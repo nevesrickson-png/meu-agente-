@@ -56,5 +56,12 @@ Testes:
 5. Teste: no `claude`, "me explica duration usando a biblioteca".
 
 
+## Dados de mercado (Fase 2)
+1. Opcional: token gratuito da brapi (brapi.dev) em `BRAPI_TOKEN` no `.env` (sem ele, só alguns tickers funcionam).
+2. `uv run pytest -m online` → confere todas as fontes reais (precisa de internet).
+3. `uv run quiron-briefing` → mostra os dados do briefing no terminal.
+4. No `claude`: "faça meu briefing" (aprove o servidor `quiron-mercado`).
+5. Confira as datas do Copom em `config\agenda_fixa.yaml` e acrescente resultados de empresas que acompanha.
+
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.

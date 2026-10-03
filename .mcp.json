@@ -15,6 +15,14 @@
         "--quiet",
         "quiron-mcp-biblioteca"
       ]
+    },
+    "quiron-mercado": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--quiet",
+        "quiron-mcp-mercado"
+      ]
     }
   }
 }

@@ -1,0 +1,16 @@
+# Eventos que não têm API pública confiável: reuniões do Copom, resultados de empresas, eventos seus.
+# ⚠️ Datas do Copom de 2026 montadas de memória pelo Claude Code — CONFIRA em
+#    https://www.bcb.gov.br/publicacoes/calendarioreunioescopom e preencha verificado_em.
+verificado_em:
+eventos:
+  # data: AAAA-MM-DD · hora opcional (HH:MM) · titulo · categoria (copom, resultado, evento, outro)
+  - {data: 2026-01-28, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-03-18, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-04-29, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-06-17, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-08-05, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-09-16, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-11-04, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-12-09, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  # Resultados de empresas: adicione conforme as empresas divulgam o calendário (RI de cada uma). Ex.:
+  # - {data: 2026-11-06, titulo: "Resultado 3T26 — WEGE3", categoria: resultado}

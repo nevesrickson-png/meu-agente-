@@ -85,6 +85,11 @@ Arquivos com DRM não são processados.
   trechos com citação; quem redige é o agente, seguindo `agente/skills/` (espelhadas em `.claude/skills/` para o Claude Code).
 - Dados: Banco Central (SGS, Focus), Tesouro Transparente, ANBIMA (ETTJ), CVM Dados Abertos, IBGE, brapi, `yfinance`,
   datasets do Damodaran, RSS de notícias, Bluesky, Reddit e YouTube pelas APIs oficiais.
+- Mercado (código): `quiron/servicos/mercado/` — `http.py` (httpx + cache SQLite em `dados/quiron.db`; fonte fora do ar
+  devolve o último valor marcado DESATUALIZADO), um módulo por fonte (`bcb`, `tesouro`, `curva` (ANBIMA, plano B Tesouro),
+  `cotacoes` (brapi/yfinance), `abertos` (CVM, IBGE, Damodaran)) e `painel.py` (Markdown com `📊 Fonte — horário`).
+  Testes com respostas gravadas (`testes/gravacoes_mercado.py`); `testes/test_mercado_online.py` confere as fontes reais.
+  Eventos sem API (Copom, resultados) em `config/agenda_fixa.yaml`.
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
 - Relatórios: Markdown → PDF (`weasyprint`), `matplotlib`, `openpyxl`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.
