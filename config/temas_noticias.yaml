@@ -1,0 +1,59 @@
+# Temas para classificar notícias e posts (palavras em minúsculas, sem acento; casam por radical/trecho).
+temas:
+  juros: [selic, juros, copom, taxa basica, curva de juros, di futuro, treasury, treasuries, fed funds, interest rate, rate cut, rate hike]
+  inflacao: [inflacao, ipca, igp-m, igpm, inpc, cpi, pce, deflacao, inflation]
+  cambio: [dolar, cambio, real brasileiro, euro, ptax, dollar, currency]
+  bolsa: [ibovespa, bolsa, b3, acoes, small caps, stocks, s&p 500, nasdaq, dow jones, wall street]
+  fiscal: [fiscal, arcabouco, divida publica, deficit, superavit, orcamento, meta fiscal, gastos publicos, tesouro nacional]
+  copom: [copom, comite de politica monetaria, ata do copom, decisao de juros, taxa selic]
+  banco_central: [banco central, galipolo, diretoria do bc]
+  fed: [federal reserve, fed, powell, fomc]
+  renda_fixa: [tesouro direto, cdb, lci, lca, debenture, cri, cra, renda fixa, credito privado, ipca+, prefixado]
+  fundos_previdencia: [fundo de investimento, fundos, previdencia, pgbl, vgbl, fii, fiis, fundo imobiliario, gestora]
+  commodities: [petroleo, brent, minerio, ouro, soja, commodities, opep, oil, gold, iron ore]
+  tributacao: [imposto de renda, tributacao, ir sobre, come-cotas, isencao, receita federal, tax]
+  regulacao: [cvm, anbima, resolucao, regulacao, normativo, sec, autorregulacao]
+  internacional: [china, estados unidos, eua, europa, guerra, tarifa, recessao, global, emergentes]
+  cripto: [bitcoin, cripto, criptomoeda, ethereum, stablecoin]
+  empresas: [resultado trimestral, resultado do trimestre, lucro liquido, lucro, balanco, receita liquida, ebitda, dividendos, jcp, fato relevante, ipo, fusao, aquisicao, recuperacao judicial, guidance]
+
+# Palavras-alerta: aparecem destacadas e entram na ferramenta `alertas`.
+alertas: [fato relevante, recuperação judicial, rebaixamento, default, calote, intervenção, liquidação extrajudicial, circuit breaker, Copom, FOMC]
+
+# Expressões que NÃO são a empresa (ex.: "Vale a pena" não é a Vale).
+empresas_excecoes:
+  vale: [a pena, lembrar, destacar, ressaltar, notar, dizer, mais, menos, o mesmo, tudo, ouro]
+  cosan: []
+
+# Empresas por nome → ticker (para ligar notícia a ativo). Acrescente as que você acompanha.
+empresas:
+  petrobras: PETR4
+  vale: VALE3
+  itau: ITUB4
+  bradesco: BBDC4
+  banco do brasil: BBAS3
+  santander brasil: SANB11
+  btg: BPAC11
+  weg: WEGE3
+  ambev: ABEV3
+  b3 s.a: B3SA3
+  localiza: RENT3
+  suzano: SUZB3
+  gerdau: GGBR4
+  eletrobras: ELET3
+  embraer: EMBR3
+  magazine luiza: MGLU3
+  raia drogasil: RADL3
+  rumo logistica: RAIL3
+  sabesp: SBSP3
+  equatorial energia: EQTL3
+  jbs: JBSS3
+  prio: PRIO3
+  totvs: TOTS3
+  cosan: CSAN3
+  klabin: KLBN11
+  hapvida: HAPV3
+  natura &co: NTCO3
+  cemig: CMIG4
+  telefonica: VIVT3
+  tim brasil: TIMS3

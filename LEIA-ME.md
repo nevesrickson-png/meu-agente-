@@ -63,5 +63,17 @@ Testes:
 4. No `claude`: "faça meu briefing" (aprove o servidor `quiron-mercado`).
 5. Confira as datas do Copom em `config\agenda_fixa.yaml` e acrescente resultados de empresas que acompanha.
 
+## Notícias e redes (Fase 3)
+- Notícias funcionam sem chave: `uv run quiron-noticias` (principais), `uv run quiron-noticias copom`, `uv run quiron-noticias --fontes`.
+- No `claude`: "o que está saindo sobre o Copom?" (aprove o servidor `quiron-noticias`).
+- Chaves gratuitas das redes (coloque no `.env`):
+  1. **Bluesky:** app do Bluesky → Configurações → Privacidade e segurança → Senhas de app → Adicionar.
+     `BLUESKY_HANDLE=seu.usuario.bsky.social` e `BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx`.
+  2. **Reddit:** https://www.reddit.com/prefs/apps → "create another app" → tipo **script**, redirect `http://localhost:8080`.
+     `REDDIT_CLIENT_ID` = código abaixo do nome do app; `REDDIT_CLIENT_SECRET` = "secret".
+  3. **YouTube:** https://console.cloud.google.com → novo projeto → APIs e serviços → ative "YouTube Data API v3" →
+     Credenciais → Criar credencial → Chave de API. `YOUTUBE_API_KEY=...` (cota grátis ≈ 100 buscas/dia).
+- Ajuste temas, palavras-alerta e empresas em `config\temas_noticias.yaml`; subreddits em `config\redes.yaml`.
+
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.

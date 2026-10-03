@@ -1,5 +1,24 @@
-# Fontes de notícias via RSS/feeds oficiais. Na Fase 5 o Claude Code confirma quais feeds estão ativos.
-# Regra: só feeds públicos; nada de contornar paywall.
-brasil: [InfoMoney, Valor Econômico, Estadão E-Investidor, Folha Mercado, Exame, Bloomberg Línea]
-global: [Reuters, CNBC, Financial Times (manchetes), The Economist (manchetes)]
-oficiais: [Banco Central (notas e comunicados), CVM (notícias), Tesouro Nacional, IBGE, ANBIMA, B3]
+# Fontes de notícias por RSS/feeds oficiais — conferidas em 03/10/2026 (item 3.1 do roteiro).
+# Regra: só feeds públicos; nada de contornar paywall (de jornais com paywall vêm só manchete e resumo do próprio feed).
+# Para desligar uma fonte: ativo: false. Para acrescentar: copie um bloco e teste com `uv run quiron-noticias --fontes`.
+fontes:
+  # --- Brasil
+  - {nome: InfoMoney, grupo: brasil, url: "https://www.infomoney.com.br/feed/"}
+  - {nome: Valor Econômico, grupo: brasil, url: "https://valor.globo.com/rss/valor"}
+  - {nome: Estadão E-Investidor, grupo: brasil, url: "https://einvestidor.estadao.com.br/feed/"}
+  - {nome: Folha Mercado, grupo: brasil, url: "https://feeds.folha.uol.com.br/mercado/rss091.xml"}
+  - {nome: Exame Invest, grupo: brasil, url: "https://exame.com/invest/feed/"}
+  - {nome: Bloomberg Línea, grupo: brasil, url: "https://www.bloomberglinea.com.br/arc/outboundfeeds/rss/?outputType=xml"}
+  # --- Global (manchetes)
+  - {nome: CNBC, grupo: global, url: "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664"}
+  - {nome: Financial Times, grupo: global, url: "https://www.ft.com/markets?format=rss"}
+  - {nome: The Economist, grupo: global, url: "https://www.economist.com/finance-and-economics/rss.xml"}
+  # --- Oficiais
+  - {nome: Banco Central — Copom, grupo: oficiais, url: "https://www.bcb.gov.br/api/feed/sitebcb/sitefeeds/comunicadoscopom"}
+  - {nome: Banco Central — notas, grupo: oficiais, url: "https://www.bcb.gov.br/api/feed/sitebcb/sitefeeds/notasImprensa"}
+  - {nome: Banco Central — notícias, grupo: oficiais, url: "https://www.bcb.gov.br/api/feed/sitebcb/sitefeeds/noticias"}
+  - {nome: CVM, grupo: oficiais, url: "https://www.gov.br/cvm/pt-br/assuntos/noticias/RSS"}
+  - {nome: IBGE, grupo: oficiais, tipo: ibge_api, url: "https://servicodados.ibge.gov.br/api/v3/noticias/?qtd=30"}
+
+# Sem feed público oficial em 03/10/2026 (não raspamos páginas):
+#   Reuters (encerrou o RSS público), Tesouro Nacional, ANBIMA, B3.

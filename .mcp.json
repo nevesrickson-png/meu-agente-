@@ -23,6 +23,14 @@
         "--quiet",
         "quiron-mcp-mercado"
       ]
+    },
+    "quiron-noticias": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--quiet",
+        "quiron-mcp-noticias"
+      ]
     }
   }
 }

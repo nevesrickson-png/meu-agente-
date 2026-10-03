@@ -92,6 +92,12 @@ Arquivos com DRM não são processados.
   Eventos sem API (Copom, resultados) em `config/agenda_fixa.yaml`.
   SGS: `api.bcb.gov.br` recusa conexões de fora do Brasil (ex.: nuvem) → plano B automático pelo web service SOAP
   oficial (`www3.bcb.gov.br/wssgs`). Focus (OData): espaços na URL precisam ser `%20` (com `+` dá erro 400).
+- Notícias (código): `quiron/servicos/noticias/` — `coleta.py` (RSS/feeds oficiais de `config/fontes_noticias.yaml`, cache
+  HTTP de 10 min, tabela `noticias` em `dados/quiron.db`, deduplicação por link canônico e por manchete), `classificacao.py`
+  (temas, tickers, alertas e empresas por regras em `config/temas_noticias.yaml`; nome de empresa exige maiúscula e tem
+  exceções, ex.: "Vale a pena"), `sentimento.py` (léxico pt/en com radicais e negação — indicação, não leitura fina),
+  `redes.py` (Bluesky senha de app, Reddit OAuth "script", YouTube Data API; sem chave devolve o passo a passo) e
+  `consultas.py`. MCP `quiron-noticias`. Sem RSS oficial: Reuters, Tesouro, ANBIMA, B3 (não raspar páginas).
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
 - Relatórios: Markdown → PDF (`weasyprint`), `matplotlib`, `openpyxl`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.

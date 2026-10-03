@@ -91,11 +91,12 @@ Execute a FASE 2 do docs/00-ROTEIRO.md, item por item. Só fontes gratuitas e of
 ```
 
 ## FASE 3 — Notícias e redes (PC)
-- [ ] 3.1 Confirmar feeds RSS ativos de `config/fontes_noticias.yaml`
-- [ ] 3.2 MCP `quiron-noticias`: coleta, deduplicação, classificação por tema e ativo
-- [ ] 3.3 Bluesky, Reddit e YouTube pelas APIs oficiais (me guie nas chaves gratuitas)
-- [ ] 3.4 Ferramentas: notícias por tema, o que as redes dizem, resumo de sentimento, palavras-alerta
+- [x] 3.1 Confirmar feeds RSS ativos de `config/fontes_noticias.yaml`
+- [x] 3.2 MCP `quiron-noticias`: coleta, deduplicação, classificação por tema e ativo
+- [~] 3.3 Bluesky, Reddit e YouTube pelas APIs oficiais (me guie nas chaves gratuitas) — código e guia prontos (testados com respostas simuladas); **falta você criar as chaves** (`LEIA-ME.md`)
+- [x] 3.4 Ferramentas: notícias por tema, o que as redes dizem, resumo de sentimento, palavras-alerta
 **Teste de aceite:** "o que está saindo sobre o Copom?" traz notícias e posts recentes com resumo e fontes.
+> ✅ 03/10/2026: aprovado para notícias — 14 feeds reais ativos (InfoMoney, Valor, E-Investidor, Folha, Exame, Bloomberg Línea, CNBC, FT, Economist, BC ×3, CVM, IBGE); a resposta trouxe fatos com fonte, horário e link, oficial antes da imprensa. Sem RSS oficial: Reuters, Tesouro, ANBIMA, B3. Posts das redes entram quando as chaves forem criadas (3.3). O histórico de notícias cresce com o uso (os feeds só guardam ~1 dia).
 ```
 Execute a FASE 3 do docs/00-ROTEIRO.md, item por item. Respeite termos de uso; prefira RSS e APIs oficiais.
 ```

@@ -1,0 +1,9 @@
+# Redes sociais (APIs oficiais, chaves gratuitas no .env). X/Twitter fora do projeto (decisão do Rickson).
+reddit:
+  subreddits: [investimentos, financaspessoais, BolsaDeValores, investing, economics, stocks]
+bluesky:
+  idioma: pt          # deixe vazio para todas as línguas
+youtube:
+  regiao: BR
+  idioma: pt
+  dias: 7             # só vídeos publicados nos últimos N dias
