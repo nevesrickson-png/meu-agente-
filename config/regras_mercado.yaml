@@ -1,0 +1,100 @@
+# Regras de mercado usadas nos cálculos do Quíron.
+#
+# ⚠️  RASCUNHO MONTADO PELO CLAUDE CODE EM 03/10/2026 — NADA AQUI FOI CONFERIDO AINDA.
+#     Regras tributárias mudam (houve propostas em 2025 de unificar o IR de aplicações e de tributar LCI/LCA).
+#     Confira cada bloco na fonte oficial indicada e preencha `verificado_em` (AAAA-MM-DD).
+#     Enquanto `verificado_em` estiver vazio, o Quíron avisa que o bloco NÃO foi verificado.
+#     Depois de 90 dias da verificação, ele avisa que é hora de conferir de novo.
+
+renda_fixa:
+  verificado_em:        # ← preencha após conferir
+  fonte: "Receita Federal — Perguntas e Respostas IRPF; Lei 11.033/2004"
+  ir_tabela_regressiva:   # prazo da aplicação (dias corridos) → alíquota
+    - {ate_dias: 180, aliquota: 0.225}
+    - {ate_dias: 360, aliquota: 0.20}
+    - {ate_dias: 720, aliquota: 0.175}
+    - {acima_de_dias: 720, aliquota: 0.15}
+  isentos_pf: [LCI, LCA, CRI, CRA, "Debêntures incentivadas (Lei 12.431)", LIG, "Poupança"]
+  iof:
+    aplica_resgate_antes_de_dias: 30
+    observacao: "Tabela regressiva diária do IOF (96% no 1º dia a 0% no 30º), sobre o rendimento"
+
+fundos:
+  verificado_em:
+  fonte: "Lei 14.754/2023; Receita Federal"
+  come_cotas:
+    meses: [maio, novembro]
+    longo_prazo: 0.15
+    curto_prazo: 0.20
+  curto_prazo_tabela: [{ate_dias: 180, aliquota: 0.225}, {acima_de_dias: 180, aliquota: 0.20}]
+  acoes: {aliquota_resgate: 0.15, come_cotas: false}
+  fii_rendimentos_pf:
+    isento: true
+    condicoes: "Cotas negociadas em bolsa/balcão, fundo com ≥ 100 cotistas e cotista com < 10% das cotas (confira regras atuais)"
+  fii_ganho_capital: 0.20
+
+renda_variavel:
+  verificado_em:
+  fonte: "Receita Federal — IRPF, renda variável"
+  acoes_swing_trade: 0.15
+  acoes_day_trade: 0.20
+  isencao_vendas_mensais_acoes_ate: 20000.00   # só ações à vista, swing trade
+  etf_renda_variavel: 0.15                      # sem isenção dos R$ 20 mil
+  irrf_dedo_duro: {swing_trade: 0.00005, day_trade: 0.01}
+  dividendos:
+    isentos_ate_2025: true
+    observacao: >
+      A partir de 2026 (Lei 15.270/2025) há retenção de 10% sobre dividendos acima de R$ 50 mil por mês
+      de uma mesma empresa para a mesma pessoa física, e tributação mínima para altas rendas. CONFIRA os detalhes.
+  jcp_irrf: 0.15        # houve propostas de aumento — CONFIRA
+
+previdencia:
+  verificado_em:
+  fonte: "Lei 11.053/2004; Lei 14.803/2024; Receita Federal"
+  pgbl_deducao_maxima_renda_bruta: 0.12
+  tabela_regressiva:
+    - {ate_anos: 2, aliquota: 0.35}
+    - {ate_anos: 4, aliquota: 0.30}
+    - {ate_anos: 6, aliquota: 0.25}
+    - {ate_anos: 8, aliquota: 0.20}
+    - {ate_anos: 10, aliquota: 0.15}
+    - {acima_de_anos: 10, aliquota: 0.10}
+  escolha_regime: "Pela Lei 14.803/2024, o regime (progressivo/regressivo) pode ser escolhido até o 1º resgate ou benefício — confira"
+
+irpf_tabela_mensal:
+  verificado_em:
+  fonte: "Receita Federal — tabela progressiva mensal vigente; Lei 15.270/2025"
+  observacao: >
+    A partir de 2026 há isenção para rendimentos até R$ 5.000/mês e redução parcial até cerca de R$ 7.350/mês.
+    Copie aqui a tabela progressiva oficial vigente antes de usar em cálculos.
+  faixas: []           # ← preencher com a tabela oficial
+
+fgc:
+  verificado_em:
+  fonte: "fgc.org.br"
+  limite_por_cpf_por_instituicao: 250000.00
+  teto_global: 1000000.00
+  teto_global_renovacao_anos: 4
+  cobre: [CDB, RDB, LCI, LCA, LC, LIG, "Poupança", "Conta corrente"]
+  nao_cobre: [CRI, CRA, "Debêntures", "Fundos", "Tesouro Direto (risco soberano, não FGC)"]
+
+itcmd:
+  verificado_em:
+  fonte: "Legislação estadual de cada UF; EC 132/2023 (progressividade obrigatória; teto de 8% pela Resolução do Senado 9/1992)"
+  aliquota_maxima_nacional: 0.08
+  observacao: >
+    Após a EC 132/2023 os estados estão migrando para alíquotas progressivas. Os valores abaixo
+    são referência antiga e precisam ser confirmados UF por UF antes de qualquer cálculo de sucessão.
+  estados:               # UF → alíquota (fixa) ou faixa [mínima, máxima]
+    SP: 0.04
+    RJ: [0.04, 0.08]
+    MG: 0.05
+    PR: 0.04
+    SC: [0.01, 0.08]
+    RS: [0.03, 0.06]
+    DF: [0.04, 0.06]
+    BA: [0.04, 0.08]
+    GO: [0.0125, 0.08]
+    PE: [0.02, 0.08]
+    CE: [0.02, 0.08]
+    ES: 0.04

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "quiron-sistema": {
+      "command": "uv",
+      "args": ["run", "--quiet", "quiron-mcp-sistema"]
+    }
+  }
+}

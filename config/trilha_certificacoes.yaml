@@ -1,0 +1,32 @@
+# Trilha de certificações — editável. Ordem pensada para: começar pelo CFP (escolha do Rickson)
+# e depois priorizar o que abre a porta de "analista/estrategista de referência".
+ritmo_semanal_horas: "3 a 7"
+trilha:
+  - id: CFP
+    entidade: Planejar
+    motivo: escolha inicial; fortalece o trabalho atual com clientes (planejamento completo)
+  - id: CNPI
+    entidade: Apimec
+    motivo: credencial que habilita o analista de valores mobiliários no Brasil (Resolução CVM 20)
+  - id: CFA_I
+    entidade: CFA Institute
+    motivo: padrão global de análise; base para o objetivo de estrategista
+  - id: CGA
+    entidade: ANBIMA
+    motivo: gestão de recursos no Brasil
+  - id: CFA_II
+    entidade: CFA Institute
+  - id: FRM_I
+    entidade: GARP
+    motivo: gestão de risco
+  - id: CFA_III
+    entidade: CFA Institute
+  - id: CGE
+    entidade: ANBIMA
+    motivo: gestão de fundos estruturados
+  - id: FRM_II
+    entidade: GARP
+  - id: CAIA
+    entidade: CAIA Association
+    motivo: investimentos alternativos
+# O Quíron recalcula datas-alvo a partir das datas de prova que o Rickson informar.

@@ -1,0 +1,8 @@
+# Ativos exibidos no Terminal e usados no briefing. Edite à vontade.
+indices: [IBOV, IFIX, SMLL, "^GSPC", "^IXIC"]
+moedas: [USDBRL, EURBRL]
+acoes: []
+fiis: []
+etfs: [BOVA11, IVVB11]
+commodities: [petroleo_brent, minerio_ferro, ouro]
+tesouro: [prefixado, ipca_mais, selic]

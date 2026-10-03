@@ -1,0 +1,23 @@
+# Segredos e dados pessoais — NUNCA vão para o GitHub
+.env
+segredos/*
+!segredos/.gitkeep
+dados/*
+!dados/.gitkeep
+biblioteca/*/*
+!biblioteca/*/.gitkeep
+academia/material/*
+!academia/material/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Sistema
+.DS_Store
+Thumbs.db

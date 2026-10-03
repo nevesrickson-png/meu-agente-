@@ -1,0 +1,5 @@
+# Fontes de notícias via RSS/feeds oficiais. Na Fase 5 o Claude Code confirma quais feeds estão ativos.
+# Regra: só feeds públicos; nada de contornar paywall.
+brasil: [InfoMoney, Valor Econômico, Estadão E-Investidor, Folha Mercado, Exame, Bloomberg Línea]
+global: [Reuters, CNBC, Financial Times (manchetes), The Economist (manchetes)]
+oficiais: [Banco Central (notas e comunicados), CVM (notícias), Tesouro Nacional, IBGE, ANBIMA, B3]
