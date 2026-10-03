@@ -2,7 +2,19 @@
   "mcpServers": {
     "quiron-sistema": {
       "command": "uv",
-      "args": ["run", "--quiet", "quiron-mcp-sistema"]
+      "args": [
+        "run",
+        "--quiet",
+        "quiron-mcp-sistema"
+      ]
+    },
+    "quiron-biblioteca": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--quiet",
+        "quiron-mcp-biblioteca"
+      ]
     }
   }
 }

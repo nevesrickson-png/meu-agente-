@@ -44,7 +44,17 @@ Uma vez só:
 Testes:
 - `uv run pytest` → deve terminar com "passed" e nenhum "failed".
 - `uv run quiron-testar-cerebro` → deve mostrar ✅ no Gemini (testa sua chave de verdade).
-- `claude` na pasta → aprove o servidor `quiron-sistema` quando ele perguntar → peça "use a ferramenta ping do Quíron".
+- `claude` na pasta → aprove os servidores `quiron-sistema` e `quiron-biblioteca` → peça "use a ferramenta ping do Quíron".
+
+## Biblioteca (Fase 1)
+1. Para PDFs escaneados, instale o OCR (uma vez): Tesseract com português (https://github.com/UB-Mannheim/tesseract/wiki,
+   marque "Portuguese" na instalação) e Ghostscript (https://ghostscript.com). PDFs com texto e EPUBs não precisam.
+2. Coloque os livros em `biblioteca\entrada\`. Dica: nomeie como `Autor - Título.pdf`, ou crie `Título.yaml` ao lado
+   com `titulo:` e `autor:` para corrigir os dados.
+3. `uv run quiron-ingerir` → processa e mostra o resultado (o 1º uso baixa o modelo de ~220 MB).
+4. Preencha `config\guia_22_blocos.yaml` e peça no Claude Code: "use a ferramenta reclassificar".
+5. Teste: no `claude`, "me explica duration usando a biblioteca".
+
 
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.

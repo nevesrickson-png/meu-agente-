@@ -21,6 +21,15 @@ PASTA_DADOS = RAIZ / "dados"
 PASTA_AGENTE = RAIZ / "agente"
 
 
+def pasta_biblioteca() -> Path:
+    """Pasta da biblioteca (QUIRON_BIBLIOTECA no ambiente permite apontar outra, ex.: nos testes)."""
+    return Path(os.environ.get("QUIRON_BIBLIOTECA") or RAIZ / "biblioteca")
+
+
+def pasta_dados() -> Path:
+    return Path(os.environ.get("QUIRON_DADOS") or PASTA_DADOS)
+
+
 def _texto(nome: str, padrao: str = "") -> str:
     """Lê uma variável de ambiente, ignorando comentários colados ao valor."""
     valor = os.environ.get(nome, padrao) or padrao

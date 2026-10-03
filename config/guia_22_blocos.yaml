@@ -1,0 +1,93 @@
+# Os 22 blocos do guia de estudo do Rickson.
+# ⚠️  PREENCHA: troque cada nome vazio pelo nome do bloco; descrição e palavras-chave melhoram a ligação dos livros.
+# Depois de editar, peça ao Quíron a ferramenta `reclassificar` (não precisa reprocessar os livros).
+limiar_semelhanca: 0.30   # 0 a 1; suba se trechos estiverem caindo em blocos errados
+blocos:
+  - id: 1
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 2
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 3
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 4
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 5
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 6
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 7
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 8
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 9
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 10
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 11
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 12
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 13
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 14
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 15
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 16
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 17
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 18
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 19
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 20
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 21
+    nome: ""
+    descricao: ""
+    palavras_chave: []
+  - id: 22
+    nome: ""
+    descricao: ""
+    palavras_chave: []

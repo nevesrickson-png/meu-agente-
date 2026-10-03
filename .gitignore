@@ -5,6 +5,7 @@ segredos/*
 dados/*
 !dados/.gitkeep
 biblioteca/*/*
+biblioteca/relatorio_ingestao.md
 !biblioteca/*/.gitkeep
 academia/material/*
 !academia/material/.gitkeep

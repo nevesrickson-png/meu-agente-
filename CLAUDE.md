@@ -77,8 +77,12 @@ Arquivos com DRM não são processados.
 
 ## Stack
 - Python 3.12, `uv`, SDK oficial de MCP para Python **v2** (`from mcp.server.mcpserver import MCPServer`; o antigo `FastMCP` não existe mais).
-- Biblioteca: `pymupdf`, `ocrmypdf`/`tesseract` (por+eng), `ebooklib`, `sentence-transformers` (modelo multilíngue leve no PC,
-  mais robusto no host), `chromadb`.
+- Biblioteca: `pymupdf`, `ocrmypdf`/`tesseract` (por+eng), `ebooklib`, `chromadb`. Embeddings com `fastembed` (ONNX, sem
+  PyTorch — leve para 8 GB): `paraphrase-multilingual-MiniLM-L12-v2` no PC; no host pode trocar por um mais robusto
+  (`QUIRON_MODELO_EMBEDDINGS`). `QUIRON_EMBEDDINGS=lexico` = plano B sem download (usado nos testes).
+- Biblioteca (código): lógica em `quiron/servicos/biblioteca/` (extração → trechos → embeddings → índice/catálogo →
+  fichas/relatório; `consultas.py` formata as respostas); MCP fino em `quiron/mcp/biblioteca/`. As ferramentas devolvem
+  trechos com citação; quem redige é o agente, seguindo `agente/skills/` (espelhadas em `.claude/skills/` para o Claude Code).
 - Dados: Banco Central (SGS, Focus), Tesouro Transparente, ANBIMA (ETTJ), CVM Dados Abertos, IBGE, brapi, `yfinance`,
   datasets do Damodaran, RSS de notícias, Bluesky, Reddit e YouTube pelas APIs oficiais.
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.

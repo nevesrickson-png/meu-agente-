@@ -5,14 +5,21 @@ description = "Quíron — parceiro de análise pessoal do assessor (sistema de 
 readme = "LEIA-ME.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "chromadb>=1.5.9",
+    "ebooklib>=0.20",
+    "fastembed>=0.8.1",
     "litellm>=1.50",
     "mcp>=2.3,<3",
+    "ocrmypdf>=17.13.0",
+    "pymupdf>=1.28.2",
     "python-dotenv>=1.0",
     "pyyaml>=6.0",
 ]
 
 [project.scripts]
 quiron-mcp-sistema = "quiron.mcp.sistema.servidor:main"
+quiron-mcp-biblioteca = "quiron.mcp.biblioteca.servidor:main"
+quiron-ingerir = "quiron.servicos.biblioteca.cli:main"
 quiron-testar-cerebro = "quiron.nucleo.cerebro:testar_conexao_cli"
 quiron-gerar-persona = "quiron.nucleo.persona:main"
 
