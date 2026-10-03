@@ -1,7 +1,8 @@
 # Eventos que não têm API pública confiável: reuniões do Copom, resultados de empresas, eventos seus.
-# ⚠️ Datas do Copom de 2026 montadas de memória pelo Claude Code — CONFIRA em
-#    https://www.bcb.gov.br/publicacoes/calendarioreunioescopom e preencha verificado_em.
-verificado_em:
+# Copom 2026 conferido em 03/10/2026 na fonte oficial do Banco Central (lista de atas: jan–set;
+# nov e dez pelo site do BC e pela série SGS 432, preenchida até a próxima reunião).
+# Atualize todo ano (o BC publica o calendário do ano seguinte até junho).
+verificado_em: 2026-10-03
 eventos:
   # data: AAAA-MM-DD · hora opcional (HH:MM) · titulo · categoria (copom, resultado, evento, outro)
   - {data: 2026-01-28, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}

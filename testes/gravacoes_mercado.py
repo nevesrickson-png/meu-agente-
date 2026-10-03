@@ -79,6 +79,24 @@ IBGE = {"items": [
 ]}
 
 
+# Formato real do web service SGS (www3.bcb.gov.br): XML escapado dentro do envelope SOAP
+SGS_SOAP = {
+    13522: [("5/2026", "4.72"), ("6/2026", "4.64"), ("7/2026", "4.44"), ("8/2026", "4.22")],
+    432: [("1/10/2026", "13,75"), ("2/10/2026", "13,75"), ("4/11/2099", "13,75")],
+}
+
+
+def _soap(codigo: int) -> str:
+    itens = "".join(f"<ITEM><DATA>{d}</DATA><VALOR>{v}</VALOR><BLOQUEADO>false</BLOQUEADO></ITEM>" for d, v in SGS_SOAP[codigo])
+    xml = f"<?xml version='1.0' encoding='ISO-8859-1'?><SERIES><SERIE ID='{codigo}'>{itens}</SERIE></SERIES>"
+    escapado = xml.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return (
+        '<?xml version="1.0" encoding="utf-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">'
+        f"<soapenv:Body><ns1:getValoresSeriesXMLResponse><getValoresSeriesXMLReturn>{escapado}</getValoresSeriesXMLReturn>"
+        "</ns1:getValoresSeriesXMLResponse></soapenv:Body></soapenv:Envelope>"
+    )
+
+
 def _zip(nome: str, texto: str) -> bytes:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as z:
@@ -92,6 +110,9 @@ def roteador(request: httpx.Request) -> httpx.Response:
     if host == "api.bcb.gov.br":
         codigo = int(url.split("bcdata.sgs.")[1].split("/")[0])
         return httpx.Response(200, json=SGS[codigo])
+    if host == "www3.bcb.gov.br":
+        codigo = int(request.content.decode().split("<item>")[1].split("</item>")[0])
+        return httpx.Response(200, text=_soap(codigo))
     if host == "olinda.bcb.gov.br":
         filtro = request.url.params["$filter"]
         nome = filtro.split("Indicador eq '")[1].split("'")[0]

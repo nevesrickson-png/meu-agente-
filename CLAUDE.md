@@ -90,6 +90,8 @@ Arquivos com DRM não são processados.
   `cotacoes` (brapi/yfinance), `abertos` (CVM, IBGE, Damodaran)) e `painel.py` (Markdown com `📊 Fonte — horário`).
   Testes com respostas gravadas (`testes/gravacoes_mercado.py`); `testes/test_mercado_online.py` confere as fontes reais.
   Eventos sem API (Copom, resultados) em `config/agenda_fixa.yaml`.
+  SGS: `api.bcb.gov.br` recusa conexões de fora do Brasil (ex.: nuvem) → plano B automático pelo web service SOAP
+  oficial (`www3.bcb.gov.br/wssgs`). Focus (OData): espaços na URL precisam ser `%20` (com `+` dá erro 400).
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
 - Relatórios: Markdown → PDF (`weasyprint`), `matplotlib`, `openpyxl`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.

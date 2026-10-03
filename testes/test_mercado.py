@@ -11,6 +11,7 @@ from testes import gravacoes_mercado as g
 @pytest.fixture(autouse=True)
 def fontes_gravadas(tmp_path, monkeypatch):
     monkeypatch.setenv("QUIRON_DADOS", str(tmp_path))
+    monkeypatch.setattr(bcb, "_api_fora_ate", 0.0)
     http.definir_cliente(httpx.Client(transport=httpx.MockTransport(g.roteador)))
 
     def yahoo_falso(simbolo):
@@ -31,6 +32,20 @@ def test_sgs_e_focus():
     assert s.fonte == "Banco Central (SGS 432)" and not s.desatualizado
     e = bcb.focus("ipca", 2026)
     assert (e.mediana, e.mediana_semana_anterior, e.data) == (4.85, 4.90, date(2026, 9, 26))
+
+
+def test_sgs_plano_b_pelo_web_service_quando_a_api_recusa():
+    def roteador(req):
+        if req.url.host == "api.bcb.gov.br":
+            return httpx.Response(502)
+        return g.roteador(req)
+
+    http.definir_cliente(httpx.Client(transport=httpx.MockTransport(roteador)))
+    s = bcb.sgs("ipca_12m")
+    assert s.fonte == "Banco Central (SGS 13522, web service)"
+    assert (s.ultimo.data, s.ultimo.valor) == (date(2026, 8, 1), 4.22)
+    selic = bcb.sgs("selic_meta")  # série preenchida até a próxima reunião: ignora datas futuras
+    assert selic.ultimo.valor == 13.75 and selic.ultimo.data <= date.today()
 
 
 def test_tesouro_pega_so_a_data_base_mais_recente():
@@ -98,7 +113,7 @@ def test_fonte_fora_do_ar_nao_derruba_o_painel():
 def test_cache_devolve_ultimo_valor_marcado_como_desatualizado():
     bcb.sgs("selic_meta")  # guarda no cache
     http.definir_cliente(httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500))))
-    r = http.obter(bcb.URL_SGS.format(codigo=432, n=2), params={"formato": "json"}, fonte="x", ttl=0)
+    r = http.obter(bcb.URL_SGS.format(codigo=432, n=42), params={"formato": "json"}, fonte="x", ttl=0)
     assert r.desatualizado and r.conteudo[-1]["valor"] == "15.00"
 
 

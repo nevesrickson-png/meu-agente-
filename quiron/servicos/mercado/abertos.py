@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import io
 import zipfile
 from dataclasses import dataclass
@@ -127,7 +128,7 @@ def calendario_ibge(dias: int = 7) -> list[Divulgacao]:
             dt = datetime.strptime(quando.strip(), "%d/%m/%Y %H:%M:%S")
         except (ValueError, AttributeError):
             continue
-        titulo = i.get("nome_produto") or i.get("titulo") or "Divulgação IBGE"
+        titulo = re.sub(r"#\S+", "", i.get("nome_produto") or i.get("titulo") or "Divulgação IBGE").strip()
         if i.get("titulo") and i.get("nome_produto") and i["titulo"] != i["nome_produto"]:
             titulo = f"{i['nome_produto']} — {i['titulo']}"
         saida.append(Divulgacao(dt, titulo, "IBGE"))

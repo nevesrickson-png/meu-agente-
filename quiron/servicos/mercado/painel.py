@@ -46,6 +46,8 @@ def _seguro(func: Callable[[], str], rotulo: str) -> str:
 
 def texto_cotacao(c: cotacoes.Cotacao) -> str:
     preco = f"R$ {_num(c.preco)}" if c.moeda == "BRL" and c.ativo not in {"IBOV", "SMLL"} else _num(c.preco)
+    if c.ativo in {"petroleo_brent", "ouro", "minerio_ferro"}:
+        preco = f"US$ {_num(c.preco)}"
     if c.ativo == "IBOV":
         preco = _num(c.preco, 0) + " pts"
     quando = f"dado de {c.horario:%d/%m %H:%M}" if c.horario else ""
@@ -145,6 +147,9 @@ class Evento:
     fonte: str
 
 
+DIAS = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
+
+
 def eventos_fixos() -> list[Evento]:
     dados = yaml.safe_load((PASTA_CONFIG / "agenda_fixa.yaml").read_text(encoding="utf-8")) or {}
     saida = []
@@ -170,7 +175,7 @@ def agenda(dias: int = 7) -> str:
     linhas = [f"## Agenda ({dias} dias)"]
     for e in sorted(eventos, key=lambda x: x.quando):
         hora = "" if e.quando.hour == 0 and e.quando.minute == 0 else f" {e.quando:%H:%M}"
-        linhas.append(f"- {e.quando:%a %d/%m}{hora} — {e.titulo} ({e.fonte})")
+        linhas.append(f"- {DIAS[e.quando.weekday()]} {e.quando:%d/%m}{hora} — {e.titulo} ({e.fonte})")
     return "\n".join(linhas) + erro
 
 

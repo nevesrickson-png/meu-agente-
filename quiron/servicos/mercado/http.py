@@ -57,8 +57,8 @@ def _banco() -> sqlite3.Connection:
     return con
 
 
-def _chave(url: str, params: dict | None, metodo: str, dados: dict | None) -> str:
-    return json.dumps([metodo, url, sorted((params or {}).items()), sorted((dados or {}).items())], ensure_ascii=False)
+def _chave(url: str, params: dict | None, metodo: str, dados: dict | None, corpo: str | None = None) -> str:
+    return json.dumps([metodo, url, sorted((params or {}).items()), sorted((dados or {}).items()), corpo], ensure_ascii=False)
 
 
 def _decodificar(bruto: bytes, formato: str, codificacao: str) -> Any:
@@ -78,15 +78,18 @@ def obter(
     metodo: str = "GET",
     dados: dict | None = None,
     codificacao: str = "utf-8",
+    corpo: str | None = None,
+    cabecalhos: dict | None = None,
 ) -> Resposta:
     """Busca com cache. `ttl` em segundos (quanto tempo o dado guardado vale)."""
-    chave = _chave(url, params, metodo, dados)
+    chave = _chave(url, params, metodo, dados, corpo)
     with _banco() as con:
         linha = con.execute("SELECT conteudo, obtido_em FROM cache WHERE chave = ?", (chave,)).fetchone()
     if linha and time.time() - linha[1] < ttl:
         return Resposta(_decodificar(linha[0], formato, codificacao), fonte, datetime.fromtimestamp(linha[1]))
     try:
-        r = cliente().request(metodo, url, params=params, data=dados)
+        extras = {"content": corpo.encode("utf-8")} if corpo is not None else {"data": dados}
+        r = cliente().request(metodo, url, params=params, headers=cabecalhos, **extras)
         r.raise_for_status()
         bruto = r.content
         conteudo = _decodificar(bruto, formato, codificacao)  # valida antes de guardar

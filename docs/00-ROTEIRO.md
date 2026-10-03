@@ -78,14 +78,14 @@ Processe só os 3 livros do piloto (meu PC tem 8 GB). Ao final, marque os itens 
 ```
 
 ## FASE 2 — Dados de mercado (PC)
-- [~] 2.1 MCP `quiron-mercado`: Banco Central (SGS, Focus), Tesouro Transparente, ANBIMA (ETTJ), IBGE, brapi, yfinance
-- [~] 2.2 CVM Dados Abertos (companhias e fundos) e datasets do Damodaran
-- [~] 2.3 Cache em SQLite; fonte e horário em cada dado; aviso de atraso nas cotações
-- [~] 2.4 Agenda econômica (IBGE, BCB/Copom, resultados de empresas)
-- [~] 2.5 Ferramentas: cotação, taxas, curva, macro, agenda, briefing sob demanda
-- [~] 2.6 Skill do briefing (formato fixo, curto, o que importa para clientes)
+- [x] 2.1 MCP `quiron-mercado`: Banco Central (SGS, Focus), Tesouro Transparente, ANBIMA (ETTJ), IBGE, brapi, yfinance
+- [x] 2.2 CVM Dados Abertos (companhias e fundos) e datasets do Damodaran
+- [x] 2.3 Cache em SQLite; fonte e horário em cada dado; aviso de atraso nas cotações
+- [x] 2.4 Agenda econômica (IBGE, BCB/Copom, resultados de empresas)
+- [x] 2.5 Ferramentas: cotação, taxas, curva, macro, agenda, briefing sob demanda
+- [x] 2.6 Skill do briefing (formato fixo, curto, o que importa para clientes)
 **Teste de aceite:** no Claude Code, "faça meu briefing" traz dados corretos com fonte e horário.
-> 🟡 03/10/2026: código pronto e testado com respostas gravadas no formato das fontes (34 testes). **Falta a conferência com dados reais**: a rede da sessão na nuvem bloqueou as fontes. Rode `uv run pytest -m online` (no PC ou numa sessão nova com a rede liberada) e depois peça "faça meu briefing". Copom 2026 em `config/agenda_fixa.yaml` a confirmar.
+> ✅ 03/10/2026: aprovado com dados reais. 19/19 testes online passando; "faça meu briefing" trouxe Selic, CDI, Tesouro, IPCA, Focus, dólar, Ibovespa, S&P 500 e Brent com fonte e horário. Correções feitas no teste real: filtro do Focus (espaços como %20), plano B do SGS pelo web service oficial do BC (a api.bcb.gov.br recusa servidores fora do Brasil), datas futuras da Selic meta ignoradas, títulos do IBGE limpos, dias da semana em português, US$ nas commodities. Copom 2026 conferido no BC.
 ```
 Execute a FASE 2 do docs/00-ROTEIRO.md, item por item. Só fontes gratuitas e oficiais.
 ```
