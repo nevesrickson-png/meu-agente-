@@ -75,5 +75,16 @@ Testes:
      Credenciais → Criar credencial → Chave de API. `YOUTUBE_API_KEY=...` (cota grátis ≈ 100 buscas/dia).
 - Ajuste temas, palavras-alerta e empresas em `config\temas_noticias.yaml`; subreddits em `config\redes.yaml`.
 
+## Quíron Terminal (Fase 4)
+- **Dois cliques em `Quiron Terminal.bat`** (na pasta do projeto): abre o Terminal no navegador. Feche a janela preta para desligar.
+  Pelo terminal: `uv run quiron-terminal`.
+- Barra de comando (atalho `/` ou `Ctrl+K`): `PETR4` (visão do ativo), `PETR4 GP` (gráfico), `CURV`, `TOP`, `NEWS COPOM`,
+  `SOC COPOM`, `ECO`, `MACRO`, `JUROS`, `WEI`, `FX`, `CMDTY`, `CALC`, `STATUS`, `HELP`.
+- Layouts prontos: Manhã, Análise, Estudo (`Alt+1/2/3`). Arraste o cabeçalho para mover, o canto para redimensionar;
+  "Salvar" guarda o layout com um nome.
+- Só abre no seu próprio PC (endereço local). Na Fase 5, no servidor, ganha senha (`TERMINAL_SENHA`) e acesso pelo Tailscale.
+
+![Quíron Terminal](docs/img/terminal-v1.png)
+
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.

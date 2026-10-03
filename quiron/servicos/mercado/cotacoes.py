@@ -6,6 +6,7 @@ Dados gratuitos têm atraso (B3 ~15 min); toda cotação traz o horário do pró
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -74,17 +75,53 @@ def brapi(ticker: str) -> Cotacao:
     )
 
 
-def _historico_yahoo(simbolo: str):
+def _historico_yahoo(simbolo: str, periodo: str = "5d"):
     """Isolado para os testes poderem substituir (o yfinance usa a própria conexão)."""
     import yfinance as yf
 
-    return yf.Ticker(simbolo).history(period="5d", interval="1d", auto_adjust=False)
+    return yf.Ticker(simbolo).history(period=periodo, interval="1d", auto_adjust=False)
+
+
+_memo: dict[tuple[str, str], tuple[float, object]] = {}
+TTL_YAHOO = 60  # o mesmo ativo não é pedido ao Yahoo mais de uma vez por minuto
+
+
+def _historico_memo(simbolo: str, periodo: str):
+    agora = time.time()
+    guardado = _memo.get((simbolo, periodo))
+    if guardado and agora - guardado[0] < TTL_YAHOO:
+        return guardado[1]
+    hist = _historico_yahoo(simbolo, periodo)
+    _memo[(simbolo, periodo)] = (agora, hist)
+    return hist
+
+
+def simbolo_yahoo(ativo: str) -> str:
+    """Nome da watchlist/ticker → símbolo do Yahoo (ticker da B3 ganha .SA)."""
+    if ativo in YAHOO:
+        return YAHOO[ativo]
+    if ativo.startswith("^") or "=" in ativo or "." in ativo:
+        return ativo
+    return f"{ativo.upper()}.SA"
+
+
+def historico(ativo: str, periodo: str = "6mo") -> list[tuple[datetime, float]]:
+    """Fechamentos diários (Yahoo). periodo: 1mo, 3mo, 6mo, 1y, 5y."""
+    simbolo = simbolo_yahoo(ativo)
+    try:
+        hist = _historico_memo(simbolo, periodo)
+    except Exception as e:  # noqa: BLE001
+        raise FonteIndisponivel(f"Yahoo indisponível para {simbolo}: {e}") from e
+    if hist is None or len(hist) == 0:
+        raise FonteIndisponivel(f"Yahoo sem histórico para {simbolo}")
+    fech = hist["Close"].dropna()
+    return [(i.to_pydatetime(), float(v)) for i, v in fech.items()]
 
 
 def yahoo(ativo: str) -> Cotacao:
     simbolo = YAHOO.get(ativo, ativo)
     try:
-        hist = _historico_yahoo(simbolo)
+        hist = _historico_memo(simbolo, "5d")
     except Exception as e:  # noqa: BLE001
         raise FonteIndisponivel(f"Yahoo indisponível para {simbolo}: {e}") from e
     if hist is None or len(hist) == 0:

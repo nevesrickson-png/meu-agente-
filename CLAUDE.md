@@ -98,6 +98,13 @@ Arquivos com DRM não são processados.
   exceções, ex.: "Vale a pena"), `sentimento.py` (léxico pt/en com radicais e negação — indicação, não leitura fina),
   `redes.py` (Bluesky senha de app, Reddit OAuth "script", YouTube Data API; sem chave devolve o passo a passo) e
   `consultas.py`. MCP `quiron-noticias`. Sem RSS oficial: Reuters, Tesouro, ANBIMA, B3 (não raspar páginas).
+- Terminal (código): `quiron/terminal/backend/` — `dados.py` (JSON a partir dos mesmos serviços; `TOPICOS` = função +
+  intervalo; fontes lentas como o Tesouro vêm em segundo plano com resultado `parcial`), `app.py` (FastAPI: `/api/topico/*`,
+  `/api/calc/*`, `/api/layouts`, `/ws` com assinatura por painel e memo compartilhado válido por 80% do intervalo; só
+  127.0.0.1 por padrão; `TERMINAL_SENHA` ativa login por cookie). Frontend sem build em `quiron/terminal/frontend/`
+  (JS puro + lightweight-charts 4.2 local em `vendor/`). Calculadoras em `quiron/servicos/calculadoras.py` (Python, com
+  memória de cálculo). Cores: séries azul/laranja/aqua da paleta validada; alta/queda sempre com ▲/▼. Datas sem fuso:
+  hora do sistema (consultas) ou de Brasília (agenda) — ver `_iso`. Aceite no navegador: `testes/test_terminal_navegador.py`.
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
 - Relatórios: Markdown → PDF (`weasyprint`), `matplotlib`, `openpyxl`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.

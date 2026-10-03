@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quíron Terminal — entrar</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body class="tela-login">
+<form method="post" action="/login" class="caixa-login">
+  <div class="marca">QUÍRON<span>TERMINAL</span></div>
+  <label for="senha">Senha</label>
+  <input id="senha" name="senha" type="password" autofocus required>
+  <button type="submit">Entrar</button>
+  <p class="erro-login" id="erro" hidden>Senha incorreta.</p>
+</form>
+<script>if (location.search.includes("erro")) document.getElementById("erro").hidden = false;</script>
+</body>
+</html>

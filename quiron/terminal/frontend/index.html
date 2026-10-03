@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quíron Terminal</title>
+<link rel="stylesheet" href="/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111110'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23f0a020' font-family='monospace'%3EQ%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="topo">
+  <div class="marca">QUÍRON<span>TERMINAL</span></div>
+  <form id="barra" class="barra" autocomplete="off">
+    <span class="prompt">&gt;</span>
+    <input id="comando" placeholder="Comando ou ticker — PETR4, PETR4 GP, CURV, TOP, MACRO, HELP   ( / ou Ctrl+K )" spellcheck="false" aria-label="Barra de comando">
+  </form>
+  <div class="controles">
+    <select id="layout" aria-label="Layout"></select>
+    <button id="salvar" type="button" title="Salvar o layout atual com um nome">Salvar</button>
+    <span id="conexao" class="conexao" title="Conexão com o servidor">●</span>
+    <span id="relogio" class="relogio"></span>
+  </div>
+</header>
+<main id="grade" class="grade" aria-live="polite"></main>
+<footer class="fita"><div id="fita" class="fita-trilho"></div></footer>
+<div id="aviso" class="aviso" role="status"></div>
+<script src="/vendor/lightweight-charts.standalone.production.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

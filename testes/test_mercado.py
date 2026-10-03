@@ -14,7 +14,7 @@ def fontes_gravadas(tmp_path, monkeypatch):
     monkeypatch.setattr(bcb, "_api_fora_ate", 0.0)
     http.definir_cliente(httpx.Client(transport=httpx.MockTransport(g.roteador)))
 
-    def yahoo_falso(simbolo):
+    def yahoo_falso(simbolo, periodo="5d"):
         if simbolo in {"NADA", "NADA.SA"}:
             return pd.DataFrame()
         idx = pd.DatetimeIndex([datetime(2026, 10, 1, tzinfo=timezone.utc), datetime(2026, 10, 2, tzinfo=timezone.utc)])
@@ -22,6 +22,7 @@ def fontes_gravadas(tmp_path, monkeypatch):
         return pd.DataFrame({"Close": precos.get(simbolo, (10.0, 10.5))}, index=idx)
 
     monkeypatch.setattr(cotacoes, "_historico_yahoo", yahoo_falso)
+    cotacoes._memo.clear()
     yield
     http.definir_cliente(None)
 

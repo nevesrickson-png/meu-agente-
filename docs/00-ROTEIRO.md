@@ -102,13 +102,14 @@ Execute a FASE 3 do docs/00-ROTEIRO.md, item por item. Respeite termos de uso; p
 ```
 
 ## FASE 4 — Quíron Terminal v1 (PC)
-- [ ] 4.1 Backend FastAPI reutilizando `quiron/servicos` + WebSocket
-- [ ] 4.2 Frontend: grade de painéis, tema escuro, atalhos de teclado, layouts salvos
-- [ ] 4.3 Barra de comando: `<TICKER>`, `GP`, `TOP`, `SOC`, `ECO`, `CURV`, `MACRO`, `WEI`, `FX`, `CMDTY`, `HELP`
-- [ ] 4.4 Painéis: watchlist, juros, macro, notícias, redes, agenda, calculadoras básicas, status
-- [ ] 4.5 Atalho para abrir no Windows com dois cliques (`Quíron Terminal.bat`)
-- [ ] 4.6 Leve: consumo de memória compatível com 8 GB
+- [x] 4.1 Backend FastAPI reutilizando `quiron/servicos` + WebSocket
+- [x] 4.2 Frontend: grade de painéis, tema escuro, atalhos de teclado, layouts salvos
+- [x] 4.3 Barra de comando: `<TICKER>`, `GP`, `TOP`, `SOC`, `ECO`, `CURV`, `MACRO`, `WEI`, `FX`, `CMDTY`, `HELP`
+- [x] 4.4 Painéis: watchlist, juros, macro, notícias, redes, agenda, calculadoras básicas, status
+- [x] 4.5 Atalho para abrir no Windows com dois cliques (`Quíron Terminal.bat`)
+- [x] 4.6 Leve: consumo de memória compatível com 8 GB
 **Teste de aceite:** você abre o Terminal no navegador, digita `PETR4` e `CURV`, e os dados atualizam sozinhos.
+> ✅ 03/10/2026: aprovado num navegador real (Chromium) com dados reais — teste automático `testes/test_terminal_navegador.py` digita PETR4 e CURV, confere cotação, curva ANBIMA e a atualização automática sem recarregar. Memória do Terminal ≈ 180 MB. Telas: `docs/img/terminal-v1.png` e `docs/img/terminal-v1-grafico.png`. Falta: você abrir no seu PC pelo `Quiron Terminal.bat`.
 ```
 Execute a FASE 4 do docs/00-ROTEIRO.md seguindo o docs/06-TERMINAL.md. Leia a skill de frontend-design se disponível.
 Quero visual profissional, denso, rápido e leve.

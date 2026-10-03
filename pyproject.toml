@@ -7,6 +7,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "chromadb>=1.5.9",
     "ebooklib>=0.20",
+    "fastapi>=0.142.2",
     "fastembed>=0.8.1",
     "feedparser>=6.0.14",
     "httpx>=0.28.1",
@@ -14,6 +15,7 @@ dependencies = [
     "mcp>=2.3,<3",
     "ocrmypdf>=17.13.0",
     "openpyxl>=3.1.5",
+    "psutil>=7.2.2",
     "pymupdf>=1.28.2",
     "python-dotenv>=1.0",
     "pyyaml>=6.0",
@@ -28,12 +30,16 @@ quiron-mcp-mercado = "quiron.mcp.mercado.servidor:main"
 quiron-briefing = "quiron.servicos.mercado.cli:main"
 quiron-mcp-noticias = "quiron.mcp.noticias.servidor:main"
 quiron-noticias = "quiron.servicos.noticias.cli:main"
+quiron-terminal = "quiron.terminal.backend.app:main"
 quiron-ingerir = "quiron.servicos.biblioteca.cli:main"
 quiron-testar-cerebro = "quiron.nucleo.cerebro:testar_conexao_cli"
 quiron-gerar-persona = "quiron.nucleo.persona:main"
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "playwright>=1.63.0",
+    "pytest>=8",
+]
 
 [build-system]
 requires = ["hatchling"]
