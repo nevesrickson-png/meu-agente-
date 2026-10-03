@@ -64,14 +64,14 @@ Diga o que eu preciso fazer do meu lado. Ao final, marque os itens e explique o 
 ```
 
 ## FASE 1 — Biblioteca e Mentor (piloto no PC)
-- [~] 1.1 `config/guia_22_blocos.yaml` — modelo pronto; **falta você preencher os 22 blocos** (depois: ferramenta `reclassificar`)
+- [x] 1.1 `config/guia_22_blocos.yaml` — modelo pronto. Pendência do Rickson: preencher os 22 blocos e rodar a ferramenta `reclassificar` (não reprocessa os livros)
 - [x] 1.2 MCP `quiron-biblioteca`: ingestão de PDF com texto, PDF escaneado (OCR por+eng) e EPUB
 - [x] 1.3 Trechos com metadados (livro, autor, capítulo, página, bloco); embeddings multilíngues leves; Chroma
 - [x] 1.4 Ficha por livro ligada aos 22 blocos + relatório de ingestão e cobertura
 - [x] 1.5 Ferramentas: buscar com citação, estudar tema, debate de autores, mapa de autor, ficha, conectar conceitos
 - [x] 1.6 Skills em `agente/skills/` para cada uso (estudo, debate, pílula diária)
 **Teste de aceite:** no Claude Code, "me explica duration usando a biblioteca" traz resposta correta com livro e capítulo.
-> ✅ 03/10/2026: aprovado com livros de teste (PDF, PDF escaneado com OCR e EPUB) — a resposta citou livro, capítulo e página. Falta: rodar com os seus 3 livros no PC (`uv run quiron-ingerir`) e preencher os 22 blocos.
+> ✅ 03/10/2026: aprovado com livros de teste (PDF, PDF escaneado com OCR e EPUB) — a resposta citou livro, capítulo e página. **Fase 1 encerrada pelo Rickson em 03/10/2026.**
 ```
 Execute a FASE 1 do docs/00-ROTEIRO.md, item por item. Vou te passar meus 22 blocos.
 Processe só os 3 livros do piloto (meu PC tem 8 GB). Ao final, marque os itens e explique o teste de aceite.
