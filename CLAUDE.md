@@ -12,7 +12,7 @@ exatamente o que ele precisa fazer do lado dele.
 - O Quíron é um sistema **pessoal e de propriedade exclusiva do Rickson**. Não é da EQI, não usa marca, sistemas,
   bases ou dados internos da EQI e não se conecta a eles. O mesmo vale para o CRM próprio e o SDR.
 - Clientes da EQI têm notas no CRM da empresa: o Quíron **nunca** se conecta a ele. Dados desses clientes só entram
-  digitados/colados pelo Rickson, anonimizados.
+  digitados/colados pelo Rickson, identificados só como `CLI-XXX`.
 - A atividade dele como assessor segue a Resolução CVM 178 e a LGPD; as regras de compliance abaixo valem sempre.
 
 ## O que é o Quíron
@@ -28,7 +28,7 @@ Funcionalidades em `docs/01-FUNCIONALIDADES.md`. Persona em `config/persona.yaml
 - O "runtime" do agente (o que conversa no Telegram) **ainda não foi decidido**: Hermes Agent, uma solução baseada
   em Claude (Claude Code / Agent SDK) ou um bot próprio em Python. A decisão é tomada na **Fase 5** (`docs/07-DECISAO-RUNTIME.md`).
 - Por isso, toda a inteligência do Quíron é construída como **servidores MCP em Python**, independentes de runtime:
-  `quiron-sistema` (ping, status, prévia do anonimizador — Fase 0), `quiron-biblioteca`, `quiron-academia`, `quiron-mercado`, `quiron-noticias`, `quiron-analise`, `quiron-assessoria`, `quiron-carreira`.
+  `quiron-sistema` (ping e status — Fase 0), `quiron-biblioteca`, `quiron-academia`, `quiron-mercado`, `quiron-noticias`, `quiron-analise`, `quiron-assessoria`, `quiron-carreira`.
   Qualquer runtime que fale MCP usa essas ferramentas sem mudança de código.
 - **Durante o desenvolvimento, o próprio Claude Code é a interface de teste:** os MCP são registrados no `.mcp.json`
   do projeto, e o Rickson já usa as ferramentas conversando com o Claude Code, antes de existir Telegram.
@@ -61,7 +61,8 @@ Trocar de modelo = mudar o `.env`.
 
 ## Privacidade e compliance (obrigatório)
 - Com modelo em camada gratuita, os dados podem ser usados pelo provedor: **nunca** enviar dado identificável de cliente.
-  Clientes são `CLI-XXX`. O `anonimizador` roda antes de qualquer envio a modelo.
+  Clientes são `CLI-XXX`. **Decisão do Rickson (03/10/2026): não haverá anonimizador** — ele não digita dados
+  identificáveis de clientes; a regra é de convenção. Não recriar o anonimizador sem ele pedir.
 - Mapa código → nome real só na versão offline, criptografado. LGPD: `/esquecer <cliente>` apaga tudo.
 - O Quíron não fala com clientes. Textos para clientes saem como RASCUNHO. Conteúdo público com lembrete de disclaimer.
 - Análises de ações/emissores com recomendação são **uso interno e de estudo** (relatório de análise para terceiros é
@@ -87,7 +88,7 @@ Arquivos com DRM não são processados.
 ## Estrutura de pastas
 ```
 quiron/
-  nucleo/        cerebro.py, anonimizador.py, config.py
+  nucleo/        cerebro.py, config.py, regras.py, persona.py
   mcp/           biblioteca/, academia/, mercado/, noticias/, analise/, assessoria/, carreira/
   servicos/      lógica compartilhada entre MCP e Terminal
   terminal/      backend/ (FastAPI), frontend/
@@ -113,7 +114,6 @@ Ao concluir itens, marque-os no roteiro e explique ao Rickson, em até 5 linhas,
 ## Convenções
 - Testes: `uv run pytest` (rápidos, sem internet). Os que usam chave/internet são marcados `@pytest.mark.online`
   e rodam com `uv run pytest -m online`. O teste do MCP sobe o servidor de verdade pelo `.mcp.json`.
-- Nomes de clientes que o anonimizador deve sempre esconder: `segredos/nomes_protegidos.txt` (um por linha, fora do Git).
 - `agente/persona.md` é gerado: edite `config/persona.yaml` e rode `uv run quiron-gerar-persona`.
 - Código e comentários em português. Toda funcionalidade com teste em `testes/`.
 - Respostas com fonte: `📚 Livro — Autor, cap. X` ou `📊 Fonte — horário`.

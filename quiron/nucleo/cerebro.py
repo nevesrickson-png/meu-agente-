@@ -2,8 +2,7 @@
 
 - Ordem de tentativa vem do `.env`: LLM_PRINCIPAL (Gemini grátis) → LLM_RESERVA (Groq grátis).
   Trocar de modelo = mudar o `.env`; nenhum outro arquivo muda.
-- Antes de enviar, o texto passa pelo anonimizador (compliance: nada identificável sai do PC).
-  A resposta volta com os valores originais restaurados, só em memória.
+- O Rickson não digita dados identificáveis de clientes (clientes só como CLI-XXX), então o texto vai como está.
 """
 
 from __future__ import annotations
@@ -12,10 +11,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any
 
-from quiron.nucleo.anonimizador import Anonimizador, carregar_nomes_protegidos
-from quiron.nucleo.config import RAIZ, Config, carregar_config
-
-ARQUIVO_NOMES_PROTEGIDOS = RAIZ / "segredos" / "nomes_protegidos.txt"
+from quiron.nucleo.config import Config, carregar_config
 
 
 class CerebroIndisponivel(RuntimeError):
@@ -26,7 +22,7 @@ class CerebroIndisponivel(RuntimeError):
 class Resposta:
     texto: str
     modelo: str
-    enviado: list[dict[str, str]]  # mensagens exatamente como saíram (já anonimizadas)
+    enviado: list[dict[str, str]]  # mensagens exatamente como foram enviadas
     falhas: list[str] = field(default_factory=list)
 
 
@@ -48,24 +44,19 @@ def perguntar(
     *,
     sistema: str | None = None,
     config: Config | None = None,
-    nomes_protegidos: list[str] | None = None,
     temperatura: float = 0.3,
     max_tokens: int | None = None,
     **extras: Any,
 ) -> Resposta:
-    """Envia uma pergunta ao cérebro, anonimizando antes e restaurando depois.
+    """Envia uma pergunta ao cérebro, tentando os modelos na ordem do `.env`.
 
     `extras` vai direto para o LiteLLM (ex.: `mock_response` nos testes).
     """
     config = config or carregar_config()
-    if nomes_protegidos is None:
-        nomes_protegidos = carregar_nomes_protegidos(ARQUIVO_NOMES_PROTEGIDOS)
-    anon = Anonimizador(nomes_protegidos)
-
     mensagens: list[dict[str, str]] = []
     if sistema:
-        mensagens.append({"role": "system", "content": anon.anonimizar(sistema)})
-    mensagens.append({"role": "user", "content": anon.anonimizar(pergunta)})
+        mensagens.append({"role": "system", "content": sistema})
+    mensagens.append({"role": "user", "content": pergunta})
 
     llm = _litellm()
     falhas: list[str] = []
@@ -85,7 +76,7 @@ def perguntar(
                 **extras,
             )
             texto = r.choices[0].message.content or ""
-            return Resposta(anon.desanonimizar(texto), modelo, mensagens, falhas)
+            return Resposta(texto, modelo, mensagens, falhas)
         except Exception as e:  # noqa: BLE001 — qualquer falha passa para o próximo modelo
             falhas.append(f"{modelo}: {type(e).__name__}: {str(e)[:200]}")
     raise CerebroIndisponivel("Nenhum modelo respondeu.\n" + "\n".join(falhas))
@@ -101,7 +92,7 @@ def testar_conexao(config: Config | None = None) -> list[tuple[str, bool, str]]:
             continue
         um_so = Config(**{**config.__dict__, "llm_principal": modelo, "llm_reserva": ""})
         try:
-            r = perguntar("Responda apenas com a palavra OK.", config=um_so, nomes_protegidos=[], max_tokens=10)
+            r = perguntar("Responda apenas com a palavra OK.", config=um_so, max_tokens=10)
             resultados.append((modelo, True, r.texto.strip()[:40]))
         except CerebroIndisponivel as e:
             resultados.append((modelo, False, str(e).splitlines()[-1]))

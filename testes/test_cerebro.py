@@ -9,19 +9,14 @@ from quiron.nucleo.config import Config, carregar_config
 CFG = Config(gemini_api_key="chave-falsa", groq_api_key="chave-falsa")
 
 
-def test_anonimiza_antes_de_enviar_e_restaura_na_resposta():
+def test_envia_a_pergunta_pelo_litellm():
     # mock_response faz o LiteLLM real devolver a resposta sem ir à internet
-    r = perguntar(
-        "A cliente Odete Pires (CPF 529.982.247-25, odete@exemplo.com) quer previdência.",
-        config=CFG,
-        nomes_protegidos=[],
-        mock_response="Para [NOME_1], sugiro PGBL. Confirme o e-mail [EMAIL_1].",
-    )
-    enviado = r.enviado[-1]["content"]
-    assert "Odete" not in enviado and "529.982" not in enviado and "odete@" not in enviado
-    assert "[NOME_1]" in enviado and "[CPF_1]" in enviado and "[EMAIL_1]" in enviado
-    assert r.texto == "Para Odete Pires, sugiro PGBL. Confirme o e-mail odete@exemplo.com."
-    assert r.modelo == CFG.llm_principal
+    r = perguntar("Explique duration.", sistema="Seja breve.", config=CFG, mock_response="Duration é...")
+    assert r.enviado == [
+        {"role": "system", "content": "Seja breve."},
+        {"role": "user", "content": "Explique duration."},
+    ]
+    assert r.texto == "Duration é..." and r.modelo == CFG.llm_principal
 
 
 def test_cai_para_a_reserva_quando_o_principal_falha(monkeypatch):
@@ -34,7 +29,7 @@ def test_cai_para_a_reserva_quando_o_principal_falha(monkeypatch):
         return original(**kw)
 
     monkeypatch.setattr(llm, "completion", completion)
-    r = perguntar("Explique duration.", config=CFG, nomes_protegidos=[], mock_response="Duration é...")
+    r = perguntar("Explique duration.", config=CFG, mock_response="Duration é...")
     assert r.modelo == CFG.llm_reserva
     assert r.texto == "Duration é..."
     assert any("cota esgotada" in f for f in r.falhas)
@@ -43,7 +38,7 @@ def test_cai_para_a_reserva_quando_o_principal_falha(monkeypatch):
 def test_pula_modelo_sem_chave_e_avisa_quando_nada_responde():
     sem_chaves = Config()
     with pytest.raises(CerebroIndisponivel, match="sem chave"):
-        perguntar("oi", config=sem_chaves, nomes_protegidos=[])
+        perguntar("oi", config=sem_chaves)
     resultados = cerebro.testar_conexao(sem_chaves)
     assert [ok for _, ok, _ in resultados] == [False, False]
 

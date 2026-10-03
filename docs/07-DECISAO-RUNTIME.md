@@ -22,6 +22,6 @@ Como todas as ferramentas do Quíron são servidores MCP, **qualquer opção aba
 
 ## Como decidir na Fase 5
 1. Montar Hermes e bot próprio com as mesmas ferramentas MCP (1 tarde cada).
-2. Rodar 10 pedidos reais (briefing, pergunta da biblioteca, análise curta, tarefa, pedido com dado de cliente anonimizado).
+2. Rodar 10 pedidos reais (briefing, pergunta da biblioteca, análise curta, tarefa, pedido sobre cliente CLI-XXX).
 3. Comparar qualidade, velocidade, estabilidade, facilidade de ajuste e se as regras de compliance foram respeitadas.
 4. Escolher e registrar em `.env` (`RUNTIME_AGENTE`).

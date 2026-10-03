@@ -12,8 +12,6 @@ from zoneinfo import ZoneInfo
 from mcp.server.mcpserver import MCPServer
 
 from quiron.nucleo import regras
-from quiron.nucleo.anonimizador import Anonimizador, carregar_nomes_protegidos
-from quiron.nucleo.cerebro import ARQUIVO_NOMES_PROTEGIDOS
 from quiron.nucleo.config import carregar_config
 
 mcp = MCPServer("quiron-sistema")
@@ -37,15 +35,6 @@ def status() -> str:
     linhas.append("- Regras de mercado: " + ("todas verificadas" if not pendencias else f"{len(pendencias)} bloco(s) pendente(s)"))
     linhas += [f"  - {a}" for a in pendencias]
     return "\n".join(linhas)
-
-
-@mcp.tool()
-def previa_anonimizacao(texto: str) -> str:
-    """Mostra como um texto sairia para o modelo de linguagem depois do anonimizador (nada é enviado)."""
-    anon = Anonimizador(carregar_nomes_protegidos(ARQUIVO_NOMES_PROTEGIDOS))
-    resultado = anon.anonimizar(texto)
-    trocas = len(anon.mapa)
-    return f"{resultado}\n\n({trocas} dado(s) substituído(s); o mapa fica só na memória e não é exibido.)"
 
 
 def main() -> None:

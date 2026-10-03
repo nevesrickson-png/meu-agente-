@@ -35,7 +35,7 @@ Material: o seu + gratuitos catalogados (`docs/05-MATERIAIS-GRATUITOS.md`).
 ## 5. Assessoria do dia a dia
 `/reuniao`, `/pos` (áudio pós-reunião → resumo e tarefas), `/treino` (cliente simulado + feedback), `/objecao`,
 `/explicar`, `/mensagem` (RASCUNHO), `/vencimentos`, `/calc`, `/esquecer` (LGPD).
-Clientes sempre anonimizados (CLI-XXX). Nada se conecta ao CRM da EQI.
+Clientes sempre como CLI-XXX. Nada se conecta ao CRM da EQI.
 
 ## 6. Carreira e evolução
 `/carreira`, `/diario` (teses e decisões, revisadas depois), `/portfolio-analises`, `/entrevista`, `/radar` (CVM, ANBIMA, Receita, BCB).

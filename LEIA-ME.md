@@ -46,8 +46,5 @@ Testes:
 - `uv run quiron-testar-cerebro` → deve mostrar ✅ no Gemini (testa sua chave de verdade).
 - `claude` na pasta → aprove o servidor `quiron-sistema` quando ele perguntar → peça "use a ferramenta ping do Quíron".
 
-Opcional: crie `segredos\nomes_protegidos.txt` com nomes que o anonimizador deve esconder sempre (um por linha).
-Esse arquivo nunca vai para o GitHub.
-
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.

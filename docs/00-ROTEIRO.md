@@ -12,7 +12,7 @@ fica para a Fase 5, quando você já terá testado o Quíron na prática. Nada c
 
 | Ordem | Fase | Onde | Resultado ao final | Depende de |
 |---|---|---|---|---|
-| 1º | **Fase 0 — Fundação** | PC | Projeto criado; cérebro grátis e anonimizador funcionando | — |
+| 1º | **Fase 0 — Fundação** | PC | Projeto criado; cérebro grátis funcionando | — |
 | 2º | **Fase 1 — Biblioteca e Mentor (piloto)** | PC | 3 livros indexados; você estuda com o Quíron pelo Claude Code | 0 |
 | 3º | **Fase 2 — Dados de mercado** | PC | Cotações, juros, macro, agenda e briefing sob demanda | 0 |
 | 4º | **Fase 3 — Notícias e redes** | PC | RSS, Bluesky, Reddit, YouTube com resumo por tema | 2 |
@@ -51,11 +51,11 @@ fica para a Fase 5, quando você já terá testado o Quíron na prática. Nada c
 - [x] 0.1 Claude Code lê CLAUDE.md, docs/ e config/, e faz até 5 perguntas
 - [x] 0.2 Estrutura de pastas, `pyproject` (uv), `.gitignore`, repositório privado no GitHub
 - [x] 0.3 `quiron/nucleo`: config, `cerebro.py` (LiteLLM: Gemini → Groq), com teste de conexão
-- [x] 0.4 `anonimizador.py` com testes (CPF, telefone, e-mail, nomes)
+- [x] 0.4 ~~`anonimizador.py`~~ — removido por decisão do Rickson (não digita dados de clientes)
 - [~] 0.5 `regras_mercado.yaml` — **você confere e preenche `verificado_em`**
 - [x] 0.6 `agente/persona.md` gerado de `config/persona.yaml`
 - [x] 0.7 Esqueleto de servidor MCP + `.mcp.json` registrando-o no Claude Code (ferramenta de teste "ping")
-**Teste de aceite:** no Claude Code, você pede "use a ferramenta ping do Quíron" e ela responde; testes do anonimizador passam.
+**Teste de aceite:** no Claude Code, você pede "use a ferramenta ping do Quíron" e ela responde; os testes passam.
 > ✅ 03/10/2026: aprovado no ambiente de desenvolvimento (32 testes passando; `ping` respondeu pelo Claude Code). Falta: conferir no seu PC (`LEIA-ME.md` → "Rodar no seu PC") e preencher `verificado_em` no item 0.5.
 ```
 Leia o CLAUDE.md e todos os arquivos em docs/ e config/. Execute a FASE 0 do docs/00-ROTEIRO.md, item por item.

@@ -34,10 +34,8 @@ def test_servidor_mcp_responde_como_no_claude_code():
         _chamar({
             "ping": {},
             "status": {},
-            "previa_anonimizacao": {"texto": "Cliente Odete Pires, tel (11) 98765-4321"},
         })
     )
-    assert {"ping", "status", "previa_anonimizacao"} <= set(nomes)
+    assert {"ping", "status"} <= set(nomes)
     assert r["ping"].startswith("pong — Quíron no ar")
     assert "Status do Quíron" in r["status"] and "Regras de mercado" in r["status"]
-    assert "Odete" not in r["previa_anonimizacao"] and "98765" not in r["previa_anonimizacao"]
