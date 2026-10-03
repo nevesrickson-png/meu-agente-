@@ -73,9 +73,15 @@ INF_DIARIO_CSV = (
     "CLASSES - FIF;98.765.432/0001-10;;2026-09-30;5000.00;1.100000;5000.00;0.00;0.00;3\n"
 )
 
-IBGE = {"items": [
-    {"nome_produto": "IPCA", "titulo": "IPCA - Setembro 2026", "data_divulgacao": "09/10/2026 09:00:00"},
-    {"nome_produto": "PNAD Contínua", "titulo": "PNAD Contínua", "data_divulgacao": "05/10/2026 09:00:00"},
+IBGE = {"count": 3, "page": 1, "totalPages": 1, "items": [  # formato real: horário em UTC
+    {"id": 4309, "titulo": "Índice Nacional de Preços ao Consumidor Amplo", "data_divulgacao": "09/10/2026 12:00:00",
+     "tipo": "Divulgação de Indicadores", "nome_produto": "Índice Nacional de Preços ao Consumidor Amplo",
+     "ano_referencia_inicio": 2026, "mes_referencia_inicio": 9},
+    {"id": 4300, "titulo": "Pesquisa Nacional por Amostra de Domicílios Contínua Mensal", "data_divulgacao": "05/10/2026 12:00:00",
+     "tipo": "Divulgação de Indicadores", "nome_produto": "Divulgação mensal#pnadc1",
+     "ano_referencia_inicio": 0, "mes_referencia_inicio": 0},
+    {"id": 3673, "titulo": "Mapa experimental", "data_divulgacao": "06/10/2026 13:00:00",
+     "tipo": "Investigações Experimentais", "nome_produto": "", "ano_referencia_inicio": 0, "mes_referencia_inicio": 0},
 ]}
 
 
@@ -107,6 +113,9 @@ def _zip(nome: str, texto: str) -> bytes:
 def roteador(request: httpx.Request) -> httpx.Response:
     url = str(request.url)
     host = request.url.host
+    if host == "olinda.bcb.gov.br" and "+" in request.url.query.decode():
+        # o Olinda real rejeita espaço codificado como "+"
+        return httpx.Response(400, text='/*{"codigo":400,"mensagem":"The types \'Edm.Boolean\' and \'Edm.String\' are not compatible."}*/')
     if host == "api.bcb.gov.br":
         codigo = int(url.split("bcdata.sgs.")[1].split("/")[0])
         return httpx.Response(200, json=SGS[codigo])
@@ -127,7 +136,8 @@ def roteador(request: httpx.Request) -> httpx.Response:
         ticker = url.split("/quote/")[1].split("?")[0]
         if ticker in BRAPI:
             return httpx.Response(200, json=BRAPI[ticker])
-        return httpx.Response(404, json={"error": True, "message": "Não encontramos o ativo"})
+        # formato real da brapi sem token para tickers fora da lista gratuita
+        return httpx.Response(401, json={"error": True, "message": "Token de autenticação não fornecido", "code": "MISSING_TOKEN"})
     if host == "dados.cvm.gov.br":
         if url.endswith("cad_cia_aberta.csv"):
             return httpx.Response(200, content=CIAS_CSV.encode("latin-1"))

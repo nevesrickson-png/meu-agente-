@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import csv
-import re
 import io
+import re
 import zipfile
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from quiron.servicos.biblioteca.trechos import chave
 from quiron.servicos.mercado.http import numero_br, obter
@@ -116,22 +117,32 @@ class Divulgacao:
     fonte: str
 
 
+BRASILIA = ZoneInfo("America/Sao_Paulo")
+
+
 def calendario_ibge(dias: int = 7) -> list[Divulgacao]:
+    """Divulgações de indicadores do IBGE nos próximos `dias`, no horário de Brasília.
+
+    A API devolve o horário em UTC (o IPCA das 9h aparece como 12:00) e mistura pesquisas experimentais e
+    publicações temáticas; ficam só as do tipo "Divulgação de Indicadores".
+    """
     hoje = date.today()
     params = {"de": hoje.strftime("%m-%d-%Y"), "ate": (hoje + timedelta(days=dias)).strftime("%m-%d-%Y"), "qtd": "100"}
     r = obter(URL_IBGE_CALENDARIO, params=params, fonte="IBGE (calendário)", ttl=12 * 3600)
     itens = r.conteudo.get("items", []) if isinstance(r.conteudo, dict) else r.conteudo
     saida = []
     for i in itens:
-        quando = i.get("data_divulgacao") or i.get("data")
-        try:
-            dt = datetime.strptime(quando.strip(), "%d/%m/%Y %H:%M:%S")
-        except (ValueError, AttributeError):
+        if i.get("tipo") and i["tipo"] != "Divulgação de Indicadores":
             continue
-        titulo = re.sub(r"#\S+", "", i.get("nome_produto") or i.get("titulo") or "Divulgação IBGE").strip()
-        if i.get("titulo") and i.get("nome_produto") and i["titulo"] != i["nome_produto"]:
-            titulo = f"{i['nome_produto']} — {i['titulo']}"
-        saida.append(Divulgacao(dt, titulo, "IBGE"))
+        try:
+            utc = datetime.strptime(i["data_divulgacao"].strip(), "%d/%m/%Y %H:%M:%S").replace(tzinfo=timezone.utc)
+        except (ValueError, AttributeError, KeyError):
+            continue
+        nome, titulo = (re.sub(r"#\w+", "", i.get(k) or "").strip() for k in ("nome_produto", "titulo"))
+        titulo = titulo or nome or "Divulgação IBGE"  # o nome do produto às vezes é genérico ("Divulgação mensal#pnadc1")
+        if i.get("mes_referencia_inicio") and i.get("ano_referencia_inicio"):
+            titulo += f" (ref. {i['mes_referencia_inicio']:02d}/{i['ano_referencia_inicio']})"
+        saida.append(Divulgacao(utc.astimezone(BRASILIA).replace(tzinfo=None), titulo, "IBGE"))
     return sorted(saida, key=lambda d: d.quando)
 
 

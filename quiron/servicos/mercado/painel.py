@@ -45,10 +45,10 @@ def _seguro(func: Callable[[], str], rotulo: str) -> str:
 
 
 def texto_cotacao(c: cotacoes.Cotacao) -> str:
-    preco = f"R$ {_num(c.preco)}" if c.moeda == "BRL" and c.ativo not in {"IBOV", "SMLL"} else _num(c.preco)
+    preco = f"R$ {_num(c.preco)}" if c.moeda == "BRL" and c.ativo not in {"IBOV", "IFIX", "SMLL"} else _num(c.preco)
     if c.ativo in {"petroleo_brent", "ouro", "minerio_ferro"}:
         preco = f"US$ {_num(c.preco)}"
-    if c.ativo == "IBOV":
+    if c.ativo in {"IBOV", "IFIX"}:
         preco = _num(c.preco, 0) + " pts"
     quando = f"dado de {c.horario:%d/%m %H:%M}" if c.horario else ""
     return f"- **{c.nome}** ({c.ativo}): {preco} ({_pct(c.variacao_pct, sinal=True)} no dia) — {_fonte(c.fonte, c.obtido_em, extra=' · '.join(x for x in (quando, c.atraso) if x))}"
@@ -126,7 +126,7 @@ def texto_focus(ano: int | None = None) -> str:
             mud = " (estável na semana)" if abs(d) < 1e-9 else f" ({'+' if d > 0 else ''}{_num(d)} na semana)"
         valor = f"R$ {_num(e.mediana)}" if ind == "cambio" else _pct(e.mediana)
         linhas.append(f"- {e.indicador}: {valor}{mud}")
-        fonte = _fonte(f"{e.fonte}, relatório de {e.data:%d/%m/%Y}", e.obtido_em)
+        fonte = _fonte(f"{e.fonte}, coleta até {e.data:%d/%m/%Y}", e.obtido_em)
     return "\n".join(linhas + ([fonte] if fonte else []))
 
 

@@ -74,6 +74,8 @@ def test_cotacoes_b3_e_global():
     assert ibov.preco == 141400.0 and ibov.variacao_pct == pytest.approx(1.0)
     # ticker que a brapi não tem cai no Yahoo (.SA)
     assert cotacoes.cotacao("WEGE3").fonte == "Yahoo Finance"
+    with pytest.raises(http.FonteIndisponivel, match="BRAPI_TOKEN"):
+        cotacoes.cotacao("NADA")  # nem brapi (sem token) nem Yahoo: mensagem diz o que fazer
 
 
 def test_cvm_companhia_e_fundo():
@@ -87,7 +89,10 @@ def test_cvm_companhia_e_fundo():
 
 def test_calendario_ibge():
     itens = abertos.calendario_ibge(10)
-    assert itens[0].titulo == "PNAD Contínua" and itens[1].titulo == "IPCA — IPCA - Setembro 2026"
+    assert [(i.quando, i.titulo) for i in itens] == [
+        (datetime(2026, 10, 5, 9, 0), "Pesquisa Nacional por Amostra de Domicílios Contínua Mensal"),  # 12:00 UTC → 9h
+        (datetime(2026, 10, 9, 9, 0), "Índice Nacional de Preços ao Consumidor Amplo (ref. 09/2026)"),
+    ]  # a pesquisa experimental fica de fora
 
 
 def test_painel_com_fonte_e_horario():

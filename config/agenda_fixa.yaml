@@ -2,6 +2,9 @@
 # Copom 2026 conferido em 03/10/2026 na fonte oficial do Banco Central (lista de atas: jan–set;
 # nov e dez pelo site do BC e pela série SGS 432, preenchida até a próxima reunião).
 # Atualize todo ano (o BC publica o calendário do ano seguinte até junho).
+# Fonte do calendário: https://www.bcb.gov.br/controleinflacao/copom → "Calendário do Copom" (a página antiga
+#   /publicacoes/calendarioreunioescopom dá 404). Conferido também ali: 2026 inteiro, atas de nov/dez e 2027.
+#   A data listada é o 2º dia da reunião (decisão); 18:30 é o horário habitual do comunicado, não consta do calendário.
 verificado_em: 2026-10-03
 eventos:
   # data: AAAA-MM-DD · hora opcional (HH:MM) · titulo · categoria (copom, resultado, evento, outro)
@@ -13,5 +16,16 @@ eventos:
   - {data: 2026-09-16, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
   - {data: 2026-11-04, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
   - {data: 2026-12-09, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2026-11-10, hora: "08:00", titulo: "Ata do Copom", categoria: copom}
+  - {data: 2026-12-15, hora: "08:00", titulo: "Ata do Copom", categoria: copom}
+  # 2027 (calendário oficial já divulgado)
+  - {data: 2027-01-27, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2027-03-17, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2027-04-28, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2027-06-16, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2027-08-04, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2027-09-22, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2027-10-27, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
+  - {data: 2027-12-08, hora: "18:30", titulo: "Copom — decisão da Selic", categoria: copom}
   # Resultados de empresas: adicione conforme as empresas divulgam o calendário (RI de cada uma). Ex.:
   # - {data: 2026-11-06, titulo: "Resultado 3T26 — WEGE3", categoria: resultado}

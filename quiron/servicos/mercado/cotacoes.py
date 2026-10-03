@@ -16,6 +16,7 @@ URL_BRAPI = "https://brapi.dev/api/quote/{ticker}"
 # Nomes da watchlist → símbolo no Yahoo. Ativos da B3 sem mapeamento vão para a brapi.
 YAHOO = {
     "IBOV": "^BVSP",
+    "IFIX": "IFIX.SA",  # a brapi só entrega o IFIX com token
     "SMLL": "SMAL11.SA",  # ETF que replica o SMLL (o índice não tem símbolo estável no Yahoo)
     "^GSPC": "^GSPC",
     "^IXIC": "^IXIC",
@@ -26,7 +27,7 @@ YAHOO = {
     "minerio_ferro": "TIO=F",
 }
 NOMES = {
-    "IBOV": "Ibovespa", "SMLL": "Small Caps (via SMAL11)", "^GSPC": "S&P 500", "^IXIC": "Nasdaq",
+    "IBOV": "Ibovespa", "IFIX": "IFIX", "SMLL": "Small Caps (via SMAL11)", "^GSPC": "S&P 500", "^IXIC": "Nasdaq",
     "USDBRL": "Dólar", "EURBRL": "Euro", "petroleo_brent": "Petróleo Brent", "ouro": "Ouro", "minerio_ferro": "Minério de ferro",
 }
 
@@ -102,5 +103,11 @@ def cotacao(ativo: str) -> Cotacao:
         return yahoo(ativo)
     try:
         return brapi(ativo)
-    except FonteIndisponivel:
-        return yahoo(f"{ativo.upper()}.SA")
+    except FonteIndisponivel as erro_brapi:
+        try:
+            return yahoo(f"{ativo.upper()}.SA")
+        except FonteIndisponivel as erro_yahoo:
+            dica = ""
+            if "401" in str(erro_brapi) or "token" in str(erro_brapi).lower():
+                dica = " — sem token, a brapi só libera alguns tickers: crie um token gratuito em brapi.dev e ponha BRAPI_TOKEN no .env"
+            raise FonteIndisponivel(f"brapi e Yahoo sem dados para {ativo.upper()}{dica}") from erro_yahoo
