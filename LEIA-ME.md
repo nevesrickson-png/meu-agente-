@@ -90,6 +90,8 @@ Testes:
 > **Um clique:** `Abrir Quiron.bat` instala na 1ª vez (Git, uv, programa), baixa a versão mais nova a cada clique
 > (todas as versões ficam guardadas na pasta) e abre o bot. Cria o atalho **Quiron** na Área de Trabalho.
 > Seus dados (`.env`, `dados\`, `biblioteca\`) nunca são apagados nem enviados.
+> **Configurações:** chaves e seu ID do Telegram numa tela no navegador (atalho **Quiron - Configuracoes**, ou
+> `uv run quiron-configurar`), com botão **Testar** em cada chave e **Descobrir meu ID**. Abre sozinha se faltar algo.
 
 1. **Crie o bot:** no Telegram, fale com **@BotFather** → `/newbot` → escolha nome e usuário → copie o token.
 2. **Descubra seu ID:** fale com **@userinfobot** → ele responde com seu número.

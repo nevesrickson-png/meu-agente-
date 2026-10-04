@@ -121,6 +121,10 @@ Arquivos com DRM não são processados.
   Comandos com `skill:` no frontmatter pré-carregam a skill (`responder(..., skills=[...])`); `audio.py` transcreve voz pelo
   Whisper do Groq (`whisper-large-v3-turbo`, pt, vocabulário de mercado); `rotinas_padrao` de `config/agente.yaml` são
   criadas uma vez (briefing 7h30) e o bot pré-aquece as fontes às 7h10.
+- Configurações (`quiron/configurador/`): tela local (FastAPI em 127.0.0.1:8766, código aleatório no `#` da URL +
+  checagem de Host) que lê/grava o `.env` preservando comentários, testa chaves (Telegram getMe, Gemini, Groq, brapi) e
+  descobre o ID pelo getUpdates; segredos nunca voltam inteiros à página. `quiron-configurar --verificar` (0 = completo)
+  é usado pelos `.bat` do Windows (`Abrir Quiron.bat` instala/atualiza/abre; `Quiron Configuracoes.bat`).
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.

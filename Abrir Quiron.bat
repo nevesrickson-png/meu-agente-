@@ -67,16 +67,19 @@ if "%ANTES%"=="%DEPOIS%" (echo  Ja esta na versao mais nova: %DEPOIS%) else (ech
 cd /d "%PASTA%"
 
 rem ---------- 4. Chaves (.env) e atalho na Area de Trabalho ----------
-if exist .env goto tem_env
-copy /y .env.example .env >nul
+echo  Preparando (na 1a vez instala tudo e demora alguns minutos)...
+uv run --quiet quiron-configurar --verificar >nul 2>nul
+if not errorlevel 1 goto tem_env
 echo.
-echo  Primeira vez: vou abrir o arquivo .env no Bloco de Notas.
-echo  Preencha TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USER_IDS (o NUMERO), GEMINI_API_KEY
-echo  e GROQ_API_KEY. Salve (Ctrl+S), feche o Bloco de Notas e volte aqui.
-start /wait notepad .env
+echo  Abrindo a tela de CONFIGURACOES no navegador.
+echo  Preencha as chaves e clique em "Salvar e concluir". O Quiron liga em seguida.
+uv run --quiet quiron-configurar
+uv run --quiet quiron-configurar --verificar >nul 2>nul
+if errorlevel 1 (echo  As configuracoes ainda estao incompletas. Abra de novo pelo atalho Quiron. & pause & exit /b 1)
 :tem_env
 set "ALVO=%PASTA%\Abrir Quiron.bat"
-powershell -NoProfile -Command "$d=[Environment]::GetFolderPath('Desktop'); $s=(New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $d 'Quiron.lnk')); $s.TargetPath=$env:ALVO; $s.WorkingDirectory=$env:PASTA; $s.IconLocation='%SystemRoot%\System32\imageres.dll,76'; $s.Save()" >nul 2>nul
+set "CONFIG=%PASTA%\Quiron Configuracoes.bat"
+powershell -NoProfile -Command "$d=[Environment]::GetFolderPath('Desktop'); $sh=New-Object -ComObject WScript.Shell; $s=$sh.CreateShortcut((Join-Path $d 'Quiron.lnk')); $s.TargetPath=$env:ALVO; $s.WorkingDirectory=$env:PASTA; $s.IconLocation='%SystemRoot%\System32\imageres.dll,76'; $s.Save(); $c=$sh.CreateShortcut((Join-Path $d 'Quiron - Configuracoes.lnk')); $c.TargetPath=$env:CONFIG; $c.WorkingDirectory=$env:PASTA; $c.IconLocation='%SystemRoot%\System32\imageres.dll,109'; $c.Save()" >nul 2>nul
 
 echo  [4/4] Abrindo o Quiron (a 1a vez demora alguns minutos instalando)...
 echo  ----------------------------------------------------------------

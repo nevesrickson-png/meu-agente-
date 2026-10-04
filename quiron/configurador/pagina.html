@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quíron — Configurações</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --fundo: #0f0f0e; --painel: #1a1a19; --painel-2: #222220; --borda: #2e2e2b;
+    --texto: #f2f1ec; --texto-2: #c3c2b7; --texto-3: #8d8c84;
+    --ambar: #f0a020; --ok: #0ca30c; --erro: #e05252; --azul: #3987e5;
+    --mono: "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
+  header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 12px;
+           padding: 12px 20px; background: #141413; border-bottom: 1px solid var(--borda); }
+  header .marca { font-weight: 700; letter-spacing: .5px; }
+  header .marca b { color: var(--ambar); }
+  header .status { margin-left: auto; font-size: 13px; color: var(--texto-2); }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 120px; }
+  h1 { font-size: 20px; margin: 4px 0 4px; }
+  .sub { color: var(--texto-2); margin: 0 0 18px; }
+  section { background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; margin: 14px 0; }
+  section > h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--texto-3);
+                 margin: 0; padding: 12px 16px; border-bottom: 1px solid var(--borda); }
+  details > summary { cursor: pointer; list-style: none; }
+  .titulo-opc { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--texto-3); font-weight: 700; }
+  details > summary::before { content: "▸ "; }
+  details[open] > summary::before { content: "▾ "; }
+  .campo { padding: 14px 16px; border-bottom: 1px solid var(--borda); }
+  .campo:last-child { border-bottom: 0; }
+  .topo-campo { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  label { font-weight: 600; }
+  .obrig { color: var(--ambar); font-size: 12px; }
+  .chip { margin-left: auto; font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--borda);
+          color: var(--texto-2); white-space: nowrap; }
+  .chip.ok { color: var(--ok); border-color: #0ca30c55; }
+  .chip.falta { color: var(--ambar); border-color: #f0a02055; }
+  .chip.erro { color: var(--erro); border-color: #e0525255; }
+  .ajuda { color: var(--texto-3); font-size: 13px; margin: 2px 0 8px; }
+  .linha { display: flex; gap: 8px; flex-wrap: wrap; }
+  input { flex: 1 1 260px; min-width: 0; background: var(--painel-2); border: 1px solid var(--borda); color: var(--texto);
+          border-radius: 6px; padding: 9px 10px; font: 13px var(--mono); }
+  input:focus { outline: 2px solid var(--azul); outline-offset: -1px; }
+  button { background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: 6px;
+           padding: 8px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+  button:hover { border-color: var(--texto-3); }
+  button:disabled { opacity: .5; cursor: wait; }
+  button.primario { background: var(--ambar); color: #1a1205; border-color: var(--ambar); font-weight: 700; }
+  button.link { background: none; border: 0; color: var(--texto-3); padding: 4px 0; text-decoration: underline; }
+  .resultado { font-size: 13px; margin-top: 8px; }
+  .resultado.ok { color: var(--ok); } .resultado.erro { color: var(--erro); }
+  .pessoas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .passos { margin: 6px 0 8px 18px; padding: 0; color: var(--texto-2); font-size: 13px; }
+  footer { position: fixed; bottom: 0; left: 0; right: 0; background: #141413ee; border-top: 1px solid var(--borda);
+           padding: 12px 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  footer .aviso { color: var(--texto-3); font-size: 13px; }
+  .pronto { text-align: center; padding: 60px 16px; }
+  .pronto h1 { color: var(--ok); }
+  .erro-geral { background: #e0525222; border: 1px solid #e0525255; color: var(--texto); padding: 10px 14px;
+                border-radius: 6px; margin: 10px 0; }
+  .oculto { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <span class="marca"><b>◆</b> QUÍRON</span><span style="color:var(--texto-3)">Configurações</span>
+  <span class="status" id="status">carregando…</span>
+</header>
+
+<main id="tela">
+  <h1>Configurações</h1>
+  <p class="sub">Chaves e quem pode falar com o Quíron. Tudo fica salvo só neste computador (arquivo <code>.env</code>), nunca vai para o GitHub.
+    Campos de chave em branco mantêm o valor atual.</p>
+  <div id="erro-geral" class="erro-geral oculto"></div>
+  <div id="grupos"></div>
+</main>
+
+<div id="pronto" class="pronto oculto">
+  <h1>✔ Tudo pronto</h1>
+  <p>Se a janela preta do Quíron estava esperando, ele já está ligando: pode fechar esta aba e falar com ele no Telegram.</p>
+  <p>Se o Quíron já estava aberto antes, feche a janela dele e abra de novo pelo atalho <b>Quiron</b> para usar as chaves novas.</p>
+  <p style="color:var(--texto-3)">Para mudar algo depois: atalho <b>Quiron - Configuracoes</b> na Área de Trabalho.</p>
+</div>
+
+<footer id="rodape">
+  <span class="aviso" id="aviso-salvo"></span>
+  <button id="salvar">Salvar</button>
+  <button id="concluir" class="primario">Salvar e concluir</button>
+</footer>
+
+<script>
+"use strict";
+const codigo = location.hash.slice(1);
+const $ = (s, el = document) => el.querySelector(s);
+let estado = null;
+
+async function api(caminho, corpo) {
+  const r = await fetch(caminho, {
+    method: corpo === undefined ? "GET" : "POST",
+    headers: { "Content-Type": "application/json", "X-Quiron-Codigo": codigo },
+    body: corpo === undefined ? undefined : JSON.stringify(corpo),
+  });
+  const dados = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(dados.detail || dados.erro || `erro ${r.status}`);
+  return dados;
+}
+
+function el(tag, attrs = {}, ...filhos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const f of filhos.flat()) if (f != null) e.append(f);
+  return e;
+}
+
+function chipDe(c) {
+  if (c.invalido) return el("span", { class: "chip erro" }, "inválido");
+  if (c.preenchido) return el("span", { class: "chip ok" }, "✔ " + (c.segredo ? c.mascara : "preenchido"));
+  return el("span", { class: c.obrigatorio ? "chip falta" : "chip" }, c.obrigatorio ? "falta preencher" : "vazio");
+}
+
+function resultado(caixa, r) {
+  caixa.className = "resultado " + (r.ok ? "ok" : "erro");
+  caixa.textContent = (r.ok ? "✔ " : "✖ ") + r.mensagem;
+}
+
+function campo(c) {
+  const input = el("input", {
+    id: "in-" + c.chave, name: c.chave, autocomplete: "off", spellcheck: "false",
+    type: c.segredo ? "password" : "text",
+    placeholder: c.segredo ? (c.preenchido ? "deixe em branco para manter" : "cole aqui") : "",
+  });
+  if (!c.segredo) input.value = c.valor || "";
+  const caixa = el("div", { class: "resultado" });
+  const botoes = [];
+  if (c.segredo) botoes.push(el("button", { type: "button", title: "mostrar/ocultar",
+    onclick: () => { input.type = input.type === "password" ? "text" : "password"; } }, "👁"));
+  if (c.teste) botoes.push(el("button", { type: "button", onclick: async (ev) => {
+    ev.target.disabled = true; caixa.className = "resultado"; caixa.textContent = "testando…";
+    try { resultado(caixa, await api("/api/testar", { chave: c.chave, valor: input.value })); }
+    catch (e) { resultado(caixa, { ok: false, mensagem: e.message }); }
+    ev.target.disabled = false;
+  } }, "Testar"));
+  if (c.chave === "TELEGRAM_ALLOWED_USER_IDS") botoes.push(el("button", { type: "button", onclick: descobrir }, "Descobrir meu ID"));
+  if (c.preenchido && !c.obrigatorio) botoes.push(el("button", { type: "button", class: "link", onclick: async () => {
+    if (!confirm(`Apagar “${c.rotulo}”?`)) return;
+    desenhar(await api("/api/apagar", { chave: c.chave }));
+  } }, "apagar"));
+
+  const extra = c.chave === "TELEGRAM_ALLOWED_USER_IDS"
+    ? [el("ol", { class: "passos" },
+        el("li", {}, "Preencha o token do bot acima."),
+        el("li", {}, "No Telegram, abra o seu bot e mande /start."),
+        el("li", {}, "Clique em “Descobrir meu ID” e escolha o seu nome.")),
+       el("div", { class: "pessoas", id: "pessoas" })]
+    : [];
+  return el("div", { class: "campo" },
+    el("div", { class: "topo-campo" },
+      el("label", { for: input.id }, c.rotulo), c.obrigatorio ? el("span", { class: "obrig" }, "obrigatório") : null, chipDe(c)),
+    el("div", { class: "ajuda" }, c.ajuda), ...extra,
+    el("div", { class: "linha" }, input, ...botoes), caixa);
+}
+
+async function descobrir(ev) {
+  const caixa = ev.target.closest(".campo").querySelector(".resultado");
+  const lista = $("#pessoas");
+  ev.target.disabled = true; lista.replaceChildren(); caixa.className = "resultado"; caixa.textContent = "procurando…";
+  try {
+    const r = await api("/api/descobrir_id", { token: $("#in-TELEGRAM_BOT_TOKEN").value });
+    if (!r.ok) { resultado(caixa, r); return; }
+    caixa.textContent = "Quem é você? Clique para usar:";
+    for (const p of r.pessoas) lista.append(el("button", { type: "button", onclick: () => {
+      $("#in-TELEGRAM_ALLOWED_USER_IDS").value = String(p.id);
+      resultado(caixa, { ok: true, mensagem: `ID ${p.id} escolhido. Clique em Salvar.` });
+      lista.replaceChildren();
+    } }, `${p.nome || "sem nome"}${p.usuario ? " (@" + p.usuario + ")" : ""} · ${p.id}`));
+  } catch (e) { resultado(caixa, { ok: false, mensagem: e.message }); }
+  finally { ev.target.disabled = false; }
+}
+
+function desenhar(e) {
+  estado = e;
+  const grupos = {};
+  for (const c of e.campos) (grupos[c.grupo] ||= []).push(c);
+  const blocos = Object.entries(grupos).map(([nome, campos]) => {
+    if (nome === "Opcionais") {
+      const d = el("details", {}, el("summary", { class: "titulo-opc" }, nome + " — pode deixar para depois"),
+        ...campos.map(campo));
+      return el("section", { style: "padding:12px 0 0" }, el("div", { style: "padding:0 16px 12px" }, d));
+    }
+    return el("section", {}, el("h2", {}, nome), ...campos.map(campo));
+  });
+  $("#grupos").replaceChildren(...blocos);
+  const falta = e.faltando.length;
+  $("#status").textContent = falta ? `faltam ${falta} item(ns) obrigatório(s)` : "✔ essencial preenchido";
+  $("#status").style.color = falta ? "var(--ambar)" : "var(--ok)";
+}
+
+function valores() {
+  const v = {};
+  for (const c of estado.campos) {
+    const i = $("#in-" + c.chave);
+    if (i && (i.value.trim() || !c.segredo)) v[c.chave] = i.value.trim();
+  }
+  return v;
+}
+
+function erroGeral(msg) {
+  const caixa = $("#erro-geral");
+  caixa.textContent = msg || ""; caixa.classList.toggle("oculto", !msg);
+  if (msg) caixa.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function salvar() {
+  erroGeral("");
+  const e = await api("/api/salvar", { valores: valores() });
+  desenhar(e);
+  $("#aviso-salvo").textContent = "Salvo às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return e;
+}
+
+$("#salvar").addEventListener("click", () => salvar().catch(e => erroGeral(e.message)));
+$("#concluir").addEventListener("click", async () => {
+  try {
+    await salvar();
+    const e = await api("/api/concluir", {});
+    if (!e.completo) {
+      const nomes = e.campos.filter(c => e.faltando.includes(c.chave)).map(c => c.rotulo);
+      erroGeral("Ainda falta: " + nomes.join(", ") + ".");
+      return;
+    }
+    $("#tela").classList.add("oculto"); $("#rodape").classList.add("oculto"); $("#pronto").classList.remove("oculto");
+    $("#status").textContent = "✔ salvo";
+  } catch (err) { erroGeral(err.message); }
+});
+
+api("/api/estado").then(desenhar).catch(e => {
+  $("#status").textContent = "sem acesso";
+  erroGeral("Não consegui abrir as configurações (" + e.message + "). Feche e abra pelo atalho “Quiron - Configuracoes”.");
+});
+</script>
+</body>
+</html>

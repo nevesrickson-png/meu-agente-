@@ -39,6 +39,7 @@ quiron-comparativo = "quiron.runtime.comparativo:main"
 quiron-ingerir = "quiron.servicos.biblioteca.cli:main"
 quiron-testar-cerebro = "quiron.nucleo.cerebro:testar_conexao_cli"
 quiron-gerar-persona = "quiron.nucleo.persona:main"
+quiron-configurar = "quiron.configurador.app:main"
 
 [dependency-groups]
 dev = [
