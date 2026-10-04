@@ -41,7 +41,7 @@ class Config:
     gemini_api_key: str = ""
     groq_api_key: str = ""
     llm_principal: str = "gemini/gemini-flash-latest"
-    llm_reserva: str = "groq/llama-3.3-70b-versatile"
+    llm_reserva: str = "groq/openai/gpt-oss-120b"
     llm_local: str = "ollama/qwen2.5:3b"
     fuso_horario: str = "America/Sao_Paulo"
     host_atual: str = "pc"

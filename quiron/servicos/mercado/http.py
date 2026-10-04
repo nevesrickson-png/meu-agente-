@@ -7,6 +7,7 @@ devolvido marcado como "desatualizado" — melhor um número velho identificado 
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import time
 from dataclasses import dataclass
@@ -17,6 +18,8 @@ from typing import Any
 import httpx
 
 from quiron.nucleo.config import pasta_dados
+
+logging.getLogger("httpx").setLevel(logging.WARNING)  # sem uma linha de log por consulta
 
 AGENTE = "Quiron/0.1 (uso pessoal; contato via GitHub nevesrickson-png)"
 _cliente: httpx.Client | None = None

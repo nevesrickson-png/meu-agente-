@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Callable
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -19,7 +20,9 @@ from quiron.servicos.mercado.http import FonteIndisponivel
 
 def _fonte(nome: str, quando: datetime, desatualizado: bool = False, extra: str = "") -> str:
     aviso = " ⚠️ DESATUALIZADO (fonte fora do ar; último valor guardado)" if desatualizado else ""
-    return f"📊 {nome} — {quando:%d/%m %H:%M}{(' · ' + extra) if extra else ''}{aviso}"
+    # horário sempre em Brasília, mesmo num servidor com relógio em UTC (sem fuso = relógio do sistema)
+    local = quando.astimezone(ZoneInfo("America/Sao_Paulo"))
+    return f"📊 {nome} — {local:%d/%m %H:%M}{(' · ' + extra) if extra else ''}{aviso}"
 
 
 def _pct(v: float | None, casas: int = 2, sinal: bool = False) -> str:
