@@ -453,12 +453,25 @@ def desenhar(g: Grafico) -> bytes:
         fig, ax = plt.subplots(figsize=(6.4, 3.6), dpi=200)
         x = list(range(len(g.rotulos)))
         rotular = len(g.series) <= 4  # rótulo direto no fim da linha só até 4 séries (senão, só a legenda)
+        fins = []
         for k, (nome, valores) in enumerate(g.series.items()):
             cor = SERIES[k % len(SERIES)]
             ax.plot(x[:len(valores)], valores, color=cor, linewidth=1.6, label=nome)
             if valores and rotular:
-                ax.annotate(fmt(valores[-1]), (x[len(valores) - 1], valores[-1]), xytext=(4, 0),
-                            textcoords="offset points", fontsize=8, color=TEXTO, va="center")
+                fins.append((valores[-1], len(valores) - 1))
+        if fins:  # rótulos do fim das linhas espaçados para não se sobreporem
+            todos = [v for vs in g.series.values() for v in vs if v is not None]
+            folga = (max(todos) - min(todos)) * 0.055 or 1
+            pos = []
+            for v, i in sorted(fins):
+                y = max(v, pos[-1][0] + folga) if pos else v
+                pos.append((y, v, i))
+            topo = ax.get_ylim()[1]
+            if pos[-1][0] + folga * 0.6 > topo:
+                ax.set_ylim(top=pos[-1][0] + folga * 0.6)
+            for y, v, i in pos:
+                ax.annotate(fmt(v), (x[i], v), xytext=(x[i] + max(0.3, len(x) * 0.012), y), textcoords="data", fontsize=8, color=TEXTO,
+                            va="center", ha="left")
         passo = max(1, len(x) // 8)
         ax.set_xticks(x[::passo], [g.rotulos[i] for i in x[::passo]])
         ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: _eixo(v, g.formato)))

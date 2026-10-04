@@ -98,6 +98,58 @@ def fundo_cotas(cnpj: str, mes: str | None = None) -> str:
 
 
 @mcp.tool()
+def buscar_fundo(termo: str, limite: int = 8) -> str:
+    """Procura fundos no cadastro da CVM por nome (ex.: "kapitalo kappa") ou CNPJ. Devolve CNPJ, classificação ANBIMA,
+    gestora e PL — use o CNPJ nas análises de fundos (quiron_analise: fundo_analise, fundos_comparativo...)."""
+    from quiron.servicos.fundos import cvm
+
+    try:
+        achados = cvm.buscar(termo, max(1, min(limite, 20)))
+    except Exception as e:  # noqa: BLE001
+        return f"Cadastro da CVM indisponível agora ({type(e).__name__})."
+    if not achados:
+        return f"Nenhum fundo em funcionamento com “{termo}” no nome. Tente menos palavras ou o CNPJ."
+    br = lambda v: f"R$ {v:,.0f}".replace(",", ".") if v else "—"  # noqa: E731
+    linhas = [f"- **{c.nome}** — CNPJ {c.cnpj_formatado} · {c.anbima or c.classificacao or c.tipo} · gestora "
+              f"{c.gestor or '?'} · PL {br(c.pl)}" for c in achados]
+    return "\n".join(linhas + [cvm.fonte()])
+
+
+@mcp.tool()
+def buscar_gestora(termo: str) -> str:
+    """Gestoras no cadastro da CVM que batem com o termo, com o número de classes e o PL (para a análise 'gestora')."""
+    from quiron.servicos.fundos import cvm
+
+    classes, nomes = cvm.fundos_da_gestora(termo)
+    if not nomes:
+        return f"Nenhuma gestora com “{termo}”."
+    por = {}
+    for c in classes:
+        n, pl = por.get(c.gestor, (0, 0.0))
+        por[c.gestor] = (n + 1, pl + (c.pl or 0))
+    linhas = [f"- {g}: {n} classes em funcionamento, PL somado R$ {pl:,.0f} (inclui fundos de cotas)".replace(",", ".")
+              for g, (n, pl) in sorted(por.items(), key=lambda x: -x[1][1])]
+    return "\n".join(linhas + [cvm.fonte()])
+
+
+@mcp.tool()
+def fii_dados(ticker: str) -> str:
+    """Último informe mensal de um FII na CVM (VP da cota, PL, cotistas, DY e rentabilidade do mês, segmento)."""
+    from quiron.servicos.fundos import cvm
+
+    try:
+        h = cvm.fii(ticker)
+    except cvm.FundoNaoEncontrado as e:
+        return str(e)
+    u = h[-1]
+    dy12 = sum(x["dy_mes"] or 0 for x in h[-12:])
+    return (f"{u['ticker'] or ticker} — {u['nome']} · {u['segmento']} · informe {u['mes']}\n"
+            f"- VP/cota R$ {u['vp_cota'] or 0:.2f} · PL R$ {u['pl'] or 0:,.0f} · cotistas {u['cotistas']}\n"
+            f"- DY do mês {u['dy_mes'] or 0:.2f}% (12m: {dy12:.2f}% sobre o VP) · rentabilidade efetiva {u['rent_efetiva'] or 0:.2f}%\n"
+            .replace(",", "X").replace(".", ",").replace("X", ".") + cvm.fonte())
+
+
+@mcp.tool()
 def damodaran(dataset: str, termo: str) -> str:
     """Procura um termo nos datasets do Damodaran. dataset: premio_pais, erp_historico, betas_eua,
     betas_emergentes, multiplos_eua, ev_ebitda_emergentes. Ex.: damodaran("premio_pais", "Brazil")."""

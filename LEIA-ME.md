@@ -154,6 +154,15 @@ comercial e comunicação) e as **certificações** (CFP, CNPI, CFA, CGA, CGE, F
 - **Revise:** as tabelas de IR, INSS, Simples, Presumido e ITCMD em `config/regras_mercado.yaml` e as premissas
   (retornos, expectativa de vida, custos de inventário, seguros) em `config/premissas_planejamento.yaml`.
 
+## Fundos, gestoras, previdência e FIIs (Fase 10)
+- **/fundo Verde 30** — análise de um fundo; **/comparar_fundos A, B, C** — até 6 lado a lado; **/gestor Ibiuna** —
+  raio-X da gestora; **/previdencia** — portabilidade (fundo atual × destino); **/fii HGLG11 KNRI11** — FIIs;
+  **/alternativos** — FII, FIDC, FIP, COE com riscos e público-alvo.
+- Tudo com dados oficiais da **CVM** (cotas, cadastro, taxas e informe de FII). O relatório traz uma tabela de
+  conferência com as cotas exatamente como a CVM publica.
+- A **primeira** análise baixa uns 3 anos de cotas da CVM (~400 MB, alguns minutos, uma vez só); depois é 1 arquivo
+  por mês. Se houver vários fundos com nome parecido (feeder, espelho, previdência), o Quíron pergunta qual é.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

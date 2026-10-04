@@ -22,6 +22,8 @@ mcp = MCPServer(
         "ou escolha pelo pedido e diga qual usou. Para contas rápidas use `calcular` (mostre a memória de cálculo). "
         "Carteira de cliente: `ler_carteira` (texto) devolve um id CART-…; confira a leitura com o Rickson e peça "
         "`analisar('carteira_diagnostico', {'carteira_id': ..., 'perfil': ..., 'aporte': ...})`. Cliente só como CLI-XXX. "
+        "Fundos (dados da CVM): ache o CNPJ com quiron_mercado buscar_fundo e use fundo_analise, fundos_comparativo, "
+        "gestora, previdencia_portabilidade ou fii_comparativo. "
         "Tudo é uso interno: não é recomendação a cliente."
     ),
 )

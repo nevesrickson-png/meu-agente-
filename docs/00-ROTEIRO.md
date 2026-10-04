@@ -193,8 +193,14 @@ Execute a FASE 9 do docs/00-ROTEIRO.md usando o motor da Fase 7.
 ```
 
 ## FASE 10 — Fundos e gestores
-- [ ] 10.1 Análise de fundo · 10.2 Comparativo · 10.3 Gestoras · 10.4 Previdência e portabilidade · 10.5 Alternativos
+- [x] 10.1 Análise de fundo — CVM Dados Abertos (cadastro CVM 175, informe diário resumido num índice mensal de todos os fundos em `dados/fundos.db`, extrato com taxas/prazos): rentabilidade por janela × CDI/Ibovespa, % do CDI, risco, percentil entre os pares ANBIMA, fluxo, cotistas, taxas e liquidez
+- [x] 10.2 Comparativo — 2 a 6 fundos lado a lado + tabela de conferência das cotas na CVM
+- [x] 10.3 Gestoras — patrimônio por classificação (sem fundos de cotas), maiores fundos abertos, consistência contra os pares, captação
+- [x] 10.4 Previdência e portabilidade — atual × destino, projeção do saldo, tabela regressiva × progressiva
+- [x] 10.5 Alternativos — FII com o informe mensal da CVM (VP, P/VP, DY sobre o preço com proventos pagos, rentabilidade, segmento) e guia de FIDC/FIP/COE na skill
 **Teste de aceite:** comparativo de 3 fundos reais bate com a CVM.
+✅ Aceite (04/10/2026): CSHG Verde 30, Legacy Capital Advisory e Ibiuna Hedge — as 6 cotas da conferência (30/09/2025,
+29/09/2023 e 30/09/2026) são idênticas às dos arquivos brutos do informe diário da CVM (`testes/test_fundos_online.py`).
 ```
 Execute a FASE 10 do docs/00-ROTEIRO.md.
 ```

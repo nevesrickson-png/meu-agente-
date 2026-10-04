@@ -177,6 +177,15 @@ Arquivos com DRM não são processados.
   que pede confirmação); `servicos/lgpd.py` apaga ficha, carteiras, relatórios, conversas e memória que citam o código
   (código inteiro: CLI-01 não apaga CLI-012). Skill `agente/skills/planejamento.md`; comandos /cliente, /planejamento,
   /aposentadoria, /sucessao, /tributario, /protecao, /empresario, /esquecer.
+- Fundos (Fase 10, `quiron/servicos/fundos/`): `cvm.py` (CVM Dados Abertos → `dados/fundos.db`: cadastro CVM 175
+  (classes, fundos/gestor, subclasses; 7 dias), extrato (taxas, prazos), índice MENSAL de todos os fundos a partir do
+  informe diário (cada mês baixado uma vez, zip descartado; mês corrente e anterior renovados a cada 12 h; desde 2021-01),
+  FII (informe mensal; ISIN → ticker; ISIN repetido → o de mais cotistas), busca, pares por classificação ANBIMA) e
+  `metricas.py` (janelas até o último mês fechado, risco mensal, percentil entre pares com PL ≥ R$ 10 mi). Tipos
+  `fundo_analise`, `fundos_comparativo`, `gestora`, `previdencia_portabilidade`, `fii_comparativo` em
+  `analise/tipos/fundos.py` (tabela de conferência com as cotas da CVM; DY de FII pelos proventos pagos via Yahoo).
+  MCP `quiron-mercado`: `buscar_fundo`, `buscar_gestora`, `fii_dados`. Skill `agente/skills/fundos.md`; comandos
+  /fundo, /comparar_fundos, /gestor, /previdencia, /fii, /alternativos. Aceite online em `testes/test_fundos_online.py`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.
