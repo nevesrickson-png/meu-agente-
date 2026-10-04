@@ -82,6 +82,72 @@ def perguntar(
     raise CerebroIndisponivel("Nenhum modelo respondeu.\n" + "\n".join(falhas))
 
 
+@dataclass
+class Turno:
+    """Resposta de um passo da conversa: texto final ou pedidos de ferramenta."""
+
+    texto: str
+    chamadas: list[dict[str, Any]]  # [{"id", "nome", "argumentos" (dict)}]
+    mensagem: dict[str, Any]  # mensagem do assistente pronta para voltar ao histórico
+    modelo: str
+    falhas: list[str] = field(default_factory=list)
+    tokens: int = 0
+
+
+def conversar(
+    mensagens: list[dict[str, Any]],
+    ferramentas: list[dict[str, Any]] | None = None,
+    *,
+    config: Config | None = None,
+    temperatura: float = 0.3,
+    **extras: Any,
+) -> Turno:
+    """Um passo de conversa com ferramentas (formato OpenAI, que o LiteLLM traduz para Gemini/Groq).
+
+    Usado pelos runtimes do agente. Mesma ordem de modelos e troca automática de `perguntar`.
+    """
+    import json
+
+    config = config or carregar_config()
+    llm = _litellm()
+    falhas: list[str] = []
+    for modelo in config.modelos:
+        if not config.tem_chave_para(modelo) and "mock_response" not in extras:
+            falhas.append(f"{modelo}: sem chave no .env")
+            continue
+        try:
+            r = llm.completion(
+                model=modelo, messages=mensagens, tools=ferramentas or None, api_key=_chave(config, modelo),
+                temperature=temperatura, num_retries=2, timeout=90, **extras,
+            )
+            msg = r.choices[0].message
+            chamadas = []
+            for c in msg.tool_calls or []:
+                try:
+                    args = json.loads(c.function.arguments or "{}")
+                except json.JSONDecodeError:
+                    args = {}
+                chamadas.append({"id": c.id, "nome": c.function.name, "argumentos": args})
+            # Devolve a mensagem original do provedor ao histórico: o Gemini 3 exige receber de volta as
+            # "assinaturas de pensamento" que vêm junto das chamadas de ferramenta.
+            try:
+                mensagem: dict[str, Any] = msg.model_dump(exclude_none=True)
+            except Exception:  # noqa: BLE001
+                mensagem = {}
+            mensagem["role"] = "assistant"
+            mensagem.setdefault("content", msg.content or "")
+            if chamadas and not mensagem.get("tool_calls"):
+                mensagem["tool_calls"] = [
+                    {"id": c["id"], "type": "function", "function": {"name": c["nome"], "arguments": json.dumps(c["argumentos"], ensure_ascii=False)}}
+                    for c in chamadas
+                ]
+            uso = getattr(r, "usage", None)
+            return Turno(msg.content or "", chamadas, mensagem, modelo, falhas, int(getattr(uso, "total_tokens", 0) or 0))
+        except Exception as e:  # noqa: BLE001
+            falhas.append(f"{modelo}: {type(e).__name__}: {str(e)[:200]}")
+    raise CerebroIndisponivel("Nenhum modelo respondeu.\n" + "\n".join(falhas))
+
+
 def testar_conexao(config: Config | None = None) -> list[tuple[str, bool, str]]:
     """Testa cada modelo configurado separadamente. Retorna (modelo, ok, detalhe)."""
     config = config or carregar_config()

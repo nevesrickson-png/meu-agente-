@@ -25,3 +25,20 @@ Como todas as ferramentas do Quíron são servidores MCP, **qualquer opção aba
 2. Rodar 10 pedidos reais (briefing, pergunta da biblioteca, análise curta, tarefa, pedido sobre cliente CLI-XXX).
 3. Comparar qualidade, velocidade, estabilidade, facilidade de ajuste e se as regras de compliance foram respeitadas.
 4. Escolher e registrar em `.env` (`RUNTIME_AGENTE`).
+
+## O que já foi verificado (04/10/2026, antes do teste com o modelo)
+
+| | Hermes Agent | Bot próprio (Quíron) |
+|---|---|---|
+| Instalação | Instalador oficial; **~2,4 GB** (código + dependências + cache) | Usa o ambiente do projeto (+ biblioteca do Telegram, poucos MB) |
+| Ferramentas do Quíron (MCP) | ✅ conectou aos 4 servidores; viu as 11 ferramentas de mercado | ✅ conecta aos mesmos servidores pelo `.mcp.json` |
+| Skills do Quíron | ✅ carregadas (geradas de `agente/skills/`) | ✅ índice no prompt + leitura sob demanda |
+| Persona | `SOUL.md` gerado de `agente/persona.md` | `agente/persona.md` no prompt |
+| Gemini grátis | Suporte nativo, **mas a doc oficial avisa que a camada grátis é pequena para sessões de agente** | Via LiteLLM, com troca automática para Groq grátis |
+| Segurança | Terminal, arquivos, navegador, computador e código **desligados** na nossa config; auto-edição de skills só com aprovação | Só existe o que nós escrevemos: ferramentas do Quíron + leitura de skills |
+| Telegram | Pronto (lista branca `TELEGRAM_ALLOWED_USERS`) | Pronto (`quiron-telegram`, lista branca, silêncio para estranhos) |
+| Memória, agendamentos, áudio | Prontos | Memória das últimas 6 trocas; agendamentos e áudio a construir (5.5/5.7) |
+
+O teste com os 10 pedidos (`uv run quiron-comparativo`) mede tempo, tokens (cota grátis), ferramentas usadas e
+conferências de compliance (RASCUNHO, uso interno, não fingir que agendou, citar fontes, manter CLI-XXX) e gera um
+relatório com as respostas lado a lado para você dar nota. Ele precisa da chave do Gemini.

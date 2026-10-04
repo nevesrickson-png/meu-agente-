@@ -55,6 +55,8 @@ def test_modelos_vem_do_env(tmp_path, monkeypatch):
         assert cfg.tem_chave_para("gemini/modelo-y")
     finally:
         carregar_config.cache_clear()
+        for v in ("LLM_PRINCIPAL", "LLM_RESERVA", "GEMINI_API_KEY"):  # o load_dotenv gravou no ambiente
+            monkeypatch.delenv(v, raising=False)
 
 
 @pytest.mark.online
@@ -63,3 +65,18 @@ def test_conexao_real():
     carregar_config.cache_clear()
     resultados = cerebro.testar_conexao()
     assert any(ok for _, ok, _ in resultados), resultados
+
+
+def test_conversar_com_ferramentas_via_litellm():
+    """O LiteLLM real com resposta simulada contendo chamada de ferramenta."""
+    import litellm
+
+    resposta = litellm.ModelResponse(choices=[{"message": {"role": "assistant", "content": None, "tool_calls": [
+        {"id": "x1", "type": "function", "function": {"name": "quiron_sistema__ping", "arguments": "{}"},
+         "provider_specific_fields": {"thought_signature": "abc"}}]}}])
+    t = cerebro.conversar([{"role": "user", "content": "ping"}],
+                          [{"type": "function", "function": {"name": "quiron_sistema__ping", "parameters": {"type": "object", "properties": {}}}}],
+                          config=CFG, mock_response=resposta)
+    assert t.chamadas == [{"id": "x1", "nome": "quiron_sistema__ping", "argumentos": {}}]
+    assert t.mensagem["role"] == "assistant" and t.mensagem["tool_calls"][0]["id"] == "x1"
+    assert "thought_signature" in str(t.mensagem)  # preservada para o Gemini 3

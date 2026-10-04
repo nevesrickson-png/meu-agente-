@@ -86,5 +86,12 @@ Testes:
 
 ![Quíron Terminal](docs/img/terminal-v1.png)
 
+## Agente no Telegram (Fase 5)
+1. **Crie o bot:** no Telegram, fale com **@BotFather** → `/newbot` → escolha nome e usuário → copie o token.
+2. **Descubra seu ID:** fale com **@userinfobot** → ele responde com seu número.
+3. No `.env`: `TELEGRAM_BOT_TOKEN=...` e `TELEGRAM_ALLOWED_USER_IDS=seu-numero` (só você fala com o Quíron).
+4. Comparativo dos runtimes (precisa de `GEMINI_API_KEY`): `uv run quiron-comparativo` → relatório em `dados\comparativo\`.
+5. Testar o bot próprio: `uv run quiron-agente -q "faça meu briefing"` (sem Telegram) ou `uv run quiron-telegram` (no Telegram).
+
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.

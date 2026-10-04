@@ -105,6 +105,12 @@ Arquivos com DRM não são processados.
   (JS puro + lightweight-charts 4.2 local em `vendor/`). Calculadoras em `quiron/servicos/calculadoras.py` (Python, com
   memória de cálculo). Cores: séries azul/laranja/aqua da paleta validada; alta/queda sempre com ▲/▼. Datas sem fuso:
   hora do sistema (consultas) ou de Brasília (agenda) — ver `_iso`. Aceite no navegador: `testes/test_terminal_navegador.py`.
+- Runtimes (Fase 5, código em `quiron/runtime/`): `ferramentas_mcp.py` (cliente MCP dos servidores do `.mcp.json`;
+  nomes `servidor__ferramenta` com `_`), `agente.py` (laço: persona + índice de skills + `ler_skill` + ferramentas MCP +
+  `cerebro.conversar`, até 8 passos; `quiron-agente -q`), `telegram_bot.py` (bot próprio, long polling, lista branca,
+  memória em `dados/conversas.db`), `hermes.py` (gera um HERMES_HOME próprio em `dados/hermes/` com SOUL.md, skills,
+  MCP e toolsets perigosos desligados) e `comparativo.py` (10 pedidos, conferências de compliance, relatório em
+  `dados/comparativo/`). `cerebro.conversar` devolve a mensagem original do provedor (assinaturas de pensamento do Gemini 3).
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
 - Relatórios: Markdown → PDF (`weasyprint`), `matplotlib`, `openpyxl`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.
