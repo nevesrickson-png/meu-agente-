@@ -403,8 +403,11 @@ def _carimbar(caminho: Path, titulo: str, rodape: str) -> None:
                           color=(0.45, 0.45, 0.43))
         pg.insert_textbox(pymupdf.Rect(r.width - 110, r.height - 44, r.width - 54, r.height - 20), f"{i}/{total}",
                           fontsize=7, color=(0.45, 0.45, 0.43), align=2)
-    doc.saveIncr()
+    # o Story grava as imagens sem compressão: salvar de novo comprimido (gráficos de ~1 MB cada viram dezenas de KB)
+    temporario = caminho.with_suffix(".tmp.pdf")
+    doc.save(temporario, garbage=4, deflate=True, deflate_images=True, deflate_fonts=True)
     doc.close()
+    temporario.replace(caminho)
 
 
 def desenhar(g: Grafico) -> bytes:
