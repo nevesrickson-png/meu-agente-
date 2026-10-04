@@ -1,0 +1,54 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: COMERCIAL
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Prospecção
+  peso: 25
+  topicos:
+  - codigo: '1.1'
+    titulo: Definição de público-alvo e nichos
+  - codigo: '1.2'
+    titulo: Geração de leads (indicações, eventos, digital)
+  - codigo: '1.3'
+    titulo: Abordagem inicial e qualificação
+- numero: 2
+  titulo: Venda consultiva
+  peso: 25
+  topicos:
+  - codigo: '2.1'
+    titulo: Diagnóstico e perguntas poderosas (SPIN)
+  - codigo: '2.2'
+    titulo: Apresentação de propostas e storytelling
+  - codigo: '2.3'
+    titulo: Tratamento de objeções
+  - codigo: '2.4'
+    titulo: Fechamento e próximos passos
+- numero: 3
+  titulo: Relacionamento
+  peso: 25
+  topicos:
+  - codigo: '3.1'
+    titulo: Onboarding do cliente
+  - codigo: '3.2'
+    titulo: Cadência de contato e revisões periódicas
+  - codigo: '3.3'
+    titulo: Comunicação em momentos de crise
+  - codigo: '3.4'
+    titulo: Indicações e NPS
+- numero: 4
+  titulo: Gestão comercial
+  peso: 25
+  topicos:
+  - codigo: '4.1'
+    titulo: Funil de vendas e métricas (conversão, AuC, receita)
+  - codigo: '4.2'
+    titulo: Rotina, agenda e produtividade
+  - codigo: '4.3'
+    titulo: CRM e organização da carteira
+  - codigo: '4.4'
+    titulo: Regras de conduta na venda (suitability, sem promessa de retorno)

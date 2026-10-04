@@ -1,0 +1,48 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: INTERNACIONAL
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Mercados globais
+  peso: 25
+  topicos:
+  - codigo: '1.1'
+    titulo: Principais bolsas e índices globais
+  - codigo: '1.2'
+    titulo: Títulos do Tesouro americano e curva global
+  - codigo: '1.3'
+    titulo: ETFs internacionais e fundos globais
+- numero: 2
+  titulo: Câmbio
+  peso: 25
+  topicos:
+  - codigo: '2.1'
+    titulo: Risco cambial e hedge
+  - codigo: '2.2'
+    titulo: Diversificação geográfica e correlações
+  - codigo: '2.3'
+    titulo: Remessas, contas e corretoras no exterior
+- numero: 3
+  titulo: Estruturas
+  peso: 25
+  topicos:
+  - codigo: '3.1'
+    titulo: BDRs x investimento direto
+  - codigo: '3.2'
+    titulo: Offshores e trusts (Lei 14.754/2023)
+  - codigo: '3.3'
+    titulo: Planejamento sucessório no exterior (estate tax)
+- numero: 4
+  titulo: Tributação
+  peso: 25
+  topicos:
+  - codigo: '4.1'
+    titulo: Tributação de aplicações financeiras no exterior
+  - codigo: '4.2'
+    titulo: Variação cambial e ganho de capital
+  - codigo: '4.3'
+    titulo: Declaração de capitais brasileiros no exterior (CBE)

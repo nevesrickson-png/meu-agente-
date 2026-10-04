@@ -79,7 +79,7 @@ class Questao:
     def texto(self, numero: str = "") -> str:
         cab = f"{numero} " if numero else ""
         alts = "\n".join(f"{LETRAS[i]}) {a}" for i, a in enumerate(self.alternativas))
-        return f"{cab}📝 Módulo {self.modulo} · tópico {self.topico}\n\n{self.enunciado}\n\n{alts}"
+        return f"{cab}📝 {self.cert} · Módulo {self.modulo} · tópico {self.topico}\n\n{self.enunciado}\n\n{alts}"
 
 
 @dataclass
@@ -90,6 +90,7 @@ class Flashcard:
     frente: str
     verso: str
     fontes: list[str] = field(default_factory=list)
+    cert: str = "CFP"
 
 
 def proxima_revisao(nota: int, repeticoes: int, intervalo: float, facilidade: float, hoje: date | None = None
@@ -243,16 +244,19 @@ class Banco:
                                                          date.today().isoformat()))
             return int(cur.lastrowid)
 
-    def cards_vencidos(self, cert: str = "CFP", limite: int = 20, hoje: date | None = None) -> list[Flashcard]:
+    def cards_vencidos(self, cert: str | None = "CFP", limite: int = 20, hoje: date | None = None) -> list[Flashcard]:
+        """Cards para revisar hoje (cert=None: de todas as áreas)."""
+        filtro, args = ("", []) if cert is None else ("cert=? AND ", [cert])
         with self._con() as c:
-            rows = c.execute("SELECT * FROM flashcards WHERE cert=? AND suspenso=0 AND revisar_em <= ? "
-                             "ORDER BY revisar_em, id LIMIT ?", (cert, (hoje or date.today()).isoformat(), limite)).fetchall()
-        return [Flashcard(r["id"], r["modulo"], r["topico"], r["frente"], r["verso"], json.loads(r["fontes"])) for r in rows]
+            rows = c.execute(f"SELECT * FROM flashcards WHERE {filtro}suspenso=0 AND revisar_em <= ? ORDER BY revisar_em, id LIMIT ?",
+                             (*args, (hoje or date.today()).isoformat(), limite)).fetchall()
+        return [Flashcard(r["id"], r["modulo"], r["topico"], r["frente"], r["verso"], json.loads(r["fontes"]), r["cert"])
+                for r in rows]
 
     def card(self, cid: int) -> Flashcard | None:
         with self._con() as c:
             r = c.execute("SELECT * FROM flashcards WHERE id=?", (cid,)).fetchone()
-        return Flashcard(r["id"], r["modulo"], r["topico"], r["frente"], r["verso"], json.loads(r["fontes"])) if r else None
+        return Flashcard(r["id"], r["modulo"], r["topico"], r["frente"], r["verso"], json.loads(r["fontes"]), r["cert"]) if r else None
 
     def contar_cards(self, cert: str = "CFP") -> int:
         with self._con() as c:

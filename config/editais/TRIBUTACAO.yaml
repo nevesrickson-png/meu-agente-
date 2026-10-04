@@ -1,0 +1,64 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: TRIBUTACAO
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Fundamentos
+  peso: 20
+  topicos:
+  - codigo: '1.1'
+    titulo: Sistema tributário nacional e princípios
+  - codigo: '1.2'
+    titulo: Tributos federais, estaduais e municipais
+  - codigo: '1.3'
+    titulo: Domicílio fiscal e residência
+- numero: 2
+  titulo: IRPF
+  peso: 20
+  topicos:
+  - codigo: '2.1'
+    titulo: Tabela progressiva, deduções e declaração
+  - codigo: '2.2'
+    titulo: Carnê-leão e rendimentos de pessoa física
+  - codigo: '2.3'
+    titulo: Ganho de capital em bens e imóveis
+  - codigo: '2.4'
+    titulo: Rendimentos isentos e de tributação exclusiva
+- numero: 3
+  titulo: Tributação de investimentos
+  peso: 20
+  topicos:
+  - codigo: '3.1'
+    titulo: 'Renda fixa: tabela regressiva e IOF'
+  - codigo: '3.2'
+    titulo: 'Fundos: come-cotas e alíquotas'
+  - codigo: '3.3'
+    titulo: Ações, ETFs, FIIs e derivativos
+  - codigo: '3.4'
+    titulo: Dividendos, JCP e tributação de altas rendas
+  - codigo: '3.5'
+    titulo: Investimentos no exterior (Lei 14.754/2023)
+- numero: 4
+  titulo: Pessoa jurídica
+  peso: 20
+  topicos:
+  - codigo: '4.1'
+    titulo: Simples Nacional, Lucro Presumido e Lucro Real
+  - codigo: '4.2'
+    titulo: Pró-labore x distribuição de lucros
+  - codigo: '4.3'
+    titulo: 'Holdings: aspectos tributários'
+- numero: 5
+  titulo: Planejamento tributário
+  peso: 20
+  topicos:
+  - codigo: '5.1'
+    titulo: Elisão x evasão fiscal
+  - codigo: '5.2'
+    titulo: Estratégias lícitas para investidores
+  - codigo: '5.3'
+    titulo: Compensação de prejuízos

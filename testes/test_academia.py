@@ -129,7 +129,7 @@ def test_diagnostico_e_plano(banco):
     minutos = {k: sum(b.minutos for b in blocos if b.modulo == k) for k in range(1, 9)}
     assert minutos[3] == max(minutos.values()) and minutos[8] <= minutos[3]
     texto = diagnostico.texto_diagnostico(mods)
-    assert "Prontidão estimada" in texto and "3.5" in texto
+    assert "Domínio estimado" in texto and "3.5" in texto
     assert "Plano de estudo" in diagnostico.texto_plano(mods, blocos, 5)
 
 
@@ -157,7 +157,7 @@ def test_bot_questao_simulado_e_flashcards(banco):
     botao = telas[0].linhas[0][0][1]  # resposta "A"
     assert botao.startswith("ac:r:") and "⚠" in telas[0].linhas[1][0][0]
     c = asyncio.run(bot.clique(botao))
-    assert "✅ Certo" in c.editar and c.novas[0].linhas[0][0][1] == "ac:prox:m3"
+    assert "✅ Certo" in c.editar and c.novas[0].linhas[0][0][1] == "ac:prox:CFP|m3"
 
     telas = asyncio.run(bot.comando("simulado", "mini"))
     assert "Simulado #" in telas[0].texto
@@ -182,7 +182,7 @@ def test_bot_questao_simulado_e_flashcards(banco):
 
 def test_consultas_configurar_e_edital(banco):
     assert "15/03/2027" in consultas.configurar("15/03/2027", 6, ["segunda", "quarta"], banco=banco)
-    assert banco.pref("data_prova") == "2027-03-15" and banco.pref("horas_semana") == 6
+    assert banco.pref("data_prova:CFP") == "2027-03-15" and banco.pref("horas_semana") == 6
     assert "faltam" in consultas.plano(banco=banco)
     assert "140 questões" in consultas.mapa_edital()
     assert "M3" in consultas.mapa_edital() and "3.5" in consultas.mapa_edital(modulo=3)
@@ -191,7 +191,7 @@ def test_consultas_configurar_e_edital(banco):
 
 def test_lote_noturno_respeita_janela_e_meta(banco, monkeypatch):
     chamadas = []
-    monkeypatch.setattr(estudo, "gerar_lote", lambda b, m, n, t=None: chamadas.append(m) or [1])
+    monkeypatch.setattr(estudo, "gerar_lote", lambda b, m, n, t=None, area="CFP": chamadas.append(m) or [1])
     cfg = {"ligada": True, "inicio": "01:00", "fim": "06:00", "meta_por_modulo": 2}
     assert estudo.lote_noturno(banco, "12:00", cfg) == [] and not chamadas
     assert estudo.lote_noturno(banco, "02:00", cfg) == [1] and chamadas == [3]  # módulo de maior peso primeiro
@@ -214,3 +214,56 @@ def test_banco_inicial_importa_uma_vez(banco):
     n = semear(banco)
     assert n >= 40 and all(v >= 2 for v in banco.contar_questoes().values())
     assert semear(banco) == 0
+
+
+def test_areas_campos_e_certificacoes(banco):
+    from quiron.servicos import areas
+
+    todas = {a.id: a for a in areas.listar()}
+    assert {"ECONOMIA", "RISCO", "COMERCIAL", "RENDA_FIXA", "CFP", "CNPI", "CFA_I", "CEA"} <= set(todas)
+    assert sum(1 for a in todas.values() if a.tipo == "campo") == 20
+    assert "ECONOMIA" in todas["CFP"].relacionadas  # caminho inverso campo → certificação
+    a, resto = areas.reconhecer("renda fixa duration")
+    assert a.id == "RENDA_FIXA" and resto == "duration"
+    assert areas.reconhecer("cfa i ética")[0].id == "CFA_I"
+    nova = areas.criar("Agronegócio", "crédito rural e CPR")
+    assert nova.id == "AGRONEGOCIO" and nova.personalizada and nova.pasta == "agronegocio"
+    with pytest.raises(ValueError):
+        areas.criar("Agronegócio")
+    # sem programa próprio: ganha um provisório e a Academia funciona igual
+    assert edital.modulos("AGRONEGOCIO")[0]["topicos"][0]["codigo"] == "1.1"
+    assert not edital.tem_programa("AGRONEGOCIO") and edital.tem_programa("ECONOMIA")
+
+
+def test_programas_dos_campos_e_filtro_por_area():
+    for ident in ("ECONOMIA", "RISCO", "COMERCIAL", "RENDA_FIXA", "SUCESSAO"):
+        mods = edital.modulos(ident)
+        assert len(mods) >= 3 and all(m["topicos"] for m in mods)
+    f = estudo.Filtro.ler("economia 3")
+    assert (f.area, f.modulo) == ("ECONOMIA", 3)
+    f = estudo.Filtro.ler("renda fixa duration")
+    assert f.area == "RENDA_FIXA" and edital.topico(f.topico, "RENDA_FIXA")["titulo"].startswith("Duration")
+    assert estudo.Filtro.ler("2", "RISCO").area == "RISCO"
+    assert estudo.Filtro.do_codigo(estudo.Filtro.ler("comercial 2.3").codigo()).topico == "2.3"
+    assert sum(estudo.distribuicao(estudo.tamanho("mini", "COMERCIAL"), "COMERCIAL").values()) == 8
+    assert "elaborador de questões de Comercial" in gerador.sistema("COMERCIAL")
+    assert gerador.usa_regras("TRIBUTACAO", 1) and not gerador.usa_regras("COMERCIAL", 1)
+
+
+def test_bot_em_outra_area(banco):
+    from quiron.runtime.academia_bot import AcademiaBot
+
+    for mod in range(1, 7):
+        _q_area = [banco.adicionar_questao("ECONOMIA", mod, f"{mod}.1", f"Econ {mod}-{i}", ["a", "b", "c", "d"], 0, "x")
+                   for i in range(2)]
+    bot = AcademiaBot(banco)
+    assert "Área ativa: Economia" in asyncio.run(bot.comando("area", "economia"))[0].texto
+    assert bot.area == "ECONOMIA"
+    telas = asyncio.run(bot.comando("questoes", ""))
+    assert "📝 ECONOMIA" in telas[0].texto and "ECONOMIA|" in telas[0].linhas[0][0][1]
+    telas = asyncio.run(bot.comando("simulado", ""))
+    assert "Economia — 12 questões" in telas[0].texto
+    assert "Diagnóstico · Economia" in asyncio.run(bot.comando("diagnostico", ""))[0].texto
+    assert "Plano de estudo · Economia" in asyncio.run(bot.comando("plano", "4"))[0].texto
+    assert "Campos (20)" in asyncio.run(bot.comando("academia", ""))[0].texto
+    assert "Não achei a área" in asyncio.run(bot.comando("area", "astrologia"))[0].texto

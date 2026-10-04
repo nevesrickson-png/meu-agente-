@@ -22,12 +22,12 @@ def test_servidor_academia_responde(tmp_path):
             async with ClientSession(r, w) as s:
                 await s.initialize()
                 nomes = {t.name for t in (await s.list_tools()).tools}
-                edital = await s.call_tool("edital", {"busca": "come-cotas"})
+                edital = await s.call_tool("programa", {"busca": "come-cotas"})
                 conf = await s.call_tool("configurar_estudo", {"data_prova": "15/03/2027", "horas_semana": 5})
                 return nomes, edital, conf
 
     nomes, edital, conf = asyncio.run(rodar())
-    assert {"trilha", "edital", "topico", "diagnostico_estudo", "plano_estudo", "configurar_estudo", "gerar_questoes",
+    assert {"trilha", "areas", "programa", "topico", "diagnostico_estudo", "plano_estudo", "configurar_estudo", "gerar_questoes",
             "questoes", "registrar_resposta", "materiais_gratuitos"} <= nomes
-    assert not edital.is_error and "edital CFP" in edital.content[0].text
+    assert not edital.is_error and "programa de" in edital.content[0].text
     assert "15/03/2027" in conf.content[0].text

@@ -1,0 +1,29 @@
+# Áreas de conhecimento do Quíron: cada uma vira uma PASTA do acervo (biblioteca/acervo/<id em minúsculas>/)
+# e uma TRILHA da Academia (programa em config/editais/<ID>.yaml). Editável.
+# Áreas novas criadas pela tela do Acervo ficam em dados/areas_personalizadas.yaml (não se perdem nas atualizações).
+# As certificações vêm de config/trilha_certificacoes.yaml (+ as extras abaixo).
+campos:
+  - {id: ECONOMIA, nome: Economia, descricao: "micro, macro, política monetária e fiscal, economia brasileira e internacional", certificacoes: [CFP, CNPI, CFA_I, CGA, CEA]}
+  - {id: RENDA_FIXA, nome: Renda fixa, descricao: "títulos públicos e privados, precificação, duration, crédito, curva de juros", certificacoes: [CFP, CNPI, CFA_I, CGA, CEA]}
+  - {id: RENDA_VARIAVEL, nome: Renda variável, descricao: "ações, mercado de capitais, B3, análise técnica e fundamentalista, proventos", certificacoes: [CNPI, CFA_I, CGA, CEA]}
+  - {id: DERIVATIVOS, nome: Derivativos, descricao: "termo, futuros, opções, swaps, hedge e estratégias", certificacoes: [CNPI, CFA_I, FRM_I, CGA, CEA]}
+  - {id: FUNDOS, nome: Fundos de investimento, descricao: "estrutura, classes (Resolução CVM 175), custos, tributação, análise de fundos", certificacoes: [CFP, CGA, CGE, CEA]}
+  - {id: PREVIDENCIA, nome: Previdência, descricao: "INSS, previdência complementar aberta e fechada, PGBL/VGBL, regimes tributários", certificacoes: [CFP, CEA]}
+  - {id: PLANEJAMENTO, nome: Planejamento financeiro pessoal, descricao: "processo de planejamento, orçamento, reserva, objetivos, aposentadoria, proteção", certificacoes: [CFP]}
+  - {id: TRIBUTACAO, nome: Tributação, descricao: "IRPF, tributação de investimentos, PJ x PF, planejamento tributário", certificacoes: [CFP, CEA]}
+  - {id: SUCESSAO, nome: Sucessão e patrimônio, descricao: "direito de família e sucessões, ITCMD, holdings, doação, testamento, previdência na sucessão", certificacoes: [CFP]}
+  - {id: RISCO, nome: Gestão de risco, descricao: "risco de mercado, crédito, liquidez e operacional, VaR, stress, gestão de risco pessoal", certificacoes: [FRM_I, FRM_II, CFA_I, CGA]}
+  - {id: CARTEIRAS, nome: Alocação e gestão de carteiras, descricao: "teoria de carteiras, alocação estratégica e tática, rebalanceamento, performance", certificacoes: [CFP, CFA_I, CFA_III, CGA, CEA]}
+  - {id: VALUATION, nome: Valuation e análise de empresas, descricao: "fluxo de caixa descontado, múltiplos, custo de capital, análise setorial", certificacoes: [CNPI, CFA_I, CFA_II]}
+  - {id: CONTABILIDADE, nome: Contabilidade e finanças corporativas, descricao: "demonstrações financeiras, IFRS/CPC, indicadores, estrutura de capital", certificacoes: [CNPI, CFA_I, CFA_II]}
+  - {id: COMPORTAMENTAL, nome: Finanças comportamentais, descricao: "vieses, heurísticas, psicologia do investidor e do planejador", certificacoes: [CFP, CFA_III]}
+  - {id: INTERNACIONAL, nome: Investimentos internacionais, descricao: "mercados globais, câmbio, ETFs, contas no exterior, tributação (Lei 14.754/2023)", certificacoes: [CFP, CFA_I, CEA]}
+  - {id: ALTERNATIVOS, nome: Investimentos alternativos, descricao: "private equity, venture capital, imobiliário, hedge funds, commodities, cripto", certificacoes: [CAIA, CFA_I, CGE]}
+  - {id: REGULACAO, nome: Regulação e compliance, descricao: "sistema financeiro nacional, CVM, ANBIMA, suitability, PLD, ética e LGPD", certificacoes: [CFP, CNPI, CGA, CEA]}
+  - {id: QUANT, nome: Matemática financeira e estatística, descricao: "juros, fluxos de caixa, VPL/TIR, estatística, regressão, probabilidade", certificacoes: [CFP, CNPI, CFA_I, FRM_I]}
+  - {id: COMERCIAL, nome: Comercial e relacionamento, descricao: "prospecção, vendas consultivas, objeções, relacionamento e retenção de clientes", certificacoes: []}
+  - {id: CONTEUDO, nome: Comunicação e conteúdo, descricao: "comunicação com clientes, conteúdo financeiro, redes sociais, regras de publicidade", certificacoes: []}
+
+# Certificações além das da trilha (a trilha está em config/trilha_certificacoes.yaml)
+certificacoes_extras:
+  - {id: CEA, nome: CEA, entidade: ANBIMA, descricao: "Certificação de Especialista em Investimentos (já conquistada)"}

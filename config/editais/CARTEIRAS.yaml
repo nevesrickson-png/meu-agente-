@@ -1,0 +1,62 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: CARTEIRAS
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Teoria
+  peso: 20
+  topicos:
+  - codigo: '1.1'
+    titulo: Retorno esperado, variância e covariância
+  - codigo: '1.2'
+    titulo: Fronteira eficiente de Markowitz
+  - codigo: '1.3'
+    titulo: CAPM e beta
+  - codigo: '1.4'
+    titulo: Modelos multifatores
+- numero: 2
+  titulo: Política de investimentos
+  peso: 20
+  topicos:
+  - codigo: '2.1'
+    titulo: 'IPS: objetivos e restrições'
+  - codigo: '2.2'
+    titulo: Perfil do investidor e suitability
+  - codigo: '2.3'
+    titulo: Horizonte e necessidade de liquidez
+- numero: 3
+  titulo: Alocação
+  peso: 20
+  topicos:
+  - codigo: '3.1'
+    titulo: Alocação estratégica x tática
+  - codigo: '3.2'
+    titulo: Classes de ativos e diversificação
+  - codigo: '3.3'
+    titulo: Alocação por objetivos e ciclo de vida
+  - codigo: '3.4'
+    titulo: Black-Litterman e paridade de risco (visão geral)
+- numero: 4
+  titulo: Gestão e rebalanceamento
+  peso: 20
+  topicos:
+  - codigo: '4.1'
+    titulo: Rebalanceamento por calendário e por bandas
+  - codigo: '4.2'
+    titulo: Custos e impacto tributário
+  - codigo: '4.3'
+    titulo: Gestão ativa x passiva
+- numero: 5
+  titulo: Avaliação de desempenho
+  peso: 20
+  topicos:
+  - codigo: '5.1'
+    titulo: Retorno ponderado pelo tempo x pelo dinheiro
+  - codigo: '5.2'
+    titulo: Sharpe, Treynor, Jensen e information ratio
+  - codigo: '5.3'
+    titulo: Atribuição de performance

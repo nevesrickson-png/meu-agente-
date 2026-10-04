@@ -11,10 +11,13 @@ diz qual modo usou. **Análises pesadas** chegam como resumo no Telegram + PDF a
 ## 1. Mentor e biblioteca
 Pergunta livre com citação, `/estudar`, `/debate` (mesa redonda de grandes investidores), `/autor`, `/ficha`, `/conectar`, `/pilula`.
 
-## 2. Academia (certificações)
-Professores de CFP, CNPI, CFA I–III, CGA, CGE, FRM I–II e CAIA. Trilha: CFP → CNPI → CFA… (3–7h/semana).
-`/academia`, `/aula`, `/questoes`, `/simulado`, `/diagnostico`, `/plano-estudo`, `/flashcards`, `/caso`.
-Material: o seu + gratuitos catalogados (`docs/05-MATERIAIS-GRATUITOS.md`).
+## 2. Academia (campos de conhecimento + certificações)
+Professor de **todas as áreas de finanças** — 20 campos (economia, renda fixa e variável, derivativos, fundos, previdência,
+planejamento, tributação, sucessão, risco, carteiras, valuation, contabilidade, comportamental, internacional, alternativos,
+regulação, matemática financeira, comercial, comunicação) — e das certificações (CFP, CNPI, CFA I–III, CGA, CGE, FRM I–II,
+CAIA, CEA). Trilha de certificações: CFP → CNPI → CFA… (3–7h/semana). Áreas novas podem ser criadas pelo Rickson.
+`/academia`, `/area`, `/aula`, `/questoes`, `/simulado`, `/diagnostico`, `/plano`, `/flashcards`, `/caso`.
+Material: o acervo do Rickson, organizado por área pela tela **Acervo** do Terminal, + gratuitos catalogados.
 
 ## 3. Análise de nível especialista
 - **Carteiras, alocação e risco:** `/carteira`, `/alocacao`, `/otimizar`, `/stress`, `/risco`, `/rebalancear`, `/backtest`.

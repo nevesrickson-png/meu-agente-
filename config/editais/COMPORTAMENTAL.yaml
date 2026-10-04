@@ -1,0 +1,52 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: COMPORTAMENTAL
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Fundamentos
+  peso: 25
+  topicos:
+  - codigo: '1.1'
+    titulo: Racionalidade limitada x finanças tradicionais
+  - codigo: '1.2'
+    titulo: Teoria do prospecto
+  - codigo: '1.3'
+    titulo: Heurísticas e atalhos mentais
+- numero: 2
+  titulo: Vieses
+  peso: 25
+  topicos:
+  - codigo: '2.1'
+    titulo: Excesso de confiança e otimismo
+  - codigo: '2.2'
+    titulo: Ancoragem, disponibilidade e representatividade
+  - codigo: '2.3'
+    titulo: Aversão à perda, efeito disposição e contabilidade mental
+  - codigo: '2.4'
+    titulo: Viés de confirmação, status quo e efeito manada
+- numero: 3
+  titulo: O investidor
+  peso: 25
+  topicos:
+  - codigo: '3.1'
+    titulo: Tolerância ao risco e emoções
+  - codigo: '3.2'
+    titulo: Tipos de personalidade do investidor
+  - codigo: '3.3'
+    titulo: Crenças sobre dinheiro (money scripts)
+- numero: 4
+  titulo: Aplicação
+  peso: 25
+  topicos:
+  - codigo: '4.1'
+    titulo: Arquitetura de escolhas e nudges
+  - codigo: '4.2'
+    titulo: Comunicação com clientes em crises
+  - codigo: '4.3'
+    titulo: Vieses do próprio assessor
+  - codigo: '4.4'
+    titulo: Desenho de processos para reduzir vieses

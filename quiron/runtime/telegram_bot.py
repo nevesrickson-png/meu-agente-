@@ -78,8 +78,9 @@ class BotQuiron:
     def ajuda(self) -> str:
         linhas = ["Quíron no ar. Pergunte livremente, mande áudio ou use:"]
         linhas += [f"/{c.nome} — {c.descricao}" for c in self.comandos.values()]
-        linhas += ["", "🎓 Academia (CFP): /academia painel · /questoes [módulo ou tema] · /simulado [mini|40|completo] · "
-                   "/flashcards · /diagnostico · /plano [horas]", ""]
+        linhas += ["", "🎓 Academia (20 campos + certificações): /academia painel · /area [nome] · "
+                   "/questoes [área] [módulo|tema] · /simulado [área] [mini|40|completo] · /flashcards · /diagnostico · "
+                   "/plano [horas]", ""]
         linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
         return "\n".join(linhas)
 

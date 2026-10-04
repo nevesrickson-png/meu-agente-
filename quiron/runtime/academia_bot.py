@@ -10,9 +10,10 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import date
 
-from quiron.servicos.academia import diagnostico, estudo
+from quiron.servicos import areas
+from quiron.servicos.academia import diagnostico, edital, estudo
 from quiron.servicos.academia.banco import LETRAS, Banco, Questao
-from quiron.servicos.academia.estudo import CERT, Filtro
+from quiron.servicos.academia.estudo import Filtro
 
 Botao = tuple[str, str]
 
@@ -33,7 +34,7 @@ class Clique:
     novas: list[Tela] = field(default_factory=list)
 
 
-COMANDOS = {"questoes", "simulado", "flashcards", "diagnostico", "plano", "academia"}
+COMANDOS = {"questoes", "simulado", "flashcards", "diagnostico", "plano", "academia", "area"}
 AVISO_IA = "🤖 Questão gerada por IA e conferida por um 2º modelo. Achou erro? Toque ⚠."
 
 
@@ -56,19 +57,50 @@ class AcademiaBot:
         self.banco = banco or Banco()
         estudo.garantir_semente(self.banco)
 
+    @property
+    def area(self) -> str:
+        return estudo.area_ativa(self.banco)
+
+    def _area_e_resto(self, args: str) -> tuple[str, str]:
+        """Área citada no começo dos argumentos vira a área ativa; senão vale a ativa."""
+        achada, resto = areas.reconhecer(args or "")
+        if achada:
+            estudo.definir_area_ativa(self.banco, achada.id)
+            return achada.id, resto
+        return self.area, (args or "").strip()
+
     # ------------------------------------------------------------ comandos
     async def comando(self, nome: str, args: str) -> list[Tela]:
+        if nome == "area":
+            return [Tela(self.trocar_area(args))]
         if nome == "questoes":
-            return await self.questao(Filtro.ler(args))
+            area, resto = self._area_e_resto(args)
+            return await self.questao(Filtro.ler(resto, area))
         if nome == "simulado":
             return await self.iniciar_simulado(args)
         if nome == "flashcards":
             return await self.flashcards(args)
         if nome == "diagnostico":
-            return [Tela(diagnostico.texto_diagnostico(diagnostico.diagnosticar(self.banco, CERT)))]
+            area, _ = self._area_e_resto(args)
+            return [Tela(diagnostico.texto_diagnostico(diagnostico.diagnosticar(self.banco, area)))]
         if nome == "plano":
             return [Tela(self.plano(args))]
-        return [Tela(diagnostico.painel(self.banco, CERT))]
+        return [Tela(diagnostico.painel_geral(self.banco, self.area))]
+
+    def trocar_area(self, args: str) -> str:
+        if args.strip():
+            achada, _ = areas.reconhecer(args)
+            if not achada:
+                return f"Não achei a área “{args.strip()}”. Veja a lista com /area."
+            estudo.definir_area_ativa(self.banco, achada.id)
+            programa = "" if edital.tem_programa(achada.id) else "\n(Programa ainda não mapeado: as questões serão gerais da área.)"
+            return (f"✅ Área ativa: {achada.nome} ({achada.id}). Agora /questoes, /simulado, /diagnostico e /plano "
+                    f"valem para ela.{programa}")
+        todas = areas.listar()
+        campos = "\n".join(f"• {a.nome} — /area {diagnostico.comando_area(a.id)}" for a in todas if a.tipo == "campo")
+        certs = ", ".join(a.id.replace("_", " ") for a in todas if a.tipo == "certificacao")
+        return (f"Área ativa: {estudo.nome_area(self.area)}.\n\nCampos:\n{campos}\n\nCertificações: {certs}\n"
+                "Ex.: /area economia · /area cfa i · /questoes risco 2 · /simulado renda fixa")
 
     async def questao(self, filtro: Filtro, cab: str = "") -> list[Tela]:
         q = await asyncio.to_thread(estudo.proxima_questao, self.banco, filtro)
@@ -80,30 +112,31 @@ class AcademiaBot:
         return [tela]
 
     def plano(self, args: str = "") -> str:
+        area, resto = self._area_e_resto(args)
         horas = float(self.banco.pref("horas_semana", 5))
-        if args.strip().replace(",", ".").replace("h", "").strip():
+        if resto.replace(",", ".").replace("h", "").strip():
             try:
-                horas = max(1.0, min(20.0, float(args.strip().replace(",", ".").replace("h", ""))))
+                horas = max(1.0, min(20.0, float(resto.replace(",", ".").replace("h", "").strip())))
                 self.banco.definir_pref("horas_semana", horas)
             except ValueError:
                 pass
-        mods = diagnostico.diagnosticar(self.banco, CERT)
-        prova = self.banco.pref("data_prova")
-        data_prova = date.fromisoformat(prova) if prova else None
-        cartoes = len(self.banco.cards_vencidos(CERT, 999))
-        blocos = diagnostico.plano_semana(mods, horas, self.banco.pref("dias_estudo"), cartoes, data_prova)
-        return diagnostico.texto_plano(mods, blocos, horas, cartoes, data_prova)
+        mods = diagnostico.diagnosticar(self.banco, area)
+        prova = diagnostico.data_prova(self.banco, area)
+        cartoes = len(self.banco.cards_vencidos(None, 999))
+        blocos = diagnostico.plano_semana(mods, horas, self.banco.pref("dias_estudo"), cartoes, prova)
+        return diagnostico.texto_plano(mods, blocos, horas, cartoes, prova)
 
     async def iniciar_simulado(self, args: str = "") -> list[Tela]:
-        a = args.strip().lower()
-        n = int(a) if a.isdigit() else estudo.TIPOS.get(a, 16)
-        n = max(8, min(140, n))
-        ids, avisos = await asyncio.to_thread(estudo.montar_simulado, self.banco, n)
+        area, resto = self._area_e_resto(args)
+        n = estudo.tamanho(resto.lower() or "mini", area)
+        ids, avisos = await asyncio.to_thread(estudo.montar_simulado, self.banco, n, True, 2, area)
         if not ids:
             return [Tela("Sem questões suficientes agora (limite dos modelos grátis). Tente mais tarde.")]
-        sid = self.banco.criar_simulado(CERT, ids, "mini" if n == 16 else str(n))
-        cab = (f"🧪 Simulado #{sid} — {len(ids)} questões, estilo prova (o gabarito vem no fim).\n"
-               f"Tempo de referência: ~{round(len(ids) * 2.9)} min (a prova dá ≈ 2,9 min por questão).")
+        sid = self.banco.criar_simulado(area, ids, resto.lower() or "mini")
+        estilo = "estilo prova" if area == "CFP" else "treino"
+        cab = f"🧪 Simulado #{sid} · {estudo.nome_area(area)} — {len(ids)} questões, {estilo} (o gabarito vem no fim)."
+        if area == "CFP":
+            cab += f"\nTempo de referência: ~{round(len(ids) * 2.9)} min (a prova dá ≈ 2,9 min por questão)."
         if avisos:
             cab += "\n" + "\n".join(f"⚠️ {x}" for x in avisos)
         return [Tela(cab), self._tela_simulado(sid)]
@@ -115,23 +148,25 @@ class AcademiaBot:
         return _tela_questao(q, f"ac:s:{sid}:{q.id}", f"[{pos + 1}/{len(s['questoes'])}]", aviso=False)
 
     async def flashcards(self, args: str = "") -> list[Tela]:
-        cards = self.banco.cards_vencidos(CERT, 1)
+        """Revisa os cards vencidos de TODAS as áreas; sem nenhum, cria novos na área ativa (ou na citada)."""
+        cards = self.banco.cards_vencidos(None, 1)
         if not cards:
-            f = Filtro.ler(args)
-            modulo = f.modulo or estudo._modulo_por_prioridade(self.banco)  # noqa: SLF001
+            area, resto = self._area_e_resto(args)
+            f = Filtro.ler(resto, area)
+            modulo = f.modulo or estudo._modulo_por_prioridade(self.banco, area)  # noqa: SLF001
             from quiron.servicos.academia import gerador
 
-            alvo = f.topico or gerador.topicos_para_gerar(modulo, 1, CERT, self.banco)[0]
+            alvo = f.topico or gerador.topicos_para_gerar(modulo, 1, area, self.banco)[0]
             try:
-                await asyncio.to_thread(gerador.gerar_flashcards, alvo, 6, CERT, self.banco)
+                await asyncio.to_thread(gerador.gerar_flashcards, alvo, 6, area, self.banco)
             except Exception:  # noqa: BLE001
                 return [Tela("Nenhum card para revisar hoje e não consegui criar novos agora. ✅")]
-            cards = self.banco.cards_vencidos(CERT, 1)
+            cards = self.banco.cards_vencidos(None, 1)
             if not cards:
                 return [Tela("Nenhum card para revisar hoje. ✅")]
         c = cards[0]
-        restantes = len(self.banco.cards_vencidos(CERT, 999))
-        return [Tela(f"🃏 Flashcard ({restantes} para hoje) · M{c.modulo} · {c.topico}\n\n{c.frente}",
+        restantes = len(self.banco.cards_vencidos(None, 999))
+        return [Tela(f"🃏 Flashcard ({restantes} para hoje) · {c.cert} · M{c.modulo} · {c.topico}\n\n{c.frente}",
                      [[("Mostrar resposta", f"ac:fv:{c.id}")]])]
 
     # ------------------------------------------------------------ botões
@@ -162,7 +197,7 @@ class AcademiaBot:
             if pos >= len(s["questoes"]):
                 self.banco.terminar_simulado(sid)
                 resultado = estudo.texto_resultado_simulado(self.banco, sid)
-                diag = diagnostico.texto_diagnostico(diagnostico.diagnosticar(self.banco, CERT))
+                diag = diagnostico.texto_diagnostico(diagnostico.diagnosticar(self.banco, s["cert"]))
                 return Clique(editar, [Tela(resultado), Tela(diag), Tela(self.plano())])
             return Clique(editar, [self._tela_simulado(sid)])
         if acao == "anular" and len(partes) == 3:
@@ -178,7 +213,7 @@ class AcademiaBot:
                                         ("Bom", f"ac:fn:{c.id}:4"), ("Fácil", f"ac:fn:{c.id}:5")]])])
         if acao == "fn" and len(partes) == 4:
             prox = self.banco.revisar_card(int(partes[2]), int(partes[3]))
-            restantes = self.banco.cards_vencidos(CERT, 1)
+            restantes = self.banco.cards_vencidos(None, 1)
             msg = f"Próxima revisão desse card: {date.fromisoformat(prox):%d/%m}."
             if restantes:
                 return Clique(msg, await self.flashcards())

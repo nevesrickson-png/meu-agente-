@@ -1,0 +1,62 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: VALUATION
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Fundamentos
+  peso: 20
+  topicos:
+  - codigo: '1.1'
+    titulo: Valor x preço
+  - codigo: '1.2'
+    titulo: Valor do dinheiro no tempo aplicado a empresas
+  - codigo: '1.3'
+    titulo: 'Custo de capital: Ke (CAPM) e WACC'
+- numero: 2
+  titulo: Fluxo de caixa descontado
+  peso: 20
+  topicos:
+  - codigo: '2.1'
+    titulo: Fluxo de caixa livre da firma e do acionista
+  - codigo: '2.2'
+    titulo: Projeções e premissas
+  - codigo: '2.3'
+    titulo: Valor terminal e perpetuidade
+  - codigo: '2.4'
+    titulo: Sensibilidade e cenários
+- numero: 3
+  titulo: Avaliação relativa
+  peso: 20
+  topicos:
+  - codigo: '3.1'
+    titulo: Múltiplos de preço e de valor da firma
+  - codigo: '3.2'
+    titulo: Escolha de comparáveis
+  - codigo: '3.3'
+    titulo: Ajustes por crescimento e risco
+- numero: 4
+  titulo: Casos especiais
+  peso: 20
+  topicos:
+  - codigo: '4.1'
+    titulo: Bancos e seguradoras
+  - codigo: '4.2'
+    titulo: Empresas cíclicas e de commodities
+  - codigo: '4.3'
+    titulo: Startups e empresas sem lucro
+  - codigo: '4.4'
+    titulo: Dividendos (modelo de Gordon)
+- numero: 5
+  titulo: Relatório de análise
+  peso: 20
+  topicos:
+  - codigo: '5.1'
+    titulo: Tese de investimento e riscos
+  - codigo: '5.2'
+    titulo: Recomendação e preço-alvo
+  - codigo: '5.3'
+    titulo: Regras do analista (Resolução CVM 20)

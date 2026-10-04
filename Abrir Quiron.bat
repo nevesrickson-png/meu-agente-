@@ -79,7 +79,8 @@ if errorlevel 1 (echo  As configuracoes ainda estao incompletas. Abra de novo pe
 :tem_env
 set "ALVO=%PASTA%\Abrir Quiron.bat"
 set "CONFIG=%PASTA%\Quiron Configuracoes.bat"
-powershell -NoProfile -Command "$d=[Environment]::GetFolderPath('Desktop'); $sh=New-Object -ComObject WScript.Shell; $s=$sh.CreateShortcut((Join-Path $d 'Quiron.lnk')); $s.TargetPath=$env:ALVO; $s.WorkingDirectory=$env:PASTA; $s.IconLocation='%SystemRoot%\System32\imageres.dll,76'; $s.Save(); $c=$sh.CreateShortcut((Join-Path $d 'Quiron - Configuracoes.lnk')); $c.TargetPath=$env:CONFIG; $c.WorkingDirectory=$env:PASTA; $c.IconLocation='%SystemRoot%\System32\imageres.dll,109'; $c.Save()" >nul 2>nul
+set "ACERVO=%PASTA%\Quiron Acervo.bat"
+powershell -NoProfile -Command "$d=[Environment]::GetFolderPath('Desktop'); $sh=New-Object -ComObject WScript.Shell; $s=$sh.CreateShortcut((Join-Path $d 'Quiron.lnk')); $s.TargetPath=$env:ALVO; $s.WorkingDirectory=$env:PASTA; $s.IconLocation='%SystemRoot%\System32\imageres.dll,76'; $s.Save(); $c=$sh.CreateShortcut((Join-Path $d 'Quiron - Configuracoes.lnk')); $c.TargetPath=$env:CONFIG; $c.WorkingDirectory=$env:PASTA; $c.IconLocation='%SystemRoot%\System32\imageres.dll,109'; $c.Save(); $v=$sh.CreateShortcut((Join-Path $d 'Quiron - Acervo.lnk')); $v.TargetPath=$env:ACERVO; $v.WorkingDirectory=$env:PASTA; $v.IconLocation='%SystemRoot%\System32\imageres.dll,112'; $v.Save()" >nul 2>nul
 
 echo  [4/4] Abrindo o Quiron (a 1a vez demora alguns minutos instalando)...
 echo  ----------------------------------------------------------------

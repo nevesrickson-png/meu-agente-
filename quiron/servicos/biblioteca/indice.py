@@ -81,6 +81,11 @@ class Indice:
                 embeddings=vetores[i : i + 500],
             )
 
+    def definir_area(self, livro_id: str, area: str) -> None:
+        dados = self.colecao.get(where={"livro_id": livro_id}, include=["metadatas"])
+        if dados["ids"]:
+            self.colecao.update(ids=dados["ids"], metadatas=[{**m, "area": area} for m in dados["metadatas"]])
+
     def remover_livro(self, livro_id: str) -> None:
         self.colecao.delete(where={"livro_id": livro_id})
 
@@ -88,7 +93,8 @@ class Indice:
         return self.colecao.count()
 
     def buscar(
-        self, consulta: str, n: int = 6, *, livro_id: str | None = None, autor: str | None = None, bloco: int | None = None
+        self, consulta: str, n: int = 6, *, livro_id: str | None = None, autor: str | None = None, bloco: int | None = None,
+        area: str | None = None,
     ) -> list[Resultado]:
         if self.total_trechos() == 0:
             return []
@@ -99,6 +105,8 @@ class Indice:
             filtros.append({"autor_chave": chave(autor)})
         if bloco is not None:
             filtros.append({"bloco": int(bloco)})
+        if area:
+            filtros.append({"area": area.upper()})
         where = None if not filtros else filtros[0] if len(filtros) == 1 else {"$and": filtros}
         r = self.colecao.query(
             query_embeddings=[self.emb.vetor_consulta(consulta)],

@@ -22,6 +22,7 @@ class Trecho:
     pagina_fim: int | None
     texto: str
     bloco: int = 0  # 0 = sem bloco do guia
+    area: str = ""  # área do acervo (ECONOMIA, CFP…) — vem da pasta em biblioteca/acervo/<área>/
 
     def metadados(self) -> dict:
         """Metadados para o índice (Chroma não aceita None)."""
@@ -34,6 +35,7 @@ class Trecho:
             "pagina_inicio": self.pagina_inicio or 0,
             "pagina_fim": self.pagina_fim or 0,
             "bloco": self.bloco,
+            "area": self.area,
         }
 
 

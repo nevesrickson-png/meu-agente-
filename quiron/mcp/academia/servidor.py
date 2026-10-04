@@ -1,71 +1,78 @@
-"""Servidor MCP `quiron-academia`: trilha, edital, questões, diagnóstico e plano de estudo (CFP primeiro)."""
+"""Servidor MCP `quiron-academia`: áreas de conhecimento (campos + certificações), programas, questões,
+diagnóstico e plano de estudo."""
 
 from __future__ import annotations
 
 from mcp.server.mcpserver import MCPServer
 
-from quiron.servicos.academia import consultas, diagnostico
-from quiron.servicos.academia.banco import Banco
+from quiron.servicos.academia import consultas
 
 mcp = MCPServer(
     "quiron-academia",
     instructions=(
-        "Academia de certificações do Rickson (trilha CFP → CNPI → CFA…). O edital oficial está mapeado em tópicos "
-        "(códigos como 3.5.2): use `edital`/`topico` para situar qualquer assunto antes de ensinar. Questões são "
-        "geradas por IA e conferidas por um 2º modelo; números e diagnóstico vêm do Python. Não invente regra: "
-        "na dúvida, diga que é preciso conferir. Siga agente/skills/academia-aula.md e academia-caso.md."
+        "Academia do Rickson: áreas de conhecimento de finanças (campos como ECONOMIA, RENDA_FIXA, RISCO, COMERCIAL… e "
+        "certificações como CFP, CNPI, CFA). Cada área tem um programa em tópicos (códigos como 3.5.2): use `programa` "
+        "para situar qualquer assunto antes de ensinar. `area` aceita o id (RENDA_FIXA) ou o nome (renda fixa); vazio = "
+        "área ativa. Questões são geradas por IA e conferidas por um 2º modelo; números e diagnóstico vêm do Python. "
+        "Não invente regra. Siga agente/skills/academia-aula.md e academia-caso.md."
     ),
 )
 
 
 @mcp.tool()
 def trilha() -> str:
-    """Trilha de certificações e painel de progresso (prontidão, ritmo, revisões pendentes)."""
+    """Trilha de certificações e painel de progresso de todas as áreas."""
     return consultas.trilha()
 
 
 @mcp.tool()
-def edital(cert: str = "CFP", modulo: int | None = None, busca: str | None = None) -> str:
-    """Edital oficial mapeado: sem argumentos = formato da prova e módulos com peso; modulo = tópicos do módulo;
-    busca = tópicos do edital que tratam de um assunto (ex.: 'come-cotas', 'sucessão', 'PGBL')."""
-    return consultas.mapa_edital(cert, modulo, busca)
+def areas() -> str:
+    """Lista as áreas de conhecimento (campos e certificações) e se cada uma tem programa mapeado."""
+    return consultas.listar_areas()
 
 
 @mcp.tool()
-def topico(codigo: str, cert: str = "CFP") -> str:
-    """Detalhe de um tópico do edital (ex.: '6.2.1'): itens, subtópicos e o desempenho do Rickson nele."""
-    return consultas.detalhar_topico(codigo, cert)
+def programa(area: str = "CFP", modulo: int | None = None, busca: str | None = None) -> str:
+    """Programa de estudo de uma área (edital oficial nas certificações mapeadas): sem argumentos = módulos;
+    modulo = tópicos do módulo; busca = tópicos que tratam de um assunto (ex.: 'come-cotas', 'duration', 'objeções')."""
+    return consultas.mapa_edital(area, modulo, busca)
 
 
 @mcp.tool()
-def diagnostico_estudo() -> str:
-    """Diagnóstico por módulo (acerto estimado, situação vs. meta de 70%) e pontos fracos por tópico."""
-    banco = Banco()
-    return diagnostico.texto_diagnostico(diagnostico.diagnosticar(banco))
+def topico(codigo: str, area: str = "CFP") -> str:
+    """Detalhe de um tópico (ex.: '6.2.1' no CFP, '5.1' em RENDA_FIXA): itens, subtópicos e desempenho do Rickson."""
+    return consultas.detalhar_topico(codigo, area)
 
 
 @mcp.tool()
-def plano_estudo(horas_semana: float | None = None) -> str:
-    """Plano da semana distribuído pelos pontos fracos e pelos pesos do edital (padrão 5 h; o Rickson estuda 3–7 h)."""
-    return consultas.plano(horas_semana)
+def diagnostico_estudo(area: str | None = None) -> str:
+    """Diagnóstico da área (acerto estimado por módulo vs. 70%) e pontos fracos por tópico."""
+    return consultas.diagnostico_texto(area)
 
 
 @mcp.tool()
-def configurar_estudo(data_prova: str | None = None, horas_semana: float | None = None, dias: list[str] | None = None) -> str:
-    """Guarda a data da prova (dd/mm/aaaa), as horas por semana e os dias de estudo (segunda…domingo)."""
-    return consultas.configurar(data_prova, horas_semana, dias)
+def plano_estudo(area: str | None = None, horas_semana: float | None = None) -> str:
+    """Plano da semana da área pelos pontos fracos e pesos do programa (padrão 5 h; o Rickson estuda 3–7 h)."""
+    return consultas.plano(horas_semana, area=area)
+
+
+@mcp.tool()
+def configurar_estudo(area: str | None = None, data_prova: str | None = None, horas_semana: float | None = None,
+                      dias: list[str] | None = None) -> str:
+    """Troca a área ativa e/ou guarda a data da prova dessa área (dd/mm/aaaa), horas por semana e dias de estudo."""
+    return consultas.configurar(data_prova, horas_semana, dias, area=area)
 
 
 @mcp.tool()
 def gerar_questoes(alvo: str, quantidade: int = 4) -> str:
-    """Gera questões novas (revisadas por um 2º modelo) para um módulo ('3'), tópico ('3.5.2') ou tema do edital."""
+    """Gera questões novas (revisadas por um 2º modelo). alvo: 'economia 2', 'cfp 3.5.2', 'renda fixa duration'…"""
     return consultas.gerar(alvo, quantidade)
 
 
 @mcp.tool()
 def questoes(alvo: str = "", quantidade: int = 3) -> str:
     """Questões para responder na conversa (gabarito separado no fim — só revele depois da resposta).
-    No Telegram, prefira sugerir /questoes (tem botões A–D)."""
+    alvo como em gerar_questoes. No Telegram, prefira sugerir /questoes (tem botões A–D)."""
     return consultas.questoes_texto(alvo, quantidade)
 
 

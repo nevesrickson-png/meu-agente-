@@ -1,0 +1,40 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: CONTEUDO
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Comunicação
+  peso: 33
+  topicos:
+  - codigo: '1.1'
+    titulo: Linguagem simples sobre finanças
+  - codigo: '1.2'
+    titulo: Relatórios e cartas a clientes
+  - codigo: '1.3'
+    titulo: Apresentações e reuniões
+- numero: 2
+  titulo: Conteúdo digital
+  peso: 33
+  topicos:
+  - codigo: '2.1'
+    titulo: Planejamento editorial e formatos
+  - codigo: '2.2'
+    titulo: Vídeo, carrossel e newsletter
+  - codigo: '2.3'
+    titulo: Métricas e crescimento orgânico
+  - codigo: '2.4'
+    titulo: Uso de IA na produção de conteúdo
+- numero: 3
+  titulo: Regras
+  peso: 33
+  topicos:
+  - codigo: '3.1'
+    titulo: Publicidade de investimentos (regras CVM e ANBIMA)
+  - codigo: '3.2'
+    titulo: Disclaimers e riscos
+  - codigo: '3.3'
+    titulo: Recomendação x conteúdo educacional

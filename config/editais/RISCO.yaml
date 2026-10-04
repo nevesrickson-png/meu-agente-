@@ -1,0 +1,60 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: RISCO
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Fundamentos
+  peso: 20
+  topicos:
+  - codigo: '1.1'
+    titulo: 'Tipos de risco: mercado, crédito, liquidez, operacional'
+  - codigo: '1.2'
+    titulo: Risco x incerteza e apetite a risco
+  - codigo: '1.3'
+    titulo: Estrutura de gestão de risco (três linhas)
+- numero: 2
+  titulo: Risco de mercado
+  peso: 20
+  topicos:
+  - codigo: '2.1'
+    titulo: Volatilidade e correlação
+  - codigo: '2.2'
+    titulo: VaR paramétrico, histórico e Monte Carlo
+  - codigo: '2.3'
+    titulo: Testes de estresse e cenários
+  - codigo: '2.4'
+    titulo: Expected shortfall
+- numero: 3
+  titulo: Risco de crédito
+  peso: 20
+  topicos:
+  - codigo: '3.1'
+    titulo: Probabilidade de default, LGD e exposição
+  - codigo: '3.2'
+    titulo: Rating e spreads de crédito
+  - codigo: '3.3'
+    titulo: Mitigadores de crédito
+- numero: 4
+  titulo: Risco de liquidez e operacional
+  peso: 20
+  topicos:
+  - codigo: '4.1'
+    titulo: Liquidez de mercado x de financiamento
+  - codigo: '4.2'
+    titulo: Descasamento de ativos e passivos
+  - codigo: '4.3'
+    titulo: Risco operacional e de modelo
+- numero: 5
+  titulo: Risco do investidor
+  peso: 20
+  topicos:
+  - codigo: '5.1'
+    titulo: 'Perfil de risco: tolerância x capacidade'
+  - codigo: '5.2'
+    titulo: 'Riscos pessoais: longevidade, morte, invalidez'
+  - codigo: '5.3'
+    titulo: Gestão de risco em carteiras de clientes

@@ -1,0 +1,68 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: RENDA_VARIAVEL
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Mercado de ações
+  peso: 20
+  topicos:
+  - codigo: '1.1'
+    titulo: Ações ON, PN, units e BDRs
+  - codigo: '1.2'
+    titulo: B3, corretoras, custódia e liquidação
+  - codigo: '1.3'
+    titulo: Ofertas públicas (IPO, follow-on) e governança (Novo Mercado)
+  - codigo: '1.4'
+    titulo: Índices de ações (Ibovespa, IBrX, SMLL)
+- numero: 2
+  titulo: Proventos e eventos
+  peso: 20
+  topicos:
+  - codigo: '2.1'
+    titulo: Dividendos e JCP
+  - codigo: '2.2'
+    titulo: Bonificação, desdobramento e grupamento
+  - codigo: '2.3'
+    titulo: Direito de subscrição
+  - codigo: '2.4'
+    titulo: Recompra e cancelamento de ações
+- numero: 3
+  titulo: Análise fundamentalista
+  peso: 20
+  topicos:
+  - codigo: '3.1'
+    titulo: 'Indicadores: P/L, P/VP, EV/EBITDA, dividend yield'
+  - codigo: '3.2'
+    titulo: ROE, ROIC e margens
+  - codigo: '3.3'
+    titulo: Endividamento e geração de caixa
+  - codigo: '3.4'
+    titulo: Análise setorial e vantagens competitivas
+- numero: 4
+  titulo: Análise técnica
+  peso: 20
+  topicos:
+  - codigo: '4.1'
+    titulo: Tendências, suportes e resistências
+  - codigo: '4.2'
+    titulo: Médias móveis e indicadores (IFR, MACD)
+  - codigo: '4.3'
+    titulo: Volume e padrões gráficos
+  - codigo: '4.4'
+    titulo: Limitações da análise técnica
+- numero: 5
+  titulo: Operações e tributação
+  peso: 20
+  topicos:
+  - codigo: '5.1'
+    titulo: Swing trade e day trade
+  - codigo: '5.2'
+    titulo: Aluguel de ações e venda a descoberto
+  - codigo: '5.3'
+    titulo: ETFs de renda variável e FIIs
+  - codigo: '5.4'
+    titulo: Tributação de ações, ETFs e FIIs

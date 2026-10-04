@@ -127,14 +127,23 @@ Arquivos com DRM não são processados.
   checagem de Host) que lê/grava o `.env` preservando comentários, testa chaves (Telegram getMe, Gemini, Groq, brapi) e
   descobre o ID pelo getUpdates; segredos nunca voltam inteiros à página. `quiron-configurar --verificar` (0 = completo)
   é usado pelos `.bat` do Windows (`Abrir Quiron.bat` instala/atualiza/abre; `Quiron Configuracoes.bat`).
-- Academia (Fase 6, `quiron/servicos/academia/`): `edital.py` (PDF oficial → `config/editais/CFP.yaml`, 8 módulos/pesos/922
+- Áreas (`quiron/servicos/areas.py`): 20 campos em `config/areas_conhecimento.yaml` + certificações da trilha (+ CEA) +
+  personalizadas em `dados/areas_personalizadas.yaml` (fora do git). Cada área = pasta do acervo (id minúsculo) + trilha da
+  Academia (programa em `config/editais/<ID>.yaml`; campos têm `tipo: campo`; sem arquivo → programa provisório de 1 tópico).
+  `areas.reconhecer('renda fixa duration')` acha a área no início do texto.
+- Acervo (`quiron/servicos/acervo.py` + Terminal `/acervo`, `acervo.html`): upload em partes (PUT com corpo bruto, limite
+  300 MB, só PDF/EPUB, nunca sobrescreve) para `biblioteca/acervo/<área>/`; fila em `dados/acervo.db` com um processador em
+  segundo plano (`ingerir_arquivo(..., area=)`); trechos guardam `area` (filtro em `Indice.buscar(area=)` e nos MCP da
+  biblioteca); mover/remover; escrita exige cabeçalho `X-Quiron: acervo` e, sem senha, host local ou `.ts.net`.
+- Academia (Fase 6, `quiron/servicos/academia/`, multiárea — `cert` = id da área): `edital.py` (PDF oficial → `config/editais/CFP.yaml`, 8 módulos/pesos/922
   tópicos; códigos de tópico são a referência de tudo), `banco.py` (`dados/academia.db`: questões, respostas, flashcards,
   simulados, preferências; SM-2 para cards e para questões erradas), `gerador.py` (gera no Groq → `validar` (estrutura +
   `verificacao` aritmética calculada sem eval) → `revisar` por modelo de OUTRO provedor, que resolve sozinho e confere
   coerência; recusadas não entram), `diagnostico.py` (acerto suavizado (a+1)/(n+2), prontidão ponderada pelo peso, plano em
   blocos de 30 min), `estudo.py` (Filtro módulo/tópico/tema, simulados 16/40/140 por peso, geração noturna
   `config/academia/geracao.yaml`, banco inicial `config/academia/banco_inicial_cfp.json`), `consultas.py` + MCP
-  `quiron-academia`, `cli.py` (`quiron-academia`). Telegram: `runtime/academia_bot.py` (direto, sem LLM; botões `ac:*`).
+  `quiron-academia`, `cli.py` (`quiron-academia`). Telegram: `runtime/academia_bot.py` (direto, sem LLM; botões `ac:*`; `/area` troca a área ativa, guardada em
+  `preferencias.area_ativa`; filtro nos botões `ÁREA|m3`).
   `/aula` e `/caso` usam as skills `academia-aula`/`academia-caso`. Catálogo de gratuitos: `config/materiais_gratuitos.yaml`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,

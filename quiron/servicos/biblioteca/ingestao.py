@@ -51,11 +51,36 @@ def _slug(texto: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", chave(texto)).strip("-")[:40]
 
 
-def ingerir_arquivo(arquivo: Path, indice: Indice, guia: Guia, forcar: bool = False) -> ResultadoLivro:
+def area_do_arquivo(arquivo: Path, raiz: Path) -> str:
+    """Área pela pasta: biblioteca/acervo/<área>/x.pdf ou academia/material/<área>/x.pdf → ÁREA ('' se fora)."""
+    from quiron.nucleo.config import RAIZ
+
+    partes: tuple[str, ...] = ()
+    for base in (raiz / "acervo", RAIZ / "academia" / "material"):
+        try:
+            partes = arquivo.resolve().relative_to(base.resolve()).parts
+            break
+        except ValueError:
+            continue
+    if len(partes) < 2:
+        return ""
+    from quiron.servicos import areas
+
+    a = areas.obter(partes[0])
+    return a.id if a else partes[0].upper()
+
+
+def ingerir_arquivo(arquivo: Path, indice: Indice, guia: Guia, forcar: bool = False, area: str | None = None) -> ResultadoLivro:
     sha = _hash(arquivo)
+    area = area if area is not None else area_do_arquivo(arquivo, indice.raiz)
     cat = indice.catalogo()
     existente = next((l for l in cat.values() if l["sha256"] == sha), None)
     if existente and not forcar:
+        if area and existente.get("area") != area:  # mesmo livro, agora numa pasta de área: só reclassifica
+            indice.definir_area(existente["id"], area)
+            cat[existente["id"]]["area"] = area
+            indice.salvar_catalogo(cat)
+            return ResultadoLivro(arquivo.name, "área atualizada", f"{existente['titulo']} → {area}", existente["id"])
         return ResultadoLivro(arquivo.name, "já estava", existente["titulo"], existente["id"])
     try:
         livro = extrair(arquivo, indice.raiz / "texto")
@@ -74,6 +99,7 @@ def ingerir_arquivo(arquivo: Path, indice: Indice, guia: Guia, forcar: bool = Fa
         vetores += indice.emb.vetores([t.texto for t in trechos[i : i + LOTE_EMBEDDINGS]])
     for t, b in zip(trechos, classificar(vetores, guia, indice.emb)):
         t.bloco = b
+        t.area = area
 
     indice.remover_livro(livro_id)
     indice.adicionar(trechos, vetores)
@@ -84,6 +110,7 @@ def ingerir_arquivo(arquivo: Path, indice: Indice, guia: Guia, forcar: bool = Fa
         "titulo": livro.titulo,
         "autor": livro.autor,
         "arquivo": arquivo.name,
+        "area": area,
         "formato": livro.formato,
         "sha256": sha,
         "paginas": max(paginas) if paginas else None,

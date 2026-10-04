@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quíron — Acervo</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --fundo: #0f0f0e; --painel: #1a1a19; --painel-2: #222220; --borda: #2e2e2b;
+    --texto: #f2f1ec; --texto-2: #c3c2b7; --texto-3: #8d8c84;
+    --ambar: #f0a020; --ok: #0ca30c; --erro: #e05252; --azul: #3987e5;
+    --mono: "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
+  a { color: var(--texto-2); }
+  header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 14px; padding: 10px 18px;
+           background: #141413; border-bottom: 1px solid var(--borda); }
+  .marca { font-weight: 700; letter-spacing: 1px; }
+  .marca span { color: var(--ambar); margin-left: 6px; }
+  header .voltar { margin-left: auto; font-size: 13px; text-decoration: none; }
+  header .voltar:hover { color: var(--ambar); }
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 60px; display: grid; gap: 16px;
+         grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; min-width: 0; }
+  section > h2 { margin: 0; padding: 11px 14px; font-size: 12px; letter-spacing: .8px; text-transform: uppercase;
+                 color: var(--texto-3); border-bottom: 1px solid var(--borda); display: flex; align-items: center; gap: 8px; }
+  section > h2 .acoes { margin-left: auto; display: flex; gap: 8px; text-transform: none; letter-spacing: 0; }
+  .corpo { padding: 12px 14px; }
+  .busca { width: 100%; background: var(--painel-2); border: 1px solid var(--borda); color: var(--texto); border-radius: 6px;
+           padding: 8px 10px; font: inherit; margin-bottom: 10px; }
+  .grupo { margin: 4px 0 12px; }
+  .grupo h3 { margin: 0 0 6px; font-size: 12px; color: var(--texto-3); font-weight: 600; }
+  .areas { display: flex; flex-wrap: wrap; gap: 6px; }
+  .area { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 99px; cursor: pointer;
+          background: var(--painel-2); border: 1px solid var(--borda); color: var(--texto); font: inherit; font-size: 13px; }
+  .area:hover { border-color: var(--texto-3); }
+  .area[aria-pressed="true"] { border-color: var(--ambar); background: #f0a02018; }
+  .area .n { font: 11px var(--mono); color: var(--texto-3); }
+  .area[aria-pressed="true"] .n { color: var(--ambar); }
+  button { background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: 6px;
+           padding: 7px 11px; cursor: pointer; font: inherit; font-size: 13px; }
+  button:hover { border-color: var(--texto-3); }
+  button.primario { background: var(--ambar); border-color: var(--ambar); color: #1a1205; font-weight: 700; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .selecionada { font-size: 15px; margin-bottom: 4px; }
+  .selecionada b { color: var(--ambar); }
+  .descricao { color: var(--texto-3); font-size: 13px; margin-bottom: 12px; min-height: 1em; }
+  .zona { border: 2px dashed var(--borda); border-radius: 10px; padding: 28px 16px; text-align: center; color: var(--texto-2);
+          cursor: pointer; transition: border-color .15s, background .15s; }
+  .zona:hover, .zona.sobre { border-color: var(--ambar); background: #f0a0200d; }
+  .zona.bloqueada { opacity: .5; cursor: not-allowed; }
+  .zona .grande { font-size: 15px; color: var(--texto); margin-bottom: 4px; }
+  .envios { margin-top: 10px; display: grid; gap: 6px; }
+  .envio { font-size: 13px; }
+  .envio .linha { display: flex; justify-content: space-between; gap: 8px; }
+  .envio .nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .progresso { height: 4px; background: var(--painel-2); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+  .progresso div { height: 100%; background: var(--azul); width: 0; transition: width .2s; }
+  .envio.erro .nome { color: var(--erro); }
+  .tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tabela th { text-align: left; color: var(--texto-3); font-weight: 600; font-size: 12px; padding: 6px 8px;
+               border-bottom: 1px solid var(--borda); }
+  .tabela td { padding: 7px 8px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+  .tabela tr:last-child td { border-bottom: 0; }
+  .tabela .arq { word-break: break-word; }
+  .tabela .det { color: var(--texto-3); font-size: 12px; margin-top: 2px; }
+  .tabela select { background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: 5px;
+                   padding: 3px 4px; font: inherit; font-size: 12px; max-width: 150px; }
+  .mono { font-family: var(--mono); font-size: 12px; color: var(--texto-2); white-space: nowrap; }
+  .sit { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 99px; border: 1px solid var(--borda); white-space: nowrap; }
+  .sit.ok { color: var(--ok); border-color: #0ca30c55; }
+  .sit.fila { color: var(--texto-2); }
+  .sit.proc { color: var(--azul); border-color: #3987e555; }
+  .sit.erro { color: var(--erro); border-color: #e0525255; }
+  .sit.aviso { color: var(--ambar); border-color: #f0a02055; }
+  .vazio { color: var(--texto-3); padding: 14px; text-align: center; }
+  .full { grid-column: 1 / -1; }
+  dialog { background: var(--painel); color: var(--texto); border: 1px solid var(--borda); border-radius: 10px; padding: 18px;
+           width: min(420px, calc(100vw - 32px)); }
+  dialog::backdrop { background: #000a; }
+  dialog label { display: block; font-size: 13px; color: var(--texto-2); margin: 10px 0 4px; }
+  dialog input, dialog select { width: 100%; background: var(--painel-2); border: 1px solid var(--borda); color: var(--texto);
+                                border-radius: 6px; padding: 8px 10px; font: inherit; }
+  dialog .botoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .msg { font-size: 13px; margin-top: 8px; min-height: 1em; }
+  .msg.erro { color: var(--erro); }
+  .esconder { display: none !important; }
+  @media (max-width: 640px) {
+    header .sub { display: none; }
+    .tabela thead { display: none; }
+    .tabela tr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px 8px;
+                 border-bottom: 1px solid var(--borda); }
+    .tabela td { border: 0; padding: 0; }
+    .tabela td.arq { flex: 1 1 100%; }
+    .tabela td:last-child { margin-left: auto; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">QUÍRON<span>ACERVO</span></div>
+  <span class="sub" style="color:var(--texto-3);font-size:13px">livros e materiais por campo de conhecimento</span>
+  <a class="voltar" href="/">← Terminal</a>
+</header>
+
+<main>
+  <section>
+    <h2>1 · Escolha a área <span class="acoes"><button id="nova-area" type="button">+ Nova área</button></span></h2>
+    <div class="corpo">
+      <input id="busca" class="busca" type="search" placeholder="Filtrar áreas (ex.: risco, renda, CFA)" aria-label="Filtrar áreas">
+      <div id="grupos"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · Envie os arquivos</h2>
+    <div class="corpo">
+      <div id="selecionada" class="selecionada">Nenhuma área escolhida</div>
+      <div id="descricao" class="descricao">Escolha a área ao lado; o arquivo vai para a pasta dela.</div>
+      <div id="zona" class="zona bloqueada" tabindex="0" role="button" aria-label="Escolher arquivos para enviar">
+        <div class="grande">Arraste PDFs ou EPUBs aqui</div>
+        <div>ou clique para escolher · até <span id="limite">300</span> MB por arquivo</div>
+      </div>
+      <input id="arquivos" type="file" multiple accept=".pdf,.epub" class="esconder">
+      <div id="envios" class="envios"></div>
+      <p style="color:var(--texto-3);font-size:12px;margin:12px 0 0">
+        Depois do envio, o Quíron lê o arquivo (com OCR se for escaneado) e o coloca na biblioteca da área — um por vez,
+        em segundo plano. Livros com DRM não são processados. Os arquivos ficam só no seu computador/servidor.
+      </p>
+    </div>
+  </section>
+
+  <section class="full">
+    <h2>Arquivos <span id="contagem" style="text-transform:none;letter-spacing:0"></span>
+      <span class="acoes"><label style="font-size:12px;color:var(--texto-3);display:flex;align-items:center;gap:6px">
+        <input id="so-area" type="checkbox"> só da área escolhida</label></span></h2>
+    <div style="overflow-x:auto">
+      <table class="tabela">
+        <thead><tr><th>Arquivo</th><th>Área</th><th>Tamanho</th><th>Situação</th><th></th></tr></thead>
+        <tbody id="lista"></tbody>
+      </table>
+      <div id="lista-vazia" class="vazio esconder">Nenhum arquivo ainda. Escolha uma área e envie o primeiro.</div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg-area">
+  <form id="form-area" method="dialog">
+    <strong>Nova área de conhecimento</strong>
+    <label for="na-nome">Nome</label>
+    <input id="na-nome" maxlength="60" required placeholder="Ex.: Agronegócio">
+    <label for="na-desc">Descrição (opcional)</label>
+    <input id="na-desc" maxlength="200" placeholder="Ex.: crédito rural, CPR, Fiagro">
+    <label for="na-tipo">Tipo</label>
+    <select id="na-tipo"><option value="campo">Campo de conhecimento</option><option value="certificacao">Certificação</option></select>
+    <div id="na-msg" class="msg"></div>
+    <div class="botoes"><button type="button" id="na-cancelar">Cancelar</button><button class="primario" id="na-criar">Criar</button></div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+let dados = { areas: [], arquivos: [] };
+let escolhida = null;
+let timer = null;
+const OK = new Set(["pronto", "já estava", "área atualizada"]);
+
+function el(tag, attrs = {}, ...filhos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const f of filhos.flat()) if (f != null) e.append(f);
+  return e;
+}
+
+async function api(caminho, opcoes = {}) {
+  const r = await fetch(caminho, { ...opcoes, headers: { "X-Quiron": "acervo", ...(opcoes.headers || {}) } });
+  if (r.status === 401) { location.href = "/login"; throw new Error("senha necessária"); }
+  const corpo = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(corpo.detail || corpo.erro || `erro ${r.status}`);
+  return corpo;
+}
+
+const tamanho = (b) => b >= 1048576 ? `${(b / 1048576).toFixed(1).replace(".", ",")} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+const nomeArea = (id) => (dados.areas.find((a) => a.id === id) || {}).nome || id;
+
+function classeSituacao(s) {
+  if (OK.has(s)) return "ok";
+  if (s === "na fila") return "fila";
+  if (s === "processando") return "proc";
+  if (s === "erro") return "erro";
+  return "aviso";
+}
+
+function desenharAreas() {
+  const filtro = $("#busca").value.trim().toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  const grupos = [["Campos de conhecimento", (a) => a.tipo === "campo" && !a.personalizada],
+                  ["Certificações", (a) => a.tipo === "certificacao" && !a.personalizada],
+                  ["Criadas por você", (a) => a.personalizada]];
+  const blocos = [];
+  for (const [titulo, teste] of grupos) {
+    const lista = dados.areas.filter(teste).filter((a) => !filtro ||
+      `${a.nome} ${a.id} ${a.descricao}`.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").includes(filtro));
+    if (!lista.length) continue;
+    blocos.push(el("div", { class: "grupo" }, el("h3", {}, titulo), el("div", { class: "areas" },
+      lista.map((a) => el("button", { type: "button", class: "area", "aria-pressed": String(a.id === escolhida),
+        title: a.descricao || a.nome, onclick: () => escolher(a.id) }, a.nome,
+        el("span", { class: "n" }, a.arquivos ? String(a.arquivos) : ""))))));
+  }
+  $("#grupos").replaceChildren(...(blocos.length ? blocos : [el("div", { class: "vazio" }, "Nenhuma área com esse nome.")]));
+}
+
+function escolher(id) {
+  escolhida = id;
+  try { localStorage.setItem("acervo-area", id); } catch (e) { /* sem armazenamento: tudo bem */ }
+  const a = dados.areas.find((x) => x.id === id);
+  $("#selecionada").replaceChildren("Área: ", el("b", {}, a ? a.nome : id), el("span", { class: "mono" }, `  → acervo/${a ? a.pasta : id.toLowerCase()}/`));
+  $("#descricao").textContent = a && a.descricao ? a.descricao : "";
+  $("#zona").classList.remove("bloqueada");
+  desenharAreas();
+  desenharLista();
+}
+
+function desenharLista() {
+  const so = $("#so-area").checked && escolhida;
+  const itens = dados.arquivos.filter((r) => !so || r.area === escolhida);
+  const prontos = dados.arquivos.filter((r) => r.pronto).length;
+  $("#contagem").textContent = dados.arquivos.length ? `· ${dados.arquivos.length} (${prontos} na biblioteca)` : "";
+  $("#lista-vazia").classList.toggle("esconder", itens.length > 0);
+  $("#lista").replaceChildren(...itens.map((r) => {
+    const mover = el("select", { "aria-label": `Mover ${r.nome} para outra área`, onchange: async (ev) => {
+      try { await api("/api/acervo/mover", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: r.id, area: ev.target.value }) }); await carregar(); }
+      catch (e) { alert(e.message); ev.target.value = r.area; }
+    } }, dados.areas.map((a) => el("option", { value: a.id, selected: a.id === r.area }, a.nome)));
+    const remover = el("button", { type: "button", title: "Tirar do acervo e da biblioteca", onclick: async () => {
+      if (!confirm(`Remover “${r.nome}” do acervo e da biblioteca?`)) return;
+      try { await api(`/api/acervo/arquivo/${r.id}`, { method: "DELETE" }); await carregar(); } catch (e) { alert(e.message); }
+    } }, "Remover");
+    return el("tr", {},
+      el("td", { class: "arq" }, r.nome, r.detalhe ? el("div", { class: "det" }, r.detalhe) : null),
+      el("td", {}, mover),
+      el("td", { class: "mono" }, tamanho(r.tamanho)),
+      el("td", {}, el("span", { class: `sit ${classeSituacao(r.situacao)}` }, r.situacao === "pronto" ? "✔ na biblioteca" : r.situacao)),
+      el("td", {}, remover));
+  }));
+}
+
+async function carregar() {
+  try {
+    dados = await api("/api/acervo");
+  } catch (e) {
+    $("#grupos").replaceChildren(el("div", { class: "vazio" }, `Não consegui carregar o acervo: ${e.message}`));
+    return;
+  }
+  $("#limite").textContent = dados.limite_mb;
+  if (!escolhida) {
+    let salva = null;
+    try { salva = localStorage.getItem("acervo-area"); } catch (e) { /* ignora */ }
+    if (salva && dados.areas.some((a) => a.id === salva)) { escolher(salva); return agendar(); }
+  }
+  desenharAreas();
+  desenharLista();
+  agendar();
+}
+
+function agendar() {
+  clearTimeout(timer);
+  const ocupado = dados.arquivos.some((r) => r.situacao === "na fila" || r.situacao === "processando");
+  timer = setTimeout(carregar, ocupado ? 3000 : 20000);
+}
+
+function enviar(arquivos) {
+  if (!escolhida) { alert("Escolha a área primeiro."); return; }
+  for (const arq of arquivos) {
+    const barra = el("div");
+    const estado = el("span", { class: "mono" }, "0%");
+    const item = el("div", { class: "envio" }, el("div", { class: "linha" }, el("span", { class: "nome" }, arq.name), estado),
+                    el("div", { class: "progresso" }, barra));
+    $("#envios").prepend(item);
+    const ext = arq.name.toLowerCase().slice(arq.name.lastIndexOf("."));
+    if (![".pdf", ".epub"].includes(ext)) { item.classList.add("erro"); estado.textContent = "só PDF/EPUB"; continue; }
+    if (arq.size > dados.limite_mb * 1048576) { item.classList.add("erro"); estado.textContent = "grande demais"; continue; }
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", `/api/acervo/arquivo?area=${encodeURIComponent(escolhida)}&nome=${encodeURIComponent(arq.name)}`);
+    xhr.setRequestHeader("X-Quiron", "acervo");
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) { const p = Math.round(ev.loaded / ev.total * 100); barra.style.width = p + "%"; estado.textContent = p + "%"; } };
+    xhr.onload = () => {
+      let corpo = {};
+      try { corpo = JSON.parse(xhr.responseText); } catch (e) { /* resposta vazia */ }
+      if (xhr.status >= 200 && xhr.status < 300) { barra.style.width = "100%"; estado.textContent = `→ ${nomeArea(corpo.area)}`; carregar(); }
+      else { item.classList.add("erro"); estado.textContent = corpo.detail || `erro ${xhr.status}`; }
+    };
+    xhr.onerror = () => { item.classList.add("erro"); estado.textContent = "falha de conexão"; };
+    xhr.send(arq);
+  }
+}
+
+const zona = $("#zona");
+zona.addEventListener("click", () => escolhida ? $("#arquivos").click() : alert("Escolha a área primeiro."));
+zona.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); zona.click(); } });
+$("#arquivos").addEventListener("change", (ev) => { enviar([...ev.target.files]); ev.target.value = ""; });
+["dragenter", "dragover"].forEach((t) => zona.addEventListener(t, (ev) => { ev.preventDefault(); if (escolhida) zona.classList.add("sobre"); }));
+["dragleave", "drop"].forEach((t) => zona.addEventListener(t, (ev) => { ev.preventDefault(); zona.classList.remove("sobre"); }));
+zona.addEventListener("drop", (ev) => enviar([...ev.dataTransfer.files]));
+$("#busca").addEventListener("input", desenharAreas);
+$("#so-area").addEventListener("change", desenharLista);
+
+const dlg = $("#dlg-area");
+$("#nova-area").addEventListener("click", () => { $("#na-msg").textContent = ""; $("#form-area").reset(); dlg.showModal(); $("#na-nome").focus(); });
+$("#na-cancelar").addEventListener("click", () => dlg.close());
+$("#na-criar").addEventListener("click", async (ev) => {
+  ev.preventDefault();
+  const msg = $("#na-msg");
+  msg.className = "msg"; msg.textContent = "criando…";
+  try {
+    const nova = await api("/api/acervo/area", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: $("#na-nome").value, descricao: $("#na-desc").value, tipo: $("#na-tipo").value }) });
+    dlg.close();
+    await carregar();
+    escolher(nova.id);
+  } catch (e) { msg.className = "msg erro"; msg.textContent = e.message; }
+});
+
+carregar();
+</script>
+</body>
+</html>

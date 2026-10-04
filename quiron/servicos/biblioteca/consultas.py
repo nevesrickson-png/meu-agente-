@@ -37,7 +37,17 @@ def _resolver_livro(indice: Indice, livro: str | None) -> tuple[str | None, str 
     return (info["id"], None) if info else (None, f"Livro não encontrado: {livro}. Use `listar_livros`.")
 
 
-def buscar(pergunta: str, n: int = 6, livro: str | None = None, autor: str | None = None, bloco: int | None = None, indice: Indice | None = None) -> str:
+def _id_area(area: str | None) -> str | None:
+    if not area:
+        return None
+    from quiron.servicos import areas
+
+    a = areas.obter(area) or areas.reconhecer(area)[0]
+    return a.id if a else area.upper()
+
+
+def buscar(pergunta: str, n: int = 6, livro: str | None = None, autor: str | None = None, bloco: int | None = None,
+           indice: Indice | None = None, area: str | None = None) -> str:
     indice = indice or Indice()
     if indice.total_trechos() == 0:
         return VAZIA
@@ -45,19 +55,19 @@ def buscar(pergunta: str, n: int = 6, livro: str | None = None, autor: str | Non
     if erro:
         return erro
     guia = carregar_guia()
-    res = indice.buscar(pergunta, n, livro_id=livro_id, autor=autor, bloco=bloco)
+    res = indice.buscar(pergunta, n, livro_id=livro_id, autor=autor, bloco=bloco, area=_id_area(area))
     if not res:
-        return f"Nada encontrado para: {pergunta}"
+        return f"Nada encontrado para: {pergunta}" + (f" na área {area} (tente sem a área)" if area else "")
     return f"## Trechos para: {pergunta}\n\n{_formatar(res, guia)}\n\n_Cite as fontes no formato 📚 Livro — Autor, cap. X._"
 
 
-def estudar_tema(tema: str, n: int = 12, indice: Indice | None = None) -> str:
+def estudar_tema(tema: str, n: int = 12, indice: Indice | None = None, area: str | None = None) -> str:
     """Trechos agrupados por livro + blocos do guia em que o tema aparece."""
     indice = indice or Indice()
     if indice.total_trechos() == 0:
         return VAZIA
     guia = carregar_guia()
-    res = [r for r in indice.buscar(tema, n) if r.semelhanca > 0.05]
+    res = [r for r in indice.buscar(tema, n, area=_id_area(area)) if r.semelhanca > 0.05]
     if not res:
         return f"Nada encontrado sobre: {tema}"
     por_livro: dict[str, list[Resultado]] = defaultdict(list)

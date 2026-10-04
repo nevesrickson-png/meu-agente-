@@ -217,6 +217,90 @@ async def ws(socket: WebSocket):
             t.cancel()
 
 
+# ---------------------------------------------------------------- acervo (upload por área)
+
+HOSTS_LOCAIS = {"127.0.0.1", "localhost"}
+
+
+def _proteger_acervo(request: Request) -> None:
+    """Escrita no acervo: exige o cabeçalho da própria tela (bloqueia outros sites) e, sem senha, só aceita o PC local
+    ou o endereço do Tailscale (bloqueia 'DNS rebinding')."""
+    if request.headers.get("x-quiron") != "acervo":
+        raise HTTPException(403, "pedido fora da tela do Acervo")
+    host = (request.headers.get("host") or "").rsplit(":", 1)[0]
+    if not _senha() and host not in HOSTS_LOCAIS | {"testserver"} and not host.endswith(".ts.net"):
+        raise HTTPException(403, "endereço não permitido sem TERMINAL_SENHA")
+
+
+def _registro_json(r) -> dict:
+    return {"id": r.id, "area": r.area, "nome": r.nome, "tamanho": r.tamanho, "enviado_em": r.enviado_em,
+            "situacao": r.situacao, "detalhe": r.detalhe, "pronto": r.situacao in {"pronto", "já estava", "área atualizada"}}
+
+
+@app.get("/acervo")
+def pagina_acervo() -> FileResponse:
+    return FileResponse(FRONTEND / "acervo.html")
+
+
+@app.get("/api/acervo")
+def api_acervo() -> dict:
+    from quiron.servicos.acervo import FORMATOS, LIMITE_BYTES, acervo
+
+    a = acervo()
+    a.iniciar_processador()
+    return {"areas": a.resumo_areas(), "arquivos": [_registro_json(r) for r in a.listar(300)],
+            "formatos": sorted(FORMATOS), "limite_mb": LIMITE_BYTES // (1024 * 1024)}
+
+
+@app.put("/api/acervo/arquivo")
+async def api_acervo_enviar(request: Request, area: str, nome: str) -> dict:
+    from quiron.servicos.acervo import AcervoErro, acervo
+
+    _proteger_acervo(request)
+    a = acervo()
+    try:
+        ident = await a.salvar_em_partes(area, nome, request.stream())
+    except AcervoErro as e:
+        raise HTTPException(400, str(e)) from e
+    a.iniciar_processador()
+    return _registro_json(a.obter(ident))
+
+
+@app.post("/api/acervo/area")
+async def api_acervo_nova_area(request: Request, corpo: dict = Body(...)) -> dict:
+    from quiron.servicos import areas
+
+    _proteger_acervo(request)
+    try:
+        nova = areas.criar(str(corpo.get("nome", "")), str(corpo.get("descricao", "")), str(corpo.get("tipo", "campo")))
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    return {"id": nova.id, "nome": nova.nome, "tipo": nova.tipo}
+
+
+@app.post("/api/acervo/mover")
+async def api_acervo_mover(request: Request, corpo: dict = Body(...)) -> dict:
+    from quiron.servicos.acervo import AcervoErro, acervo
+
+    _proteger_acervo(request)
+    try:
+        return _registro_json(acervo().mover(int(corpo.get("id", 0)), str(corpo.get("area", ""))))
+    except (AcervoErro, ValueError) as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@app.delete("/api/acervo/arquivo/{ident}")
+async def api_acervo_remover(request: Request, ident: int) -> dict:
+    from quiron.servicos.acervo import AcervoErro, acervo
+
+    _proteger_acervo(request)
+    try:
+        acervo().remover(ident)
+    except AcervoErro as e:
+        raise HTTPException(400, str(e)) from e
+    return {"ok": True}
+
+
 # ---------------------------------------------------------------- páginas
 
 @app.get("/")
@@ -239,11 +323,15 @@ def main() -> None:
     p.add_argument("--porta", type=int, default=int(os.environ.get("TERMINAL_PORTA", "8765").split(" #")[0] or 8765))
     p.add_argument("--host", default="127.0.0.1", help="127.0.0.1 = só este PC (padrão)")
     p.add_argument("--sem-navegador", action="store_true")
+    p.add_argument("--abrir", default="", help="página a abrir no navegador (ex.: /acervo)")
     a = p.parse_args()
     url = f"http://{'localhost' if a.host in {'127.0.0.1', '0.0.0.0'} else a.host}:{a.porta}"
+    from quiron.servicos.acervo import acervo
+
+    acervo().iniciar_processador()  # processa a fila do acervo em segundo plano
     print(f"Quíron Terminal em {url}  (feche esta janela para desligar)")
     if not a.sem_navegador:
-        threading.Timer(1.5, lambda: webbrowser.open(url)).start()
+        threading.Timer(1.5, lambda: webbrowser.open(url + a.abrir)).start()
     uvicorn.run(app, host=a.host, port=a.porta, log_level="warning")
 
 

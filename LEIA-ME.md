@@ -107,16 +107,24 @@ Testes:
 8. **Áudio:** mande uma mensagem de voz — ele transcreve (Whisper grátis do Groq, usa a mesma `GROQ_API_KEY`) e responde.
 9. O briefing diário das 7h30 já vem criado (veja `/agenda`; cancele ou mude pedindo no chat).
 
-## Academia — CFP (Fase 6)
-No Telegram: **/academia** (painel) · **/simulado** (mini, 16 questões, 2 por módulo; também `/simulado 40` ou
-`/simulado completo`) · **/questoes** `[módulo, código ou tema]` (botões A–D) · **/flashcards** · **/diagnostico** ·
-**/plano** `[horas]` · **/aula** `<tema>` · **/caso** `[tema]`. Diga “minha prova do CFP é em dd/mm/aaaa” para o plano contar os dias.
-- O edital oficial do CFP está mapeado (8 módulos, pesos e 922 tópicos) em `config/editais/CFP.yaml`.
+## Academia — todas as áreas (Fase 6)
+São **20 campos** (economia, renda fixa, renda variável, derivativos, fundos, previdência, planejamento, tributação, sucessão,
+risco, carteiras, valuation, contabilidade, comportamental, internacional, alternativos, regulação, matemática financeira,
+comercial e comunicação) e as **certificações** (CFP, CNPI, CFA, CGA, CGE, FRM, CAIA, CEA). No Telegram:
+- **/area** mostra as áreas · **/area economia** troca a área ativa (vale para os comandos abaixo);
+- **/questoes** `[área] [módulo|tema]` (botões A–D) · **/simulado** `[área] [mini|40|completo]` · **/flashcards** (revisa todas) ·
+  **/diagnostico** · **/plano** `[horas]` · **/aula** `<tema>` · **/caso** `[tema]` · **/academia** (painel de todas as áreas);
+- ex.: `/questoes renda fixa duration`, `/simulado risco`, `/aula objeções de preço`, `/questoes cfp 6`.
+- Programas: o do CFP é o edital oficial (922 tópicos); os dos campos foram montados pelo Quíron e são **editáveis** em
+  `config/editais/<CAMPO>.yaml`. Certificação ainda sem edital mapeado gera questões gerais da área.
 - Questões geradas por IA (Groq) e conferidas por um 2º modelo (Gemini); contas conferidas em Python. Achou erro? Toque **⚠**.
-- O banco cresce sozinho de madrugada (01h–06h, `config/academia/geracao.yaml`). Pelo terminal: `uv run quiron-academia status`
-  ou `uv run quiron-academia gerar --modulo 3 --n 8`.
-- Suas apostilas: coloque em `academia\material\CFP\` e rode `uv run quiron-ingerir --academia` (aulas e questões passam a citar o seu material).
-- Materiais gratuitos conferidos: `config/materiais_gratuitos.yaml` (nada é baixado sem você aprovar).
+- O banco cresce sozinho de madrugada nas áreas que você estuda (`config/academia/geracao.yaml`).
+
+## Acervo — seus livros por área
+Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
+PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca
+marcado com a área. Dá para mudar a área ou remover depois. Aulas e questões passam a citar o seu material da área.
+No mini PC, a mesma tela abre pelo Tailscale (inclusive no celular).
 
 ## Servidor 24h (mini PC em casa; VPS no futuro) — detalhes em `docs/03-HOSPEDAGEM.md`
 Tudo roda em Docker; o Terminal só é acessível pelo Tailscale (nenhuma porta aberta além da 22).

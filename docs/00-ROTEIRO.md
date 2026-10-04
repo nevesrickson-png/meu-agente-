@@ -142,6 +142,8 @@ Depois me guie comando por comando, esperando minha confirmação.
 - [x] 6.5 Aula, questões (botões no Telegram), flashcards com revisão espaçada — `/aula`, `/questoes` (A–D, ⚠ anula), `/flashcards` (SM-2); questões geradas pelo Groq e conferidas pelo Gemini (contas conferidas em Python)
 - [x] 6.6 Simulado, diagnóstico, plano de estudo (3–7h/semana), estudo de caso, painel de progresso — `/simulado`, `/diagnostico`, `/plano`, `/caso`, `/academia`
 - [~] 6.7 Estrutura pronta para o CNPI — banco, diagnóstico e MCP já aceitam outra certificação (`cert`); falta o programa oficial do CNPI (não achei o PDF no site da Apimec em 04/10/2026)
+- [x] 6.8 (pedido do Rickson, 04/10/2026) **Academia de todas as áreas**: 20 campos de conhecimento com programa próprio (`config/editais/<CAMPO>.yaml`, editável) + certificações; `/area` troca a área; áreas novas criadas pelo Rickson
+- [x] 6.9 (pedido do Rickson) **Acervo**: tela de upload no Terminal (`/acervo`, atalho *Quiron - Acervo*) — escolhe a área, arrasta o PDF/EPUB, o arquivo vai para `biblioteca/acervo/<área>/` e entra na biblioteca marcado com a área
 **Teste de aceite:** mini-simulado do CFP gera diagnóstico e plano da semana.
 ```
 Execute a FASE 6 do docs/00-ROTEIRO.md, item por item. Comece pelo CFP.

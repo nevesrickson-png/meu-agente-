@@ -91,12 +91,25 @@ def extrair_programa(texto: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------- leitura do YAML
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=64)
 def carregar(cert: str = "CFP") -> dict[str, Any]:
+    """Programa da área (edital oficial ou programa do campo). Área sem programa ganha um provisório de 1 tópico."""
     arq = PASTA_EDITAIS / f"{cert.upper()}.yaml"
-    if not arq.exists():
-        raise FileNotFoundError(f"Edital de {cert} ainda não mapeado ({arq.name}).")
-    return yaml.safe_load(arq.read_text(encoding="utf-8"))
+    if arq.exists():
+        return yaml.safe_load(arq.read_text(encoding="utf-8"))
+    from quiron.servicos import areas
+
+    a = areas.obter(cert)
+    if not a:
+        raise FileNotFoundError(f"Área {cert} não existe (veja config/areas_conhecimento.yaml).")
+    return {"certificacao": a.id, "tipo": "sem_programa", "entidade": "", "verificado_em": "",
+            "fonte": "programa ainda não mapeado — questões gerais da área",
+            "modulos": [{"numero": 1, "titulo": a.nome, "peso": 100,
+                         "topicos": [{"codigo": "1.1", "titulo": f"{a.nome}" + (f": {a.descricao}" if a.descricao else "")}]}]}
+
+
+def tem_programa(cert: str) -> bool:
+    return (PASTA_EDITAIS / f"{cert.upper()}.yaml").exists()
 
 
 def modulos(cert: str = "CFP") -> list[dict[str, Any]]:

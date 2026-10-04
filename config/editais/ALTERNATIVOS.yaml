@@ -1,0 +1,58 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: ALTERNATIVOS
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Imobiliário
+  peso: 20
+  topicos:
+  - codigo: '1.1'
+    titulo: Imóveis diretos x FIIs
+  - codigo: '1.2'
+    titulo: 'Análise de FIIs: tijolo x papel, vacância, cap rate'
+  - codigo: '1.3'
+    titulo: Crédito imobiliário e securitização
+- numero: 2
+  titulo: Private markets
+  peso: 20
+  topicos:
+  - codigo: '2.1'
+    titulo: Private equity e venture capital
+  - codigo: '2.2'
+    titulo: 'FIP: estrutura e ciclo de vida'
+  - codigo: '2.3'
+    titulo: J-curve, chamadas de capital e TVPI/DPI
+- numero: 3
+  titulo: Hedge funds e multimercados
+  peso: 20
+  topicos:
+  - codigo: '3.1'
+    titulo: 'Estratégias: macro, long-short, arbitragem'
+  - codigo: '3.2'
+    titulo: Medidas de desempenho e risco
+  - codigo: '3.3'
+    titulo: Due diligence
+- numero: 4
+  titulo: Commodities e reais
+  peso: 20
+  topicos:
+  - codigo: '4.1'
+    titulo: Commodities agrícolas, energia e metais
+  - codigo: '4.2'
+    titulo: Fiagro e ativos do agronegócio
+  - codigo: '4.3'
+    titulo: Infraestrutura
+- numero: 5
+  titulo: Cripto e outros
+  peso: 20
+  topicos:
+  - codigo: '5.1'
+    titulo: 'Criptoativos: riscos e regulação'
+  - codigo: '5.2'
+    titulo: ETFs de cripto e custódia
+  - codigo: '5.3'
+    titulo: Arte, colecionáveis e créditos de carbono

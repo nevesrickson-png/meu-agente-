@@ -18,16 +18,19 @@ mcp = MCPServer(
 
 
 @mcp.tool()
-def buscar(pergunta: str, n: int = 6, livro: str | None = None, autor: str | None = None, bloco: int | None = None) -> str:
+def buscar(pergunta: str, n: int = 6, livro: str | None = None, autor: str | None = None, bloco: int | None = None,
+           area: str | None = None) -> str:
     """Busca trechos dos livros sobre uma pergunta, com citação (livro, autor, capítulo, página).
-    Filtros opcionais: livro (id ou parte do título), autor, bloco (número do bloco do guia)."""
-    return consultas.buscar(pergunta, n, livro, autor, bloco)
+    Filtros opcionais: livro (id ou parte do título), autor, bloco (número do bloco do guia),
+    area (pasta do acervo: ECONOMIA, RENDA_FIXA, RISCO, COMERCIAL, CFP…)."""
+    return consultas.buscar(pergunta, n, livro, autor, bloco, area=area)
 
 
 @mcp.tool()
-def estudar_tema(tema: str, n: int = 12) -> str:
-    """Material para estudar um tema: trechos agrupados por livro, capítulos para ler e blocos do guia ligados."""
-    return consultas.estudar_tema(tema, n)
+def estudar_tema(tema: str, n: int = 12, area: str | None = None) -> str:
+    """Material para estudar um tema: trechos agrupados por livro, capítulos para ler e blocos do guia ligados.
+    area opcional limita à pasta do acervo (ex.: RISCO)."""
+    return consultas.estudar_tema(tema, n, area=area)
 
 
 @mcp.tool()

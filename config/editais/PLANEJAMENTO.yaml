@@ -1,0 +1,64 @@
+# Programa de estudo do campo — montado pelo Quíron em 04/10/2026. EDITÁVEL: acrescente, renomeie ou
+# remova tópicos à vontade (questões antigas continuam valendo pelo código do tópico).
+certificacao: PLANEJAMENTO
+tipo: campo
+entidade: Quíron
+fonte: Programa de estudo montado pelo Quíron (editável); não é edital oficial
+verificado_em: '2026-10-04'
+modulos:
+- numero: 1
+  titulo: Processo
+  peso: 20
+  topicos:
+  - codigo: '1.1'
+    titulo: Etapas do planejamento financeiro pessoal
+  - codigo: '1.2'
+    titulo: Coleta de dados quantitativos e qualitativos
+  - codigo: '1.3'
+    titulo: Ética e padrões de prática
+- numero: 2
+  titulo: Gestão financeira
+  peso: 20
+  topicos:
+  - codigo: '2.1'
+    titulo: Orçamento e fluxo de caixa pessoal
+  - codigo: '2.2'
+    titulo: Balanço patrimonial pessoal
+  - codigo: '2.3'
+    titulo: Reserva de emergência
+  - codigo: '2.4'
+    titulo: Gestão de dívidas e crédito
+- numero: 3
+  titulo: Objetivos
+  peso: 20
+  topicos:
+  - codigo: '3.1'
+    titulo: Definição de objetivos SMART
+  - codigo: '3.2'
+    titulo: Educação dos filhos e compra de imóvel
+  - codigo: '3.3'
+    titulo: Independência financeira e aposentadoria
+  - codigo: '3.4'
+    titulo: Ciclo de vida e prioridades
+- numero: 4
+  titulo: Proteção
+  peso: 20
+  topicos:
+  - codigo: '4.1'
+    titulo: Seguro de vida e invalidez
+  - codigo: '4.2'
+    titulo: Seguro saúde e patrimonial
+  - codigo: '4.3'
+    titulo: Cálculo da necessidade de capital segurado
+- numero: 5
+  titulo: Integração
+  peso: 20
+  topicos:
+  - codigo: '5.1'
+    titulo: Investimentos alinhados aos objetivos (IPS)
+  - codigo: '5.2'
+    titulo: Tributação e sucessão no plano
+  - codigo: '5.3'
+    titulo: Monitoramento e revisão do plano
+  - codigo: '5.4'
+    titulo: Planejamento para empresários (PF x PJ)
