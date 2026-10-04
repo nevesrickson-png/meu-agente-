@@ -31,6 +31,14 @@
         "--quiet",
         "quiron-mcp-noticias"
       ]
+    },
+    "quiron-academia": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--quiet",
+        "quiron-mcp-academia"
+      ]
     }
   }
 }

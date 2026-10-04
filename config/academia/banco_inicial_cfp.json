@@ -1,0 +1,830 @@
+[
+ {
+  "cert": "CFP",
+  "modulo": 1,
+  "topico": "1.6.9",
+  "enunciado": "Um cliente deseja analisar o prazo de retorno (payback) de um investimento de R$100.000,00 que gera os seguintes fluxos de caixa anuais: Ano 1: R$30.000,00; Ano 2: R$40.000,00; Ano 3: R$50.000,00; Ano 4: R$20.000,00. Qual é o payback simples (não descontado) em anos?",
+  "alternativas": [
+   "2,6",
+   "2,8",
+   "3,0",
+   "3,2"
+  ],
+  "correta": 0,
+  "explicacao": "Acumulando os fluxos: 30+40=70 (ainda abaixo de 100). No Ano 3, acumulado =120, excedendo 100. Falta 30 para atingir 100; no Ano 3 há 50, logo fração =30/50=0,6. Payback =2+0,6=2,6 anos. As demais opções são valores arredondados incorretos.\n🧮 Conta conferida em Python: round(2+30/50,2)",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 1,
+  "topico": "1.6.9",
+  "enunciado": "Considerando a mesma sequência de fluxos de caixa do exercício anterior, calcule o payback descontado (discounted payback) usando uma taxa de desconto anual de 10%. Qual o prazo de retorno descontado, em anos, até que o investimento de R$100.000,00 seja recuperado?",
+  "alternativas": [
+   "3,15",
+   "3,30",
+   "3,45",
+   "3,60"
+  ],
+  "correta": 0,
+  "explicacao": "PV Ano1=30/1,1=27,27; PV Ano2=40/1,1²=33,06; PV Ano3=50/1,1³=37,57. Acumulado até Ano3=97,90. Falta 2,10. PV Ano4=20/1,1⁴=13,66. Fração=2,10/13,66=0,154. Payback descontado=3+0,154≈3,15 anos. As demais opções são arredondamentos incorretos.\n🧮 Conta conferida em Python: round(3+(100-(27.2727+33.0579+37.565))/13.660,2)",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 1,
+  "topico": "1.6.9",
+  "enunciado": "Dois projetos A e B exigem investimento inicial de R$150.000,00 cada. As projeções de fluxo de caixa (positivos) são: Projeto A – Ano 1: R$50.000,00; Ano 2: R$60.000,00; Ano 3: R$70.000,00; Ano 4: R$80.000,00. Projeto B – Ano 1: R$80.000,00; Ano 2: R$60.000,00; Ano 3: R$40.000,00; Ano 4: R$30.000,00. Utilizando taxa de desconto de 8% ao ano, qual projeto apresenta menor payback descontado?",
+  "alternativas": [
+   "Projeto A",
+   "Projeto B",
+   "Ambos têm o mesmo payback descontado",
+   "Nenhum recupera o investimento"
+  ],
+  "correta": 1,
+  "explicacao": "Projeto A: PV acumulado até Ano2 =46,30+51,43=97,73; falta 52,27; PV Ano3=55,58 → fração 0,941 → payback≈2,94 anos. Projeto B: PV acumulado até Ano2 =74,07+51,43=125,50; falta 24,50; PV Ano3=31,76 → fração 0,771 → payback≈2,77 anos. Projeto B tem payback descontado menor. As demais opções estão incorretas.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 1,
+  "topico": "1.8.2.1",
+  "enunciado": "João, 35 anos, pretende viajar ao exterior em 18 meses e deseja investir parte da reserva para obter retorno acima da inflação. Qual dos seguintes fatores tem maior peso ao definir o perfil de risco de João?",
+  "alternativas": [
+   "Horizonte temporal do investimento",
+   "Patrimônio líquido atual",
+   "Objetivo de aposentadoria",
+   "Situação familiar"
+  ],
+  "correta": 0,
+  "explicacao": "O horizonte temporal determina a capacidade de suportar volatilidade; 18 meses indica necessidade de liquidez, sendo o fator mais relevante. Patrimônio, aposentadoria e situação familiar são importantes, mas secundários ao prazo da meta.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-3.6-flash"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 1,
+  "topico": "1.8.2.4",
+  "enunciado": "Após duas revisões anuais, Ana percebeu que, devido a um diagnóstico de saúde, prefere reduzir a exposição a ativos voláteis. Qual ação deve ser tomada pelo planejador financeiro?",
+  "alternativas": [
+   "Manter a alocação original, pois o plano já está diversificado",
+   "Rebalancear o portfólio aumentando a participação de renda fixa e reduzindo ações",
+   "Vender todos os investimentos e manter o capital em caixa",
+   "Transferir os recursos para um fundo de alto rendimento"
+  ],
+  "correta": 1,
+  "explicacao": "Rebalancear para maior renda fixa diminui a volatilidade, atendendo à nova preferência de Ana. Manter a alocação ignora a mudança; vender tudo elimina potencial de retorno; fundos de alto rendimento aumentam risco.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-3.6-flash"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 2,
+  "topico": "2.5.1",
+  "enunciado": "Ana e Carlos desejam elaborar um orçamento anual para garantir a aposentadoria confortável. Qual conjunto de informações é indispensável para a construção desse orçamento?",
+  "alternativas": [
+   "Receita bruta anual, despesas fixas e variáveis, projeção de renda de investimentos, perfil de risco e metas de aposentadoria.",
+   "Apenas a renda atual e o saldo das contas bancárias.",
+   "Somente as metas de aposentadoria e o valor desejado de benefício.",
+   "Apenas o valor atual do imóvel residencial."
+  ],
+  "correta": 0,
+  "explicacao": "Para um orçamento completo são necessários dados de receitas, despesas, projeções de investimentos e o perfil de risco que influenciam as metas. As demais opções omitem itens essenciais.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-3.6-flash"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 2,
+  "topico": "2.5.1",
+  "enunciado": "Em um processo de revisão orçamentária, qual documento deve ser atualizado anualmente para refletir as mudanças no fluxo de caixa projetado?",
+  "alternativas": [
+   "Declaração de Imposto de Renda da pessoa física.",
+   "Plano de metas de curto prazo.",
+   "Demonstrativo de fluxo de caixa projetado.",
+   "Contrato de previdência privada."
+  ],
+  "correta": 2,
+  "explicacao": "O demonstrativo de fluxo de caixa projetado reúne receitas e despesas previstas e deve ser revisado anualmente. As outras opções não trazem a visão completa do fluxo de caixa.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-3.6-flash"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 2,
+  "topico": "2.5.1",
+  "enunciado": "Mariana tem dois filhos menores e está montando o orçamento familiar. Qual das despesas abaixo deve obrigatoriamente ser incluída na elaboração do orçamento?",
+  "alternativas": [
+   "Despesas médicas não reembolsadas.",
+   "Valor da taxa de condomínio.",
+   "Despesas com educação dos dependentes.",
+   "Todas as anteriores."
+  ],
+  "correta": 3,
+  "explicacao": "Um orçamento familiar completo considera despesas médicas, condomínio e educação dos dependentes. Excluir qualquer uma delas compromete a precisão do planejamento.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-3.6-flash"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 2,
+  "topico": "2.8.2",
+  "enunciado": "Para garantir um financiamento, João oferece como garantia o aval de seu sócio e uma fiança bancária. Qual dessas garantias é classificada como fidejussória?",
+  "alternativas": [
+   "Hipoteca",
+   "Penhor",
+   "Aval",
+   "Alienação fiduciária"
+  ],
+  "correta": 2,
+  "explicacao": "Garantias fidejussórias são pessoais, baseadas na promessa de pagamento de terceiros (aval, fiança). Hipoteca, penhor e alienação fiduciária são garantias reais.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 2,
+  "topico": "2.8.2.2",
+  "enunciado": "Carlos tem renda mensal de R$ 8.000, despesas fixas de R$ 5.000 e dívida total de R$ 20.000 com taxa média de 2% ao mês. Qual indicador é mais adequado para medir sua capacidade de pagamento?",
+  "alternativas": [
+   "Índice de cobertura de juros (ICJ)",
+   "Relação dívida/renda (DDR)",
+   "Prazo médio de pagamento das contas",
+   "Valor presente líquido (VPL) das dívidas"
+  ],
+  "correta": 1,
+  "explicacao": "A DDR (dívida ÷ renda) relaciona o total da dívida à renda disponível, sendo o parâmetro padrão para capacidade de pagamento. ICJ exige cálculo de juros, prazo médio e VPL não são usados aqui.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 3,
+  "topico": "3.1.2.3",
+  "enunciado": "Marcos, 62 anos, está próximo da aposentadoria e deseja investir parte de seu patrimônio (R$ 300.000) em ativos com potencial de retorno superior, mas aceita menor liquidez. Ele também quer que esses investimentos sigam princípios ESG. Qual das afirmações abaixo está correta sobre o trade‑off entre liquidez e retorno nesse contexto?",
+  "alternativas": [
+   "Investir em fundos de private equity ESG pode oferecer maior retorno, porém o capital ficará bloqueado por, no mínimo, 7 a 10 anos, reduzindo a liquidez.",
+   "Aplicar em CDBs de liquidez diária com classificação ESG garante alta rentabilidade e liquidez imediata.",
+   "Comprar ações de empresas de energia renovável na bolsa oferece baixa liquidez, mas garante retorno garantido.",
+   "Investir em debêntures incentivadas ESG permite resgate a qualquer momento sem perda de rentabilidade."
+  ],
+  "correta": 0,
+  "explicacao": "Fundos de private equity ESG realmente apresentam potencial de retorno superior, porém exigem bloqueio de capital por vários anos, refletindo o trade‑off entre liquidez e retorno. B) CDBs de liquidez diária não costumam ter classificação ESG. C) Ações na bolsa são líquidas, não baixa liquidez, e retorno não é garantido. D) Debêntures incentivadas têm prazo definido e não permitem resgate imediato sem penalidade.",
+  "fontes": [],
+  "dificuldade": "dificil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 3,
+  "topico": "3.1.2.4",
+  "enunciado": "Fernanda tem forte convicção pessoal contra investimentos em empresas de combustíveis fósseis. Ela deseja aplicar R$ 200.000 em um fundo que exclua esses setores e ainda ofereça boa diversificação. Qual das opções abaixo melhor atende ao critério de valores individuais e ESG?",
+  "alternativas": [
+   "Fundo de ações setoriais de energia tradicional.",
+   "Fundo multimercado com política de exclusão de empresas que não atendam a critérios ESG, incluindo exclusão de combustíveis fósseis.",
+   "Fundo de renda fixa de títulos públicos federais.",
+   "Fundo de crédito privado que investe em debêntures de empresas de petróleo."
+  ],
+  "correta": 1,
+  "explicacao": "O fundo B tem política de exclusão de empresas que não atendam a critérios ESG, alinhando-se ao desejo de Fernanda de evitar combustíveis fósseis e ainda proporcionando diversificação. A) contradiz o critério, C) não oferece exposição a ESG, D) investe diretamente em setor proibido.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 3,
+  "topico": "3.6.6.1",
+  "enunciado": "Um cliente possui uma carteira com alocação alvo de 60% em renda variável e 40% em renda fixa. Após 12 meses, devido à alta dos mercados acionários, a participação da renda variável subiu para 70% e a da renda fixa caiu para 30%. Qual a principal razão para se recomendar o rebalanceamento da carteira neste momento?",
+  "alternativas": [
+   "Reduzir a volatilidade da carteira, retornando à alocação de risco originalmente definida.",
+   "Realizar lucro imediato, vendendo as ações que mais valorizaram.",
+   "Aproveitar a oportunidade de compra de ativos de renda fixa mais baratos.",
+   "Cumprir exigência regulatória de manutenção de limites de exposição."
+  ],
+  "correta": 0,
+  "explicacao": "O rebalanceamento visa restaurar a alocação de risco planejada, controlando a volatilidade. B e C são motivos secundários, e D não existe na regulação brasileira.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 3,
+  "topico": "3.6.6.2",
+  "enunciado": "Ana prefere rebalancear sua carteira de forma regular, realizando ajustes a cada semestre, independentemente da variação dos pesos. João, por outro lado, opta por rebalancear somente quando algum ativo ultrapassa 5 pontos percentuais da sua meta. Qual das afirmações abaixo descreve corretamente uma vantagem do método de João em relação ao de Ana?",
+  "alternativas": [
+   "Reduz custos de transação ao evitar ajustes desnecessários quando a carteira está dentro da tolerância.",
+   "Garante que a carteira sempre esteja exatamente na alocação alvo.",
+   "Simplifica o planejamento tributário, pois as vendas ocorrem em períodos fixos.",
+   "Elimina a necessidade de monitoramento constante da carteira."
+  ],
+  "correta": 0,
+  "explicacao": "O rebalanceamento baseado em tolerância (threshold) só opera quando há desvio significativo, diminuindo a frequência de negociações e, consequentemente, custos. B é falso, C não se aplica, D é incorreto porque ainda exige monitoramento.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 3,
+  "topico": "3.6.6.3",
+  "enunciado": "Em um cenário de alta volatilidade nos mercados de renda variável, um planejador recomenda ao cliente a adoção de uma estratégia dinâmica de rebalanceamento que aumenta a exposição à renda fixa quando o índice Bovespa recua mais de 8% em um mês. Essa estratégia se caracteriza como:",
+  "alternativas": [
+   "Rebalanceamento estático, pois mantém a alocação original independentemente do mercado.",
+   "Estratégia de alocação tática, ajustando a carteira conforme sinais de mercado.",
+   "Rebalanceamento periódico, realizado em datas pré‑definidas.",
+   "Estratégia de compra e manutenção (buy‑and‑hold) sem alterações de posição."
+  ],
+  "correta": 1,
+  "explicacao": "A estratégia altera a alocação com base em indicadores de mercado, típico da alocação tática. A, C e D descrevem abordagens que não respondem a sinais de mercado.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 4,
+  "topico": "4.4.3.1",
+  "enunciado": "João tem renda bruta anual de R$200.000,00 e deseja fazer aportes mensais em um plano PGBL. Qual é o valor máximo anual que ele pode deduzir na declaração de ajuste anual, segundo a Lei 11.053/2004?",
+  "alternativas": [
+   "R$24.000,00",
+   "R$20.000,00",
+   "R$30.000,00",
+   "R$12.000,00"
+  ],
+  "correta": 0,
+  "explicacao": "A dedução máxima para PGBL é 12% da renda bruta anual (Lei 11.053/2004). 12% de 200.000 = 24.000. As demais opções são valores incorretos ou subestimados.\n🧮 Conta conferida em Python: 0.12*200000",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 4,
+  "topico": "4.4.3.1",
+  "enunciado": "Em um plano de previdência aberto, não patrocinado (PGBL ou VGBL), qual é o prazo de vesting para que o participante tenha direito pleno ao saldo acumulado?",
+  "alternativas": [
+   "Imediatamente, no momento da contribuição",
+   "Após 2 anos de contribuição contínua",
+   "Após 5 anos de contribuição contínua",
+   "Após 10 anos de contribuição contínua"
+  ],
+  "correta": 0,
+  "explicacao": "Planos abertos não possuem cláusula de vesting; o participante é proprietário dos recursos desde a sua aplicação. As demais respostas confundem com regras de planos patrocinados.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 4,
+  "topico": "4.4.3.2",
+  "enunciado": "Maria possui um plano PGBL com 5 anos de período de acumulação e ainda não realizou nenhum resgate. Ela deseja transferir todo o saldo para outro plano PGBL de outra instituição. Em que condição essa portabilidade é feita sem incidência de IR no momento da transferência?",
+  "alternativas": [
+   "Quando a transferência ocorre antes de qualquer resgate e ambos os planos são da mesma modalidade (PGBL)",
+   "Quando o novo plano oferece taxa de administração menor",
+   "Somente se o novo plano for do regime regressivo escolhido no primeiro plano",
+   "Quando o saldo transferido for inferior a R$100.000,00"
+  ],
+  "correta": 0,
+  "explicacao": "A portabilidade entre planos de previdência aberta é isenta de IR desde que não haja resgate e a modalidade seja a mesma (PGBL para PGBL) – conforme a Lei 14.803/2024. As outras opções não garantem isenção.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 4,
+  "topico": "4.4.3.2",
+  "enunciado": "Carlos pretende resgatar o rendimento acumulado em seu VGBL após 7 anos de contribuição. Qual alíquota de Imposto de Renda será aplicada sobre o ganho, segundo a tabela regressiva prevista na Lei 11.053/2004?",
+  "alternativas": [
+   "20%",
+   "25%",
+   "15%",
+   "30%"
+  ],
+  "correta": 0,
+  "explicacao": "A tabela regressiva estabelece 20% para períodos entre 6 e 8 anos. Como Carlos tem 7 anos, a alíquota correta é 20%. As demais alíquotas correspondem a outros intervalos de tempo.\n🧮 Conta conferida em Python: 0.20",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 4,
+  "topico": "4.4.6",
+  "enunciado": "Um investidor resgatou um CDB após 400 dias de aplicação. Qual a alíquota de Imposto de Renda incidente sobre o rendimento, segundo a tabela regressiva de renda fixa?",
+  "alternativas": [
+   "22,5%",
+   "20%",
+   "17,5%",
+   "15%"
+  ],
+  "correta": 2,
+  "explicacao": "Para 400 dias, a alíquota está entre 180 e 720 dias, ou seja, 17,5% (0.175). As demais alíquotas correspondem a outros períodos.\n🧮 Conta conferida em Python: 0.175",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 4,
+  "topico": "4.4.6",
+  "enunciado": "Sobre os rendimentos de aluguéis de cotas de Fundos de Investimento Imobiliário (FII) para pessoa física, qual condição garante a isenção do Imposto de Renda?",
+  "alternativas": [
+   "O fundo ser negociado em bolsa, possuir pelo menos 100 cotistas e o cotista deter menos de 10% das cotas",
+   "O fundo ter menos de 100 cotistas",
+   "O fundo ser fechado e não ter cotas negociadas em bolsa",
+   "O cotista possuir mais de 10% das cotas do fundo"
+  ],
+  "correta": 0,
+  "explicacao": "A isenção vale quando o fundo tem cotas negociadas em bolsa/balcão, tem ≥ 100 cotistas e nenhum cotista possui ≥ 10% das cotas. As demais situações não atendem ao requisito legal.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 4,
+  "topico": "4.4.6",
+  "enunciado": "Um investidor realizou day‑trade em ações com lucro de R$ 50.000,00. Qual o valor do IRRF retido na fonte, considerando a alíquota de 1% para day‑trade?",
+  "alternativas": [
+   "R$ 500,00",
+   "R$ 250,00",
+   "R$ 1.000,00",
+   "Isento"
+  ],
+  "correta": 0,
+  "explicacao": "IRRF = lucro × alíquota = 50.000 × 0,01 = R$ 500. As demais alternativas são incorretas: a alíquota não é 0,5% nem 2%, e a operação de day‑trade não é isenta.\n🧮 Conta conferida em Python: 50000*0.01",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 5,
+  "topico": "5.2.2",
+  "enunciado": "João tem 35 anos, é casado, sua esposa não possui renda própria e tem dois filhos de 5 e 8 anos. Sua renda mensal é de R$ 8.000,00. Qual informação é mais relevante para definir o capital segurado de um seguro de vida?",
+  "alternativas": [
+   "Idade do cliente",
+   "Valor total das dívidas de cartão de crédito",
+   "Número de dependentes financeiros",
+   "Valor acumulado na poupança pessoal"
+  ],
+  "correta": 2,
+  "explicacao": "O número de dependentes determina a necessidade de proteção da renda familiar em caso de falecimento; idade, dívidas e poupança são relevantes, mas secundários para o cálculo do capital segurado.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 5,
+  "topico": "5.2.2",
+  "enunciado": "Ao iniciar o planejamento de riscos, o consultor deve priorizar qual ferramenta para captar informações detalhadas sobre as fontes de risco do cliente?",
+  "alternativas": [
+   "Formulário online de múltipla escolha",
+   "Entrevista semiestruturada presencial",
+   "Revisão de extratos bancários dos últimos 12 meses",
+   "Análise de perfil nas redes sociais"
+  ],
+  "correta": 1,
+  "explicacao": "A entrevista semiestruturada permite aprofundar questões específicas, adaptar perguntas ao cliente e identificar riscos que um formulário fechado não revelaria. Os demais métodos são complementares, mas não substituem a entrevista.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 5,
+  "topico": "5.2.2",
+  "enunciado": "Maria, 45 anos, possui renda anual de R$ 120.000,00 e deseja contratar seguro de vida com capital equivalente a 10 vezes sua renda anual. Qual o valor do capital segurado?",
+  "alternativas": [
+   "R$ 1.000.000,00",
+   "R$ 1.200.000,00",
+   "R$ 1.500.000,00",
+   "R$ 2.000.000,00"
+  ],
+  "correta": 1,
+  "explicacao": "10 vezes R$ 120.000,00 resulta em R$ 1.200.000,00. As demais opções são cálculos incorretos (8, 12, 16 vezes, etc.).\n🧮 Conta conferida em Python: 120000*10",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 5,
+  "topico": "5.3.1",
+  "enunciado": "Uma empresa de construção civil possui risco de responsabilidade civil e danos materiais decorrentes de suas obras. Qual cobertura de seguro geral é a mais indicada para proteger a empresa contra reclamações de terceiros por danos causados nas obras?",
+  "alternativas": [
+   "Seguro de Responsabilidade Civil Geral (RCG)",
+   "Seguro de Danos Patrimoniais (DP)",
+   "Seguro de Risco de Engenharia (RCE)",
+   "Seguro de Vida em Grupo"
+  ],
+  "correta": 0,
+  "explicacao": "A cobertura de Responsabilidade Civil Geral cobre obrigações de indenizar terceiros por danos materiais ou corporais causados nas atividades da empresa, sendo a mais adequada ao caso. As demais coberturas não atendem especificamente a reclamações de terceiros (DP cobre bens da própria empresa, RCE é para obras específicas e Vida em Grupo não tem relação com risco patrimonial).",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 5,
+  "topico": "5.3.1",
+  "enunciado": "Um cliente deseja contratar um seguro patrimonial para sua empresa, cuja exposição total ao risco é de R$ 2.000.000,00. A taxa de sinistralidade esperada é de 2,5% ao ano. As despesas administrativas correspondem a 15% do prêmio puro e a margem de lucro desejada é de 10% sobre o prêmio bruto. Qual o valor do prêmio bruto anual que deverá ser cobrado?",
+  "alternativas": [
+   "R$ 57.500,00",
+   "R$ 63.889,00",
+   "R$ 70.000,00",
+   "R$ 55.000,00"
+  ],
+  "correta": 1,
+  "explicacao": "Prêmio puro = 2.000.000 × 0,025 = R$ 50.000. Despesa = 15% × 50.000 = R$ 7.500. Prêmio bruto = (prêmio puro + despesa) ÷ (1‑0,10) = 57.500 ÷ 0,9 = R$ 63.889 (arredondado). As demais alternativas ignoram algum dos componentes ou aplicam a margem de forma incorreta.\n🧮 Conta conferida em Python: round((50000+7500)/0.9,0)",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 5,
+  "topico": "5.3.1",
+  "enunciado": "Um cliente possui uma frota de 30 veículos, cada um com valor médio de R$ 120.000,00. A probabilidade anual de ocorrência de um sinistro total (perda total) é de 1% para cada veículo. Qual o valor esperado da perda anual (EL) para toda a frota?",
+  "alternativas": [
+   "R$ 3.600,00",
+   "R$ 36.000,00",
+   "R$ 360.000,00",
+   "R$ 1.200,00"
+  ],
+  "correta": 1,
+  "explicacao": "EL = Probabilidade × Número de veículos × Valor médio = 0,01 × 30 × 120.000 = R$ 36.000. As outras opções resultam de cálculos com fatores errados (ex.: omissão do número de veículos ou da probabilidade).\n🧮 Conta conferida em Python: 0.01*30*120000",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 5,
+  "topico": "5.3.1",
+  "enunciado": "Um segurado mora em região conhecida por alagamentos frequentes e deseja contratar um seguro residencial. Qual cláusula costuma excluir a cobertura de danos causados por enchentes, exigindo a contratação de cobertura adicional?",
+  "alternativas": [
+   "Cláusula de exclusão de risco de terremoto",
+   "Cláusula de exclusão de risco de incêndio",
+   "Cláusula de exclusão de risco de alagamento",
+   "Cláusula de exclusão de risco de roubo"
+  ],
+  "correta": 2,
+  "explicacao": "A cláusula de exclusão de risco de alagamento (ou enchente) retira da apólice a cobertura para esse evento, sendo necessária a adesão de cobertura específica. As demais cláusulas tratam de riscos diferentes.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 6,
+  "topico": "6.1.3.2",
+  "enunciado": "Sobre a classificação dos rendimentos recebidos por pessoa física, assinale a alternativa correta.",
+  "alternativas": [
+   "Dividendos distribuídos por empresas brasileiras são rendimentos tributáveis sujeitos à alíquota de 15% a partir de 2026.",
+   "Juros sobre capital próprio (JCP) são rendimentos tributáveis com alíquota de 15% de IRRF e são dedutíveis do lucro da empresa pagadora.",
+   "Aplicações em LCI e LCA são rendimentos tributáveis, porém com alíquota reduzida de 5%.",
+   "Ganho de capital na venda de ações acima de R$ 20 mil mensais é isento de IR."
+  ],
+  "correta": 1,
+  "explicacao": "JCP são tributados na fonte à alíquota de 15% (art. 10 da Lei 9.249/95) e, ao mesmo tempo, são dedutíveis do lucro da empresa, evitando a dupla tributação. A) está errada – dividendos continuam isentos até mudança legislativa ainda não em vigor. C) está errada – LCI e LCA são isentas de IR para pessoa física. D) está errada – o ganho de capital em ações acima de R$ 20 mil mensais não é isento; há tributação de 15% (swing‑trade) ou 20% (day‑trade).",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 6,
+  "topico": "6.1.3.2",
+  "enunciado": "Maria investiu R$ 100.000 em um CDB de 180 dias e R$ 50.000 em LCI. Considerando a legislação vigente, quais desses rendimentos são tributados exclusivamente na fonte e quais são isentos de IR?",
+  "alternativas": [
+   "O CDB tem tributação exclusiva na fonte (IRRF 22,5%) e a LCI é isenta de IR.",
+   "Ambos são tributados exclusivamente na fonte, porém com alíquotas diferentes.",
+   "O CDB é tributado no ajuste anual e a LCI tem retenção de 15% na fonte.",
+   "Nenhum dos dois possui tributação exclusiva; ambos são tributados no ajuste anual."
+  ],
+  "correta": 0,
+  "explicacao": "CDBs têm IR retido na fonte conforme a tabela regressiva (22,5% para prazo até 180 dias). LCI é investimento isento de IR para pessoa física, não havendo retenção nem tributação no ajuste anual. B está errada porque LCI não sofre retenção. C está errada – CDB não é tributado apenas no ajuste anual. D está errada – o CDB tem tributação exclusiva na fonte.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 6,
+  "topico": "6.3.1",
+  "enunciado": "Um cliente deseja declarar os rendimentos provenientes de salário. Qual documento o planejador tributário deve solicitar para comprovar esses rendimentos na elaboração da declaração de IRPF?",
+  "alternativas": [
+   "Recibo de pagamento de salário emitido pelo empregador",
+   "Informe de rendimentos fornecido pela empresa ao final do ano",
+   "Extrato bancário contendo os depósitos de salário",
+   "Contrato de trabalho assinado"
+  ],
+  "correta": 1,
+  "explicacao": "O informe de rendimentos da empresa contém detalhamento oficial dos salários, encargos e retenções, sendo o documento exigido pela Receita Federal. Os demais podem ser auxiliares, mas não substituem o informe.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 6,
+  "topico": "6.3.1",
+  "enunciado": "Um cliente possui investimentos em LCI e deseja comprovar a isenção de IR sobre esses rendimentos. Qual documento é essencial para essa comprovação?",
+  "alternativas": [
+   "Informe de rendimentos da corretora ou banco",
+   "DARF de pagamento de IR",
+   "Recibo de compra da LCI",
+   "Extrato de conta corrente"
+  ],
+  "correta": 0,
+  "explicacao": "O informe de rendimentos da instituição financeira detalha os valores recebidos e indica a isenção prevista em lei. O DARF não existe para LCI, e os demais documentos não comprovam a natureza isenta do rendimento.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 6,
+  "topico": "6.3.1",
+  "enunciado": "Ao planejar a tributação sobre ganhos de capital em operações de compra e venda de ações, qual documento é indispensável para apurar o ganho ou perda?",
+  "alternativas": [
+   "Nota de corretagem emitida pela corretora",
+   "Extrato de poupança",
+   "Declaração de Imposto de Renda do exercício anterior",
+   "Contrato de trabalho do cliente"
+  ],
+  "correta": 0,
+  "explicacao": "A nota de corretagem contém preço de compra, venda, custos operacionais e data, permitindo o cálculo preciso do ganho de capital. Os demais documentos não trazem informações sobre as operações de ações.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 6,
+  "topico": "6.5.2",
+  "enunciado": "Considerando um plano de previdência privada que ainda não realizou nenhum resgate, qual das afirmativas abaixo está correta quanto à escolha do regime tributário (progressivo ou regressivo) segundo a Lei 14.803/2024?",
+  "alternativas": [
+   "A escolha pode ser feita a qualquer momento, inclusive após o primeiro resgate",
+   "A escolha deve ser feita até a data de adesão ao plano, não podendo ser alterada depois",
+   "A escolha pode ser feita até o primeiro resgate ou benefício, e depois permanece fixa",
+   "A escolha é automática: planos com prazo acima de 10 anos adotam regressivo e os demais progressivo"
+  ],
+  "correta": 2,
+  "explicacao": "A lei permite que o contribuinte escolha o regime até o primeiro resgate ou benefício; após isso, o regime escolhido é definitivo. As demais alternativas ou permitem mudança posterior ou impõem regras inexistentes.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 6,
+  "topico": "6.5.2",
+  "enunciado": "Em relação ao tratamento tributário dos rendimentos auferidos em planos PGBL e VGBL, assinale a alternativa correta:",
+  "alternativas": [
+   "No PGBL, o imposto incide sobre o total resgatado (principal + rendimentos); no VGBL, incide apenas sobre os rendimentos",
+   "No VGBL, o imposto incide sobre o total resgatado; no PGBL, incide apenas sobre os rendimentos",
+   "Ambos os planos tributam apenas os rendimentos, independentemente do regime escolhido",
+   "Ambos os planos tributam o total resgatado, mas a alíquota varia conforme a tabela de renda fixa"
+  ],
+  "correta": 0,
+  "explicacao": "PGBL é tributado sobre o valor total resgatado, pois o principal foi deduzido na fase de acumulação. VGBL, por não ter dedução, tributa apenas os rendimentos. As demais opções invertem ou generalizam incorretamente a regra.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 7,
+  "topico": "7.3.2.2",
+  "enunciado": "Em regime de comunhão parcial de bens, Maria, viúva, tem direito à meação dos bens adquiridos onerosamente durante o casamento. Sobre a parte que lhe cabe como herdeira, o que ocorre?",
+  "alternativas": [
+   "A meação é considerada parte da herança e será distribuída entre os herdeiros, inclusive os filhos.",
+   "A meação é excluída da herança; Maria a recebe integralmente e o restante da herança é dividido entre os descendentes.",
+   "Maria tem direito apenas à metade da meação, pois a outra metade integra a herança.",
+   "A meação e a herança são indistinguíveis; tudo será dividido igualmente entre todos os herdeiros."
+  ],
+  "correta": 1,
+  "explicacao": "No regime de comunhão parcial, a meação (metade dos bens adquiridos onerosamente) pertence ao cônjuge sobrevivente e não integra a herança; portanto, Maria a recebe integralmente. O restante da herança (bens excluídos da comunhão) é partilhado entre os descendentes. As demais alternativas confundem a natureza da meação.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 7,
+  "topico": "7.5.3",
+  "enunciado": "Um cliente deseja transferir parte de seu patrimônio para o filho enquanto ainda está vivo, mas quer garantir que o bem só será efetivamente controlado pelo filho após seu falecimento. Qual a estratégia mais adequada e qual a tributação incidente?",
+  "alternativas": [
+   "Doação com reserva de usufruto; incide ITCMD sobre o valor da nua‑propriedade no momento da doação",
+   "Testamento que institui legado; incide ITCMD apenas no momento da abertura da sucessão",
+   "Doação simples sem reserva; incide ITCMD sobre o valor total do bem no momento da doação",
+   "Transferência por compra e venda a preço simbólico; incide apenas IR sobre ganho de capital"
+  ],
+  "correta": 0,
+  "explicacao": "A doação com reserva de usufruto permite ao doador manter o uso do bem e, ao falecer, o nu‑proprietário já possui a propriedade. O ITCMD incide sobre o valor da nua‑propriedade na data da doação. As demais alternativas não preservam o controle ou tratam de tributos incorretos.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 7,
+  "topico": "7.5.3",
+  "enunciado": "Um casal pretende, antes do casamento, transferir a totalidade das quotas de uma empresa de responsabilidade limitada (LTDA) para o futuro cônjuge, mediante pacto antenupcial. Qual a consequência tributária principal dessa operação?",
+  "alternativas": [
+   "Incide ITCMD sobre o valor das quotas transferidas, conforme tabela estadual vigente",
+   "Incide IR sobre ganho de capital, independentemente do valor das quotas",
+   "Não há tributação, pois a transferência ocorre antes da celebração do casamento",
+   "Incide apenas IOF sobre a operação de transferência de quotas"
+  ],
+  "correta": 0,
+  "explicacao": "A transferência de quotas como doação está sujeita ao ITCMD, que varia conforme o estado. Não há IR nem IOF nessa situação; o IOF incide apenas sobre operações financeiras. A isenção não se aplica porque não é casamento, mas doação.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 7,
+  "topico": "7.5.3",
+  "enunciado": "Em planejamento sucessório, a divisão de um imóvel em usufruto (para o pai) e nua‑propriedade (para a filha) gera quais efeitos no IRPF de cada parte?",
+  "alternativas": [
+   "O usufrutuário inclui os rendimentos do imóvel (aluguéis) como renda tributável; o nu‑proprietário não tem tributação sobre o bem enquanto não houver usufruto",
+   "Ambos declaram o valor total do imóvel em bens, mas apenas o nu‑proprietário paga imposto sobre ganho de capital futuro",
+   "O usufrutuário paga ITCMD sobre o valor do usufruto e o nu‑proprietário paga ITCMD sobre a nua‑propriedade",
+   "Nenhum dos dois tem obrigação de declarar o bem, pois a divisão impede a tributação até a consolidação da propriedade"
+  ],
+  "correta": 0,
+  "explicacao": "O usufrutuário tem direito ao uso e aos rendimentos (aluguéis), que são tributáveis no IRPF. O nu‑proprietário possui apenas a propriedade e não recebe rendimentos, logo não tem tributação corrente. ITCMD já foi pago na doação, não recai novamente. As demais alternativas confundem obrigações.",
+  "fontes": [],
+  "dificuldade": "dificil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 7,
+  "topico": "7.5.4",
+  "enunciado": "Ana, compositora de sucessos musicais, deseja garantir que os royalties de suas obras continuem gerando renda para seus filhos após seu falecimento, minimizando a carga tributária. Qual a estratégia mais adequada dentro do planejamento patrimonial e sucessório?",
+  "alternativas": [
+   "Transferir a titularidade das obras para uma holding familiar e cobrar os royalties da empresa que as explora.",
+   "Incluir os direitos autorais no inventário e dividir o valor total entre os herdeiros.",
+   "Vender as obras a título definitivo antes do falecimento, recebendo o valor à vista.",
+   "Depositar os direitos autorais em conta corrente, tratando-os como dinheiro."
+  ],
+  "correta": 0,
+  "explicacao": "A holding familiar permite que os royalties sejam tributados como renda da pessoa jurídica (IR 15% + CSLL 9%), evitando a alíquota progressiva do IRPF e facilitando a sucessão por meio de cotas. B) gera tributação na transmissão causa mortis. C) pode gerar ganho de capital elevado. D) perde a proteção de direitos autorais.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 7,
+  "topico": "7.5.4",
+  "enunciado": "Carlos possui uma marca comercial registrada no INPI há 10 anos e pretende incluí‑la em seu planejamento sucessório. Qual das afirmativas abaixo está correta quanto à transferência da marca para os herdeiros?",
+  "alternativas": [
+   "A marca só pode ser transferida mediante a realização de inventário judicial, não havendo cessão em vida.",
+   "A marca pode ser cedida ou doada em vida, devendo ser averbada no INPI; no inventário, apenas a titularidade será formalizada.",
+   "A transferência da marca exige a extinção da empresa que a utiliza, pois marca e empresa são inseparáveis.",
+   "A marca não pode ser objeto de doação, pois é bem imaterial e, portanto, não se transmite por sucessão."
+  ],
+  "correta": 1,
+  "explicacao": "B) está correta: a titularidade da marca pode ser transferida por cessão ou doação, com registro da alteração no INPI. No inventário, a marca aparece como bem imaterial, mas a transferência já pode ter sido feita em vida. A) está errada – cessão em vida é permitida. C) está errada – marca pode ser separada da empresa. D) está errada – marcas são transmissíveis por doação ou herança.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 7,
+  "topico": "7.5.4",
+  "enunciado": "Mariana recebeu R$ 120.000,00 de royalties de um livro publicado no exterior. Considerando a legislação brasileira vigente, qual o tratamento tributário correto desses rendimentos para pessoa física?",
+  "alternativas": [
+   "Tributação exclusiva na fonte no país de origem, isenta no Brasil por acordo de bitributação.",
+   "Incidência de IRPF na tabela progressiva, com crédito do imposto pago no exterior, e isenção de contribuição previdenciária.",
+   "Incidência de IRRF de 15% na fonte no Brasil, sem necessidade de declaração na declaração anual de IRPF.",
+   "Tributação como ganho de capital, com alíquota fixa de 20% sobre o valor total recebido."
+  ],
+  "correta": 1,
+  "explicacao": "Royalties recebidos por pessoa física são rendimentos tributáveis pelo IRPF na tabela progressiva, podendo ser compensados com imposto pago no exterior (se houver acordo). Não incidem contribuição previdenciária nem IRRF automático. A) depende de tratado, mas geralmente há tributação no Brasil. C) IRRF não se aplica a royalties. D) não se trata de ganho de capital.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 8,
+  "topico": "8.1.2",
+  "enunciado": "Durante a reunião de planejamento, a consultora apresenta ao cliente duas projeções de patrimônio: uma conservadora (C) que considera apenas cenários de baixa rentabilidade e outra otimista (O) que inclui cenários de alta rentabilidade. O cliente, ao analisar as duas, dá maior peso à projeção otimista e decide alocar mais recursos nela. Qual viés explicaria essa preferência?",
+  "alternativas": [
+   "Viés de ancoragem",
+   "Viés de confirmação",
+   "Viés de otimismo (excesso de otimismo)",
+   "Viés de aversão à perda"
+  ],
+  "correta": 2,
+  "explicacao": "O excesso de otimismo faz o investidor superestimar resultados favoráveis e subestimar riscos, favorecendo a projeção otimista. Ancoragem seria fixar-se em um número inicial; confirmação busca informações que confirmem crenças prévias; aversão à perda levaria a ser mais cauteloso.",
+  "fontes": [],
+  "dificuldade": "media",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 8,
+  "topico": "8.2.6",
+  "enunciado": "Maria, planejadora financeira, acredita que sua experiência de 10 anos a torna capaz de prever os retornos dos fundos de ações melhor que a maioria dos analistas. Ela recomenda ao cliente um fundo que superou 15% nos últimos dois anos, sem diversificar. Qual o viés que está em risco de comprometer a política de investimentos?",
+  "alternativas": [
+   "Viés de confirmação",
+   "Viés de ancoragem",
+   "Viés de excesso de confiança",
+   "Viés de aversão à perda"
+  ],
+  "correta": 2,
+  "explicacao": "O excesso de confiança leva a sobrestimar a própria capacidade de previsão, resultando em recomendações pouco diversificadas. A) seria buscar apenas informações que confirmam a crença. B) refere‑se a fixar-se em um número de referência. D) trata‑se de medo de perdas, não aplicável aqui.",
+  "fontes": [],
+  "dificuldade": "facil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ },
+ {
+  "cert": "CFP",
+  "modulo": 8,
+  "topico": "8.2.6",
+  "enunciado": "Durante a definição da taxa de retorno esperada, Carlos fixa o número 8% ao lembrar que o índice de referência do mercado subiu 8% no último ano, sem analisar outros períodos. Qual viés cognitivo está presente e como o planejador deve corrigi‑lo?",
+  "alternativas": [
+   "Viés de disponibilidade; o planejador deve usar a média histórica de 10 anos para estimar a taxa.",
+   "Viés de ancoragem; o planejador deve recalcular a taxa usando múltiplos períodos e cenários macroeconômicos.",
+   "Viés de representatividade; o planejador deve comparar o índice com fundos semelhantes antes de decidir.",
+   "Viés de confirmação; o planejador deve buscar estudos que confirmem a taxa de 8%."
+  ],
+  "correta": 1,
+  "explicacao": "Carlos está ancorado ao número recente de 8%. A correção consiste em usar uma análise mais ampla, incorporando diferentes períodos e cenários. A) descreve disponibilidade, mas a solução proposta não aborda a ancoragem. C) trata de representatividade, não do problema. D) refere‑se à confirmação, não ao uso de um ponto de referência único.",
+  "fontes": [],
+  "dificuldade": "dificil",
+  "modelo": "groq/openai/gpt-oss-120b",
+  "revisor": "gemini/gemini-flash-lite-latest"
+ }
+]

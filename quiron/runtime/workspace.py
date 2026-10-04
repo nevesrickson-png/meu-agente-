@@ -95,9 +95,10 @@ class Comando:
     descricao: str
     modelo: str  # texto do pedido; {args} é trocado pelo que vem depois do comando
     skill: str = ""  # skill carregada junto (poupa uma ida e volta ao modelo)
+    padrao: str = "o mercado hoje"  # o que entra no {args} quando o comando vem sem nada
 
     def montar(self, args: str) -> str:
-        return self.modelo.replace("{args}", args.strip() or "o mercado hoje").strip()
+        return self.modelo.replace("{args}", args.strip() or self.padrao).strip()
 
 
 def carregar_comandos(pasta: Path | None = None) -> dict[str, Comando]:
@@ -113,6 +114,10 @@ def carregar_comandos(pasta: Path | None = None) -> dict[str, Comando]:
             descricao = d.group(1).strip() if d else ""
             s = re.search(r"skill:\s*(.+)", m.group(1))
             skill = s.group(1).strip() if s else ""
+            p = re.search(r"padrao:\s*(.+)", m.group(1))
+            padrao = p.group(1).strip() if p else Comando.padrao
             texto = texto[m.end():]
-        saida[arq.stem] = Comando(arq.stem, descricao, texto.strip(), skill)
+        else:
+            padrao = Comando.padrao
+        saida[arq.stem] = Comando(arq.stem, descricao, texto.strip(), skill, padrao)
     return saida

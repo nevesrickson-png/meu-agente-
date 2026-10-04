@@ -16,6 +16,8 @@ from datetime import datetime
 
 from quiron.nucleo.config import carregar_config
 from quiron.runtime import batimento
+from quiron.runtime.academia_bot import COMANDOS as COMANDOS_ACADEMIA
+from quiron.runtime.academia_bot import AcademiaBot, Tela
 from quiron.runtime.agendador import BRT
 from quiron.runtime.agente import Agente
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
@@ -53,6 +55,10 @@ class Saida:
 
     texto: str
     botoes: list[tuple[str, str]] = field(default_factory=list)
+    linhas: list[list[tuple[str, str]]] = field(default_factory=list)  # várias linhas de botões (Academia)
+
+    def teclado(self) -> list[list[tuple[str, str]]]:
+        return self.linhas or ([self.botoes] if self.botoes else [])
 
 
 class BotQuiron:
@@ -61,6 +67,7 @@ class BotQuiron:
     def __init__(self, agente: Agente, permitidos: set[int]):
         self.agente, self.permitidos = agente, permitidos
         self.comandos = carregar_comandos()
+        self.academia = AcademiaBot()
 
     def autorizado(self, usuario: int) -> bool:
         if usuario not in self.permitidos:
@@ -71,6 +78,8 @@ class BotQuiron:
     def ajuda(self) -> str:
         linhas = ["Quíron no ar. Pergunte livremente, mande áudio ou use:"]
         linhas += [f"/{c.nome} — {c.descricao}" for c in self.comandos.values()]
+        linhas += ["", "🎓 Academia (CFP): /academia painel · /questoes [módulo ou tema] · /simulado [mini|40|completo] · "
+                   "/flashcards · /diagnostico · /plano [horas]", ""]
         linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
         return "\n".join(linhas)
 
@@ -92,6 +101,9 @@ class BotQuiron:
         skills: list[str] = []
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
+            if nome.split("@")[0].lower() in COMANDOS_ACADEMIA:
+                telas = await self.academia.comando(nome.split("@")[0].lower(), args)
+                return [self._saida(t) for t in telas]
             cmd = self.comandos.get(nome.split("@")[0].lower())
             if not cmd:
                 return [Saida(f"Comando desconhecido. {self.ajuda()}")]
@@ -102,6 +114,16 @@ class BotQuiron:
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
         return saidas
+
+    @staticmethod
+    def _saida(t: Tela) -> Saida:
+        return Saida(t.texto[:LIMITE_TELEGRAM], linhas=t.linhas)
+
+    async def clicar_academia(self, usuario: int, dado: str) -> tuple[str | None, list[Saida]]:
+        if not self.autorizado(usuario):
+            return None, []
+        c = await self.academia.clique(dado)
+        return c.editar, [self._saida(t) for t in c.novas]
 
     async def decidir(self, usuario: int, dado: str) -> str:
         if not self.autorizado(usuario):
@@ -179,7 +201,9 @@ async def _rodar() -> None:
         app = Application.builder().token(token).build()
 
         async def enviar(chat: int, s: Saida) -> None:
-            teclado = InlineKeyboardMarkup([[InlineKeyboardButton(r, callback_data=d) for r, d in s.botoes]]) if s.botoes else None
+            linhas = s.teclado()
+            teclado = InlineKeyboardMarkup([[InlineKeyboardButton(r, callback_data=d) for r, d in linha] for linha in linhas]) \
+                if linhas else None
             await app.bot.send_message(chat, s.texto, reply_markup=teclado, disable_web_page_preview=True)
 
         async def digitando(chat: int) -> None:
@@ -215,6 +239,22 @@ async def _rodar() -> None:
         async def ao_clicar(update: Update, contexto: ContextTypes.DEFAULT_TYPE) -> None:
             q = update.callback_query
             await q.answer()
+            if (q.data or "").startswith("ac:"):
+                sinal = asyncio.create_task(digitando(q.message.chat_id))
+                try:
+                    editar, saidas = await bot.clicar_academia(q.from_user.id, q.data)
+                finally:
+                    sinal.cancel()
+                try:
+                    if editar:
+                        await q.edit_message_text(editar[:LIMITE_TELEGRAM], reply_markup=None)
+                    else:
+                        await q.edit_message_reply_markup(None)
+                except Exception:  # noqa: BLE001 — mensagem antiga ou igual: segue o fluxo
+                    pass
+                for s in saidas:
+                    await enviar(q.message.chat_id, s)
+                return
             texto = await bot.decidir(q.from_user.id, q.data or "")
             if texto:
                 await q.edit_message_reply_markup(None)
@@ -258,6 +298,20 @@ async def _rodar() -> None:
                 except Exception:  # noqa: BLE001
                     logging.exception("falha no batimento")
 
+        async def laco_academia() -> None:
+            """De madrugada, aumenta o banco de questões aos poucos (dentro dos limites grátis)."""
+            from quiron.servicos.academia import estudo
+
+            while True:
+                cfg = estudo.config_geracao()
+                try:
+                    novas = await asyncio.to_thread(estudo.lote_noturno, bot.academia.banco, datetime.now(BRT).strftime("%H:%M"), cfg)
+                    if novas:
+                        logging.info("academia: +%d questões no banco", len(novas))
+                except Exception:  # noqa: BLE001
+                    logging.exception("falha na geração noturna de questões")
+                await asyncio.sleep(max(5, int(cfg.get("intervalo_min", 12))) * 60)
+
         for criada in bot.garantir_rotinas_padrao():
             logging.info("rotina padrão criada: %s", criada)
         app.add_handler(MessageHandler(filters.TEXT | filters.VOICE | filters.AUDIO, ao_receber))
@@ -265,7 +319,8 @@ async def _rodar() -> None:
         async with app:
             await app.start()
             await app.updater.start_polling(drop_pending_updates=True)
-            tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer())]
+            tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer()),
+                       asyncio.create_task(laco_academia())]
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

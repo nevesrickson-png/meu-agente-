@@ -1,0 +1,8 @@
+# Geração automática do banco de questões (o bot faz sozinho, de madrugada, sem atrapalhar o dia).
+# Cada lote = 1 chamada ao gerador (Groq) + 1 ao revisor (Gemini). Os limites grátis são por dia/minuto.
+noturna:
+  ligada: true
+  inicio: "01:00"
+  fim: "06:00"
+  intervalo_min: 12        # um lote a cada 12 min → ~25 lotes por noite
+  meta_por_modulo: 60      # para quando cada módulo tiver isso de questões

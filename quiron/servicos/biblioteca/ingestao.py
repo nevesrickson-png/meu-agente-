@@ -102,12 +102,15 @@ def ingerir_arquivo(arquivo: Path, indice: Indice, guia: Guia, forcar: bool = Fa
     return ResultadoLivro(arquivo.name, "ingerido", detalhe, livro_id)
 
 
-def ingerir_pasta(indice: Indice | None = None, guia: Guia | None = None, entrada: Path | None = None, forcar: bool = False) -> Relatorio:
+def ingerir_pasta(indice: Indice | None = None, guia: Guia | None = None, entrada: Path | None = None, forcar: bool = False,
+                  recursivo: bool = False) -> Relatorio:
     indice = indice or Indice()
     guia = guia or carregar_guia()
     entrada = entrada or indice.raiz / "entrada"
     relatorio = Relatorio()
-    for arquivo in sorted(entrada.glob("*")):
+    for arquivo in sorted(entrada.rglob("*") if recursivo else entrada.glob("*")):
+        if not arquivo.is_file():
+            continue
         if arquivo.suffix.lower() not in FORMATOS or arquivo.name.endswith(".ocr.pdf"):
             continue
         try:

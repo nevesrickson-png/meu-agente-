@@ -107,6 +107,17 @@ Testes:
 8. **Áudio:** mande uma mensagem de voz — ele transcreve (Whisper grátis do Groq, usa a mesma `GROQ_API_KEY`) e responde.
 9. O briefing diário das 7h30 já vem criado (veja `/agenda`; cancele ou mude pedindo no chat).
 
+## Academia — CFP (Fase 6)
+No Telegram: **/academia** (painel) · **/simulado** (mini, 16 questões, 2 por módulo; também `/simulado 40` ou
+`/simulado completo`) · **/questoes** `[módulo, código ou tema]` (botões A–D) · **/flashcards** · **/diagnostico** ·
+**/plano** `[horas]` · **/aula** `<tema>` · **/caso** `[tema]`. Diga “minha prova do CFP é em dd/mm/aaaa” para o plano contar os dias.
+- O edital oficial do CFP está mapeado (8 módulos, pesos e 922 tópicos) em `config/editais/CFP.yaml`.
+- Questões geradas por IA (Groq) e conferidas por um 2º modelo (Gemini); contas conferidas em Python. Achou erro? Toque **⚠**.
+- O banco cresce sozinho de madrugada (01h–06h, `config/academia/geracao.yaml`). Pelo terminal: `uv run quiron-academia status`
+  ou `uv run quiron-academia gerar --modulo 3 --n 8`.
+- Suas apostilas: coloque em `academia\material\CFP\` e rode `uv run quiron-ingerir --academia` (aulas e questões passam a citar o seu material).
+- Materiais gratuitos conferidos: `config/materiais_gratuitos.yaml` (nada é baixado sem você aprovar).
+
 ## Servidor 24h (mini PC em casa; VPS no futuro) — detalhes em `docs/03-HOSPEDAGEM.md`
 Tudo roda em Docker; o Terminal só é acessível pelo Tailscale (nenhuma porta aberta além da 22).
 1. No servidor novo, como root: `bash deploy/preparar_host.sh "sua-chave-ssh-publica"` (segurança, Docker, Tailscale).

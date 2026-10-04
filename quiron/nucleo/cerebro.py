@@ -7,8 +7,10 @@
 
 from __future__ import annotations
 
+import re
 import sys
-from dataclasses import dataclass, field
+import time
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from quiron.nucleo.config import Config, carregar_config
@@ -32,6 +34,29 @@ def _litellm():
     litellm.suppress_debug_info = True
     litellm.telemetry = False
     return litellm
+
+
+# Modelo que respondeu "cota esgotada" fica de molho até a cota voltar (não perde tempo tentando de novo).
+_PAUSA: dict[str, float] = {}
+
+
+def _pausar_se_cota(modelo: str, erro: Exception) -> None:
+    texto = str(erro)
+    if not any(x in texto for x in ("429", "RateLimit", "RESOURCE_EXHAUSTED", "quota")):
+        return
+    segundos = 60.0
+    if m := re.search(r'retryDelay"?\s*:\s*"?(\d+)s', texto):
+        segundos = float(m.group(1))
+    elif m := re.search(r"retry in (?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?", texto):
+        h, mi, se = (float(x or 0) for x in m.groups())
+        segundos = h * 3600 + mi * 60 + se or 60.0
+    elif "PerDay" in texto or "per day" in texto.lower():
+        segundos = 3600.0
+    _PAUSA[modelo] = time.time() + min(segundos, 12 * 3600)
+
+
+def _em_pausa(modelo: str) -> bool:
+    return _PAUSA.get(modelo, 0) > time.time()
 
 
 def _chave(config: Config, modelo: str) -> str | None:
@@ -64,6 +89,9 @@ def perguntar(
         if not config.tem_chave_para(modelo) and "mock_response" not in extras:
             falhas.append(f"{modelo}: sem chave no .env")
             continue
+        if _em_pausa(modelo) and "mock_response" not in extras:
+            falhas.append(f"{modelo}: cota esgotada (em pausa)")
+            continue
         try:
             r = llm.completion(
                 model=modelo,
@@ -78,6 +106,7 @@ def perguntar(
             texto = r.choices[0].message.content or ""
             return Resposta(texto, modelo, mensagens, falhas)
         except Exception as e:  # noqa: BLE001 — qualquer falha passa para o próximo modelo
+            _pausar_se_cota(modelo, e)
             falhas.append(f"{modelo}: {type(e).__name__}: {str(e)[:200]}")
     raise CerebroIndisponivel("Nenhum modelo respondeu.\n" + "\n".join(falhas))
 
@@ -115,6 +144,9 @@ def conversar(
         if not config.tem_chave_para(modelo) and "mock_response" not in extras:
             falhas.append(f"{modelo}: sem chave no .env")
             continue
+        if _em_pausa(modelo) and "mock_response" not in extras:
+            falhas.append(f"{modelo}: cota esgotada (em pausa)")
+            continue
         try:
             r = llm.completion(
                 model=modelo, messages=mensagens, tools=ferramentas or None, api_key=_chave(config, modelo),
@@ -144,6 +176,7 @@ def conversar(
             uso = getattr(r, "usage", None)
             return Turno(msg.content or "", chamadas, mensagem, modelo, falhas, int(getattr(uso, "total_tokens", 0) or 0))
         except Exception as e:  # noqa: BLE001
+            _pausar_se_cota(modelo, e)
             falhas.append(f"{modelo}: {type(e).__name__}: {str(e)[:200]}")
     raise CerebroIndisponivel("Nenhum modelo respondeu.\n" + "\n".join(falhas))
 
@@ -156,7 +189,7 @@ def testar_conexao(config: Config | None = None) -> list[tuple[str, bool, str]]:
         if not config.tem_chave_para(modelo):
             resultados.append((modelo, False, "sem chave no .env"))
             continue
-        um_so = Config(**{**config.__dict__, "llm_principal": modelo, "llm_reserva": ""})
+        um_so = replace(config, ordem=(modelo,))
         try:
             r = perguntar("Responda apenas com a palavra OK.", config=um_so, max_tokens=10)
             resultados.append((modelo, True, r.texto.strip()[:40]))

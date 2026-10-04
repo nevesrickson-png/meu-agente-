@@ -126,19 +126,22 @@ Quero visual profissional, denso, rápido e leve.
 - [x] 5.7 Rotinas: briefing 7h30 (criado sozinho na 1ª vez, com pré-aquecimento às 7h10), limite de 3 mensagens automáticas/dia, fins de semana normais
 - [~] 5.8 Backup noturno (Google Drive) + **simulado de desastre** com `deploy/migrar.sh` — scripts prontos (`backup.sh`, `restaurar.sh`, `migrar.sh`); simulado no host.
 **Teste de aceite:** com o PC desligado, o Quíron responde no Telegram usando a biblioteca toda; a restauração funciona.
+> 04/10/2026 — **etapa 1 (PC) aprovada pelo Rickson**: instala/atualiza/abre com um clique (`Abrir Quiron.bat`), tela de
+> Configurações, bot respondendo no Telegram. O aceite completo (PC desligado + restauração) fica para a etapa 2 (mini PC):
+> itens 5.4 (host), 5.6 e 5.8 seguem abertos. Por decisão do Rickson, seguimos para a Fase 6 enquanto isso.
 ```
 Execute a FASE 5 do docs/00-ROTEIRO.md. Comece pelo item 5.1 e me apresente o comparativo antes de eu decidir.
 Depois me guie comando por comando, esperando minha confirmação.
 ```
 
 ## FASE 6 — Academia
-- [ ] 6.1 MCP `quiron-academia` lendo `config/trilha_certificacoes.yaml`
-- [ ] 6.2 Ingerir seu material em `academia/material/`
-- [ ] 6.3 Pesquisar, confirmar e catalogar os gratuitos de `docs/05-MATERIAIS-GRATUITOS.md` (mostrar antes de baixar)
-- [ ] 6.4 Edital do **CFP** mapeado em tópicos
-- [ ] 6.5 Aula, questões (botões no Telegram), flashcards com revisão espaçada
-- [ ] 6.6 Simulado, diagnóstico, plano de estudo (3–7h/semana), estudo de caso, painel de progresso
-- [ ] 6.7 Estrutura pronta para o CNPI
+- [x] 6.1 MCP `quiron-academia` lendo `config/trilha_certificacoes.yaml` (10 ferramentas: trilha, edital, tópico, diagnóstico, plano, configurar, gerar/questões, registrar, materiais)
+- [~] 6.2 Ingerir seu material em `academia/material/` — comando pronto: `uv run quiron-ingerir --academia` (subpastas por certificação). **Falta você colocar as apostilas.**
+- [x] 6.3 Pesquisar, confirmar e catalogar os gratuitos de `docs/05-MATERIAIS-GRATUITOS.md` (mostrar antes de baixar) — `config/materiais_gratuitos.yaml` (16 itens, links conferidos em 04/10/2026; nada baixado sem sua aprovação)
+- [x] 6.4 Edital do **CFP** mapeado em tópicos — `config/editais/CFP.yaml` gerado do Programa Detalhado oficial: 8 módulos, pesos, tempos e 922 tópicos
+- [x] 6.5 Aula, questões (botões no Telegram), flashcards com revisão espaçada — `/aula`, `/questoes` (A–D, ⚠ anula), `/flashcards` (SM-2); questões geradas pelo Groq e conferidas pelo Gemini (contas conferidas em Python)
+- [x] 6.6 Simulado, diagnóstico, plano de estudo (3–7h/semana), estudo de caso, painel de progresso — `/simulado`, `/diagnostico`, `/plano`, `/caso`, `/academia`
+- [~] 6.7 Estrutura pronta para o CNPI — banco, diagnóstico e MCP já aceitam outra certificação (`cert`); falta o programa oficial do CNPI (não achei o PDF no site da Apimec em 04/10/2026)
 **Teste de aceite:** mini-simulado do CFP gera diagnóstico e plano da semana.
 ```
 Execute a FASE 6 do docs/00-ROTEIRO.md, item por item. Comece pelo CFP.

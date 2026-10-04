@@ -1,0 +1,85 @@
+# Catálogo de materiais gratuitos (item 6.3). Links conferidos (respondendo) em 04/10/2026.
+# Regra: nada é baixado sem o Rickson aprovar; material de terceiros é só para estudo pessoal.
+# Para entrar na biblioteca: baixe o PDF, coloque em academia/material/<CERT>/ e rode `uv run quiron-ingerir --academia`.
+verificado_em: "2026-10-04"
+itens:
+  - nome: Programa Detalhado, Edital 2026, Lista de Fórmulas e Orientações de Estudo do CFP
+    fonte: Planejar
+    url: https://www.planejar.org.br/conheca-o-exame
+    certificacoes: [CFP]
+    situacao: "oficial — programa já mapeado em config/editais/CFP.yaml; Lista de Fórmulas recomendada para a biblioteca"
+  - nome: Perguntas e Respostas do IRPF
+    fonte: Receita Federal
+    url: https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirpf
+    certificacoes: [CFP, CNPI]
+    situacao: "oficial — base do módulo 6 (tributário)"
+  - nome: Livros da série TOP e cadernos do Portal do Investidor
+    fonte: CVM
+    url: https://www.investidor.gov.br/publicacao/ListaLivros.html
+    certificacoes: [CFP, CNPI, CGA]
+    situacao: "PDF gratuitos (mercado de capitais, fundos, derivativos, governança)"
+  - nome: Cursos gratuitos de mercado de capitais
+    fonte: B3 Educação
+    url: https://edu.b3.com.br
+    certificacoes: [CFP, CNPI]
+    situacao: "cursos online (exige cadastro gratuito)"
+  - nome: Relatório de Política Monetária
+    fonte: Banco Central
+    url: https://www.bcb.gov.br/publicacoes/rpm
+    certificacoes: [CFP, CNPI, CFA_I]
+    situacao: "trimestral (macroeconomia aplicada)"
+  - nome: Materiais e relatórios do Tesouro
+    fonte: Tesouro Nacional (Tesouro Transparente)
+    url: https://www.tesourotransparente.gov.br
+    certificacoes: [CFP, CNPI]
+    situacao: "títulos públicos, dívida pública"
+  - nome: Estudos e boletins
+    fonte: ANBIMA
+    url: https://www.anbima.com.br/pt_br/informar/estudos.htm
+    certificacoes: [CFP, CGA, CGE]
+    situacao: "estudos de mercado e fundos"
+  - nome: Certificações ANBIMA (programas detalhados CGA/CGE)
+    fonte: ANBIMA
+    url: https://www.anbima.com.br/pt_br/educar/certificacoes.htm
+    certificacoes: [CGA, CGE]
+    situacao: "o endereço antigo do CGA mudou; programas a partir desta página"
+  - nome: Página do CNPI (Apimec)
+    fonte: Apimec
+    url: https://www.apimecbrasil.com.br/certificacao/sobre-o-cnpi/
+    certificacoes: [CNPI]
+    situacao: "programa detalhado em PDF não encontrado no site em 04/10/2026 — pedir à Apimec ou conferir de novo"
+  - nome: Research Foundation (monografias e livros em PDF)
+    fonte: CFA Institute
+    url: https://rpc.cfainstitute.org/research/foundation
+    certificacoes: [CFA_I, CFA_II, CFA_III, CFP]
+    situacao: "PDF gratuitos (alocação, risco, alternativos, finanças comportamentais)"
+  - nome: Refresher Readings e recursos do candidato
+    fonte: CFA Institute
+    url: https://www.cfainstitute.org/insights/professional-learning/refresher-readings
+    certificacoes: [CFA_I, CFA_II, CFA_III]
+    situacao: "leituras gratuitas por tema"
+  - nome: Study Guide do FRM
+    fonte: GARP
+    url: https://www.garp.org/frm/study-materials
+    certificacoes: [FRM_I, FRM_II]
+    situacao: "lista oficial de tópicos e leituras"
+  - nome: Currículo do CAIA
+    fonte: CAIA Association
+    url: https://caia.org/curriculum
+    certificacoes: [CAIA]
+    situacao: "o endereço antigo mudou; currículo nesta página"
+  - nome: Aulas, planilhas e bases de dados de valuation
+    fonte: Aswath Damodaran (NYU Stern)
+    url: https://pages.stern.nyu.edu/~adamodar/
+    certificacoes: [CNPI, CFA_I, CFA_II]
+    situacao: "aulas e planilhas gratuitas"
+  - nome: Finance Theory I
+    fonte: MIT OpenCourseWare
+    url: https://ocw.mit.edu/courses/15-401-finance-theory-i-fall-2008/
+    certificacoes: [CFA_I, CNPI]
+    situacao: "curso completo gratuito (inglês)"
+  - nome: Financial Markets (Robert Shiller)
+    fonte: Yale / Coursera
+    url: https://www.coursera.org/learn/financial-markets-global
+    certificacoes: [CFA_I, CFP]
+    situacao: "modo ouvinte gratuito (inglês)"

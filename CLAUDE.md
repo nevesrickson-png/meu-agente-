@@ -50,7 +50,9 @@ Funcionalidades em `docs/01-FUNCIONALIDADES.md`. Persona em `config/persona.yaml
 
 ## Cérebro trocável
 Toda chamada a LLM no código próprio passa por `quiron/nucleo/cerebro.py` (LiteLLM): Gemini grátis → Groq grátis → futuro Claude.
-Trocar de modelo = mudar o `.env`.
+Trocar de modelo = mudar o `.env`. Ordem: `LLM_PRINCIPAL` → `LLM_ALTERNATIVOS` (fila de Gemini grátis, cada um com cota
+diária própria — o Flash mais novo só dá ~20 pedidos/dia) → `LLM_RESERVA`. Modelo com cota esgotada (429) fica em pausa até
+a cota voltar (`_PAUSA`). `Config.ordem` troca a ordem pontualmente (ex.: gerador da Academia começa pelo Groq).
 
 ## Como o Quíron trabalha em análises
 - Rigor de CFA/CFP/FRM: premissas explícitas, fontes e datas, cenários e sensibilidade, limitações declaradas.
@@ -125,6 +127,15 @@ Arquivos com DRM não são processados.
   checagem de Host) que lê/grava o `.env` preservando comentários, testa chaves (Telegram getMe, Gemini, Groq, brapi) e
   descobre o ID pelo getUpdates; segredos nunca voltam inteiros à página. `quiron-configurar --verificar` (0 = completo)
   é usado pelos `.bat` do Windows (`Abrir Quiron.bat` instala/atualiza/abre; `Quiron Configuracoes.bat`).
+- Academia (Fase 6, `quiron/servicos/academia/`): `edital.py` (PDF oficial → `config/editais/CFP.yaml`, 8 módulos/pesos/922
+  tópicos; códigos de tópico são a referência de tudo), `banco.py` (`dados/academia.db`: questões, respostas, flashcards,
+  simulados, preferências; SM-2 para cards e para questões erradas), `gerador.py` (gera no Groq → `validar` (estrutura +
+  `verificacao` aritmética calculada sem eval) → `revisar` por modelo de OUTRO provedor, que resolve sozinho e confere
+  coerência; recusadas não entram), `diagnostico.py` (acerto suavizado (a+1)/(n+2), prontidão ponderada pelo peso, plano em
+  blocos de 30 min), `estudo.py` (Filtro módulo/tópico/tema, simulados 16/40/140 por peso, geração noturna
+  `config/academia/geracao.yaml`, banco inicial `config/academia/banco_inicial_cfp.json`), `consultas.py` + MCP
+  `quiron-academia`, `cli.py` (`quiron-academia`). Telegram: `runtime/academia_bot.py` (direto, sem LLM; botões `ac:*`).
+  `/aula` e `/caso` usam as skills `academia-aula`/`academia-caso`. Catálogo de gratuitos: `config/materiais_gratuitos.yaml`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.

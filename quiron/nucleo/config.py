@@ -43,6 +43,10 @@ class Config:
     llm_principal: str = "gemini/gemini-flash-latest"
     llm_reserva: str = "groq/openai/gpt-oss-120b"
     llm_local: str = "ollama/qwen2.5:3b"
+    # Modelos tentados entre o principal e a reserva. Cada modelo Gemini grátis tem cota diária própria
+    # (o Flash mais novo dá só ~20 pedidos/dia), então uma fila de modelos grátis evita cair cedo no Groq.
+    llm_alternativos: tuple[str, ...] = ()
+    ordem: tuple[str, ...] = ()  # se preenchida, substitui a ordem (usado para "segunda opinião" e testes)
     fuso_horario: str = "America/Sao_Paulo"
     host_atual: str = "pc"
     runtime_agente: str = "a_definir"
@@ -51,8 +55,10 @@ class Config:
     @property
     def modelos(self) -> list[str]:
         """Ordem de tentativa do cérebro: principal → reserva (sem repetir, sem vazios)."""
+        if self.ordem:
+            return list(dict.fromkeys(m for m in self.ordem if m))
         ordem: list[str] = []
-        for m in (self.llm_principal, self.llm_reserva):
+        for m in (self.llm_principal, *self.llm_alternativos, self.llm_reserva):
             if m and m not in ordem:
                 ordem.append(m)
         return ordem
@@ -66,6 +72,16 @@ class Config:
         return True  # ollama e outros locais não precisam de chave
 
 
+# Conferido em 04/10/2026: cada um respondeu na camada grátis com cota própria (LLM_ALTERNATIVOS= vazio desliga).
+ALTERNATIVOS_PADRAO = ("gemini/gemini-3.7-flash", "gemini/gemini-3.6-flash", "gemini/gemini-flash-lite-latest")
+
+
+def _alternativos() -> tuple[str, ...]:
+    bruto = os.environ.get("LLM_ALTERNATIVOS")  # ausente = padrão; vazio = nenhum
+    texto = ",".join(ALTERNATIVOS_PADRAO) if bruto is None else bruto.split(" #")[0]
+    return tuple(m.strip() for m in texto.split(",") if m.strip())
+
+
 @lru_cache(maxsize=1)
 def carregar_config(arquivo_env: str | None = None) -> Config:
     load_dotenv(arquivo_env or RAIZ / ".env", override=False)
@@ -74,6 +90,7 @@ def carregar_config(arquivo_env: str | None = None) -> Config:
         groq_api_key=_texto("GROQ_API_KEY"),
         llm_principal=_texto("LLM_PRINCIPAL", Config.llm_principal),
         llm_reserva=_texto("LLM_RESERVA", Config.llm_reserva),
+        llm_alternativos=_alternativos(),
         llm_local=_texto("LLM_LOCAL", Config.llm_local),
         fuso_horario=_texto("FUSO_HORARIO", Config.fuso_horario),
         host_atual=_texto("HOST_ATUAL", Config.host_atual),

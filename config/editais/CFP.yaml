@@ -1,0 +1,2607 @@
+# Mapa do edital do CFP — GERADO do PDF oficial por `uv run quiron-academia mapear-cfp <programa.txt>`.
+# Pode editar à mão (títulos, itens). Códigos de tópico são a referência de questões, flashcards e diagnóstico.
+certificacao: CFP
+entidade: Planejar
+fonte: Programa Detalhado do Exame (novos padrões) e Edital 2026 — planejar.org.br/conheca-o-exame
+verificado_em: '2026-10-04'
+prova:
+  questoes: 140
+  alternativas: 4
+  aprovacao_completa: ≥ 70% no total e ≥ 50% em cada módulo
+  aprovacao_modular: ≥ 70% em cada módulo (8 módulos em até 24 meses)
+  legislacao: vigente até 6 meses antes do exame
+  exames_2026:
+  - 52º — 26/04/2026
+  - 53º — 26/07/2026
+  - 54º — 18/10/2026 (inscrições encerradas em 16/09)
+  observacao: Os pesos oficiais somam 99%. 'questoes_estimadas' = 140 × peso (o edital não fixa o número por módulo).
+modulos:
+- numero: 1
+  titulo: 'Planejamento Financeiro: Princípios, Processos e Habilidades'
+  peso: 13
+  topicos:
+  - codigo: '1.1'
+    titulo: 'Planejamento Financeiro: a profissão e o processo'
+  - codigo: 1.1.1
+    titulo: Introdução ao planejamento financeiro pessoal
+  - codigo: 1.1.2
+    titulo: Funções do planejador financeiro ao realizar o planejamento financeiro integrado
+  - codigo: 1.1.3
+    titulo: Diferença entre planejadores financeiros e consultores de produtos financeiros
+  - codigo: 1.1.4
+    titulo: Processo de Planejamento Financeiro
+  - codigo: 1.1.4.1
+    titulo: Etapas do processo de planejamento financeiro
+  - codigo: 1.1.4.1.1
+    titulo: ETAPA 1 - Definir e estabelecer o relacionamento com o cliente
+  - codigo: 1.1.4.1.2
+    titulo: ETAPA 2 - Coleta das informações do cliente
+  - codigo: 1.1.4.1.2.1
+    titulo: Como se dá a coleta de informações na prática?
+  - codigo: 1.1.4.1.2.2
+    titulo: Informações quantitativas
+  - codigo: 1.1.4.1.2.3
+    titulo: Informações qualitativas
+  - codigo: 1.1.4.1.3
+    titulo: ETAPA 3 - Análise dos objetivos, necessidades, valores e informações do cliente
+  - codigo: 1.1.4.1.4
+    titulo: ETAPA 4 - Desenvolvimento de recomendações e apresentação ao cliente
+  - codigo: 1.1.4.1.4.1
+    titulo: Política de investimentos (Investment Policy Statement - IPS)
+  - codigo: 1.1.4.1.5
+    titulo: ETAPA 5 - Implementação das recomendações de planejamento financeiro
+  - codigo: 1.1.4.1.5.1
+    titulo: Responsabilidade pela implementação
+  - codigo: 1.1.4.1.6
+    titulo: ETAPA 6 - Monitoramento da situação do cliente
+  - codigo: '1.2'
+    titulo: Prática e Ética em Planejamento Financeiro
+  - codigo: 1.2.1
+    titulo: Práticas Essenciais de Planejamento Financeiro
+  - codigo: 1.2.1.1
+    titulo: Estabelecer e definir a relação com o cliente
+  - codigo: 1.2.1.2
+    titulo: Coletar as informações cliente
+  - codigo: 1.2.1.3
+    titulo: Analisar e assessorar o status financeiro do cliente
+  - codigo: 1.2.1.4
+    titulo: Desenvolver as recomendações de planejamento financeiro e apresentá-las ao cliente
+  - codigo: 1.2.1.5
+    titulo: Implementar as recomendações do planejamento financeiro ao cliente
+  - codigo: 1.2.1.6
+    titulo: Revisar a situação do cliente
+  - codigo: 1.2.2
+    titulo: Estrutura e função das Normas de Práticas de Planejamento Financeiro
+  - codigo: 1.2.3
+    titulo: O Código de Ética e da Responsabilidade Profissional na prática profissional dos planejadores financeiros
+  - codigo: 1.2.3.1
+    titulo: Aplicabilidade e cumprimento
+  - codigo: 1.2.3.2
+    titulo: Termos e expressões (seção I)
+  - codigo: 1.2.3.3
+    titulo: Princípios (seção II)
+    itens:
+    - '6'
+  - codigo: 1.2.3.3.1
+    titulo: Cliente em Primeiro Lugar
+  - codigo: 1.2.3.3.2
+    titulo: Integridade
+  - codigo: 1.2.3.3.3
+    titulo: Objetividade
+  - codigo: 1.2.3.3.4
+    titulo: Imparcialidade
+  - codigo: 1.2.3.3.5
+    titulo: Profissionalismo
+  - codigo: 1.2.3.3.6
+    titulo: Competência
+  - codigo: 1.2.3.3.7
+    titulo: Confidencialidade
+  - codigo: 1.2.3.3.8
+    titulo: Diligência
+  - codigo: 1.2.3.4
+    titulo: Regra (seção III) – 25 regras
+  - codigo: 1.2.3.5
+    titulo: Procedimentos disciplinares
+  - codigo: 1.2.3.6
+    titulo: Melhores práticas de relacionamento entre o planejador e clientes
+  - codigo: 1.2.3.7
+    titulo: Normas disciplinares e procedimentos para apuração de descumprimento às regras do
+  - codigo: 1.2.3.7.1
+    titulo: Procedimentos
+  - codigo: 1.2.3.7.2
+    titulo: Direitos do denunciado
+  - codigo: 1.2.3.7.3
+    titulo: Penalidades por descumprimento das normas
+  - codigo: 1.2.4
+    titulo: Implementação na prática das Normas de Práticas de Planejamento Financeiro, das Práticas
+  - codigo: 1.2.5
+    titulo: Gerenciamento de um negócio de planejamento financeiro
+  - codigo: 1.2.5.1
+    titulo: Plano de Negócios
+  - codigo: 1.2.5.1.1
+    titulo: Planejamento Financeiro Empresarial
+  - codigo: 1.2.5.1.2
+    titulo: Estrutura de um Plano de Negócios para uma Empresa de Planejamento Financeiro
+  - codigo: 1.2.5.1.3
+    titulo: Sumário Executivo
+  - codigo: 1.2.5.1.4
+    titulo: Análise de Mercado
+  - codigo: 1.2.5.1.5
+    titulo: Plano de Marketing
+  - codigo: 1.2.5.1.6
+    titulo: Plano Operacional
+  - codigo: 1.2.5.1.7
+    titulo: Plano Financeiro
+  - codigo: 1.2.5.1.8
+    titulo: Estratégias Específicas para o Negócio de Planejamento Financeiro
+  - codigo: 1.2.5.1.8.1
+    titulo: Manutenção de Registros
+  - codigo: 1.2.5.1.8.2
+    titulo: Proteção de Dados e LGPD
+  - codigo: 1.2.5.2
+    titulo: Estratégias de Marketing
+  - codigo: 1.2.5.2.1
+    titulo: Principais Estratégias
+  - codigo: 1.2.5.2.2
+    titulo: Ética na Publicidade
+  - codigo: 1.2.5.2.3
+    titulo: Manutenção de Registros
+  - codigo: 1.2.5.3
+    titulo: Proteção das informações do cliente
+  - codigo: 1.2.5.4
+    titulo: Má conduta ética e regulatória
+  - codigo: '1.3'
+    titulo: Habilidades Profissionais do Planejador Financeiro
+  - codigo: 1.3.1
+    titulo: Habilidades que fazem parte da matriz de Competências Profissionais do Planejador Financeiro
+  - codigo: 1.3.1.1
+    titulo: Criar confiança
+  - codigo: 1.3.1.1.1
+    titulo: Pilares da Confiança com Clientes
+  - codigo: 1.3.1.1.1.1
+    titulo: Honestidade
+  - codigo: 1.3.1.1.1.2
+    titulo: Transparência
+  - codigo: 1.3.1.1.1.3
+    titulo: Consistência
+  - codigo: 1.3.1.1.1.4
+    titulo: Empatia
+  - codigo: 1.3.1.1.1.5
+    titulo: Competência
+    itens:
+    - '7'
+  - codigo: 1.3.1.1.1.6
+    titulo: Proatividade
+  - codigo: 1.3.1.1.1.7
+    titulo: Vulnerabilidade
+  - codigo: 1.3.1.2
+    titulo: Engajamento com o cliente
+  - codigo: 1.3.1.3
+    titulo: Comunicação eficaz
+  - codigo: 1.3.1.3.1
+    titulo: Os elementos da Comunicação
+  - codigo: 1.3.1.3.2
+    titulo: Os princípios da comunicação
+  - codigo: 1.3.1.3.3
+    titulo: Formas de comunicação Verbal e Não Verbal
+  - codigo: 1.3.1.3.4
+    titulo: Comunicação Assertiva
+  - codigo: 1.3.1.4
+    titulo: Coaching
+  - codigo: 1.3.1.4.1
+    titulo: Fundamentos Científicos do Coaching
+  - codigo: 1.3.1.4.2
+    titulo: Habilidades Essenciais do Coach
+  - codigo: 1.3.1.4.3
+    titulo: Estabelecimento de Metas
+  - codigo: 1.3.1.4.4
+    titulo: Feedback Construtivo
+  - codigo: 1.3.1.4.5
+    titulo: Desenvolvimento da Autonomia
+  - codigo: 1.3.1.4.6
+    titulo: Empatia e Presença
+  - codigo: 1.3.1.4.7
+    titulo: Benefícios do Coaching com Base em Evidências
+  - codigo: 1.3.1.4.8
+    titulo: Ética e Papel do Coach
+  - codigo: 1.3.1.5
+    titulo: Defesa do Cliente
+  - codigo: 1.3.1.5.1
+    titulo: Compreensão Profunda das Necessidades
+  - codigo: 1.3.1.5.2
+    titulo: Formulação de Soluções Relevantes
+  - codigo: 1.3.1.5.3
+    titulo: Ação com Autonomia e Iniciativa
+  - codigo: 1.3.1.5.4
+    titulo: Monitoramento Contínuo
+  - codigo: 1.3.1.6
+    titulo: Pensamento crítico
+  - codigo: 1.3.1.6.1
+    titulo: Importância no Planejamento Financeiro
+  - codigo: 1.3.1.6.2
+    titulo: Componentes do Pensamento Crítico
+  - codigo: 1.3.1.6.3
+    titulo: Etapas para aplicar o Pensamento Crítico
+  - codigo: 1.3.1.6.4
+    titulo: Ferramentas e Estratégias
+  - codigo: 1.3.1.6.5
+    titulo: Barreiras e Como Superá-las
+  - codigo: 1.3.1.7
+    titulo: Solução de problemas
+  - codigo: 1.3.1.7.1
+    titulo: A Importância da Solução de Problemas no Planejamento Financeiro
+  - codigo: 1.3.1.7.2
+    titulo: Etapas do Processo de Solução de Problemas
+  - codigo: 1.3.1.7.3
+    titulo: Aplicando Matemática Financeira na Solução de Problemas
+  - codigo: 1.3.1.7.4
+    titulo: Conduzindo Pesquisas e Análises
+  - codigo: 1.3.1.8
+    titulo: Tomada de decisões
+  - codigo: 1.3.1.8.1
+    titulo: A Relevância da Tomada de Decisão no Planejamento Financeiro
+  - codigo: 1.3.1.8.2
+    titulo: Fundamentos Cognitivos e Comportamentais
+  - codigo: 1.3.1.8.2.1
+    titulo: Raciocínio Lógico
+  - codigo: 1.3.1.8.2.2
+    titulo: Heurísticas e Vieses Cognitivos
+  - codigo: 1.3.1.8.2.3
+    titulo: Processo de Tomada de Decisão
+  - codigo: 1.3.1.8.2.4
+    titulo: Tomando Decisões com Informações Incompletas
+  - codigo: 1.3.1.8.2.5
+    titulo: Avaliação de Alternativas e Julgamento Crítico
+  - codigo: 1.3.1.8.2.6
+    titulo: Ferramentas para Tomada de Decisão
+  - codigo: 1.3.1.9
+    titulo: Experiência em tecnologia
+  - codigo: 1.3.1.9.1
+    titulo: Ferramentas e Softwares de Uso Comum
+  - codigo: 1.3.1.9.2
+    titulo: Engajamento do Cliente Através da Tecnologia
+  - codigo: 1.3.1.9.3
+    titulo: Boas Práticas no Uso de Ferramentas Digitais
+  - codigo: 1.3.1.9.4
+    titulo: Tendências Tecnológicas no Setor Financeiro
+  - codigo: 1.3.1.10
+    titulo: Inteligência emocional
+    itens:
+    - '8'
+  - codigo: 1.3.1.10.1
+    titulo: A Importância da IE no Planejamento Financeiro
+  - codigo: 1.3.1.10.2
+    titulo: Componentes da Inteligência Emocional
+  - codigo: 1.3.1.10.2.1
+    titulo: Autoconhecimento e Autogestão Emocional
+  - codigo: 1.3.1.10.2.2
+    titulo: Empatia e Consciência Social
+  - codigo: 1.3.1.10.3
+    titulo: Gerenciamento de Relacionamentos
+  - codigo: 1.3.1.10.4
+    titulo: 'IE na Prática: Situações Comuns'
+  - codigo: 1.3.1.10.5
+    titulo: Desenvolvimento Contínuo da IE
+  - codigo: '1.4'
+    titulo: Ambientes regulatório, político e econômico que impactam o planejamento financeiro
+  - codigo: 1.4.1
+    titulo: Introdução ao ambiente regulatório
+  - codigo: 1.4.1.1
+    titulo: Reguladores
+  - codigo: 1.4.1.1.1
+    titulo: O Sistema Financeiro Nacional - SFN
+  - codigo: 1.4.1.1.1.1
+    titulo: Órgãos Normativos
+  - codigo: 1.4.1.1.1.1.1
+    titulo: Conselho Monetário Nacional - CMN
+  - codigo: 1.4.1.1.1.1.2
+    titulo: Conselho Nacional de Seguros Privados - CNSP
+  - codigo: 1.4.1.1.1.1.3
+    titulo: Conselho Nacional de Previdência Complementar - CNPC
+  - codigo: 1.4.1.1.1.2
+    titulo: Entidades Supervisoras
+  - codigo: 1.4.1.1.1.2.1
+    titulo: Banco Central do Brasil – BACEN
+  - codigo: 1.4.1.1.1.2.2
+    titulo: Comissão de Valores Mobiliários – CVM
+  - codigo: 1.4.1.1.1.2.3
+    titulo: Superintendência de Seguros Privados – SUSEP
+  - codigo: 1.4.1.1.1.2.4
+    titulo: Superintendência Nacional de Previdência Complementar –
+  - codigo: 1.4.1.1.1.2.5
+    titulo: Agência Nacional de Saúde Suplementar – ANS
+  - codigo: 1.4.1.1.1.3
+    titulo: Operadores (Intermediários Financeiros)
+  - codigo: 1.4.1.1.1.3.1
+    titulo: Instituições que atuam na intermediação dos recursos.
+  - codigo: 1.4.1.1.1.3.1.1
+    titulo: Banco Múltiplo
+  - codigo: 1.4.1.1.1.3.1.2
+    titulo: Banco Comercial
+  - codigo: 1.4.1.1.1.3.1.3
+    titulo: Banco de Investimento
+  - codigo: 1.4.1.1.1.3.1.4
+    titulo: Sociedades Corretoras de Títulos e Valores Mobiliários
+  - codigo: 1.4.1.1.1.3.1.5
+    titulo: Sociedades Corretoras de Câmbio
+  - codigo: 1.4.1.1.1.3.2
+    titulo: Entidades Auxiliares
+  - codigo: 1.4.1.1.1.3.2.1
+    titulo: B3 – Brasil, Bolsa, Balcão
+  - codigo: 1.4.1.1.1.3.2.2
+    titulo: SELIC – Sistema Especial de Liquidação e Custódia
+  - codigo: 1.4.1.2
+    titulo: Legislação e regulação
+  - codigo: 1.4.1.2.1.1
+    titulo: CVM – Comissão de Valores Mobiliários
+  - codigo: 1.4.1.2.1.2
+    titulo: BACEN – Banco Central do Brasil
+  - codigo: 1.4.1.2.1.3
+    titulo: ANBIMA – Associação Brasileira das Entidades dos Mercados Financeiro e de Capitais
+  - codigo: 1.4.1.2.1.4
+    titulo: PLANEJAR – Associação Brasileira de Planejadores Financeiros
+  - codigo: 1.4.1.2.1.5
+    titulo: LGPD – Lei Geral de Proteção de Dados (Lei 13.709/2018)
+  - codigo: 1.4.1.2.2
+    titulo: Boas Práticas no Planejamento Financeiro Pessoal
+  - codigo: 1.4.1.2.2.1
+    titulo: Dever Fiduciário
+  - codigo: 1.4.1.2.2.2
+    titulo: Transparência
+  - codigo: 1.4.1.2.2.3
+    titulo: Educação Financeira
+  - codigo: 1.4.1.2.2.4
+    titulo: Documentação e Compliance
+  - codigo: 1.4.1.2.2.5
+    titulo: Atualização Profissional
+    itens:
+    - '9'
+  - codigo: 1.4.2
+    titulo: 'Dever fiduciário: Conduta ética e profissional'
+  - codigo: 1.4.3
+    titulo: Exigências legais de atuar ‘no melhor interesse do cliente’
+  - codigo: 1.4.3.1
+    titulo: Leis e Regulamentações Aplicáveis
+  - codigo: 1.4.4
+    titulo: Suitability
+  - codigo: 1.4.4.1
+    titulo: Benefícios Esperados
+  - codigo: 1.4.4.2
+    titulo: 'Objetivos do investidor: preservação do capital, crescimento do capital'
+  - codigo: 1.4.4.3
+    titulo: Horizonte de tempo
+  - codigo: 1.4.4.4
+    titulo: Tolerância ao risco
+  - codigo: 1.4.4.5
+    titulo: Restrições do investidor
+  - codigo: 1.4.5
+    titulo: Introdução ao ambiente econômico
+  - codigo: 1.4.5.1
+    titulo: Microeconomia
+  - codigo: 1.4.5.1.1
+    titulo: Princípios Básicos
+  - codigo: 1.4.5.1.1.1
+    titulo: Oferta e Demanda
+  - codigo: 1.4.5.1.1.2
+    titulo: Elasticidade
+  - codigo: 1.4.5.1.1.3
+    titulo: Maximização de Utilidade
+  - codigo: 1.4.5.1.1.4
+    titulo: Custo de Oportunidade
+  - codigo: 1.4.5.1.2
+    titulo: Aplicações Financeiras
+  - codigo: 1.4.5.1.2.1
+    titulo: Decisões de Consumo
+  - codigo: 1.4.5.1.2.2
+    titulo: Poupança e Investimento
+  - codigo: 1.4.5.1.2.3
+    titulo: Eficiência de Mercado
+  - codigo: 1.4.5.1.3
+    titulo: Análise Microeconômica
+  - codigo: 1.4.5.1.3.1
+    titulo: Elasticidade e Finanças
+  - codigo: 1.4.5.1.3.2
+    titulo: Comparativo de Cenários
+  - codigo: 1.4.5.1.3.3
+    titulo: Planejamento Financeiro do Cliente
+  - codigo: 1.4.5.1.3.4
+    titulo: Escassez
+  - codigo: 1.4.5.1.4
+    titulo: O fluxo circular
+  - codigo: 1.4.5.2
+    titulo: Macroeconomia – Princípios Básicos
+  - codigo: 1.4.5.2.1
+    titulo: Princípios
+  - codigo: 1.4.5.2.2
+    titulo: Política Monetária, Fiscal e Eventos Globais
+  - codigo: 1.4.5.2.3
+    titulo: Impacto no Planejamento Financeiro Pessoal
+  - codigo: 1.4.5.2.1.2
+    titulo: Aplicação ao Portfólio de Investimentos
+    itens:
+    - Como fatores macroeconômicos influenciam os investimentos
+  - codigo: 1.4.5.2.4
+    titulo: Análise de Indicadores Macroeconômicos e Ciclos Econômicos
+  - codigo: 1.4.5.2.4.1
+    titulo: Comparação de Cenários Econômicos
+  - codigo: 1.4.5.2.4.2
+    titulo: Ajustes de Estratégia Financeira em Mudanças Macroeconômicas
+  - codigo: 1.4.6
+    titulo: Ambiente econômico e planejamento financeiro
+  - codigo: 1.4.6.1
+    titulo: Políticas Monetária
+  - codigo: 1.4.6.2
+    titulo: Políticas Fiscal
+  - codigo: 1.4.6.2.1
+    titulo: Aplicações Práticas no Planejamento Financeiro
+  - codigo: 1.4.6.3
+    titulo: Ciclo de negócios (ou Ciclos econômicos)
+  - codigo: 1.4.6.4
+    titulo: Principais Indicadores econômicos
+  - codigo: 1.4.6.4.1
+    titulo: PIB – Produto Interno Bruto
+  - codigo: 1.4.6.4.2
+    titulo: Inflação e Deflação – Conceito
+  - codigo: 1.4.6.4.2.1
+    titulo: Índices de Inflação
+    itens:
+    - '10'
+  - codigo: 1.4.6.4.2.1.1
+    titulo: IGP-M – Índice Geral de Preços de Mercado
+  - codigo: 1.4.6.4.2.1.2
+    titulo: IPCA – Índice Nacional de Preços ao Consumidor Amplo
+  - codigo: 1.4.6.4.3
+    titulo: Taxa de juros - SELIC Meta
+  - codigo: 1.4.6.4.4
+    titulo: Taxa de juros - SELIC Over
+  - codigo: 1.4.6.4.5
+    titulo: Taxa DI - Depósito Interfinanceiro
+  - codigo: 1.4.6.4.6
+    titulo: TLP - Taxa de Longo Prazo
+  - codigo: 1.4.6.4.7
+    titulo: TR - Taxa Referencial
+  - codigo: 1.4.6.4.8
+    titulo: Taxa de câmbio
+  - codigo: 1.4.6.4.8.1
+    titulo: Câmbio comercial e câmbio turismo
+  - codigo: 1.4.6.4.8.2
+    titulo: Spot
+  - codigo: 1.4.6.4.8.3
+    titulo: Ptax
+  - codigo: 1.4.6.5
+    titulo: Análise de ciclos econômicos e seus impactos no emprego, renda, preços dos ativos, oferta de crédito e taxas de juros
+  - codigo: 1.4.6.5.1
+    titulo: Compra e Venda de Títulos Públicos
+  - codigo: 1.4.6.5.2
+    titulo: Redesconto
+  - codigo: 1.4.6.5.3
+    titulo: Depósito Compulsório
+  - codigo: 1.4.6.5.4
+    titulo: Política Monetária
+  - codigo: 1.4.6.5.5
+    titulo: Sistema de metas de inflação
+  - codigo: 1.4.6.5.6
+    titulo: COPOM - Comitê de Política Monetária
+  - codigo: 1.4.6.5.6.1
+    titulo: Impacto nos investimentos e nas linhas de crédito
+  - codigo: 1.4.6.5.7
+    titulo: Política fiscal
+  - codigo: 1.4.6.5.7.1
+    titulo: Necessidade de financiamento do setor público. Implicações sobre a Dívida
+  - codigo: 1.4.6.5.8
+    titulo: Política cambial
+  - codigo: 1.4.6.5.8.1
+    titulo: Regimes mais usuais de taxa de câmbio
+  - codigo: 1.4.6.5.8.1.1
+    titulo: Câmbio fixo/ Câmbio flutuante / Flutuação suja (Dirty float) /
+  - codigo: 1.4.6.5.8.2
+    titulo: Relações entre taxa de câmbio, regime de câmbio e reservas internacionais
+  - codigo: 1.4.6.5.8.2.1
+    titulo: Cupom cambial
+  - codigo: 1.4.7
+    titulo: Introdução aos ambientes social e político
+    itens:
+    - O Papel do Governo Local na Economia
+  - codigo: 1.4.7.1
+    titulo: Sentimento em relação ao governo local
+  - codigo: 1.4.7.1.1
+    titulo: Confiança x Desconfiança e Indicadores de Sentimento
+  - codigo: 1.4.7.1.2
+    titulo: Impactos no Mercado e no Comportamento Econômico
+  - codigo: 1.4.7.1.3
+    titulo: Estratégias Baseadas na Percepção Pública
+  - codigo: 1.4.7.1.4
+    titulo: Planejamento Financeiro e Governança Local
+  - codigo: 1.4.7.2
+    titulo: Políticas sociais
+  - codigo: 1.4.7.2.1
+    titulo: Principais Políticas Sociais que influenciam o Planejamento Financeiro
+  - codigo: 1.4.7.2.1.1
+    titulo: Saúde Pública/ Educação/ Habitação/ Assistência Social
+  - codigo: 1.4.7.2.1.2
+    titulo: Aplicando o Conhecimento ao Planejamento Financeiro/ Auxiliando o
+  - codigo: 1.4.7.2.1.3
+    titulo: Impacto das Políticas Sociais na Economia e no Mercado
+  - codigo: 1.4.7.3
+    titulo: Política fiscal e o Planejamento Financeiro
+  - codigo: 1.4.7.3.1
+    titulo: Instrumentos principais e Objetivos da política fiscal
+  - codigo: 1.4.7.3.2
+    titulo: Como a Política Fiscal Influencia a Economia
+  - codigo: 1.4.7.3.2.1
+    titulo: Política Fiscal Expansiva e Política Fiscal Contracionista
+  - codigo: 1.4.7.3.3
+    titulo: Aplicando o Conhecimento Fiscal ao Planejamento Financeiro
+    itens:
+    - '11'
+  - codigo: 1.4.7.3.3.1
+    titulo: Como adaptar as recomendações financeiras diante de mudanças fiscais
+  - codigo: 1.4.7.3.3.2
+    titulo: Antecipando o Impacto de Novas Medidas Fiscais
+  - codigo: 1.4.7.3.3.3
+    titulo: Avaliação de Oportunidades e Riscos
+  - codigo: 1.4.7.3.3.4
+    titulo: Estratégias para Mitigação de Riscos Fiscais
+  - codigo: 1.4.7.4
+    titulo: Política de aposentadoria
+  - codigo: 1.4.7.4.1
+    titulo: Previdência Pública no Brasil (RGPS) - Regime Geral de Previdência Social (INSS)
+  - codigo: 1.4.7.4.2
+    titulo: Previdência Complementar
+  - codigo: 1.4.7.4.2.1
+    titulo: Previdência Privada (Aberta)
+  - codigo: 1.4.7.4.2.2
+    titulo: Previdência Fechada (Fundos de Pensão)
+  - codigo: 1.4.8
+    titulo: Utilização indevida de informações privilegiadas e práticas fraudulentas
+  - codigo: 1.4.8.1
+    titulo: – Insider trading, insider information
+  - codigo: 1.4.8.2
+    titulo: Front Running
+  - codigo: 1.4.8.3
+    titulo: Market Spoofing
+  - codigo: 1.4.8.4
+    titulo: Layering
+  - codigo: '1.5'
+    titulo: Lei e conformidade (Compliance)
+  - codigo: 1.5.1
+    titulo: Definir conformidade e suas implicações no Planejamento Financeiro
+  - codigo: 1.5.1.1
+    titulo: Princípios de Conformidade no Planejamento Financeiro
+  - codigo: 1.5.2
+    titulo: Divulgação de documentos em linha com a jurisdição
+  - codigo: 1.5.2.1
+    titulo: Requisitos Legais e Regulatórios
+  - codigo: 1.5.2.1.1
+    titulo: CVM – Comissão de Valores Mobiliários
+  - codigo: 1.5.2.1.2
+    titulo: LGPD – Lei Geral de Proteção de Dados (Lei nº 13.709/2018)
+  - codigo: 1.5.2.1.3
+    titulo: COAF – Prevenção à Lavagem de Dinheiro
+  - codigo: 1.5.3
+    titulo: Potenciais conflitos de interesse no Planejamento Financeiro
+  - codigo: 1.5.3.1
+    titulo: Princípios Éticos para Lidar com Conflitos
+  - codigo: 1.5.4
+    titulo: Direito privado aplicável no contexto do planejamento financeiro
+  - codigo: 1.5.4.1
+    titulo: Princípios Éticos para Lidar com Conflitos
+  - codigo: 1.5.4.2
+    titulo: Direito Sucessório
+  - codigo: 1.5.4.3
+    titulo: Direito de Família
+  - codigo: 1.5.4.4
+    titulo: Direito de Propriedade
+  - codigo: 1.5.5
+    titulo: Leis relativas a contratos e negócios aplicáveis ao contexto do planejamento financeiro
+  - codigo: 1.5.5.1
+    titulo: Princípios das leis relativas a contratos e negócios jurídicos
+  - codigo: 1.5.5.2
+    titulo: Exigências para a validade dos contratos
+  - codigo: 1.5.5.3
+    titulo: Proteção dos interesses do cliente em acordos financeiros
+  - codigo: '1.6'
+    titulo: Valor do dinheiro no tempo
+  - codigo: 1.6.1
+    titulo: Valor futuro de um montante
+  - codigo: 1.6.1.1
+    titulo: Capitalização de Juros
+  - codigo: 1.6.1.2
+    titulo: Análise do Impacto das Taxas de Juros e Prazos
+  - codigo: 1.6.2
+    titulo: Valor presente de um montante
+  - codigo: 1.6.2.1
+    titulo: Comparação de Cenários e Tomada de Decisões
+    itens:
+    - '12'
+  - codigo: 1.6.3
+    titulo: Número de períodos de capitalização e taxa de juros por período
+  - codigo: 1.6.3.1
+    titulo: Conceito de Períodos de Capitalização
+  - codigo: 1.6.3.2
+    titulo: Relação entre Taxa Nominal e Taxa Efetiva
+  - codigo: 1.6.3.3
+    titulo: Regime de capitalização simples. Proporcionalidade de taxas
+  - codigo: 1.6.3.4
+    titulo: Regime de capitalização composto. Equivalência de taxas
+  - codigo: 1.6.3.5
+    titulo: Taxa de juros nominal x juro real
+  - codigo: 1.6.3.6
+    titulo: Estrutura a termo da taxa de juros em moeda local e moeda estrangeira
+  - codigo: 1.6.3.7
+    titulo: Desconto bancário e desconto comercial
+  - codigo: 1.6.3.7.1
+    titulo: Desconto racional (ou por dentro) – Juros simples
+  - codigo: 1.6.3.7.2
+    titulo: Desconto bancário ou comercial (ou “por fora”)
+  - codigo: 1.6.3.8
+    titulo: Perpetuidade
+  - codigo: 1.6.3.9
+    titulo: 'Séries de pagamento: SAC, Price e SAA'
+  - codigo: 1.6.3.10
+    titulo: Série uniforme postecipada (END)
+  - codigo: 1.6.3.11
+    titulo: Série uniforme antecipada (BEGIN)
+  - codigo: 1.6.3.12
+    titulo: Série de pagamentos com carência
+  - codigo: 1.6.3.13
+    titulo: 'Sistemas de amortização: SAC, Price e SAA'
+  - codigo: 1.6.4
+    titulo: Valor presente de uma anuidade (Anuidade Ordinária e Anuidade Vencida)
+  - codigo: 1.6.5
+    titulo: Valor futuro de uma anuidade/anuidade devida
+  - codigo: 1.6.6
+    titulo: Pagamentos ou recebimentos periódicos
+  - codigo: 1.6.7
+    titulo: Fluxos de caixa irregulares – Avaliação, Modelagem e Estratégia Financeira
+  - codigo: 1.6.7.1
+    titulo: Conceito e Importância dos Fluxos de Caixa Irregulares
+  - codigo: 1.6.7.2
+    titulo: Cálculo do Valor Presente e Valor Futuro de Fluxos Irregulares
+  - codigo: 1.6.7.3
+    titulo: Modelagem de Cenários com Ferramentas de Planejamento
+  - codigo: 1.6.8
+    titulo: Taxa interna de retorno (TIR) – Conceito, Aplicações e Limitações
+  - codigo: 1.6.8.1
+    titulo: Conceito de Taxa Interna de Retorno (TIR)
+  - codigo: 1.6.8.2
+    titulo: TIR Modificada (TIRM)
+  - codigo: 1.6.8.3
+    titulo: Taxa mínima de atratividade e custo de oportunidade
+  - codigo: 1.6.8.4
+    titulo: Taxa de desconto em ativos financeiros
+  - codigo: 1.6.9
+    titulo: Payback e PaybackModificado (descontado)
+  - codigo: 1.6.10
+    titulo: Custo Médio Ponderado de Capital (CMPC)
+  - codigo: 1.6.11
+    titulo: Medida de fluxo de caixa incluindo lucro antes de juros, impostos, depreciação e amortização
+  - codigo: 1.6.12
+    titulo: Valor presente líquido (VPL)
+  - codigo: 1.6.12.1
+    titulo: Variáveis Envolvidas no Cálculo do VPL
+  - codigo: '1.7'
+    titulo: Características do cliente
+  - codigo: 1.7.1
+    titulo: Objetivos do cliente
+  - codigo: 1.7.1.1
+    titulo: Importância de identificar os objetivos financeiros do cliente
+  - codigo: 1.7.1.2
+    titulo: Tipos de objetivos financeiros
+  - codigo: 1.7.1.3
+    titulo: Análise dos objetivos financeiros em relação à situação financeira atual do cliente
+    itens:
+    - '13'
+  - codigo: 1.7.1.4
+    titulo: Avaliação da viabilidade dos objetivos financeiros e ajustes no plano
+  - codigo: 1.7.2
+    titulo: Valores e status da família
+  - codigo: 1.7.2.1
+    titulo: Diferenças entre os cônjuges
+  - codigo: 1.7.2.2
+    titulo: Influência dos valores e do status familiar nas decisões financeiras
+  - codigo: 1.7.2.3
+    titulo: Diferenças entre as dinâmicas familiares e seus impactos
+  - codigo: 1.7.2.4
+    titulo: Impactos na alocação de recursos e sucessão
+  - codigo: 1.7.2.5
+    titulo: Ajuste das recomendações financeiras com base na estrutura familiar
+  - codigo: 1.7.2.6
+    titulo: Análise das interações familiares e seus efeitos nas finanças
+  - codigo: 1.7.2.7
+    titulo: Desenvolvimento de estratégias financeiras alinhadas aos valores familiares
+  - codigo: 1.7.3
+    titulo: Considerações sobre famílias não tradicionais no Planejamento Financeiro
+  - codigo: 1.7.3.1
+    titulo: Particularidades das famílias não tradicionais e impactos no planejamento financeiro
+  - codigo: 1.7.3.2
+    titulo: Necessidades financeiras específicas de famílias não tradicionais
+  - codigo: 1.7.3.3
+    titulo: Implicações legais e financeiras das decisões de planejamento para famílias não tradicionais
+  - codigo: 1.7.3.4
+    titulo: Avaliação e ajuste das estratégias financeiras para famílias não tradicionais
+  - codigo: 1.7.4
+    titulo: Grupos geracionais no Planejamento Financeiro
+  - codigo: 1.7.4.1
+    titulo: Influência das diferenças geracionais nas atitudes financeiras e comportamento de consumo
+  - codigo: 1.7.4.1.1
+    titulo: Características financeiras e comportamentais por geração
+  - codigo: 1.7.4.2
+    titulo: Impacto das diferenças geracionais nas decisões financeiras e planejamen to patrimonial
+  - codigo: 1.7.4.3
+    titulo: Avaliação e ajuste das estratégias financeiras conforme características geracionais
+  - codigo: 1.7.4.4
+    titulo: Desenvolvimento de estratégias financeiras personalizadas por geração
+  - codigo: 1.7.5
+    titulo: Comunicação no Planejamento Financeiro
+  - codigo: 1.7.5.1
+    titulo: Métodos de comunicação e seu impacto na relação com o cliente
+  - codigo: 1.7.5.2
+    titulo: Preferências individuais de comunicação
+  - codigo: 1.7.5.3
+    titulo: Ações e reações psicológicas do cliente
+  - codigo: 1.7.5.4
+    titulo: Aplicação de técnicas de comunicação adaptadas às necessidades do cliente
+  - codigo: 1.7.5.5
+    titulo: Utilização de ferramentas de comunicação para gestão das reações psicológicas
+  - codigo: 1.7.5.6
+    titulo: Análise das preferências do cliente e identificação de barreiras
+  - codigo: '1.8'
+    titulo: Perfil de risco do cliente
+  - codigo: 1.8.1
+    titulo: Habilidade em Assumir Riscos
+  - codigo: 1.8.1.1
+    titulo: Fatores que influenciam a habilidade do cliente em assumir riscos
+  - codigo: 1.8.1.2
+    titulo: Ferramentas de avaliação da habilidade de risco
+  - codigo: 1.8.1.3
+    titulo: Impacto da habilidade de risco nas decisões financeiras
+  - codigo: 1.8.1.4
+    titulo: Aplicação prática no planejamento financeiro
+  - codigo: 1.8.2
+    titulo: Desejos e Preferências no Planejamento Financeiro
+  - codigo: 1.8.2.1
+    titulo: Fatores que moldam os desejos e preferências do cliente
+  - codigo: 1.8.2.2
+    titulo: Utilização das informações para ajuste do plano financeiro
+  - codigo: 1.8.2.3
+    titulo: Análise das preferências quanto ao risco e retorno esperado
+  - codigo: 1.8.2.4
+    titulo: Avaliação e ajuste das estratégias financeiras
+  - codigo: 1.8.3
+    titulo: Tolerância ao Risco no Planejamento Financeiro
+  - codigo: 1.8.3.1
+    titulo: Fatores que afetam a tolerância ao risco
+  - codigo: 1.8.3.2
+    titulo: Aplicação de questionários e ferramentas de avaliação
+    itens:
+    - '14'
+  - codigo: 1.8.3.3
+    titulo: Ajuste das estratégias financeiras conforme a tolerância ao risco
+  - codigo: 1.8.3.4
+    titulo: Análise do perfil de tolerância em relação ao portfólio atual
+  - codigo: 1.8.4
+    titulo: Necessidade de Risco no Planejamento Financeiro
+  - codigo: 1.8.4.1
+    titulo: Fatores que determinam a necessidade de risco
+  - codigo: 1.8.4.2
+    titulo: Ferramentas para avaliação da necessidade de risco
+  - codigo: 1.8.4.3
+    titulo: Ajuste das estratégias de investimento conforme necessidade de risco
+  - codigo: 1.8.4.4
+    titulo: Análise da necessidade de risco em relação ao portfólio atual
+  - codigo: 1.8.4.5
+    titulo: Avaliação contínua e ajustes
+  - codigo: 1.8.5
+    titulo: Capacidade de Risco no Planejamento Financeiro
+  - codigo: 1.8.5.1
+    titulo: Fatores que influenciam a capacidade de risco
+  - codigo: 1.8.5.2
+    titulo: Técnicas de avaliação da capacidade de risco
+  - codigo: 1.8.5.3
+    titulo: Ajuste das recomendações de investimento
+  - codigo: 1.8.5.4
+    titulo: Análise da capacidade de risco em relação ao portfólio
+  - codigo: 1.8.5.5
+    titulo: Avaliação e ajustes das estratégias financeiras
+  - codigo: 1.8.6
+    titulo: Experiências e traços da personalidade que impactam o perfil de risco
+  - codigo: 1.8.6.1
+    titulo: Traços de personalidade que influenciam o comportamento financeiro
+  - codigo: 1.8.6.2
+    titulo: Técnicas para descobrir e analisar o perfil de risco
+  - codigo: 1.8.6.3
+    titulo: Influência das experiências passadas e traços de personalidade nas decisões f inanceiras
+  - codigo: 1.8.6.4
+    titulo: Avaliação e ajuste das estratégias financeiras
+  - codigo: '1.9'
+    titulo: Engajamento com o cliente e comunicação
+  - codigo: 1.9.1
+    titulo: Ouvir - Escuta Ativa
+  - codigo: 1.9.1.1
+    titulo: Importância da escuta ativa no engajamento com o cliente
+  - codigo: 1.9.1.2
+    titulo: Técnicas de escuta ativa
+  - codigo: 1.9.1.3
+    titulo: Aplicação da escuta ativa durante reuniões
+  - codigo: 1.9.1.4
+    titulo: Análise das informações obtidas
+  - codigo: 1.9.2
+    titulo: Processo de descoberta
+  - codigo: 1.9.2.1
+    titulo: Etapas do processo de descoberta
+  - codigo: 1.9.2.2
+    titulo: Aplicação do processo de descoberta
+  - codigo: 1.9.2.3
+    titulo: Análise das informações coletadas
+  - codigo: 1.9.2.4
+    titulo: Avaliação da profundidade e precisão
+  - codigo: 1.9.3
+    titulo: Investigação apreciativa
+  - codigo: 1.9.3.1
+    titulo: Conceito de investigação apreciativa
+  - codigo: 1.9.3.2
+    titulo: Etapas da investigação apreciativa
+  - codigo: 1.9.3.3
+    titulo: Aplicação da investigação apreciativa nas interações com o cliente
+  - codigo: 1.9.3.4
+    titulo: Análise dos resultados da investigação apreciativa
+  - codigo: 1.9.4
+    titulo: Perguntas abertas e fechadas
+  - codigo: 1.9.4.1
+    titulo: Diferença entre perguntas abertas e fechadas
+  - codigo: 1.9.4.2
+    titulo: Aplicação prática de perguntas abertas
+  - codigo: 1.9.4.3
+    titulo: Análise das respostas
+    itens:
+    - '15'
+  - codigo: '1.10'
+    titulo: Processo Diligente Na Seleção De Produtos E Serviços E Fornecedores e Comunicação
+  - codigo: 1.10.1
+    titulo: Processo diligente para avaliar produtos e serviços financeiros
+  - codigo: 1.10.1.1
+    titulo: Critérios para avaliar produtos e serviços financeiros
+  - codigo: 1.10.1.2
+    titulo: Técnicas de análise de produtos e serviços financeiros
+  - codigo: 1.10.1.3
+    titulo: Análise e seleção considerando necessidades específicas
+  - codigo: 1.10.1.4
+    titulo: Avaliação final e ajustes
+  - codigo: 1.10.2
+    titulo: Escolha de um produto ou serviço financeiro
+  - codigo: 1.10.2.1
+    titulo: Critérios de Escolha de Produtos e Serviços Financeiros
+  - codigo: 1.10.2.1.1
+    titulo: Adequação ao Perfil do Cliente
+  - codigo: 1.10.2.1.2
+    titulo: Custos
+  - codigo: 1.10.2.1.3
+    titulo: Riscos
+  - codigo: 1.10.2.1.4
+    titulo: Prazos
+  - codigo: 1.10.2.2
+    titulo: Regulamentações e Suitability
+  - codigo: 1.10.2.3
+    titulo: Aplicação dos Critérios de Adequação
+  - codigo: 1.10.2.4
+    titulo: Análise Comparativa dos Produtos Financeiros
+  - codigo: 1.10.3
+    titulo: Avaliação e seleção do fornecedor de produtos ou serviços financeiros
+  - codigo: 1.10.3.1
+    titulo: Critérios de Avaliação de Fornecedores Financeiros
+  - codigo: 1.10.3.1.1
+    titulo: Reputação no Mercado
+  - codigo: 1.10.3.1.2
+    titulo: Histórico e Experiência
+  - codigo: 1.10.3.1.3
+    titulo: Solidez Financeira
+  - codigo: 1.10.3.1.4
+    titulo: Conformidade Regulatória
+  - codigo: 1.10.3.2
+    titulo: Métodos de Análise de Fornecedores
+  - codigo: 1.10.3.2.1
+    titulo: Análise Quantitativa
+  - codigo: 1.10.3.2.2
+    titulo: Análise Qualitativa
+  - codigo: 1.10.3.2.3
+    titulo: Análise Comparativa (Benchmarking)
+  - codigo: 1.10.3.2.4
+    titulo: Avaliação de Desempenho e Ajuste
+  - codigo: 1.10.4
+    titulo: Plano financeiro amplo e integrado
+  - codigo: 1.10.4.1
+    titulo: Importância de um Plano Financeiro Integrado
+  - codigo: 1.10.4.2
+    titulo: Técnicas de Planejamento Integrado
+  - codigo: 1.10.4.2.1
+    titulo: Levantamento e Diagnóstico Financeiro
+  - codigo: 1.10.4.2.2
+    titulo: Análise das Necessidades e Objetivos
+  - codigo: 1.10.4.2.3
+    titulo: Elaboração do Plano Unificado
+  - codigo: 1.10.4.3
+    titulo: Alinhamento com os Objetivos do Cliente
+  - codigo: 1.10.4.3.1
+    titulo: Personalização
+  - codigo: 1.10.4.3.2
+    titulo: Revisão e Ajustes
+  - codigo: 1.10.4.3.3
+    titulo: Desenvolvimento do Plano Integrado
+    itens:
+    - '16'
+  tempo_min: 50
+  questoes_estimadas: 18
+- numero: 2
+  titulo: Gestão Financeira
+  peso: 14
+  topicos:
+  - codigo: '2.1'
+    titulo: Princípios de gestão financeira
+  - codigo: 2.1.1
+    titulo: Aplicação de cálculos financeiros no processo de gestão financeira
+  - codigo: 2.1.2
+    titulo: O ponto econômico ótimo (O ponto, na criação de riqueza, em que o dinheiro não traz mais felicidade a uma pessoa)
+  - codigo: 2.1.3
+    titulo: As demonstrações financeiras básicas
+  - codigo: 2.1.3.1
+    titulo: Balanço patrimonial (demonstração de patrimônio líquido)
+  - codigo: 2.1.3.2
+    titulo: Fluxo de caixa
+  - codigo: 2.1.3.3
+    titulo: Orçamento
+  - codigo: '2.2'
+    titulo: Objetivos de gestão financeira
+  - codigo: 2.2.1
+    titulo: Fluxo de caixa e orçamento
+  - codigo: 2.2.1.1
+    titulo: Como elaborar um orçamento pessoal
+  - codigo: 2.2.1.1.1
+    titulo: Analisar as receitas
+  - codigo: 2.2.1.1.2
+    titulo: Analisar os gastos
+  - codigo: 2.2.2
+    titulo: Compromissos financeiros significativos
+  - codigo: '2.3'
+    titulo: Balanço patrimonial pessoal
+  - codigo: 2.3.1
+    titulo: Ativos, passivos e patrimônio líquido
+  - codigo: 2.3.2
+    titulo: Análise
+  - codigo: 2.3.2.1
+    titulo: Análise de Liquidez
+  - codigo: 2.3.2.2
+    titulo: Análise de Alavancagem
+  - codigo: 2.3.2.3
+    titulo: Análise de Solvência
+  - codigo: 2.3.2.4
+    titulo: Análise da Composição Patrimonial, Exposição a Riscos e Oportunidades de Melhoria
+  - codigo: '2.4'
+    titulo: Planejamento e estratégias do fluxo de caixa
+  - codigo: 2.4.1
+    titulo: Receitas e despesas - atuais/futuras
+  - codigo: 2.4.2
+    titulo: Efeitos da inflação
+  - codigo: 2.4.2.1
+    titulo: Causas da Inflação
+    itens:
+    - Inflação de demanda
+    - Inflação de custos
+    - Inflação de custos induzida
+    - Inflação de custos autônoma
+  - codigo: 2.4.2.2
+    titulo: Deflação
+    itens:
+    - '17'
+  - codigo: 2.4.2.3
+    titulo: Índices de inflação
+    itens:
+    - IGP-M – Índice Geral de Preços de Mercado
+    - IPCA – Índice Nacional de Preços ao Consumidor Amplo
+  - codigo: 2.4.3
+    titulo: Análise
+  - codigo: '2.5'
+    titulo: Planejamento e estratégias de orçamento
+  - codigo: 2.5.1
+    titulo: Informações necessárias para elaborar um orçamento
+  - codigo: 2.5.2
+    titulo: 'Conciliação orçamentária: importância e uso'
+  - codigo: '2.6'
+    titulo: Análise, estratégias e soluções de poupança
+  - codigo: 2.6.1
+    titulo: Poupar para construir uma reserva de caixa
+  - codigo: 2.6.2
+    titulo: Poupar como parte do orçamento
+  - codigo: 2.6.3
+    titulo: Poupar e fluxo de caixa
+  - codigo: 2.6.4
+    titulo: Definir estratégias de poupança
+  - codigo: 2.6.5
+    titulo: Poupar para objetivos específicos como educação dos filhos e compra de uma casa
+  - codigo: '2.7'
+    titulo: Fundo de emergência
+  - codigo: 2.7.1
+    titulo: Importância do fundo de emergência e quanto é suficiente para ele
+  - codigo: 2.7.2
+    titulo: Veículos e estratégias apropriados para a formação do fundo de emergências coordenados com as características do capital humano e
+      os períodos de carência dos produtos
+  - codigo: 2.7.3
+    titulo: Uso de cartões de crédito e crédito rotativo para custear emergências
+  - codigo: 2.7.4
+    titulo: Importância de ter ativos líquidos sempre
+  - codigo: '2.8'
+    titulo: Estratégias de gestão de débitos e créditos
+  - codigo: 2.8.1
+    titulo: Tipos de crédito
+  - codigo: 2.8.1.1
+    titulo: Crédito Rotativo
+  - codigo: 2.8.1.1.1
+    titulo: Cheque Especial
+  - codigo: 2.8.1.1.2
+    titulo: Cartão de Crédito
+  - codigo: 2.8.1.2
+    titulo: Crédito consignado
+  - codigo: 2.8.1.2.1
+    titulo: Cartão Consignado
+  - codigo: 2.8.1.2.2
+    titulo: Margem Consignável
+  - codigo: 2.8.1.3
+    titulo: Crédito pessoal
+  - codigo: 2.8.1.4
+    titulo: Crédito Direto ao Consumidor – CDC
+  - codigo: 2.8.1.5
+    titulo: Financiamento Imobiliário
+  - codigo: 2.8.1.5.1
+    titulo: Seguro Habitacional
+  - codigo: 2.8.1.6
+    titulo: Leasing
+  - codigo: 2.8.1.7
+    titulo: Consórcio
+  - codigo: 2.8.1.8
+    titulo: Penhor
+  - codigo: 2.8.1.9
+    titulo: Crédito rural
+  - codigo: 2.8.1.9.1
+    titulo: Objetivos específicos do crédito rural
+  - codigo: 2.8.1.10
+    titulo: Crédito educacional
+    itens:
+    - '18'
+  - codigo: 2.8.1.10.1
+    titulo: Fundo de Financiamento Estudantil (FIES) – Modalidade I
+  - codigo: 2.8.1.10.2
+    titulo: Programa de Financiamento Estudantil (P-FIES) – Modalidades II e III
+  - codigo: 2.8.2
+    titulo: Fatores que os credores usam para avaliar potenciais devedores
+  - codigo: 2.8.2.1
+    titulo: Histórico de Crédito
+  - codigo: 2.8.2.2
+    titulo: Renda e Capacidade de Pagamento
+  - codigo: 2.8.2.3
+    titulo: Nível de Endividamento
+  - codigo: 2.8.2.4
+    titulo: Garantias e Colaterais
+  - codigo: 2.8.2.4.1
+    titulo: Garantias reais
+  - codigo: 2.8.2.4.2
+    titulo: Garantias fidejussórias
+  - codigo: 2.8.3
+    titulo: Uso apropriado e inapropriado e níveis de dívida (ou seja, gestão de crédito e dívida)
+  - codigo: 2.8.4
+    titulo: Gestão de caixa para objetivos específicos (por exemplo, compra de imóvel, educação dos filhos etc.)
+  - codigo: 2.8.5
+    titulo: Abordagens para a gestão de dívidas
+  - codigo: '2.9'
+    titulo: Análise de coeficientes financeiros
+  - codigo: 2.9.1
+    titulo: Liquidez
+  - codigo: 2.9.2
+    titulo: Poupança
+  - codigo: 2.9.3
+    titulo: Patrimônio líquido pessoal
+  - codigo: 2.9.4
+    titulo: Dívida sobre patrimônio
+  - codigo: 2.9.5
+    titulo: Liquidez corrente
+  - codigo: 2.9.6
+    titulo: Investimento
+  - codigo: 2.9.7
+    titulo: Ativos financeiros sobre total de ativos
+  - codigo: 2.9.8
+    titulo: Renda passiva
+  - codigo: 2.9.9
+    titulo: Custo da dívida
+  - codigo: 2.9.10
+    titulo: Solvência
+    itens:
+    - '19'
+  tempo_min: 60
+  questoes_estimadas: 20
+- numero: 3
+  titulo: Planejamento de Investimentos e Gestão de Ativos
+  peso: 17
+  topicos:
+  - codigo: '3.1'
+    titulo: Princípios de Planejamento de Investimento
+  - codigo: 3.1.1
+    titulo: Princípios de risco e retorno
+  - codigo: 3.1.1.1
+    titulo: Conceito de risco
+  - codigo: 3.1.1.2
+    titulo: Conceito de retorno
+  - codigo: 3.1.1.3
+    titulo: Trade-off risco x retorno
+  - codigo: 3.1.1.4
+    titulo: Diversificação
+  - codigo: 3.1.1.5
+    titulo: Alocação de Ativos
+  - codigo: 3.1.1.6
+    titulo: Tipos de Alocação de Ativos
+    itens:
+    - Alocação Estratégica
+    - Alocação Tática
+    - Alocação Dinâmica
+  - codigo: 3.1.2
+    titulo: 'Critérios qualitativos e pessoais do investidor (por exemplo: investimentos ESG)'
+  - codigo: 3.1.2.1
+    titulo: Tolerância ao risco
+  - codigo: 3.1.2.2
+    titulo: Ciclo de vida do investidor
+  - codigo: 3.1.2.3
+    titulo: Liquidez desejada
+  - codigo: 3.1.2.4
+    titulo: No perfil do investidor, valores individuais e investimentos ESG, podem influenciar
+  - codigo: 3.1.3
+    titulo: Horizonte de tempo de investimento
+  - codigo: 3.1.3.1
+    titulo: Curto, médio e longo prazos.
+  - codigo: 3.1.3.2
+    titulo: Medições históricas de risco e retorno para várias classes de ativos relacionadas ao período de investimento do cliente.
+  - codigo: '3.2'
+    titulo: Objetivos, restrições e adequação do planejamento de investimentos
+  - codigo: 3.2.1
+    titulo: Objetivos
+  - codigo: 3.2.1.1
+    titulo: Rendimento real vs. crescimento do capital
+  - codigo: 3.2.1.2
+    titulo: Preservação do capital
+  - codigo: 3.2.2
+    titulo: Restrições
+    itens:
+    - Gerir as restrições entre os objetivos de investimento
+    - Liquidez
+    - Tolerância ao risco e capacidade de assumir riscos
+    - '20'
+    - Alocação dos ativos
+    - Escolhas restritas de investimento
+  - codigo: 3.2.3
+    titulo: Suitability
+  - codigo: 3.2.3.1
+    titulo: Adequação aos investidores de varejo, qualificados e profissionais.
+  - codigo: 3.2.3.2
+    titulo: Benefícios Esperados após feito Suitability
+  - codigo: 3.2.4
+    titulo: Risco e rentabilidade (crescimento do capital comparado com preservação)
+  - codigo: 3.2.4.1
+    titulo: Rentabilidade
+  - codigo: 3.2.4.1.1
+    titulo: Rentabilidade Observada
+  - codigo: 3.2.4.1.2
+    titulo: Rentabilidade Esperada
+  - codigo: 3.2.4.2
+    titulo: Riscos
+  - codigo: 3.2.4.2.1
+    titulo: Classificação e Tipos de risco
+  - codigo: 3.2.4.2.1.1
+    titulo: Risco de crédito
+    itens:
+    - Risco País
+    - Risco de Inadimplência do Emissor
+    - Risco de Contraparte
+    - Risco de Liquidação Financeira
+    - Risco de Intermediação
+    - Risco de Atraso
+  - codigo: 3.2.4.2.1.2
+    titulo: 'Risco de mercado: sistemático e não sistemático'
+  - codigo: 3.2.4.2.1.3
+    titulo: Risco de liquidez
+    itens:
+    - Implicações na precificação do risco de liquidez
+    - Estratégias de controle do risco de liquidez
+  - codigo: '3.3'
+    titulo: Classes de ativos
+  - codigo: 3.3.1
+    titulo: 'Tradicionais: conceito e riscos inerentes'
+  - codigo: 3.3.1.1
+    titulo: Equivalentes a caixa (curto prazo, alta liquidez, baixíssimo risco de crédito)
+  - codigo: 3.3.1.2
+    titulo: 'Títulos representativos de dívida (títulos públicos e privados) Públicos: LFT, LTN, NTN-B,'
+  - codigo: 3.3.1.2.2
+    titulo: 'Tesouro Direto: Tesouro Prefixado, Tesouro Selic, Tesouro IPCA+ (com e sem cupom),'
+  - codigo: 3.3.1.2.2.1
+    titulo: 'Tesouro Direto: Conceito, características, custos'
+    itens:
+    - Considerações Técnicas e Estratégicas
+    - Estrutura, formas de negociação e custos para o Investidor
+    - Custos transacionais
+    - Limites de compra e venda
+    - Horário de Funcionamento
+  - codigo: 3.3.1.2.3
+    titulo: Privados emitidos por instituições financeiras
+    itens:
+    - Poupança
+    - '21'
+    - Certificado de Depósito Bancário (CDB
+    - Recibo de Depósito Bancário (RDB)
+    - Depósito a Prazo com Garantia Especial (DPGE)
+    - Letra de Crédito Imobiliário (LCI)
+    - Letra Imobiliária Garantida (LIG)
+    - Letra de Crédito do Agronegócio (LCA)
+    - Letra de Câmbio (LC)
+    - Letra Financeira (LF)
+    - Operação Compromissada
+  - codigo: 3.3.1.2.4
+    titulo: FGC – Fundo Garantidor de Crédito
+    itens:
+    - Limites de cobertura
+    - Limitação da garantia até R$ 1 milhão
+    - Garantia especial
+  - codigo: 3.3.1.2.5
+    titulo: Privados emitidos por instituições não financeiras
+  - codigo: 3.3.1.2.5.1
+    titulo: Debêntures simples, debêntures conversíveis, debêntures permutáveis, debêntures de infraestrutura.
+  - codigo: 3.3.1.2.5.1.1
+    titulo: Conceito e características
+  - codigo: 3.3.1.2.5.1.2
+    titulo: Características da emissão e dos títulos
+  - codigo: 3.3.1.2.5.1.3
+    titulo: Taxas, Formas de Remuneração e de Negociação
+  - codigo: 3.3.1.2.5.1.4
+    titulo: Cláusulas da escritura das debêntures
+    itens:
+    - Repactuação
+    - Vencimento antecipado
+    - Covenant
+    - Cross default
+    - Resgate Antecipado
+    - Aquisição facultativa
+    - Opção de compra (call)
+  - codigo: 3.3.1.2.5.1.5
+    titulo: Hierarquia das espécies de debêntures de acordo com as garantias
+    itens:
+    - Garantia Real
+    - Garantia Flutuante
+    - Quirografária
+    - Subordinada
+  - codigo: 3.3.1.2.5.1.6
+    titulo: Assembleia de debenturistas
+  - codigo: 3.3.1.2.5.1.7
+    titulo: Deveres do Agente Fiduciário
+  - codigo: 3.3.1.2.5.2
+    titulo: Nota promissória
+    itens:
+    - Prazo de emissão
+    - Forma de Emissão
+    - Colocação/Negociação no Mercado
+    - Registro
+    - Remuneração
+    - Resgate
+  - codigo: 3.3.1.2.5.3
+    titulo: Certificado de Recebíveis Imobiliários (CRI)
+  - codigo: 3.3.1.2.5.4
+    titulo: Certificado de Recebíveis do Agronegócio (CRA)
+  - codigo: 3.3.1.3
+    titulo: Títulos representativos de participação acionária (ações)
+  - codigo: 3.3.1.3.1
+    titulo: Ações
+  - codigo: 3.3.1.3.1.1
+    titulo: Conceito
+  - codigo: 3.3.1.3.1.2
+    titulo: Tipos de ações
+    itens:
+    - '22'
+    - Ações Ordinárias (ON)
+    - Ações Preferenciais (PN)
+  - codigo: 3.3.1.3.1.3
+    titulo: Classes
+  - codigo: 3.3.1.3.1.4
+    titulo: Units
+  - codigo: 3.3.1.3.2
+    titulo: 'BDR (Brazilian Depositary Receipt): conceito e tipos (patrocinado e não patrocinado)'
+  - codigo: 3.3.1.3.2.1
+    titulo: Categorias de BDRs
+    itens:
+    - Patrocinados (Níveis I, II ou III)
+    - Não patrocinados (apenas Nível I)
+  - codigo: 3.3.1.3.3
+    titulo: Proventos dos acionistas
+    itens:
+    - Dividendos
+    - Juros sobre Capital Próprio
+    - Subscrição
+    - Bônus de Subscrição
+    - Bonificação
+    - Desdobramento (split)
+    - Grupamento (inplit)
+  - codigo: 3.3.1.3.4
+    titulo: Estratégia de Investimentos em ações
+    itens:
+    - Compra à vista,
+    - Compra a termo
+    - Compra com uso de margem
+    - Venda à vista,
+    - Venda a termo,
+    - Venda descoberta,
+    - Aluguel de ações,
+    - Long and short
+  - codigo: 3.3.1.3.5
+    titulo: Ambientes de negociação
+    itens:
+    - Bolsa
+    - Balcão organizado
+  - codigo: 3.3.1.3.6
+    titulo: Segmentos de listagem da B3
+  - codigo: 3.3.1.3.6.1
+    titulo: Características
+  - codigo: 3.3.1.3.6.1.1
+    titulo: Direito dos acionistas minoritários
+    itens:
+    - Direito de voto
+    - Participação nos lucros
+    - Direito de participação no acervo em caso de liquidação
+    - Fiscalização
+    - Preferência de Subscrição
+    - Direito de recesso
+  - codigo: 3.3.1.3.6.2
+    titulo: Proteção do minoritário no fechamento do capital
+    itens:
+    - Previsão legal
+    - Direito ao tag along na alienação do controle
+  - codigo: 3.3.1.3.6.3
+    titulo: Níveis de governança, critérios de adesão e listagem
+    itens:
+    - Companhia Nível 1
+    - Companhia Nível 2
+    - Novo Mercado
+    - '23'
+  - codigo: 3.3.1.4
+    titulo: Oferta Pública de Valores Mobiliários (renda fixa e variável)
+  - codigo: 3.3.1.4.1
+    titulo: 'Mercado primário e secundário: conceito, funções econômicas e formas de negociação'
+    itens:
+    - Oferta Primária (Underwriting)
+    - Oferta Secundária (Block Trade)
+  - codigo: 3.3.1.4.2
+    titulo: Initial Public Offering – IPO. Conceito, características, operacionalidade
+  - codigo: 3.3.1.4.2.1
+    titulo: Papel dos principais agentes no processo da Oferta Pública
+    itens:
+    - Comissão de Valores Mobiliários
+    - Instituições Intermediárias (Pool de Distribuição)
+    - Banco Coordenador
+    - Agência de Rating
+    - Agente Fiduciário ou Agente de Notas
+    - Banco Escriturador
+    - Banco Mandatário
+    - Banco Custodiante
+    - Formador de Mercado (Market Maker) – Mercado de ações
+    - Escritório de Advocacia
+    - ANBIMA – Associação Brasileira das Entidades dos Mercados Financeiro e de
+  - codigo: 3.3.1.4.3
+    titulo: Tipos de Subscrição
+    itens:
+    - Garantia Firme ou Underwriting Firm
+    - Melhores Esforços ou Best Effort Underwriting
+    - Residual ou Stand-By Underwriting
+  - codigo: 3.3.1.4.4
+    titulo: Formação de preço nas ofertas
+    itens:
+    - Preço Fixo
+    - Bookbuilding
+    - Leilão em Bolsa
+  - codigo: 3.3.1.4.5
+    titulo: Sobre a Distribuição
+    itens:
+    - Lote Suplementar (green shoe) até 15%
+    - Lote Adicional (Hot Issue) até 20%
+    - Rateio
+  - codigo: 3.3.1.4.6
+    titulo: Não concretização
+  - codigo: 3.3.1.4.7
+    titulo: Follow On
+  - codigo: 3.3.1.4.8
+    titulo: 'Oferta Pública de Aquisição (OPA): conceito, características, operacionalidade'
+  - codigo: 3.3.1.5
+    titulo: Fundos de Investimento
+  - codigo: 3.3.1.5.1
+    titulo: Definições gerais
+    itens:
+    - Condomínio
+    - Patrimônio líquido
+    - Cota e cotista
+  - codigo: 3.3.1.5.2
+    titulo: Responsabilidades dos prestadores de serviços
+    itens:
+    - Administrador
+    - Gestor
+    - Distribuidor
+    - Custodiante
+    - Auditor Independente
+    - Consultoria de Investimentos
+  - codigo: 3.3.1.5.3
+    titulo: Direitos e deveres dos cotistas
+  - codigo: 3.3.1.5.4
+    titulo: Fundos de investimento (Fl) e Fundos de Investimento em Cotas (FIC)
+  - codigo: 3.3.1.5.5
+    titulo: Tipos de fundos
+    itens:
+    - '24'
+    - Fundos Abertos
+    - Fundos Fechados
+    - Fundos Abertos com carência
+    - Fundos Abertos sem carência
+    - Fundo de Investimento com Único Investidor
+  - codigo: 3.3.1.5.6
+    titulo: Dinâmica de aplicação e resgate
+    itens:
+    - Regras de conversão das cotas (aplicação e resgate)
+  - codigo: 3.3.1.5.7
+    titulo: Cotas de abertura e cota de fechamento
+  - codigo: 3.3.1.5.8
+    titulo: Fechamento do Fundo para novas aplicações
+  - codigo: 3.3.1.5.9
+    titulo: Fechamento do fundo para resgates
+  - codigo: 3.3.1.5.10
+    titulo: Objetivo e política de investimento do fundo
+    itens:
+    - Limites por emissor
+    - Limites por modalidade de ativo financeiro
+  - codigo: 3.3.1.5.11
+    titulo: Informações comerciais na distribuição de fundos
+    itens:
+    - Regulamento
+    - Termo de adesão e de ciência de risco
+    - Lâmina (de informações básicas)
+  - codigo: 3.3.1.5.12
+    titulo: Prestação de contas aos cotistas - Divulgação de cotas e rentabilidade
+  - codigo: 3.3.1.5.13
+    titulo: Assembleia Geral
+  - codigo: 3.3.1.5.14
+    titulo: Disclaimers e avisos obrigatórios
+  - codigo: 3.3.1.5.15
+    titulo: Classificação dos fundos quanto ao prazo médio da carteira
+  - codigo: 3.3.1.5.16
+    titulo: Tipos de fundos quanto à estratégia de gestão das carteiras
+    itens:
+    - Renda Fixa - Gestão Passiva
+    - Renda Variável - Gestão Passiva
+  - codigo: 3.3.1.5.16.1
+    titulo: Estratégias para manter aderência aos índices de referência e as respectivas limitações
+    itens:
+    - Renda Fixa - Gestão Passiva
+    - Renda Variável - Gestão Passiva
+  - codigo: 3.3.1.5.16.2
+    titulo: 'Estratégias de gestão: posicionamento, hedge e alavancagem.'
+  - codigo: 3.3.1.5.17
+    titulo: Instrução CVM 175
+  - codigo: 3.3.1.5.17.1
+    titulo: Classes dos fundos segundo classificação da CVM.
+    itens:
+    - Fundos Renda Fixa
+    - Fundos Ações
+    - Fundos Cambial
+    - Fundo de Renda Fixa – Curto Prazo
+    - Fundo Renda Fixa – Referenciado
+    - Fundo Renda Fixa – Simples
+    - Fundo Renda Fixa – Dívida Externa
+    - Fundo de Crédito Privado
+    - Fundo de Ações – Mercado de Acesso
+    - Fundos de Investimento Multimercado
+  - codigo: 3.3.1.5.18
+    titulo: Outros fundos
+  - codigo: 3.3.1.5.18.1
+    titulo: Fundo de Investimento Imobiliário (FII)
+  - codigo: 3.3.1.5.18.2
+    titulo: Fundo de Investimento com Único Investidor (ou de Classes Exclusivas)
+  - codigo: 3.3.1.5.18.3
+    titulo: Fundo destinado a investidor qualificado e profissional
+    itens:
+    - Investidores profissionais – Definição
+    - Investidores qualificados – Definição
+  - codigo: 3.3.1.5.18.4
+    titulo: Fundos de Índice e ETF - Exchange Traded Funds
+    itens:
+    - '25'
+  - codigo: 3.3.1.5.19
+    titulo: Custos do cotista
+    itens:
+    - 'Taxa de administração: finalidade, base de cálculo e forma de cobrança'
+    - 'Taxa de performance: finalidade, base de cálculo e conceito de linha d’águaTaxa de'
+    - Taxa de Saída
+    - Regras de alteração
+    - Outras despesas autorizadas
+  - codigo: 3.3.1.5.20
+    titulo: Fatores que afetam o valor da cota
+    itens:
+    - Marcação a Mercado dos ativos da carteira
+  - codigo: 3.3.1.5.20.2
+    titulo: Taxa de administração, taxa de performance e outras despesas
+  - codigo: 3.3.1.5.21
+    titulo: Clube de investimento
+  - codigo: 3.3.1.5.22
+    titulo: 'Carteira administrada: conceito e principais características'
+  - codigo: 3.3.1.5.23
+    titulo: Ativos imobiliários
+    itens:
+    - 'Tipos: imóveis residenciais, comerciais e terras'
+    - 'Riscos: liquidez, vacância, lei do Inquilinato, contrato de aluguel ou arrendamento,'
+    - 'Custos: Manutenção, condomínio, IPTU e ITR'
+    - 'Estratégias: geração de renda, ganho de capital'
+    - 'Índices do mercado imobiliário: IFIX, FIPE ZAP, IVAR'
+  - codigo: 3.3.2
+    titulo: 'Não Tradicionais/Alternativos: conceito e riscos inerentes'
+  - codigo: 3.3.2.1
+    titulo: Fundos multimercado
+  - codigo: 3.3.2.2
+    titulo: Private Equity
+  - codigo: 3.3.2.3
+    titulo: Criptoativos (bitcoin e ethereum) e blockchain
+  - codigo: 3.3.2.4
+    titulo: Investimentos no Exterior
+  - codigo: 3.3.2.4.1
+    titulo: Títulos públicos norte-americanos
+    itens:
+    - Treasury /K Bills (ou T-bills)
+    - Treasury Notes (T-Notes)
+    - Treasury Bonds (T-Bonds)
+    - TIPS - Treasury Inflation-Protected Securities
+  - codigo: 3.3.2.4.2
+    titulo: Títulos privados
+    itens:
+    - Certificates of Deposit (CD)
+    - Commercial Papers (CP)
+    - Eurobonds High Yield Bonds
+    - High Yield Bonds
+    - Repo – Repurchase Agreements
+  - codigo: 3.3.2.4.3
+    titulo: 'Ações: preferred e commom'
+    itens:
+    - Preferred Stock (Ações Preferenciais)
+    - Common Stock (Ações Ordinárias)ADRS - American Depositary Receipts
+  - codigo: 3.3.2.4.4
+    titulo: 'Fundos de Investimento: Principais classes'
+    itens:
+    - Money Market Funds
+    - Bond Funds (Fixed Income Funds)
+    - Equity Funds (Stocks)
+    - 'Peculiaridade: classes e tipos de cotas'
+    - '26'
+  - codigo: 3.3.2.4.5
+    titulo: 'Investimentos Alternativos: Hedge Funds'
+    itens:
+    - Real Estate Investment Trusts (REIT)
+  - codigo: 3.3.2.4.6
+    titulo: Indicadores e índices de referência
+    itens:
+    - LIBOR (London Interbank Offered Rate)
+    - HFR15 (Hedge Fund Research Index)
+    - Event Driven
+    - DJIA (Dow Jones)
+    - NASDAQ
+    - S&P500
+    - VIX (Chicago Board Options Exchange Market Volatility Index)
+  - codigo: 3.3.2.4.7
+    titulo: ETF – Exchange Traded Funds
+  - codigo: 3.3.2.5
+    titulo: Fundos Estruturados
+  - codigo: 3.3.2.6
+    titulo: Fundos de Investimento em Participações (FIP)
+  - codigo: 3.3.2.7
+    titulo: FIDC – Fundo de Investimento em Direitos Creditórios
+  - codigo: 3.3.2.8
+    titulo: COE – Certificado de Operações Estruturadas
+  - codigo: 3.3.3
+    titulo: Instrumentos e estratégias de proteção e alavancagem
+  - codigo: 3.3.3.1
+    titulo: Instrumentos de Derivativos
+  - codigo: 3.3.3.1.1
+    titulo: Conceito e ambientes de negociação. B3 e Balcão
+    itens:
+    - Principais características das negociações em Bolsa
+    - Vantagens e Problemas
+    - Ajuste Diário
+  - codigo: 3.3.3.1.1.2
+    titulo: Principais características do mercado de Balcão
+    itens:
+    - Vantagens e Problemas
+  - codigo: 3.3.3.1.2
+    titulo: Modalidades
+  - codigo: 3.3.3.1.2.1
+    titulo: 'Termo: ações e dólar'
+    itens:
+    - Formação de preço do NDF
+    - 'Futuro: DI, cupom cambial, Ibovespa, FRA'
+    - Características operacionais e funcionais
+    - Margem de garantia e sua função
+    - Cupom cambial
+    - Ibovespa futuro
+    - Forward Rate Agreement de Cupom Cambial (FRA de cupom, FRC)
+  - codigo: 3.3.3.1.2.3
+    titulo: 'Swap: juros, moeda, índice de preços'
+    itens:
+    - Os swaps mais comuns no mercado brasileiro
+  - codigo: 3.3.3.1.2.4
+    titulo: 'Opções: compra e venda de call e put, opções com barreira, análise de gráficos, fatores que determinam o preço da call'
+    itens:
+    - Participantes do Mercado de OpçõesCompra e venda de call e put
+    - 'Combinando opções: principais estratégias Financiamento (Lançamento Coberto)'
+    - Box de quatro pontas
+    - Opções com barreira
+    - Modelo Binomial – Conceito (John Cox e Mark Rubinstein)
+    - Modelo de Black & Scholes – Conceito
+  - codigo: 3.3.3.1.2.5
+    titulo: Estratégias e riscos potenciais
+    itens:
+    - '27'
+    - Hedge (proteção)
+    - Especulação
+    - Alavancagem e Alavancagem Sintética
+  - codigo: '3.4'
+    titulo: Técnicas de gestão de portifólio
+  - codigo: 3.4.1
+    titulo: Teoria de carteiras
+    itens:
+    - Eficiência de mercado fraca, semiforte e forte
+    - Hipótese de Eficiência dos Mercados (HEM)
+    - Teoria da Utilidade Esperada
+    - Função utilidade
+  - codigo: 3.4.2
+    titulo: Fronteiras eficientes de Markowitz (Teoria Moderna de Portfólio)
+  - codigo: 3.4.2.1
+    titulo: Fronteira Eficiente
+  - codigo: 3.4.2.2
+    titulo: Diversificação, risco e retorno
+    itens:
+    - Risco diversificável
+    - Risco sistemático
+    - Diversificação
+    - Ativo livre de risco – Conceito
+    - Retorno esperado de uma carteira
+  - codigo: 3.4.2.3
+    titulo: Risco e Covariância. Diversificação do Risco e o Modelo de Markowitz.
+    itens:
+    - A covariância é indicada por cov (X, Y). Coeficiente de correlação
+    - Escolha da carteira ótima
+  - codigo: 3.4.3
+    titulo: Modelo de Precificação de Ativos (CAPM)
+  - codigo: 3.4.3.1
+    titulo: Técnicas de gestão de portfólio
+    itens:
+    - Beta e a reta característica
+    - Coeficiente Beta – Risco Sistemático
+    - Coeficiente Alfa ou Alfa de Jensen
+    - A reta do mercado de capitais (Capital Market Line - CML)
+    - Modelos de precificação
+  - codigo: '3.5'
+    titulo: Medição de desempenho e risco
+  - codigo: 3.5.1
+    titulo: Questões relativas à avaliação de desempenho e risco
+  - codigo: 3.5.2
+    titulo: Implicações das comissões e encargos
+  - codigo: 3.5.3
+    titulo: Retorno ponderado pelo tempo e moeda (valor)
+  - codigo: 3.5.4
+    titulo: Medição de desempenho ajustado ao risco
+    itens:
+    - Índice de Sharpe
+    - Índice de Treynor
+    - Índice de Sortino
+  - codigo: 3.5.4.1
+    titulo: Gestão e mensuração de retorno
+    itens:
+    - '28'
+    - Índice de Sharpe
+    - Índice de Treynor
+  - codigo: 3.5.5
+    titulo: Expectativas do mercado de capitais (previsões para diferentes classes de ativos, prêmio de mercado)
+  - codigo: 3.5.5.1
+    titulo: Beta
+  - codigo: 3.5.5.2
+    titulo: Gestão e mensuração de risco
+    itens:
+    - Value at Risk (VaR)
+    - Stress Test
+    - Stop loss
+    - Risco de reinvestimento, risco de resgate antecipado (liquidez)
+    - Duration e Duration Modificada
+    - Imunização da carteira
+  - codigo: 3.5.5.3
+    titulo: Principais índices de referência
+  - codigo: 3.5.5.3.1
+    titulo: Índices de Renda Fixa
+    itens:
+    - Prefixados (IRF-M)
+    - Indexados ao IPCA (IMA-B)
+    - Indexados ao IGP-M (IMA-C)
+    - Pós-fixados, que respondem à taxa Selic (IMA-S)
+    - Carteiras Teóricas
+  - codigo: 3.5.5.3.2
+    titulo: Índices de Renda Variável
+    itens:
+    - Ibovespa
+    - IBrX – Índice Brasil
+    - IbrX-50 - Índice Brasil 50
+    - Índice Small Cap – SMLL
+    - Índice de Dividendos – IDIV
+  - codigo: '3.6'
+    titulo: Alocação de ativos e tipos de investimentos
+  - codigo: 3.6.1
+    titulo: Alocação estratégica de ativos
+  - codigo: 3.6.1.1
+    titulo: Seleção de ativos de renda variável
+  - codigo: 3.6.1.1.1
+    titulo: Modelos de precificação de ações
+  - codigo: 3.6.1.1.1.1
+    titulo: Capital Asset Pricing Model – CAPM
+    itens:
+    - Premissas do CAPM
+    - Prêmio pelo risco e Aversão ao Risco
+    - Prêmio pelo risco de ativos particulares
+  - codigo: 3.6.1.1.1.2
+    titulo: Dividend discount model – Modelo de Gordon
+  - codigo: 3.6.1.1.1.3
+    titulo: Free Cash Flow
+    itens:
+    - Esqueleto de Fluxo de Caixa da Empresa (FCDE) (+) Receitas
+    - Esqueleto do Fluxo de Caixa do Acionista (+) Receitas
+  - codigo: 3.6.1.2
+    titulo: Múltiplos
+    itens:
+    - Lucro por ação (LPA)
+    - Preço/Lucro (P/L)
+    - Preço/ Valor Patrimonial (P/ VP)
+    - Dividend Yield
+    - EV (Enterprise Value)/ EBITDA (Earnings before interest, taxes, depreciation and amortization)
+  - codigo: 3.6.2
+    titulo: Alocação tática de ativos
+    itens:
+    - '29'
+  - codigo: 3.6.2.1
+    titulo: 'Análise técnica (ou grafista) e fundamentalista: premissas e diferenças'
+    itens:
+    - Premissas da análise fundamentalista
+    - Premissas da análise técnica
+  - codigo: 3.6.3
+    titulo: Investimento ativo
+  - codigo: 3.6.3.1
+    titulo: Seleção de ativos de renda fixa
+    itens:
+    - Rating
+    - Yield to Maturity (YTM), Current Yield (CY)
+  - codigo: 3.6.3.2
+    titulo: Alocação de ativos
+    itens:
+    - Alocação Estratégica (fixa)
+    - Alocação Tática (flexível)
+    - Alocação dinâmicaAlocação Estática
+  - codigo: 3.6.4
+    titulo: Investimento passivo
+  - codigo: 3.6.5
+    titulo: Declaração de Política de Investimento
+  - codigo: 3.6.6
+    titulo: Estratégias de rebalanceamento de portfólio
+  - codigo: 3.6.6.1
+    titulo: Rebalanceamento
+    itens:
+    - Alterações das circunstâncias do investidor
+    - Desvios da alocação estratégica
+  - codigo: 3.6.6.2
+    titulo: Rebalanceamento regular versus percentual da carteira
+    itens:
+    - Balanceamento regular (período definido)
+    - Desvio Percentual
+  - codigo: 3.6.6.3
+    titulo: Estratégias dinâmicas de rebalanceamento
+    itens:
+    - Buy-and-Hold
+    - Constant Mix
+    - Constant Proportion Portfolio Insurance – CPPI
+    - '30'
+  tempo_min: 70
+  questoes_estimadas: 24
+- numero: 4
+  titulo: Planejamento de Aposentadoria
+  peso: 12
+  topicos:
+  - codigo: '4.1'
+    titulo: Princípios do planejamento de aposentadoria
+  - codigo: 4.1.1
+    titulo: A necessidade e a importância de planejar a aposentadoria de forma consistente e antecipada
+  - codigo: 4.1.2
+    titulo: A necessidade de um fluxo de caixa real na aposentadoria
+  - codigo: 4.1.3
+    titulo: A importância de um fluxo de caixa regular e consistente na aposentadoria
+  - codigo: 4.1.4
+    titulo: O poder dos juros compostos e sua aplicação para a renda na aposentadoria
+  - codigo: 4.1.5
+    titulo: Consequências da mudança do sistema de repartição para o sistema de quotização e a consequente transferência de responsabilidades
+      para os clientes
+  - codigo: 4.1.5.1
+    titulo: Risco de longevidade
+  - codigo: 4.1.5.2
+    titulo: Oscilações do mercado financeiro
+  - codigo: 4.1.5.3
+    titulo: Inflação
+  - codigo: 4.1.5.4
+    titulo: Falta de conhecimento sobre investimentos
+  - codigo: 4.1.6
+    titulo: Seleção e gestão de carteiras de investimentos de longo prazo
+  - codigo: 4.1.7
+    titulo: Risco-retorno, atitudes do consumidor, educação financeira e implicações para o planejamento da aposentadoria
+  - codigo: '4.2'
+    titulo: Objetivos do planejamento de aposentadoria
+  - codigo: 4.2.1
+    titulo: Objetivos financeiros com base em dinheiro/moeda real
+  - codigo: 4.2.1.1
+    titulo: Cálculo do capital necessário para a aposentadoria
+  - codigo: 4.2.1.2
+    titulo: Estabelecimento de metas acessíveis
+    itens:
+    - Específica
+    - Mensurável
+    - Atingível
+    - Atingível
+    - Prazo
+  - codigo: 4.2.2
+    titulo: Metas de renda em cenários de mudanças políticas e econômicas
+  - codigo: 4.2.3
+    titulo: Objetivos de estilo de vida
+  - codigo: 4.2.3.1
+    titulo: Atividades na aposentadoria
+  - codigo: 4.2.3.2
+    titulo: Plano de saúde na aposentadoria
+  - codigo: '4.3'
+    titulo: Análise e projeções das necessidades na aposentadoria
+  - codigo: 4.3.1
+    titulo: Inflação e o seu impacto na renda necessária na aposentadoria
+  - codigo: 4.3.2
+    titulo: Risco da longevidade
+    itens:
+    - '31'
+  - codigo: 4.3.2.1
+    titulo: Tábua Atuarial ou Biométrica
+  - codigo: 4.3.2.2
+    titulo: BR EMS - Experiência do Mercado Segurador Brasileiro
+  - codigo: 4.3.3
+    titulo: Classificação de objetivos
+    itens:
+    - 'Fixo e rescindível (ex: empréstimos)'
+    - 'Fixo e permanente (ex: hipoteca)'
+    - 'Variável e rescindível (ex: apoio à família)'
+    - 'Variável e permanente (ex: despesas básicas de subsistência)'
+  - codigo: 4.3.4
+    titulo: Prioridade dos objetivos
+  - codigo: '4.4'
+    titulo: Potenciais fontes de renda na aposentadoria
+  - codigo: 4.4.1
+    titulo: Tipos de benefícios para empregados
+  - codigo: 4.4.2
+    titulo: Fundos de pensão patrocinados pelo empregador
+    itens:
+    - Contribuição definida
+    - Benefício definido
+    - Contribuição Variável
+  - codigo: 4.4.2.2
+    titulo: Particularidades dos fundos de pensão
+    itens:
+    - Estatuto
+    - Regulamento
+  - codigo: 4.4.2.3
+    titulo: 'Planos de benefícios: patrocinado por empregador e instituído por entidade associativa'
+    itens:
+    - Institutos dos planos de benefícios
+  - codigo: 4.4.3
+    titulo: Planos de Previdência abertos, não patrocinados
+    itens:
+    - Regulamento
+    - Plano averbado e plano instituído
+    - Regras de vesting
+    - Modalidades de planos
+  - codigo: 4.4.3.1
+    titulo: Planos do tipo PGBL e VGBL o Períodos dos planos o Período de acumulação
+    itens:
+    - Fundo de Investimento Especialmente Constituído (FIE)
+    - Dos Limites de Alocação por Modalidade para cada Segmento (Renda Fixa, Renda Variável,
+    - Taxa de carregamento, de administração e de performance
+    - Modalidades das rendas
+    - Renda mensal vitalícia, vitalícia reversível (e suas variações) e vitalícia com prazo mínimo
+    - Renda mensal temporária e mensal por prazo certo (renda financeira)
+    - 'Tributação: Regime progressivo e regressivo'
+    - 'PGBL ou VGBL: qual plano recomendar?'
+    - '32'
+    - 'Planos com cobertura de risco: Renda por invalidez - Pensão por morte - Pecúlio por morte'
+    - Pecúlio por invalidez
+  - codigo: 4.4.3.2
+    titulo: Portabilidade entre planos de previdência no Brasil
+  - codigo: 4.4.4
+    titulo: Previdência Social - Sistema Previdenciário Brasileiro
+    itens:
+    - Regime Geral da Previdência Social (RGPS)
+    - Regime Próprio de Previdência Social (RPPS)
+  - codigo: 4.4.5
+    titulo: Imóveis
+  - codigo: 4.4.6
+    titulo: Ativos mobiliários
+  - codigo: '4.5'
+    titulo: Renda de aposentadoria, projeções e estratégias de retiradas
+  - codigo: 4.5.1
+    titulo: Planejamento pré-aposentadoria
+  - codigo: 4.5.2
+    titulo: Estratégias de construção e distribuição de carteira - conversão do crescimento de capital em geração de renda
+    itens:
+    - Entendendo a Conversão do Crescimento de Capital em Geração de Renda
+    - Construção e Ajuste da Carteira nas Fases de Acumulação e Distribuição
+  - codigo: 4.5.3
+    titulo: Fontes de fluxo de caixa na aposentadoria
+    itens:
+    - Previdência Social
+    - Planos de aposentadoria fornecidos pelo empregador
+    - Planos de previdência abertos (fase de benefício de renda)
+    - Economias pessoais para a aposentadoria
+    - Outras economias e ativos pessoais
+  - codigo: 4.5.4
+    titulo: Instrumentos de rendimento fixo e variável
+  - codigo: 4.5.5
+    titulo: Taxas de distribuição na aposentadoria
+    itens:
+    - Fatores que influenciam a taxa de distribuição
+    - Preservação do Capital
+    - Consumo Total do Capital
+  - codigo: 4.5.6
+    titulo: Estratégias de transição para aposentadoria de proprietários de empresas
+    itens:
+    - Valuation (Avaliação do Negócio)
+    - Otimização do Negócio para Valorização
+  - codigo: 4.5.7
+    titulo: Impacto dos impostos no fluxo de caixa na aposentadoria
+    itens:
+    - '33'
+  tempo_min: 50
+  questoes_estimadas: 17
+- numero: 5
+  titulo: Planejamento de Seguros e Gestão de Risco
+  peso: 12
+  topicos:
+  - codigo: '5.1'
+    titulo: Princípios de gestão de risco
+  - codigo: 5.1.1
+    titulo: Gerenciamento de risco não relacionados a investimentos
+  - codigo: 5.1.2
+    titulo: Fundamentos da gestão de risco
+    itens:
+    - Tratamento do risco
+    - 'Gestão de risco: premissas e transferência'
+    - Percepções e vieses do cliente
+    - Técnicas básicas de gestão de risco
+    - Aplicação do processo de gestão de riscos
+    - Tolerância pessoal ao risco e gestão
+  - codigo: 5.1.3
+    titulo: Princípios de seguro
+    itens:
+    - O significado do risco
+    - Tipos de risco
+    - Risco puro e risco especulativo
+    - Principais tipos de risco puro
+    - Características do seguro
+    - Seguro compreensivo
+    - Importância segurada, capital segurado e limite máximo de indenização
+    - Franquias, participações obrigatórias do segurado ou coparticipação carência de cobertura
+    - Tipos de seguro
+    - Lei dos Grandes Números
+    - Fraude e Boa fé
+    - 'O contrato de seguro: definições'
+  - codigo: '5.2'
+    titulo: Objetivos do planejamento de riscos e seguros
+  - codigo: 5.2.1
+    titulo: Seguro e risco
+  - codigo: 5.2.2
+    titulo: Coleta de informações do cliente
+  - codigo: '5.3'
+    titulo: Análise e avaliação da exposição a riscos
+  - codigo: 5.3.1
+    titulo: Introdução aos seguros gerais
+  - codigo: 5.3.2
+    titulo: Introdução ao seguro de vida
+  - codigo: 5.3.3
+    titulo: Exposições de risco
+    itens:
+    - Riscos pessoais
+    - Riscos patrimoniais
+    - '34'
+    - Riscos de saúde
+    - Riscos de responsabilidade civil
+    - Riscos associados a obrigações financeiras
+  - codigo: '5.4'
+    titulo: Gestão de risco e estratégias de seguro
+  - codigo: 5.4.1
+    titulo: Introdução às estratégias de gerenciamento de riscos
+  - codigo: 5.4.2
+    titulo: A aplicação dos princípios de gerenciamento de riscos
+  - codigo: 5.4.3
+    titulo: Estudos de caso em gerenciamento de risco e planejamento de seguros
+  - codigo: '5.5'
+    titulo: Soluções de gestão de risco e seguro
+  - codigo: 5.5.1
+    titulo: Seguro de pessoas
+    itens:
+    - Seguro de Vida
+    - Seguro de Vida Temporário
+    - Seguro de vida inteira
+    - Seguros de vida com cobertura por sobrevivência
+    - Seguro Resgatável
+    - VGBL - Vida Gerador de Benefício Livre
+    - Acidentes pessoais
+    - Seguro funeral
+    - Coberturas
+    - Assistências
+    - Seguro Viagem
+    - Termos e condições
+    - Exclusões do seguro (falsificação de idade/gênero, fraude, suicídio)
+  - codigo: 5.5.2
+    titulo: Seguro Saúde e as coberturas obrigatórias
+    itens:
+    - Carência e cobertura parcial temporária
+    - Coparticipação e franquia
+    - Garantias do beneficiário
+  - codigo: 5.5.3
+    titulo: Seguro de danos e responsabilidades para pessoas físicas
+    itens:
+    - Seguro residencial
+    - Seguro de veículo
+    - Danos materiais
+    - Danos corporais
+    - Dano moral
+    - 'Seguro D&O: diretores e gerentes com responsabilidades que afetam seu patrimônio pessoal'
+    - '35'
+    - Termos e condições
+  - codigo: 5.5.4
+    titulo: Seguro relacionado ao negócio
+    itens:
+    - Seguro do executivo-chave e de necessidades de pequenos empreendimentos (MEI)
+    - Seguro rural
+    - Seguro Agrícola, Pecuário, Aquícola, de Florestas, de Benfeitorias e Produtos Agropecuários, de
+    - Aspectos Regulatórios Relevantes
+    - Cobertura para membros do conselho administrativo
+  - codigo: '5.6'
+    titulo: Princípios da Lei de Seguros e processo de sinistro
+  - codigo: 5.6.1
+    titulo: Características legais e financeiras das partes envolvidas em um contrato de seguro
+    itens:
+    - O proprietário da apólice
+    - O beneficiário
+    - O segurado
+    - O anuente
+  - codigo: 5.6.2
+    titulo: Conceitos relacionados à Lei de Seguros
+    itens:
+    - Indenização de interesse segurável
+    - Doutrina do dever de boa-fé
+    - Doutrina da sub-rogação
+    - Cláusula de rateio
+    - A doutrina da contribuição
+    - 'A legislação aplicável ao seguro: Código Civil e Código de Defesa do Consumidor'
+    - Exclusões de cobertura
+    - Aspectos jurídicos
+  - codigo: 5.6.3
+    titulo: Processo de sinistro
+    itens:
+    - Notificação de sinistro
+    - Prova de perda
+    - Ônus da prova
+    - Causa imediata
+    - Seguro de responsabilidade civil
+    - Exclusões
+    - Reivindicações fraudulentas
+    - Perda por ato próprio
+    - Quantificação da perda
+    - Risco Absoluto
+    - Risco Relativo
+    - Risco Total
+    - Cláusula de Rateio Parcial
+    - Valor da perda no caso de Invalidez Permanente
+    - Subseguro
+    - Seguro ‘duplo’ ou ‘outro’
+    - '36'
+    - Fraude
+  - codigo: 5.6.4
+    titulo: Regulação e compliance
+    itens:
+    - Do Sistema Nacional de Seguros Privados
+    - CNSP - Conselho Nacional de Seguros Privados
+    - SUSEP – Superintendência de Seguros Privados
+    - Seguradoras
+    - Resseguradores
+    - Corretores
+    - Do Sistema de Seguro Saúde
+  - codigo: 5.6.5
+    titulo: Taxação de apólices de seguro
+    itens:
+    - IOF – Imposto Sobre Operações Financeiras
+    - Imposto de renda
+    - '37'
+  tempo_min: 50
+  questoes_estimadas: 17
+- numero: 6
+  titulo: Planejamento Tributário
+  peso: 12
+  topicos:
+  - codigo: '6.1'
+    titulo: Princípios de tributação e declaração
+  - codigo: 6.1.1
+    titulo: 'Imposto global: política, normas e interrelações'
+  - codigo: 6.1.2
+    titulo: Sistema tributário e enquadramento
+  - codigo: 6.1.2.1
+    titulo: Sistema tributário
+  - codigo: 6.1.2.2
+    titulo: Princípios constitucionais tributários
+    itens:
+    - Princípio da Legalidade
+    - Princípio da Isonomia (ou Igualdade)
+    - Princípio da Irretroatividade
+    - Princípios da Anterioridade Anual e Nonagesimal
+    - Princípio da Capacidade Contributiva
+    - Vedação ao Confisco
+    - Princípio da competência
+    - Imunidade
+    - Isenção
+  - codigo: 6.1.2.3
+    titulo: Conceito de tributo
+    itens:
+    - Toda prestação pecuniária
+    - Compulsória
+    - Em moeda ou cujo valor nela possa se exprimir
+    - Que não constitua sanção por ato ilícito
+    - Instituída em lei
+    - Cobrada mediante atividade administrativa plenamente vinculada
+  - codigo: 6.1.2.4
+    titulo: A obrigação tributária
+    itens:
+    - Fato gerador
+    - Base de cálculo
+    - Alíquota
+    - Sujeito ativo
+    - Sujeito passivo
+  - codigo: 6.1.2.5
+    titulo: Tributos relevantes para o planejamento fiscal
+    itens:
+    - Impostos
+    - Taxas
+    - Contribuição de melhorias
+    - Tributos incidentes sobre a renda
+    - Tributos incidentes sobre o patrimônio
+    - Tributos incidentes sobre as transferências patrimoniais
+    - Outros tributos
+    - Contribuições Sociais
+    - '38'
+  - codigo: 6.1.2.6
+    titulo: Imposto de Renda da Pessoa Física
+    itens:
+    - Fato gerador
+    - Base de cálculo
+    - Alíquota
+    - Sujeito ativo
+    - Sujeito passivo
+  - codigo: 6.1.2.7
+    titulo: Fundamentos do Imposto de Renda
+    itens:
+    - Generalidade
+    - Universalidade
+    - Progressividade
+  - codigo: 6.1.3
+    titulo: Sistema de declaração e conformidade
+  - codigo: 6.1.3.1
+    titulo: 'Formas de recolhimento do imposto: retenção na fonte e recolhimento pelo próprio contribuinte'
+    itens:
+    - Retenção de Imposto de Renda na fonte
+    - Recolhimento mensal obrigatório
+  - codigo: 6.1.3.2
+    titulo: Classificação dos rendimentos. tributáveis, sujeitos à tributação exclusiva/definitiva e isentos
+    itens:
+    - Rendimentos tributáveis
+    - Rendimentos sujeitos à tributação exclusiva ou definitiva
+    - Rendimentos isentos e não tributáveis
+  - codigo: 6.1.4
+    titulo: Evasão fiscal x elisão fiscal
+    itens:
+    - Elisão fiscal
+    - Evasão fiscal
+    - Propósito negocial
+  - codigo: '6.2'
+    titulo: Tributação das Pessoas Físicas e Jurídicas
+  - codigo: 6.2.1
+    titulo: Imposto de renda e imposto de ganho de capital para os indivíduos
+  - codigo: 6.2.1.1
+    titulo: 'Rendimentos do trabalho: assalariado e autônomo'
+    itens:
+    - Rendimentos do trabalho assalariado
+    - Rendimentos do trabalho sem vínculo empregatício (autônomo)
+    - Indenizações por rescisão do contrato de trabalho
+  - codigo: 6.2.1.2
+    titulo: Rendimentos de aposentadoria pública e privada
+    itens:
+    - Rendimentos de Aposentadoria Pública
+    - Rendimentos de Previdência Privada (PGBL e VGBL)
+  - codigo: 6.2.1.3
+    titulo: Tributação de Aplicações Financeiras
+  - codigo: 6.2.1.3.1
+    titulo: Aplicações de renda fixa
+    itens:
+    - Aplicações de renda fixa isentas de Imposto de Renda
+    - Aplicações de renda fixa sujeitas à tributação
+    - Imposto sobre Operações Financeiras (IOF)
+  - codigo: 6.2.1.3.2
+    titulo: Fundos de Investimento
+    itens:
+    - 'Fundos de renda fixa: longo prazo e curto prazo'
+    - Fundos de ações
+    - Compensação de perdas de fundos de investimento
+    - Outros fundos de investimento
+    - '39'
+  - codigo: 6.2.1.3.3
+    titulo: Aplicações de renda variável
+    itens:
+    - Base de cálculo
+    - Alíquotas
+    - Isenções
+    - Compensação de Perdas
+    - IOF
+  - codigo: 6.2.1.3.4
+    titulo: Criptoativos
+  - codigo: 6.2.1.4
+    titulo: 'Tributação de investimentos em imóveis: aluguel e ganho de capital'
+    itens:
+    - Rendimentos de aluguéis
+    - Ganho de capital na venda de imóveis
+  - codigo: 6.2.1.5
+    titulo: Tributação de rendimentos recebidos no exterior por residentes no Brasil
+    itens:
+    - Regras Gerais
+    - Acordos para evitar a dupla tributação
+    - Rendimentos tributáveis recebidos no exterior
+    - Ganhos de capital pela alienação de bens e direitos no exterior (exceto aplicações financeiras)
+    - Rendimentos de aplicações financeiras no exterior
+    - Conceito
+    - Base de Cálculo
+    - Compensação de Prejuízos
+    - Alíquota e Momento de Pagamento
+    - Compensação de Imposto Pago no Exterior
+    - Entidades controladas no Exterior (CFC – “Controlled Foreign Companies”)
+    - Enquadramento no Regime de Tributação Anual dos Lucros
+    - Apuração e Tributação dos Lucros de Controladas no Exterior
+    - Regime de Transparência Fiscal
+    - Tratamento Fiscal dos Trusts
+    - Outras entidades no exterior
+  - codigo: 6.2.2
+    titulo: Imposto de renda e imposto de ganho de capital para seus negócios
+    itens:
+    - '40'
+  - codigo: 6.2.2.1
+    titulo: Pessoa jurídica prestadora de serviços (MEI e SIMPLES)
+  - codigo: 6.2.2.2
+    titulo: Holding
+    itens:
+    - Receitas de aluguel
+    - Receitas de alienação de imóveis
+  - codigo: 6.2.3
+    titulo: Doações, heranças e transferência de patrimônio
+  - codigo: 6.2.3.1
+    titulo: ITCMD
+    itens:
+    - Elementos da Obrigação Tributária
+    - Competência
+    - Alterações trazidas pela Reforma Tributária
+  - codigo: 6.2.3.2
+    titulo: IR
+  - codigo: 6.2.3.3
+    titulo: ITBI
+  - codigo: '6.3'
+    titulo: Princípios de planejamento tributário
+  - codigo: 6.3.1
+    titulo: 'Coleta de documentos fiscais (exemplos: declarações de IR, informes de rendimentos etc.)'
+  - codigo: 6.3.2
+    titulo: Conformidade fiscal, de declarações e penalidades pela falta de conformidade
+  - codigo: 6.3.2.1
+    titulo: Declaração de Imposto de Renda
+  - codigo: 6.3.2.1.1
+    titulo: Rendimentos
+  - codigo: 6.3.2.1.2
+    titulo: Despesas
+  - codigo: 6.3.2.1.3
+    titulo: Deduções legais (“modo completo”) e desconto simplificado
+  - codigo: 6.3.2.1.4
+    titulo: 'Modalidades de Declaração: ajuste anual, saída definitiva e espólio'
+    itens:
+    - Declaração de Saída Definitiva do País
+    - Declaração Final de Espólio
+  - codigo: 6.3.2.1.5
+    titulo: Penalidades pelo descumprimento de obrigações
+  - codigo: 6.3.2.2
+    titulo: 'Declaração de Capitais Brasileiros no Exterior para o Banco Central: regras gerais, obrigatoriedade, penalidades'
+  - codigo: '6.4'
+    titulo: Análise tributária e cálculos
+  - codigo: 6.4.1
+    titulo: Avaliar o nível de complexidade fiscal e das declarações do cliente
+  - codigo: 6.4.2
+    titulo: Determinar a necessidade de envolvimento de especialistas em impostos
+  - codigo: 6.4.3
+    titulo: Determinar questões de passivos e de responsabilidades fiscais
+  - codigo: '6.5'
+    titulo: Estratégias de planejamento tributário
+  - codigo: 6.5.1
+    titulo: 'Trabalho: Pessoa Física x Pessoa Jurídica'
+    itens:
+    - Tributação como Pessoa Física
+    - Tributação na Pessoa Jurídica
+    - '41'
+  - codigo: 6.5.2
+    titulo: 'Previdência Privada: PGBL e VGBL'
+  - codigo: 6.5.3
+    titulo: Ativos financeiros (exemplo, isenções fiscais)
+    itens:
+    - 'Renda Fixa: Títulos Isentos x Títulos Tributados'
+    - 'Renda Variável: Ações x Fundos de Ações'
+    - Fundos de investimento com come-cotas X Fundos sem come-cotas
+    - 'Criptoativos: Comparativo entre Investimento Direto e Fundos'
+  - codigo: 6.5.4
+    titulo: 'Ativos Imobiliários: Pessoa Física x Holding Imobiliária'
+    itens:
+    - Tributação sobre Rendimentos de Aluguel
+    - Tributação na Venda do Imóvel
+  - codigo: 6.5.5
+    titulo: Fundos de investimento
+  tempo_min: 50
+  questoes_estimadas: 17
+- numero: 7
+  titulo: Planejamento patrimonial e sucessório
+  peso: 12
+  topicos:
+  - codigo: '7.1'
+    titulo: Princípios de planejamento patrimonial e sucessório
+  - codigo: 7.1.1
+    titulo: O que constitui o patrimônio? (definição legal)
+    itens:
+    - Jurisdição domiciliar / várias jurisdições
+  - codigo: 7.1.2
+    titulo: O processo de planejamento patrimonial e a equipe profissional
+  - codigo: '7.2'
+    titulo: Objetivos de planejamento patrimonial e sucessório
+  - codigo: 7.2.1
+    titulo: Aspectos a serem considerados ao identificar objetivos
+    itens:
+    - Necessidades especiais
+    - Tutela de familiares incapazes
+    - Casamento e outros relacionamentos afetivos
+    - Valores familiares / pessoais
+    - Necessidades de capital / liquidez
+    - Proteção de ativos e privacidade
+  - codigo: 7.2.2
+    titulo: Seleção de beneficiários
+  - codigo: 7.2.3
+    titulo: Filantropia
+  - codigo: 7.2.4
+    titulo: Eficiência fiscal
+  - codigo: 7.2.5
+    titulo: Sucessão empresarial
+    itens:
+    - Controle/propriedade
+    - Gestão contínua
+  - codigo: '7.3'
+    titulo: Aspectos legais
+  - codigo: 7.3.1
+    titulo: Casamento e União Estável
+  - codigo: 7.3.1.1
+    titulo: Regimes de bens
+  - codigo: 7.3.1.2
+    titulo: Relacionamentos não formalizados
+  - codigo: 7.3.1.3
+    titulo: Reflexos patrimoniais no término
+  - codigo: 7.3.2
+    titulo: Sucessão
+  - codigo: 7.3.2.1
+    titulo: Processo de Inventário
+  - codigo: 7.3.2.2
+    titulo: 'Delimitação da herança: meação x herança'
+  - codigo: 7.3.2.3
+    titulo: Ordem de sucessão
+  - codigo: 7.3.2.3.1
+    titulo: Conceito de herdeiro necessário
+    itens:
+    - '43'
+  - codigo: 7.3.2.3.2
+    titulo: Descendentes
+  - codigo: 7.3.2.3.3
+    titulo: Descendentes em concorrência com o cônjuge ou companheiro
+  - codigo: 7.3.2.3.4
+    titulo: Ascendentes
+  - codigo: 7.3.2.3.5
+    titulo: Ascendentes em concorrência com o cônjuge ou companheiro
+  - codigo: 7.3.2.3.6
+    titulo: Cônjuge ou companheiro
+  - codigo: 7.3.2.3.7
+    titulo: Colaterais até o quarto grau
+  - codigo: 7.3.2.3.8
+    titulo: Município, Distrito Federal e União (herança jacente e vacante)
+  - codigo: 7.3.2.4
+    titulo: Aceitação, renúncia e excluídos da sucessão
+  - codigo: '7.4'
+    titulo: Planejamento patrimonial – aspectos familiares
+  - codigo: 7.4.1
+    titulo: 'Limites para dispor do patrimônio em vida: conceito de legítima, disponível e herdeiros necessários'
+  - codigo: 7.4.2
+    titulo: Divórcio
+  - codigo: 7.4.2.1
+    titulo: Impactos na situação familiar (exemplo, pensão alimentícia)
+  - codigo: 7.4.2.2
+    titulo: 'Projeção da situação financeira: regime de bens de casamento/união e impactos'
+  - codigo: 7.4.2.3
+    titulo: Projeção de custos e burocracia no processo de divórcio
+  - codigo: 7.4.2.4
+    titulo: Desenvolvimento do planejamento patrimonial
+  - codigo: 7.4.3
+    titulo: Sucessão
+  - codigo: 7.4.3.1
+    titulo: Projeção da situação familiar, identificar quem são os herdeiros
+  - codigo: 7.4.3.2
+    titulo: 'Projeção da situação financeira: ativos, passivos, liquidez'
+  - codigo: 7.4.3.3
+    titulo: Projeção de custos e burocracia na sucessão
+  - codigo: 7.4.3.4
+    titulo: Desenvolvimento do planejamento sucessório
+  - codigo: 7.4.4
+    titulo: Incapacidade, tutela, procuração e cuidados de saúde
+  - codigo: 7.4.4.1
+    titulo: Incapacidade
+  - codigo: 7.4.4.2
+    titulo: Tutela
+  - codigo: 7.4.4.3
+    titulo: Procuração
+  - codigo: 7.4.4.4
+    titulo: Diretivas relativas aos cuidados de saúde
+  - codigo: '7.5'
+    titulo: Planejamento Patrimonial – Ativos e Passivos (Propriedade, Avaliação, Transferências,
+  - codigo: 7.5.1
+    titulo: 'Propriedade: Titulação de Bens e Designação de Beneficiários'
+  - codigo: 7.5.2
+    titulo: Valuation
+  - codigo: 7.5.3
+    titulo: Alterações de Propriedade
+  - codigo: 7.5.4
+    titulo: Ativos Especiais (direitos autorais, marcas comerciais, royalties etc.)
+  - codigo: 7.5.5
+    titulo: Ativos Digitais
+  - codigo: 7.5.6
+    titulo: Proteção de Ativos
+  - codigo: 7.5.7
+    titulo: Sucessão Empresarial
+  - codigo: 7.5.8
+    titulo: Privacidade
+    itens:
+    - '44'
+  - codigo: '7.6'
+    titulo: Filantropia
+  - codigo: 7.6.1
+    titulo: Estabelecimento de um legado
+  - codigo: 7.6.2
+    titulo: Doações de caridade vitalícias
+  - codigo: 7.6.3
+    titulo: Doações de caridade após a morte
+  - codigo: '7.7'
+    titulo: Estratégias de planejamento patrimonial
+  - codigo: 7.7.1
+    titulo: Instrumentos de Planejamento Patrimonial
+    itens:
+    - Doação
+    - Testamento
+    - Seguro de Vida
+    - Plano de Previdência
+    - Holding
+    - Fundo de investimento
+    - Exterior
+  tempo_min: 60
+  questoes_estimadas: 17
+- numero: 8
+  titulo: Psicologia no Planejamento Financeiro
+  peso: 7
+  topicos:
+  - codigo: '8.1'
+    titulo: Finanças comportamentais e a psicologia no planejamento financeiro
+  - codigo: 8.1.1
+    titulo: Introdução às finanças comportamentais
+  - codigo: 8.1.2
+    titulo: Finanças tradicionais versus finanças comportamentais
+  - codigo: 8.1.3
+    titulo: Vieses e heurística
+  - codigo: 8.1.4
+    titulo: Arquitetura de escolha e tomada de financeira
+    itens:
+    - Abordagem tradicional (racional) para a tomada de decisões
+    - A tomada de decisões
+    - Racionalidade limitada
+    - Neurofinanças
+  - codigo: 8.1.5
+    titulo: Introdução à psicologia no planejamento financeiro
+  - codigo: '8.2'
+    titulo: Atitudes, valores e vieses do cliente e do planejador financeiro
+  - codigo: 8.2.1
+    titulo: Abordagem tradicional (racional) da tomada de decisão
+  - codigo: 8.2.2
+    titulo: Criação de sentido (ou sensibilização)
+  - codigo: 8.2.3
+    titulo: A racionalidade limitada
+  - codigo: 8.2.4
+    titulo: Os elementos psicológicos do planejamento financeiro
+  - codigo: 8.2.5
+    titulo: Perceção do risco e tolerância ao risco
+  - codigo: 8.2.6
+    titulo: Política de investimentos do cliente
+  - codigo: 8.2.7
+    titulo: A psicologia do comportamento de manada
+  - codigo: '8.3'
+    titulo: Capacidade cognitiva e educação financeira do cliente
+  - codigo: 8.3.1
+    titulo: Educação financeira e cálculos
+  - codigo: 8.3.2
+    titulo: Avaliar a compreensão do cliente sobre as recomendações do aconselhamento
+  - codigo: 8.3.3
+    titulo: Longevidade e a percepção de declínio cognitivo
+    itens:
+    - '46'
+  - codigo: '8.4'
+    titulo: Preferências do cliente e classificação dos tipos de clientes
+  - codigo: 8.4.1
+    titulo: Características comportamentais do cliente ao investir
+  - codigo: 8.4.2
+    titulo: Características/ armadilhas comportamentais do cliente consumidor
+  - codigo: 8.4.3
+    titulo: Preferências de aconselhamento do consumidor
+  - codigo: 8.4.4
+    titulo: Vieses cognitivos e emocionais
+  - codigo: 8.4.5
+    titulo: Identificar e gerir comportamentos autodestrutivos
+  - codigo: '8.5'
+    titulo: Crenças dos clientes e sua influência na tomada de decisões financeiras
+  - codigo: 8.5.1
+    titulo: Viés de excesso de confiança
+  - codigo: 8.5.2
+    titulo: Viés de status quo
+  - codigo: 8.5.3
+    titulo: Aspectos demográficos e socioeconômicos da tomada de decisão
+  - codigo: 8.5.4
+    titulo: Percepção versus realidade
+  - codigo: '8.6'
+    titulo: Abordagens comportamentais para os planejadores financeiros
+  - codigo: 8.6.1
+    titulo: Teoria do incentivo (nudge)
+  - codigo: 8.6.2
+    titulo: Planejamento financeiro baseado em políticas definidas
+  - codigo: 8.6.3
+    titulo: Princípios de aconselhamento e coaching
+  - codigo: 8.6.4
+    titulo: Técnicas de comunicação para reduzir vieses comportamentais
+  - codigo: '8.7'
+    titulo: Eventos críticos com graves consequências financeiras
+  - codigo: 8.7.1
+    titulo: Impactos potenciais
+  - codigo: 8.7.2
+    titulo: Soluções
+  - codigo: 8.7.3
+    titulo: Monitorizar os vieses cognitivos
+  - codigo: 8.7.4
+    titulo: Navegar pelas implicações das crises
+  - codigo: 8.7.5
+    titulo: Enquadramento, ancoragem e adaptação
+    itens:
+    - '47'
+  tempo_min: 30
+  questoes_estimadas: 10
