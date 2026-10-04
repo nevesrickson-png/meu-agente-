@@ -25,8 +25,8 @@ Prioridades: (1) conhecimento e estudo, (2) análise e assessoria, (3) organiza�
 Funcionalidades em `docs/01-FUNCIONALIDADES.md`. Persona em `config/persona.yaml` (siga à risca).
 
 ## Princípio de arquitetura: FERRAMENTAS PRIMEIRO, AGENTE DEPOIS
-- O "runtime" do agente (o que conversa no Telegram) **ainda não foi decidido**: Hermes Agent, uma solução baseada
-  em Claude (Claude Code / Agent SDK) ou um bot próprio em Python. A decisão é tomada na **Fase 5** (`docs/07-DECISAO-RUNTIME.md`).
+- **Runtime decidido (04/10/2026): bot próprio em Python**, inspirado no melhor de Hermes, Claude Code e OpenClaw —
+  desenho em `docs/08-AGENTE-QUIRON.md`. Sem terminal, arquivos do sistema, navegador autônomo nem loja de skills de terceiros.
 - Por isso, toda a inteligência do Quíron é construída como **servidores MCP em Python**, independentes de runtime:
   `quiron-sistema` (ping e status — Fase 0), `quiron-biblioteca`, `quiron-academia`, `quiron-mercado`, `quiron-noticias`, `quiron-analise`, `quiron-assessoria`, `quiron-carreira`.
   Qualquer runtime que fale MCP usa essas ferramentas sem mudança de código.
@@ -105,7 +105,14 @@ Arquivos com DRM não são processados.
   (JS puro + lightweight-charts 4.2 local em `vendor/`). Calculadoras em `quiron/servicos/calculadoras.py` (Python, com
   memória de cálculo). Cores: séries azul/laranja/aqua da paleta validada; alta/queda sempre com ▲/▼. Datas sem fuso:
   hora do sistema (consultas) ou de Brasília (agenda) — ver `_iso`. Aceite no navegador: `testes/test_terminal_navegador.py`.
-- Runtimes (Fase 5, código em `quiron/runtime/`): `ferramentas_mcp.py` (cliente MCP dos servidores do `.mcp.json`;
+- Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
+  cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
+  `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`
+  (lembretes/tarefas com recorrências legíveis — uma vez, diario, dias_uteis, semanal, mensal — e limite de mensagens
+  automáticas/dia da persona), `permissoes.py` (livre/confirmar/bloqueado por ferramenta em `config/agente.yaml`,
+  aprovações por botão, hooks de compliance RASCUNHO e rodapé de uso interno), `ferramentas_internas.py`
+  (ler_skill, lembrar, esquecer, buscar_conversas, agendar, listar/cancelar, propor_skill) e `batimento.py` (heartbeat que
+  confere ROTINAS.md e só fala se valer a pena). Peças anteriores: `ferramentas_mcp.py` (cliente MCP dos servidores do `.mcp.json`;
   nomes `servidor__ferramenta` com `_`), `agente.py` (laço: persona + índice de skills + `ler_skill` + ferramentas MCP +
   `cerebro.conversar`, até 8 passos; `quiron-agente -q`), `telegram_bot.py` (bot próprio, long polling, lista branca,
   memória em `dados/conversas.db`), `hermes.py` (gera um HERMES_HOME próprio em `dados/hermes/` com SOUL.md, skills,

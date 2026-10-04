@@ -1,0 +1,25 @@
+# Comportamento do agente do Quíron (runtime próprio). Edite com cuidado.
+
+# Permissões por ferramenta: livre (usa sozinho) · confirmar (pede ✅ no Telegram) · bloqueado (nunca usa).
+# Nomes: <servidor>__<ferramenta> (com _ no lugar de -) ou ferramentas internas. "*" vale para o servidor inteiro.
+permissoes:
+  padrao: livre
+  regras:
+    quiron_biblioteca__ingerir: confirmar       # processa livros (pesado)
+    quiron_biblioteca__reclassificar: confirmar
+    esquecer: confirmar                         # apagar memória
+    propor_skill: confirmar                     # o agente criar uma skill nova
+
+# Regras de compliance aplicadas na resposta (hooks).
+compliance:
+  rascunho_para_cliente: true      # mensagem para cliente sai marcada como RASCUNHO
+  rodape_uso_interno: true         # análise/recomendação de ação ganha o rodapé de uso interno
+
+memoria:
+  turnos_recentes: 8               # trocas lembradas na íntegra; as mais antigas viram resumo
+  resumir_acima_de: 16             # quando passar disso, compacta
+
+batimento:                          # "heartbeat": o Quíron confere ROTINAS.md sozinho
+  ativo: true
+  intervalo_min: 120
+  horario: ["07:00", "22:00"]

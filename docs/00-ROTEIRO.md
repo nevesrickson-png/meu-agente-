@@ -116,9 +116,9 @@ Quero visual profissional, denso, rápido e leve.
 ```
 
 ## FASE 5 — Agente 24h no Telegram
-- [~] 5.1 Teste comparativo de runtime (Hermes × bot próprio; Claude se houver orçamento) — `docs/07-DECISAO-RUNTIME.md`
-  > 04/10/2026: os dois runtimes estão montados e ligados às ferramentas do Quíron; o roteiro de 10 pedidos está pronto (`uv run quiron-comparativo`). **Falta a chave do Gemini** para rodar.
-- [ ] 5.2 **Você decide** o runtime e o host (`docs/03-HOSPEDAGEM.md`)
+- [x] 5.1 Teste comparativo de runtime (Hermes × bot próprio; Claude se houver orçamento) — `docs/07-DECISAO-RUNTIME.md`
+  > 04/10/2026: os dois runtimes estão montados e ligados às ferramentas do Quíron; o roteiro de 10 pedidos está pronto (`uv run quiron-comparativo`). O Rickson decidiu pelo bot próprio; o comparativo segue disponível como régua de qualidade.
+- [~] 5.2 **Você decide** o runtime e o host (`docs/03-HOSPEDAGEM.md`) — **runtime decidido em 04/10/2026: bot próprio** com o melhor de Hermes, Claude Code e OpenClaw (`docs/08-AGENTE-QUIRON.md`). Falta escolher o host.
 - [ ] 5.3 Preparar o host: `deploy/preparar_host.sh`, Docker Compose, Tailscale
 - [ ] 5.4 Subir MCPs + Terminal + runtime no host
 - [ ] 5.5 Telegram com lista branca (só seu ID); áudio com transcrição

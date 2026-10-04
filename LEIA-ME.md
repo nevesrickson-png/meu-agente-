@@ -91,7 +91,11 @@ Testes:
 2. **Descubra seu ID:** fale com **@userinfobot** → ele responde com seu número.
 3. No `.env`: `TELEGRAM_BOT_TOKEN=...` e `TELEGRAM_ALLOWED_USER_IDS=seu-numero` (só você fala com o Quíron).
 4. Comparativo dos runtimes (precisa de `GEMINI_API_KEY`): `uv run quiron-comparativo` → relatório em `dados\comparativo\`.
-5. Testar o bot próprio: `uv run quiron-agente -q "faça meu briefing"` (sem Telegram) ou `uv run quiron-telegram` (no Telegram).
+5. Testar o agente: `uv run quiron-agente -q "faça meu briefing"` (sem Telegram) ou `uv run quiron-telegram` (no Telegram).
+6. O "cérebro" editável fica em `dados\workspace\`: `USUARIO.md` (quem é você), `MEMORIA.md` (o que ele aprendeu),
+   `ROTINAS.md` (o que vigiar sozinho) e `diario\`. Comandos novos: crie `agente\comandos\<nome>.md`.
+7. No Telegram: `/ajuda`, `/briefing`, `/noticia <tema>`, `/estudar <tema>`, `/agenda`, `/memoria`, `/novo`; peça
+   "todo dia útil às 7h30 me manda o briefing" ou "me lembre amanhã às 10h de…". Ações sensíveis chegam com botões ✅/❌.
 
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.
