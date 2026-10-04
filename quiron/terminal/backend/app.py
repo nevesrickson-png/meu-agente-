@@ -116,17 +116,21 @@ def _converter(topico: str, params: dict[str, str]) -> dict[str, Any]:
     return {k: int(v) if k in inteiros else v for k, v in params.items() if v not in ("", None)}
 
 
+@app.get("/api/calc")
+def api_calc_lista() -> dict:
+    """Campos de cada calculadora (a tela monta os formulários a partir daqui)."""
+    return {k: {"nome": v["nome"], "campos": [list(c) for c in v["campos"]]} for k, v in calculadoras.ESQUEMAS.items()}
+
+
 @app.post("/api/calc/{nome}")
 async def api_calc(nome: str, entrada: dict = Body(...)):
-    func = calculadoras.CALCULADORAS.get(nome)
-    if not func:
+    if nome not in calculadoras.CALCULADORAS:
         raise HTTPException(404, "calculadora desconhecida")
     try:
-        args = {k: (int(v) if k == "dias" else v if k == "periodo" else float(str(v).replace(",", "."))) for k, v in entrada.items()}
-        if nome == "percentual_cdi" and "cdi_aa" not in args:
-            args["cdi_aa"] = (await asyncio.to_thread(bcb.sgs, "cdi", 2)).ultimo.valor
-        return (await asyncio.to_thread(func, **args)).como_dict()
-    except (TypeError, ValueError, ZeroDivisionError) as e:
+        if nome == "percentual_cdi" and "cdi_aa" not in entrada:
+            entrada = {**entrada, "cdi_aa": (await asyncio.to_thread(bcb.sgs, "cdi", 2)).ultimo.valor}
+        return (await asyncio.to_thread(calculadoras.executar, nome, entrada)).como_dict()
+    except (TypeError, ValueError, ZeroDivisionError, OverflowError) as e:
         return {"erro": f"Entrada inválida: {e}"}
 
 
@@ -215,6 +219,36 @@ async def ws(socket: WebSocket):
     finally:
         for t in tarefas:
             t.cancel()
+
+
+# ---------------------------------------------------------------- relatórios (motor de análise)
+
+ARQUIVOS_RELATORIO = {"relatorio.pdf": "application/pdf", "planilha.xlsx":
+                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "relatorio.md": "text/markdown"}
+
+
+@app.get("/api/relatorios")
+def api_relatorios(busca: str = "", limite: int = 30) -> dict:
+    from quiron.servicos.analise.fila import fila
+
+    f = fila()
+    tarefas = f.buscar(busca, limite) if busca.strip() else f.listar(limite)
+    return {"itens": [{"id": t.id, "titulo": t.titulo or t.tipo, "situacao": t.situacao, "erro": t.erro,
+                       "quando": (t.terminada_em or t.criada_em).replace("T", " ")[:16],
+                       "pdf": "pdf" in t.arquivos(), "planilha": "planilha" in t.arquivos()} for t in tarefas]}
+
+
+@app.get("/relatorios/{ident}/{arquivo}")
+def baixar_relatorio(ident: int, arquivo: str) -> FileResponse:
+    from quiron.servicos.analise.fila import fila
+
+    if arquivo not in ARQUIVOS_RELATORIO:
+        raise HTTPException(404)
+    t = fila().obter(ident)
+    if not t or not t.pasta or not (Path(t.pasta) / arquivo).exists():
+        raise HTTPException(404)
+    nome = f"quiron-{ident:04d}-{arquivo}"
+    return FileResponse(Path(t.pasta) / arquivo, media_type=ARQUIVOS_RELATORIO[arquivo], filename=nome)
 
 
 # ---------------------------------------------------------------- acervo (upload por área)

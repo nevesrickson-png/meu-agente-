@@ -98,3 +98,9 @@ itcmd:
     PE: [0.02, 0.08]
     CE: [0.02, 0.08]
     ES: 0.04
+
+tesouro_direto:
+  verificado_em:        # ← preencha após conferir
+  fonte: "Tesouro Direto — tesourodireto.com.br (Taxas); B3"
+  taxa_custodia_b3: 0.002          # 0,20% a.a. sobre o valor dos títulos, cobrada semestralmente
+  isencao_custodia: "Tesouro Selic: isento até R$ 10 mil por investidor (confira a regra atual)"

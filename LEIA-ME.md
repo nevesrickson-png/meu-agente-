@@ -120,6 +120,16 @@ comercial e comunicação) e as **certificações** (CFP, CNPI, CFA, CGA, CGE, F
 - Questões geradas por IA (Groq) e conferidas por um 2º modelo (Gemini); contas conferidas em Python. Achou erro? Toque **⚠**.
 - O banco cresce sozinho de madrugada nas áreas que você estuda (`config/academia/geracao.yaml`).
 
+## Análises e calculadoras (Fase 7)
+- Peça no Telegram em linguagem natural ou com **/analise**: “compare CDB 110% do CDI, LCI 92% e Tesouro IPCA+ para
+  R$ 200 mil em 3 anos”. O Quíron responde com o número do pedido e, em 30 s a 2 min, manda **resumo + PDF + planilha**.
+- **Modos**: peça “no modo debate” (prós, contras e perguntas) ou “advogado do diabo” (contesta a conclusão); o padrão
+  é entregar pronto. Todo número vem do Python; se o texto citar número que não está nas contas, o relatório avisa.
+- **/calc** faz contas com memória de cálculo: juros compostos, equivalência, CDB × LCI, taxa real, % do CDI,
+  financiamento (Price/SAC), VPL/TIR, aporte para meta, renda na aposentadoria, PU de prefixado e duration.
+- No Terminal: **RPT** lista e busca os relatórios (baixa PDF e planilha); **CALC** tem todas as calculadoras.
+- Taxas de custódia e alíquotas vêm de `config/regras_mercado.yaml` — confira e preencha `verificado_em`.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

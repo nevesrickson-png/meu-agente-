@@ -150,12 +150,13 @@ Execute a FASE 6 do docs/00-ROTEIRO.md, item por item. Comece pelo CFP.
 ```
 
 ## FASE 7 — Motor de análise e calculadoras
-- [ ] 7.1 MCP `quiron-analise`: fila de tarefas pesadas
-- [ ] 7.2 Relatórios Markdown → PDF (capa, premissas, fontes, limitações) + planilha
-- [ ] 7.3 Entrega: resumo + anexos no Telegram; arquivo pesquisável
-- [ ] 7.4 Modos de colaboração (entregar/debater/contestar)
-- [ ] 7.5 Calculadoras com testes conferíveis à mão (também no Terminal: `CALC`)
+- [x] 7.1 MCP `quiron-analise`: fila de tarefas pesadas — `dados/analise.db`, reserva atômica, tarefa órfã volta à fila, tipos registrados com `@tipo`
+- [x] 7.2 Relatórios Markdown → PDF (capa, premissas, fontes, limitações) + planilha — PDF com pymupdf (sem dependência de sistema, roda igual no Windows), gráficos matplotlib (paleta validada), planilha openpyxl
+- [x] 7.3 Entrega: resumo + anexos no Telegram; arquivo pesquisável — o bot envia resumo + PDF + planilha quando fica pronto; busca em texto completo (Terminal `RPT`, MCP `relatorios`)
+- [x] 7.4 Modos de colaboração (entregar/debater/contestar) — redação a partir dos números calculados; todo número do texto é conferido (inventado → nova tentativa → aviso)
+- [x] 7.5 Calculadoras com testes conferíveis à mão (também no Terminal: `CALC`) — 11 calculadoras (novas: financiamento Price/SAC, VPL/TIR, aporte p/ meta, renda na aposentadoria, PU prefixado, duration); `/calc` no Telegram
 **Teste de aceite:** uma análise de teste chega com resumo, PDF e planilha coerentes.
+> ✅ 04/10/2026: pedido em linguagem natural ao agente (“R$ 300 mil, 2 anos, CDB 108% × LCI 90% × Tesouro Selic × IPCA+, modo debate”) → análise #1 com taxas reais (BCB, Focus, Tesouro) → resumo + PDF de 4 páginas + planilha coerentes, números do texto conferidos. Falta: você testar pelo Telegram.
 ```
 Execute a FASE 7 do docs/00-ROTEIRO.md. Este motor será reaproveitado nas Fases 8 a 11; capriche na estrutura.
 ```

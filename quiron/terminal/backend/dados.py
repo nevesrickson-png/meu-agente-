@@ -256,7 +256,17 @@ def status() -> dict:
     proc = psutil.Process(os.getpid())
     with http._banco() as con:
         fontes = con.execute("SELECT fonte, MAX(obtido_em) FROM cache GROUP BY fonte ORDER BY 2 DESC LIMIT 20").fetchall()
+    try:
+        from quiron.servicos.analise.fila import fila
+
+        tarefas = fila().listar(50)
+        analises = {"na_fila": sum(t.situacao == "na fila" for t in tarefas),
+                    "rodando": sum(t.situacao == "rodando" for t in tarefas),
+                    "ultima": tarefas[0].descrever() if tarefas else ""}
+    except Exception:  # noqa: BLE001
+        analises = {}
     return {
+        "analises": analises,
         "memoria_mb": round(proc.memory_info().rss / 1e6, 1),
         "memoria_sistema_pct": psutil.virtual_memory().percent,
         "no_ar_desde": _iso(datetime.fromtimestamp(INICIO)),

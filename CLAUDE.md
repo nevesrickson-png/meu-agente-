@@ -145,11 +145,21 @@ Arquivos com DRM não são processados.
   `quiron-academia`, `cli.py` (`quiron-academia`). Telegram: `runtime/academia_bot.py` (direto, sem LLM; botões `ac:*`; `/area` troca a área ativa, guardada em
   `preferencias.area_ativa`; filtro nos botões `ÁREA|m3`).
   `/aula` e `/caso` usam as skills `academia-aula`/`academia-caso`. Catálogo de gratuitos: `config/materiais_gratuitos.yaml`.
+- Análise (Fase 7, `quiron/servicos/analise/`): `relatorio.py` (modelo único Relatorio → PDF via `pymupdf.Story` em blocos
+  — gráfico com altura fixa nunca encolhe, passa de página; sem fundo colorido em CSS (o Story repete fundos na página
+  seguinte); rodapé/cabeçalho carimbados em Latin-1 — + planilha openpyxl + Markdown + JSON), `fila.py` (`dados/analise.db`,
+  `@tipo`, reserva atômica, `dono`=PID e `recuperar_orfas`, FTS5, `a_entregar`/`marcar_entregue`), `redacao.py` (modos;
+  `conferir` números do texto contra fatos/tabelas/diferenças; 2ª tentativa e aviso), `tipos/` (renda_fixa:
+  cenário mensal Selic→Focus interpolada, IPCA Focus, IR regressivo, custódia `tesouro_direto` das regras, sensibilidade).
+  MCP `quiron-analise` (processa a fila em segundo plano; origem = `QUIRON_ORIGEM`, o bot define `telegram` e entrega
+  resumo + PDF + planilha em `laco_analises`). Calculadoras: `ESQUEMAS` + `executar()` em `calculadoras.py` (fonte única
+  do Terminal `/api/calc`, do MCP e do `/calc`). Terminal: `RPT` (`/api/relatorios`, `/relatorios/<id>/<arquivo>`).
+  Decisão 04/10/2026: PDF com pymupdf em vez de weasyprint (weasyprint exige GTK no Windows).
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
-- Relatórios: Markdown → PDF (`weasyprint`), `matplotlib`, `openpyxl`.
+- Relatórios: PDF com `pymupdf` (Story), `matplotlib`, `openpyxl`, `markdown`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.
 
 ## Estrutura de pastas

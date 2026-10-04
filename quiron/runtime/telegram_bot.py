@@ -195,6 +195,7 @@ async def _rodar() -> None:
         raise SystemExit("Configure TELEGRAM_BOT_TOKEN e TELEGRAM_ALLOWED_USER_IDS no .env (veja o LEIA-ME).")
     dono = sorted(permitidos)[0]  # mensagens proativas vão para o primeiro ID da lista
 
+    os.environ["QUIRON_ORIGEM"] = "telegram"  # análises pedidas por aqui são entregues no Telegram quando ficam prontas
     async with ConexaoMCP() as conexao:
         if conexao.falhas:
             logging.warning("servidores MCP com problema: %s", conexao.falhas)
@@ -299,6 +300,29 @@ async def _rodar() -> None:
                 except Exception:  # noqa: BLE001
                     logging.exception("falha no batimento")
 
+        async def laco_analises() -> None:
+            """Entrega as análises prontas (resumo + PDF + planilha) pedidas pelo Telegram."""
+            from quiron.servicos.analise.fila import fila
+
+            while True:
+                try:
+                    f = fila()
+                    for t in f.a_entregar("telegram"):
+                        if t.situacao == "erro":
+                            await app.bot.send_message(dono, f"⚠️ A análise #{t.id} falhou: {t.erro[:500]}")
+                        else:
+                            rel = f.relatorio(t.id)
+                            texto = rel.resumo_curto() if rel else f"📑 {t.titulo}\n{t.resumo}"
+                            await app.bot.send_message(dono, f"✅ Análise #{t.id} pronta\n{texto}"[:LIMITE_TELEGRAM])
+                            for tipo_arq, caminho in t.arquivos().items():
+                                if tipo_arq in {"pdf", "planilha"}:
+                                    with caminho.open("rb") as arq:
+                                        await app.bot.send_document(dono, arq, filename=f"quiron-{t.id:04d}-{caminho.name}")
+                        f.marcar_entregue(t.id)
+                except Exception:  # noqa: BLE001 — o laço nunca morre
+                    logging.exception("falha ao entregar análises")
+                await asyncio.sleep(10)
+
         async def laco_academia() -> None:
             """De madrugada, aumenta o banco de questões aos poucos (dentro dos limites grátis)."""
             from quiron.servicos.academia import estudo
@@ -321,7 +345,7 @@ async def _rodar() -> None:
             await app.start()
             await app.updater.start_polling(drop_pending_updates=True)
             tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer()),
-                       asyncio.create_task(laco_academia())]
+                       asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises())]
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

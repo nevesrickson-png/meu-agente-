@@ -51,6 +51,7 @@ const TIPOS = {
   moedas: { titulo: "Moedas — FX", topico: "grupo", params: () => ({ nome: "fx" }), w: 4, h: 7, render: renderCotacoes },
   commodities: { titulo: "Commodities — CMDTY", topico: "grupo", params: () => ({ nome: "cmdty" }), w: 4, h: 8, render: renderCotacoes },
   calc: { titulo: "Calculadoras — CALC", topico: null, w: 4, h: 9, render: renderCalc },
+  rpt: { titulo: "Relatórios — RPT", topico: null, w: 5, h: 10, render: renderRpt },
   status: { titulo: "Status", topico: "status", w: 3, h: 7, render: renderStatus },
   ajuda: { titulo: "Ajuda — HELP", topico: null, w: 4, h: 10, render: renderAjuda },
 };
@@ -434,24 +435,25 @@ function renderStatus(corpo, d, painel) {
   corpo.innerHTML = `<div class="kpis"><div class="kpi"><div class="kpi-r">Memória do Terminal</div><div class="kpi-v">${fmt(d.memoria_mb, 0)} MB</div><div class="kpi-d">PC: ${fmt(d.memoria_sistema_pct, 0)}% em uso</div></div></div>
     <table class="t" style="margin-top:6px"><thead><tr><th>Fonte</th><th class="n">Última consulta</th></tr></thead><tbody>${d.fontes.map((f) => `<tr><td class="nome">${esc(f.fonte)}</td><td class="n">${hora(f.atualizado_em)}</td></tr>`).join("")}</tbody></table>
     <div class="dica" style="margin-top:4px">Redes: ${redes}</div>
+    ${d.analises && d.analises.ultima !== undefined ? `<div class="dica">Análises: ${d.analises.na_fila} na fila, ${d.analises.rodando} rodando${d.analises.ultima ? " · última " + esc(d.analises.ultima) : ""} — RPT</div>` : ""}
     ${d.regras_pendentes.length ? `<div class="erro" style="margin-top:4px">⚠ ${d.regras_pendentes.length} bloco(s) de regras de mercado sem verificação</div>` : ""}`;
   rodape(painel, "no ar desde " + hora(d.no_ar_desde));
 }
 
-const CALCS = {
-  juros_compostos: { nome: "Juros compostos", campos: [["valor_inicial", "Valor inicial (R$)", 10000], ["aporte_mensal", "Aporte mensal (R$)", 1000], ["taxa_aa", "Taxa (% a.a.)", 12], ["anos", "Prazo (anos)", 10]] },
-  equivalencia: { nome: "Equivalência", campos: [["taxa", "Taxa (%)", 12], ["periodo", "Período da taxa", "aa", [["aa", "ao ano"], ["am", "ao mês"]]]] },
-  cdb_x_isento: { nome: "CDB × LCI", campos: [["taxa_isenta_aa", "LCI/LCA (% a.a.)", 11], ["taxa_cdb_aa", "CDB (% a.a.)", 13.5], ["dias", "Prazo (dias)", 720]] },
-  taxa_real: { nome: "Taxa real", campos: [["nominal_aa", "Taxa nominal (% a.a.)", 13.75], ["inflacao_aa", "Inflação (% a.a.)", 4.5]] },
-  percentual_cdi: { nome: "% do CDI", campos: [["percentual", "% do CDI", 110]] },
-};
-function renderCalc(corpo, _d, painel) {
-  const atual = painel.p.calc || "juros_compostos";
+// Calculadoras: os campos vêm do servidor (/api/calc) — fonte única com o agente e o Telegram.
+let CALCS = null;
+async function carregarCalcs() {
+  if (!CALCS) CALCS = await (await fetch("/api/calc")).json();
+  return CALCS;
+}
+async function renderCalc(corpo, _d, painel) {
+  try { await carregarCalcs(); } catch (e) { corpo.innerHTML = `<div class="erro">Sem conexão com o servidor</div>`; return; }
+  const atual = CALCS[painel.p.calc] ? painel.p.calc : "juros_compostos";
   const def = CALCS[atual];
-  corpo.innerHTML = `<div class="calc-abas">${Object.entries(CALCS).map(([k, c]) => `<button data-c="${k}" class="${k === atual ? "ativo" : ""}">${c.nome}</button>`).join("")}</div>
-    <form class="calc-form">${def.campos.map(([k, rot, val, ops]) => ops
-      ? `<label>${rot}<select name="${k}">${ops.map(([v, t]) => `<option value="${v}" ${v === val ? "selected" : ""}>${t}</option>`).join("")}</select></label>`
-      : `<label>${rot}<input name="${k}" value="${String(val).replace(".", ",")}" inputmode="decimal"></label>`).join("")}</form>
+  corpo.innerHTML = `<div class="calc-abas">${Object.entries(CALCS).map(([k, c]) => `<button data-c="${k}" class="${k === atual ? "ativo" : ""}">${esc(c.nome)}</button>`).join("")}</div>
+    <form class="calc-form">${def.campos.map(([k, rot, val, tipo, ops]) => tipo === "opção"
+      ? `<label>${esc(rot)}<select name="${k}">${ops.map(([v, t]) => `<option value="${v}" ${v === val ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>`
+      : `<label>${esc(rot)}<input name="${k}" value="${esc(tipo === "texto" ? String(val) : String(val).replace(".", ","))}" ${tipo === "texto" ? "" : 'inputmode="decimal"'}></label>`).join("")}</form>
     <div data-res></div>`;
   corpo.querySelectorAll("[data-c]").forEach((b) => (b.onclick = () => { painel.p.calc = b.dataset.c; salvarLocal(); renderCalc(corpo, null, painel); }));
   const form = $("form", corpo), res = $("[data-res]", corpo);
@@ -471,10 +473,30 @@ function renderCalc(corpo, _d, painel) {
   rodape(painel, "calculado em Python no servidor, resultado enquanto você digita");
 }
 
+// Relatórios do motor de análise (fila + arquivo pesquisável)
+function renderRpt(corpo, _d, painel) {
+  corpo.innerHTML = `<form class="calc-form rpt-busca"><input name="q" placeholder="Buscar nos relatórios (ex.: debênture, CDB)" value="${esc(painel.p.q || "")}"></form><div data-lista></div>`;
+  const lista = $("[data-lista]", corpo), form = $("form", corpo);
+  let timer;
+  const carregar = async () => {
+    clearTimeout(timer);
+    try {
+      const r = await (await fetch(`/api/relatorios?busca=${encodeURIComponent(painel.p.q || "")}`)).json();
+      lista.innerHTML = r.itens.length ? `<table class="t">${r.itens.map((t) => `<tr><td>#${t.id}</td><td>${esc(t.titulo)}<div class="memoria">${esc(t.quando)} · ${esc(t.situacao)}${t.erro ? " · " + esc(t.erro) : ""}</div></td>
+        <td class="n">${t.pdf ? `<a href="/relatorios/${t.id}/relatorio.pdf" target="_blank" rel="noopener">PDF</a>` : ""} ${t.planilha ? `<a href="/relatorios/${t.id}/planilha.xlsx">XLSX</a>` : ""}</td></tr>`).join("")}</table>`
+        : `<div class="memoria">Nenhum relatório ainda. Peça uma análise ao Quíron no Telegram (ex.: “compare CDB 110% do CDI com LCI 92% em 2 anos”).</div>`;
+      if (r.itens.some((t) => t.situacao === "na fila" || t.situacao === "rodando")) timer = setTimeout(carregar, 5000);
+    } catch (e) { lista.innerHTML = `<div class="erro">Sem conexão com o servidor</div>`; }
+  };
+  form.addEventListener("submit", (e) => { e.preventDefault(); painel.p.q = new FormData(form).get("q"); salvarLocal(); carregar(); });
+  carregar();
+  rodape(painel, "relatórios em dados/relatorios · PDF + planilha · busca no texto completo");
+}
+
 function renderAjuda(corpo) {
   const cmds = [
     ["PETR4", "Visão do ativo: cotação, gráfico de 3 meses e notícias"], ["PETR4 GP", "Gráfico com médias móveis e comparação com o Ibovespa"],
-    ["TOP", "Principais notícias agora"], ["NEWS <tema>", "Notícias de um tema ou ticker (ex.: NEWS COPOM)"], ["SOC <tema>", "O que as redes dizem"],
+    ["TOP", "Principais notícias agora"], ["RPT", "Relatórios do motor de análise (PDF e planilha)"], ["NEWS <tema>", "Notícias de um tema ou ticker (ex.: NEWS COPOM)"], ["SOC <tema>", "O que as redes dizem"],
     ["ECO", "Agenda econômica"], ["CURV", "Curva de juros pré, real e inflação implícita"], ["MACRO", "Painel macro e Focus"],
     ["JUROS", "Selic, CDI e Tesouro"], ["WEI", "Índices mundiais"], ["FX", "Moedas"], ["CMDTY", "Commodities"], ["W", "Watchlist"],
     ["CALC", "Calculadoras"], ["STATUS", "Saúde do sistema"], ["HELP", "Esta ajuda"],
@@ -492,13 +514,13 @@ function rodape(painel, html) { $(".painel-rodape", document.getElementById(pain
 
 // ------------------------------------------------------------------ comandos
 function abrirAtivo(ativo) { adicionarPainel("ativo", { ativo }); }
-const V2 = new Set(["FA", "DCF", "PORT", "FUND", "CMPF", "PLAN", "RPT", "ACAD", "TASK", "ALRT"]);
+const V2 = new Set(["FA", "DCF", "PORT", "FUND", "CMPF", "PLAN", "ACAD", "TASK", "ALRT"]);
 function executar(texto) {
   const partes = texto.trim().toUpperCase().split(/\s+/).filter(Boolean);
   if (!partes.length) return;
   const [a, b, ...resto] = partes;
   const simples = { TOP: ["noticias", {}], ECO: ["agenda", {}], CURV: ["curva", {}], MACRO: ["macro", {}], JUROS: ["juros", {}], WEI: ["mundo", {}],
-    FX: ["moedas", {}], CMDTY: ["commodities", {}], W: ["watchlist", {}], CALC: ["calc", {}], STATUS: ["status", {}], HELP: ["ajuda", {}], "?": ["ajuda", {}] };
+    FX: ["moedas", {}], CMDTY: ["commodities", {}], W: ["watchlist", {}], CALC: ["calc", {}], RPT: ["rpt", {}], STATUS: ["status", {}], HELP: ["ajuda", {}], "?": ["ajuda", {}] };
   if (simples[a] && !b) return adicionarPainel(...simples[a]);
   if ((a === "NEWS" || a === "N") && b) return adicionarPainel("noticias", { termo: [b, ...resto].join(" ").toLowerCase() });
   if (a === "SOC" && b) return adicionarPainel("redes", { termo: [b, ...resto].join(" ").toLowerCase() });

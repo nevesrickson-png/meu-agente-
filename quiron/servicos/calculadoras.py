@@ -115,10 +115,184 @@ def percentual_cdi(percentual: float, cdi_aa: float) -> Resultado:
     )
 
 
+def financiamento(valor: float, taxa_am: float, meses: int, sistema: str = "price") -> Resultado:
+    """Parcelas pela Tabela Price (parcela fixa) ou SAC (amortização fixa)."""
+    i = taxa_am / 100
+    n = int(meses)
+    if n <= 0 or valor <= 0:
+        raise ValueError("valor e meses precisam ser positivos")
+    if sistema == "sac":
+        amort = valor / n
+        primeira = amort + valor * i
+        ultima = amort + amort * i
+        juros = sum((valor - amort * k) * i for k in range(n))
+        memoria = [f"Amortização fixa = {_brl(valor)} ÷ {n} = {_brl(amort)}",
+                   "Parcela k = amortização + juros sobre o saldo devedor (cai a cada mês)"]
+        linhas = [("1ª parcela", _brl(primeira)), ("Última parcela", _brl(ultima))]
+    else:
+        pmt = valor * i / (1 - (1 + i) ** -n) if i else valor / n
+        juros = pmt * n - valor
+        memoria = [f"PMT = PV·i ÷ (1 − (1+i)^−n) = {_brl(valor)}·{_pct(taxa_am, 4)} ÷ (1 − (1+{_pct(taxa_am, 4)})^−{n})"]
+        linhas = [("Parcela fixa", _brl(pmt))]
+    return Resultado(f"Financiamento ({'SAC' if sistema == 'sac' else 'Price'})",
+                     linhas + [("Total de juros", _brl(juros)), ("Total pago", _brl(valor + juros)),
+                               ("Taxa anual equivalente", _pct(taxa_anual(taxa_am)) + " a.a.")], memoria)
+
+
+def _fluxos(texto: str | list) -> list[float]:
+    if isinstance(texto, list):
+        return [float(x) for x in texto]
+    partes = [p for p in str(texto).replace("\n", ";").split(";") if p.strip()]
+    return [float(p.strip().replace(".", "").replace(",", ".") if "," in p else p.strip()) for p in partes]
+
+
+def _vpl(taxa: float, fluxos: list[float]) -> float:
+    return sum(f / (1 + taxa) ** t for t, f in enumerate(fluxos))
+
+
+def vpl_tir(fluxos: str, taxa_desconto: float) -> Resultado:
+    """VPL e TIR de uma série de fluxos por período (o 1º é o período 0, normalmente negativo)."""
+    f = _fluxos(fluxos)
+    if len(f) < 2:
+        raise ValueError("informe ao menos 2 fluxos separados por ponto e vírgula")
+    vpl = _vpl(taxa_desconto / 100, f)
+    linhas = [("VPL", _brl(vpl))]
+    memoria = [f"VPL = Σ Fₜ ÷ (1 + {_pct(taxa_desconto)})^t, t = 0…{len(f) - 1}"]
+    avisos = []
+    if any(x < 0 for x in f) and any(x > 0 for x in f):
+        baixo, alto = -0.99, 10.0
+        if _vpl(baixo, f) * _vpl(alto, f) > 0:
+            avisos.append("TIR não encontrada entre −99% e 1000% por período")
+        else:
+            for _ in range(200):  # bisseção: conferível e sem dependências
+                meio = (baixo + alto) / 2
+                if _vpl(baixo, f) * _vpl(meio, f) <= 0:
+                    alto = meio
+                else:
+                    baixo = meio
+            linhas.append(("TIR", _pct(meio * 100) + " por período"))
+            memoria.append("TIR = taxa que zera o VPL (bisseção)")
+            trocas = sum(1 for a, b in zip(f, f[1:]) if (a < 0) != (b < 0) and a and b)
+            if trocas > 1:
+                avisos.append("Fluxo com mais de uma troca de sinal: pode haver mais de uma TIR")
+    else:
+        avisos.append("TIR exige fluxos com sinais diferentes (investimento e retorno)")
+    return Resultado("VPL e TIR", linhas, memoria, avisos)
+
+
+def aporte_necessario(meta: float, anos: float, taxa_aa: float, valor_inicial: float = 0.0) -> Resultado:
+    """Aporte mensal para chegar à meta (aportes no fim de cada mês)."""
+    n = round(anos * 12)
+    i = taxa_mensal(taxa_aa) / 100
+    falta = meta - valor_inicial * (1 + i) ** n
+    pmt = max(0.0, falta * i / ((1 + i) ** n - 1) if i else falta / n)
+    return Resultado("Aporte necessário", [("Aporte mensal", _brl(pmt)), ("Total aportado", _brl(pmt * n + valor_inicial)),
+                                           ("Juros no período", _brl(meta - pmt * n - valor_inicial))],
+                     [f"Taxa mensal: {_pct(i * 100, 4)}; {n} meses",
+                      "PMT = (meta − VP·(1+i)^n) · i ÷ ((1+i)^n − 1)"],
+                     ["Use taxa REAL (acima da inflação) se a meta estiver em valores de hoje"])
+
+
+def renda_aposentadoria(patrimonio: float, taxa_real_aa: float, anos: float = 0) -> Resultado:
+    """Renda mensal (em valores de hoje) que o patrimônio sustenta: por N anos (consome o capital) ou perpétua (anos=0)."""
+    i = taxa_mensal(taxa_real_aa) / 100
+    if anos and anos > 0:
+        n = round(anos * 12)
+        renda = patrimonio * i / (1 - (1 + i) ** -n) if i else patrimonio / n
+        memoria = [f"PMT = PV·i ÷ (1 − (1+i)^−n), {n} meses, i = {_pct(i * 100, 4)} real ao mês"]
+        titulo = f"Renda por {anos:g} anos (consome o capital)"
+    else:
+        renda = patrimonio * i
+        memoria = [f"Perpetuidade: renda = patrimônio × {_pct(i * 100, 4)} real ao mês (preserva o capital)"]
+        titulo = "Renda perpétua (preserva o capital)"
+    return Resultado(titulo, [("Renda mensal", _brl(renda)), ("Renda anual", _brl(renda * 12))], memoria,
+                     ["Valores de hoje (taxa real); não considera IR sobre os rendimentos nem taxas"])
+
+
+def pu_prefixado(taxa_aa: float, dias_uteis: int, valor_face: float = 1000.0) -> Resultado:
+    """Preço unitário de um título prefixado sem cupom (ex.: LTN / Tesouro Prefixado), base 252."""
+    pu = valor_face / (1 + taxa_aa / 100) ** (int(dias_uteis) / 252)
+    return Resultado("PU de título prefixado", [("PU", _brl(pu)), ("Desconto sobre o valor de face", _pct((1 - pu / valor_face) * 100))],
+                     [f"PU = {_brl(valor_face)} ÷ (1 + {_pct(taxa_aa)})^({int(dias_uteis)}/252)"])
+
+
+def duration(fluxos: str, taxa_aa: float) -> Resultado:
+    """Duration de Macaulay e modificada de fluxos ANUAIS a partir do ano 1 (ex.: cupons e principal)."""
+    f = _fluxos(fluxos)
+    y = taxa_aa / 100
+    vps = [x / (1 + y) ** t for t, x in enumerate(f, 1)]
+    preco = sum(vps)
+    if preco <= 0:
+        raise ValueError("fluxos precisam ter valor presente positivo")
+    mac = sum(t * v for t, v in enumerate(vps, 1)) / preco
+    mod = mac / (1 + y)
+    return Resultado("Duration", [("Preço (VP dos fluxos)", _brl(preco)), ("Duration de Macaulay", f"{mac:.2f} anos".replace(".", ",")),
+                                  ("Duration modificada", f"{mod:.2f}".replace(".", ",")),
+                                  ("Variação de preço p/ +1 p.p.", _pct(-mod, 2) + " (aprox.)")],
+                     ["Macaulay = Σ t·VPₜ ÷ Σ VPₜ; modificada = Macaulay ÷ (1 + taxa)",
+                      "ΔPreço% ≈ −modificada × Δtaxa"])
+
+
 CALCULADORAS = {
     "juros_compostos": juros_compostos,
     "equivalencia": equivalencia,
     "cdb_x_isento": cdb_x_isento,
     "taxa_real": taxa_real,
     "percentual_cdi": percentual_cdi,
+    "financiamento": financiamento,
+    "vpl_tir": vpl_tir,
+    "aporte_necessario": aporte_necessario,
+    "renda_aposentadoria": renda_aposentadoria,
+    "pu_prefixado": pu_prefixado,
+    "duration": duration,
 }
+
+# Campos de cada calculadora (fonte única para o Terminal, o agente/MCP e o Telegram):
+# (nome, rótulo, padrão, tipo: num | int | texto | opção, opções)
+ESQUEMAS: dict[str, dict] = {
+    "juros_compostos": {"nome": "Juros compostos", "campos": [("valor_inicial", "Valor inicial (R$)", 10000, "num"),
+                        ("aporte_mensal", "Aporte mensal (R$)", 1000, "num"), ("taxa_aa", "Taxa (% a.a.)", 12, "num"),
+                        ("anos", "Prazo (anos)", 10, "num")]},
+    "equivalencia": {"nome": "Equivalência", "campos": [("taxa", "Taxa (%)", 12, "num"),
+                     ("periodo", "Período da taxa", "aa", "opção", [["aa", "ao ano"], ["am", "ao mês"]])]},
+    "cdb_x_isento": {"nome": "CDB × LCI", "campos": [("taxa_isenta_aa", "LCI/LCA (% a.a.)", 11, "num"),
+                     ("taxa_cdb_aa", "CDB (% a.a.)", 13.5, "num"), ("dias", "Prazo (dias)", 720, "int")]},
+    "taxa_real": {"nome": "Taxa real", "campos": [("nominal_aa", "Taxa nominal (% a.a.)", 13.75, "num"),
+                  ("inflacao_aa", "Inflação (% a.a.)", 4.5, "num")]},
+    "percentual_cdi": {"nome": "% do CDI", "campos": [("percentual", "% do CDI", 110, "num")]},
+    "financiamento": {"nome": "Financiamento", "campos": [("valor", "Valor financiado (R$)", 300000, "num"),
+                      ("taxa_am", "Taxa (% a.m.)", 1, "num"), ("meses", "Prazo (meses)", 360, "int"),
+                      ("sistema", "Sistema", "price", "opção", [["price", "Price (parcela fixa)"], ["sac", "SAC"]])]},
+    "vpl_tir": {"nome": "VPL e TIR", "campos": [("fluxos", "Fluxos (;) — 1º = hoje", "-1000; 300; 400; 500", "texto"),
+                ("taxa_desconto", "Taxa de desconto (% por período)", 10, "num")]},
+    "aporte_necessario": {"nome": "Aporte p/ meta", "campos": [("meta", "Meta (R$)", 1000000, "num"),
+                          ("anos", "Prazo (anos)", 20, "num"), ("taxa_aa", "Taxa (% a.a.)", 5, "num"),
+                          ("valor_inicial", "Já tenho (R$)", 0, "num")]},
+    "renda_aposentadoria": {"nome": "Renda aposentadoria", "campos": [("patrimonio", "Patrimônio (R$)", 2000000, "num"),
+                            ("taxa_real_aa", "Taxa real (% a.a.)", 4, "num"),
+                            ("anos", "Por quantos anos (0 = perpétua)", 0, "num")]},
+    "pu_prefixado": {"nome": "PU prefixado", "campos": [("taxa_aa", "Taxa (% a.a.)", 13.5, "num"),
+                     ("dias_uteis", "Dias úteis até o vencimento", 504, "int"), ("valor_face", "Valor de face (R$)", 1000, "num")]},
+    "duration": {"nome": "Duration", "campos": [("fluxos", "Fluxos anuais (;) a partir do ano 1", "10; 10; 10; 110", "texto"),
+                 ("taxa_aa", "Taxa (% a.a.)", 10, "num")]},
+}
+
+
+def executar(nome: str, entrada: dict) -> Resultado:
+    """Converte a entrada (textos do formulário, com vírgula decimal) pelos tipos do esquema e calcula."""
+    if nome not in CALCULADORAS:
+        raise KeyError(nome)
+    tipos = {c[0]: c[3] for c in ESQUEMAS[nome]["campos"]}
+    args = {}
+    for k, v in entrada.items():
+        if k not in tipos and k != "cdi_aa":
+            continue
+        if v in ("", None):
+            continue
+        t = tipos.get(k, "num")
+        if t in {"texto", "opção"}:
+            args[k] = str(v)
+        else:
+            valor = float(str(v).replace(".", "").replace(",", ".")) if isinstance(v, str) and "," in v else float(v)
+            args[k] = int(valor) if t == "int" else valor
+    return CALCULADORAS[nome](**args)
