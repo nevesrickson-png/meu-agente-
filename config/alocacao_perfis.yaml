@@ -1,0 +1,38 @@
+# Alocação de referência por perfil (proposta inicial do Quíron — AJUSTE à sua política de investimentos).
+# Para cada classe: [mínimo, alvo, máximo] em % do patrimônio. Os alvos de cada perfil somam 100.
+# Uso: comparar a carteira com o perfil (enquadramento), limitar a otimização e guiar o rebalanceamento.
+verificado_em:        # preencha quando revisar com a sua política
+perfis:
+  conservador:
+    descricao: "Preservação de capital e liquidez; volatilidade baixa (aposentados, reserva, curto prazo)."
+    classes:
+      pos_fixado:    [45, 60, 80]
+      prefixado:     [0, 5, 15]
+      inflacao:      [10, 20, 30]
+      multimercado:  [0, 5, 10]
+      acoes:         [0, 5, 10]
+      fii:           [0, 5, 10]
+      internacional: [0, 0, 10]
+      cripto:        [0, 0, 0]
+  moderado:
+    descricao: "Equilíbrio entre proteção e crescimento; aceita oscilações moderadas no médio prazo."
+    classes:
+      pos_fixado:    [25, 35, 50]
+      prefixado:     [0, 10, 15]
+      inflacao:      [15, 20, 30]
+      multimercado:  [5, 10, 15]
+      acoes:         [5, 12, 20]
+      fii:           [0, 5, 10]
+      internacional: [0, 8, 15]
+      cripto:        [0, 0, 2]
+  arrojado:
+    descricao: "Crescimento de longo prazo; aceita volatilidade alta e perdas temporárias relevantes."
+    classes:
+      pos_fixado:    [10, 15, 30]
+      prefixado:     [0, 5, 15]
+      inflacao:      [10, 15, 25]
+      multimercado:  [5, 10, 20]
+      acoes:         [15, 30, 40]
+      fii:           [0, 10, 15]
+      internacional: [5, 15, 25]
+      cripto:        [0, 0, 5]

@@ -1,0 +1,15 @@
+# Premissas de RETORNO ESPERADO por classe (usadas só na otimização e nas projeções). São OPINIÕES declaradas,
+# não dados: o relatório sempre mostra estas premissas. Edite à vontade.
+# Formas: "cdi + X" (X p.p. acima do CDI esperado do Focus), "tesouro_prefixado" (taxa do dia ~3 anos),
+# "tesouro_ipca + IPCA" (taxa real do dia ~7 anos + IPCA do Focus) ou um número fixo (% a.a.).
+verificado_em:
+retorno_esperado:
+  pos_fixado:    {forma: "cdi", acima: 0.0, nota: "CDI esperado (Focus) nos próximos 12 meses"}
+  prefixado:     {forma: "tesouro_prefixado", nota: "taxa do Tesouro Prefixado de ~3 anos (carregado até o fim)"}
+  inflacao:      {forma: "tesouro_ipca", nota: "IPCA esperado (Focus) + taxa real do Tesouro IPCA+ de ~7 anos"}
+  multimercado:  {forma: "cdi", acima: 1.5, nota: "CDI + 1,5 p.p. (alfa médio esperado de bons multimercados, líquido)"}
+  acoes:         {forma: "cdi", acima: 5.0, nota: "CDI + 5 p.p. (prêmio de risco de ações Brasil, premissa de longo prazo)"}
+  fii:           {forma: "cdi", acima: 2.0, nota: "CDI + 2 p.p. (renda isenta + valorização, premissa)"}
+  internacional: {forma: "fixo", valor: 11.0, nota: "~9% a.a. em dólar + ~2% a.a. de desvalorização média do real (premissa)"}
+  cripto:        {forma: "cdi", acima: 0.0, nota: "sem premissa de prêmio (volatilidade extrema): CDI"}
+premio_risco_livre: "cdi"   # taxa livre de risco usada no índice de Sharpe

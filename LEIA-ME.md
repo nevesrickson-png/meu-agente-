@@ -130,6 +130,18 @@ comercial e comunicação) e as **certificações** (CFP, CNPI, CFA, CGA, CGE, F
 - No Terminal: **RPT** lista e busca os relatórios (baixa PDF e planilha); **CALC** tem todas as calculadoras.
 - Taxas de custódia e alíquotas vêm de `config/regras_mercado.yaml` — confira e preencha `verificado_em`.
 
+## Carteiras de clientes (Fase 8)
+- Mande no Telegram um **print** da carteira, uma **planilha** (.xlsx/.csv com colunas como Ativo e Valor) ou o texto
+  com **/carteira** (“/carteira CLI-012 moderado: CDB 110% CDI R$ 120 mil; PETR4 1000; IVVB11 R$ 45 mil”).
+  Se puder, informe custo e data de aplicação (melhora o cálculo do IR) e o vencimento dos títulos.
+- **Recorte o nome do cliente** antes do print (use só CLI-XXX). O print é lido no seu computador (OCR); CPF, conta,
+  e-mail e telefone são ocultados antes de qualquer envio ao modelo.
+- O Quíron mostra o que leu para você conferir e pede o **diagnóstico completo**: enquadramento no perfil, risco
+  (volatilidade, VaR, pior queda, beta, duration), stress (Selic ±3 p.p., bolsa −20%, dólar +20%, inflação, crises),
+  carteira ótima dentro do perfil, rebalanceamento com IR estimado e backtest de 10 anos — resumo + PDF + planilha.
+- **Ajuste à sua política:** faixas dos perfis em `config/alocacao_perfis.yaml`, retornos esperados em
+  `config/premissas_carteira.yaml` e choques dos cenários em `config/cenarios_stress.yaml` (preencha `verificado_em`).
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

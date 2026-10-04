@@ -1,0 +1,35 @@
+# Cenários de stress da carteira. EDITÁVEL. Dois tipos:
+# 1) hipotéticos: choques instantâneos em fatores de risco (premissas do Quíron, declaradas no relatório);
+#    impacto em renda fixa = −duration modificada × variação da taxa; ações = beta (histórico) × choque da bolsa;
+#    internacional/cripto = choque do ativo combinado com o do dólar; pós-fixado ≈ 0 no instante (passa a render
+#    mais/menos depois — mostrado como efeito em 12 meses quando a Selic muda).
+# 2) históricos: o que a carteira de HOJE teria sofrido em episódios reais (séries mensais reais).
+verificado_em:
+hipoteticos:
+  selic_mais_3:
+    nome: "Selic +3 p.p."
+    descricao: "Choque de juros: curva prefixada +3 p.p. (paralela), juro real +1,5 p.p., bolsa e FIIs caem pela alta do custo de capital."
+    choques: {selic: 3.0, juros_pre: 3.0, juro_real: 1.5, bolsa: -10.0, fii: -8.0, multimercado: -2.0, dolar: 5.0, spx: 0.0, cripto: -10.0}
+  selic_menos_3:
+    nome: "Selic −3 p.p."
+    descricao: "Ciclo de cortes: curva prefixada −3 p.p., juro real −1,5 p.p., bolsa e FIIs sobem."
+    choques: {selic: -3.0, juros_pre: -3.0, juro_real: -1.5, bolsa: 10.0, fii: 8.0, multimercado: 2.0, dolar: -5.0, spx: 0.0, cripto: 5.0}
+  bolsa_menos_20:
+    nome: "Bolsa −20%"
+    descricao: "Queda forte de ações no Brasil, com fuga para o dólar."
+    choques: {selic: 0.0, juros_pre: 1.0, juro_real: 0.5, bolsa: -20.0, fii: -10.0, multimercado: -4.0, dolar: 10.0, spx: -5.0, cripto: -15.0}
+  dolar_mais_20:
+    nome: "Dólar +20%"
+    descricao: "Desvalorização forte do real (estresse fiscal/externo)."
+    choques: {selic: 1.0, juros_pre: 2.0, juro_real: 1.0, bolsa: -8.0, fii: -5.0, multimercado: 0.0, dolar: 20.0, spx: 0.0, cripto: 0.0}
+  ipca_mais_3:
+    nome: "Inflação +3 p.p."
+    descricao: "Surpresa inflacionária: prefixados sofrem, IPCA+ protege (juro real estável)."
+    choques: {selic: 2.0, juros_pre: 2.5, juro_real: 0.0, bolsa: -6.0, fii: -4.0, multimercado: -1.0, dolar: 5.0, spx: 0.0, cripto: 0.0}
+historicos:
+  - {nome: "Crise de 2008", inicio: "2008-06", fim: "2009-02"}
+  - {nome: "Recessão e rebaixamento (2015)", inicio: "2015-01", fim: "2015-12"}
+  - {nome: "Joesley Day (mai/2017)", inicio: "2017-05", fim: "2017-05"}
+  - {nome: "Greve dos caminhoneiros (2018)", inicio: "2018-05", fim: "2018-06"}
+  - {nome: "Covid-19 (2020)", inicio: "2020-02", fim: "2020-03"}
+  - {nome: "Ciclo de alta de juros (2021)", inicio: "2021-01", fim: "2021-12"}

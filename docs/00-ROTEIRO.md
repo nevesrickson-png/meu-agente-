@@ -162,9 +162,17 @@ Execute a FASE 7 do docs/00-ROTEIRO.md. Este motor será reaproveitado nas Fases
 ```
 
 ## FASE 8 — Carteiras, alocação e risco
-- [ ] 8.1 Carteira (texto, print, planilha) · 8.2 Alocação por perfil · 8.3 Risco (vol, VaR, drawdown, duration)
-- [ ] 8.4 Stress test · 8.5 Otimização · 8.6 Rebalanceamento com impostos · 8.7 Backtest
+- [x] 8.1 Carteira (texto, print, planilha) — texto pelo cérebro (plano B por regras), planilha xlsx/csv com colunas reconhecidas, print por OCR local (tesseract) com CPF/conta/e-mail/telefone ocultados antes do modelo; guardada como `CART-…` (`dados/carteiras/`)
+- [x] 8.2 Alocação por perfil — faixas [mín, alvo, máx] por classe em `config/alocacao_perfis.yaml` (conservador/moderado/arrojado, editável); enquadramento no relatório
+- [x] 8.3 Risco (vol, VaR, drawdown, duration) — 60 meses mensais; ticker próprio ou proxy da classe (CDI, índices sintéticos do Tesouro, Ibovespa, cesta de FIIs, S&P em reais); VaR/CVaR, beta, contribuição ao risco
+- [x] 8.4 Stress test — hipotéticos editáveis (`config/cenarios_stress.yaml`: Selic ±3 p.p., bolsa −20%, dólar +20%, inflação +3 p.p.) + 6 episódios históricos
+- [x] 8.5 Otimização — média-variância dentro das faixas do perfil (máx. Sharpe, mín. variância, fronteira); retornos esperados declarados em `config/premissas_carteira.yaml`
+- [x] 8.6 Rebalanceamento com impostos — aporte primeiro; vendas pelo menor IR (prejuízo, isentos, isenção de R$ 20 mil em ações, FII 20%, ETF 15%, tabela regressiva); aporte para chegar ao alvo sem vender
+- [x] 8.7 Backtest — 10 anos, rebalanceamento mensal: atual × alvo × ótima × CDI × Ibovespa
 **Teste de aceite:** carteira fictícia gera relatório completo; stress "Selic +3 p.p." faz sentido.
+✅ Aceite (04/10/2026): carteira moderada fictícia de R$ 566 mil (CLI-012) → PDF de 9 páginas; Selic +3 p.p. = −4,35%
+(IPCA+ 2035 −R$ 10,8 mil por duration modificada 8,0 × 1,5 p.p.; prefixado −R$ 2,4 mil; ações pelo beta; FII −8%;
+IVVB11 +5% pelo dólar) com +R$ 6 mil de carregamento do pós-fixado em 12 meses.
 ```
 Execute a FASE 8 do docs/00-ROTEIRO.md usando o motor da Fase 7.
 ```

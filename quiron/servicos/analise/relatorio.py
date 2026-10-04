@@ -61,12 +61,14 @@ class Tabela:
 @dataclass
 class Grafico:
     titulo: str
-    tipo: str  # "barras_h" (categorias, série única) | "linhas" (evolução, várias séries)
-    rotulos: list[str] = field(default_factory=list)  # barras: categorias · linhas: eixo x
-    series: dict[str, list[float]] = field(default_factory=dict)  # barras: {"valor": [...]} · linhas: {nome: [...]}
-    formato: str = "num"  # dos valores (rótulos diretos e eixo)
+    tipo: str  # "barras_h" (categorias; 1 série ou agrupadas) | "linhas" (evolução) | "dispersao" (x × y)
+    rotulos: list[str] = field(default_factory=list)  # barras: categorias · linhas: eixo x · dispersão: não usado
+    series: dict[str, list[float]] = field(default_factory=dict)  # barras/linhas: {nome: valores} · dispersão: y
+    formato: str = "num"  # dos valores (rótulos diretos e eixo y)
     eixo_x: str = ""
     nota: str = ""
+    x: dict[str, list[float]] = field(default_factory=dict)  # dispersão: valores de x por série
+    formato_x: str = "num"  # dispersão: formato do eixo x
 
 
 @dataclass
@@ -272,11 +274,15 @@ class Relatorio:
                     aba.append([g.eixo_x or "x", *g.series.keys()])
                     for k, rot in enumerate(g.rotulos):
                         aba.append([rot, *[v[k] if k < len(v) else None for v in g.series.values()]])
+                elif g.tipo == "dispersao":
+                    aba.append(["Série", g.eixo_x or "x", "y"])
+                    for nome, ys in g.series.items():
+                        for xv, yv in zip(g.x.get(nome, []), ys):
+                            aba.append([nome, xv, yv])
                 else:
-                    valores = next(iter(g.series.values()), [])
-                    aba.append(["Categoria", "Valor"])
-                    for rot, v in zip(g.rotulos, valores):
-                        aba.append([rot, v])
+                    aba.append(["Categoria", *g.series.keys()])
+                    for k, rot in enumerate(g.rotulos):
+                        aba.append([rot, *[v[k] if k < len(v) else None for v in g.series.values()]])
                 for c in aba[1]:
                     c.font, c.fill = negrito, cabecalho
         wb.save(destino)
@@ -412,19 +418,34 @@ def desenhar(g: Grafico) -> bytes:
                          "ytick.color": TEXTO_2, "font.family": "DejaVu Sans"})
     fmt = (lambda v: formatar(v, g.formato))
     if g.tipo == "barras_h":
-        valores = next(iter(g.series.values()), [])
-        altura = max(1.6, 0.42 * len(valores) + 0.6)
-        fig, ax = plt.subplots(figsize=(6.4, altura), dpi=200)
-        pos = list(range(len(valores)))[::-1]
-        ax.barh(pos, valores, color=SERIES[0], height=0.55, edgecolor="white", linewidth=1)
-        ax.set_yticks(pos, g.rotulos)
-        maior = max(valores) if valores else 1
-        for y, v in zip(pos, valores):
-            ax.text(v + maior * 0.01, y, fmt(v), va="center", fontsize=7.5, color=TEXTO)
-        ax.set_xlim(0, maior * 1.22)
-        ax.xaxis.set_visible(False)
-        for lado in ("top", "right", "bottom"):
+        _barras(plt, g, fmt)
+        fig, ax = plt.gcf(), plt.gca()
+    elif g.tipo == "dispersao":
+        fig, ax = plt.subplots(figsize=(6.4, 3.8), dpi=200)
+        k_ponto = 0
+        for k, (nome, ys) in enumerate(g.series.items()):
+            xs = g.x.get(nome, [])
+            cor = SERIES[k % len(SERIES)]
+            if len(ys) > 2:  # curva (ex.: fronteira eficiente)
+                ax.plot(xs, ys, color=cor, linewidth=1.6, label=nome, zorder=2)
+            else:  # pontos destacados com rótulo direto
+                ax.scatter(xs, ys, s=46, color=cor, edgecolor="white", linewidth=1.5, label=nome, zorder=3)
+                for xv, yv in zip(xs, ys):
+                    ax.annotate(nome, (xv, yv), xytext=(6, 6 if k_ponto % 2 == 0 else -10), textcoords="offset points",
+                                fontsize=7.5, color=TEXTO)
+                k_ponto += 1
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: formatar(v, g.formato_x)))
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: fmt(v)))
+        ax.grid(color=GRADE, linewidth=0.6)
+        ax.set_axisbelow(True)
+        for lado in ("top", "right"):
             ax.spines[lado].set_visible(False)
+        if g.eixo_x:
+            ax.set_xlabel(g.eixo_x)
+        if len(g.series) >= 2:
+            ax.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.16),
+                      ncol=min(4, len(g.series)))
+        ax.margins(x=0.12, y=0.12)
     else:
         fig, ax = plt.subplots(figsize=(6.4, 3.6), dpi=200)
         x = list(range(len(g.rotulos)))
@@ -454,3 +475,36 @@ def desenhar(g: Grafico) -> bytes:
     fig.savefig(buf, format="png", facecolor="white", bbox_inches="tight", pad_inches=0.08)
     plt.close(fig)
     return buf.getvalue()
+
+
+def _barras(plt, g: Grafico, fmt) -> None:
+    """Barras horizontais: série única (azul) ou agrupadas (ordem fixa da paleta + legenda). Aceita negativos."""
+    nomes = list(g.series)
+    n_cat, n_ser = len(g.rotulos), max(1, len(nomes))
+    todos = [v for vs in g.series.values() for v in vs if v is not None] or [0]
+    menor, maior = min(0, min(todos)), max(0, max(todos))
+    amplitude = (maior - menor) or 1
+    altura_barra = 0.55 if n_ser == 1 else min(0.8 / n_ser, 0.3)
+    altura = max(1.6, (0.42 if n_ser == 1 else 0.22 * n_ser + 0.2) * n_cat + 0.6)
+    fig, ax = plt.subplots(figsize=(6.4, altura), dpi=200)
+    base = list(range(n_cat))[::-1]
+    for k, nome in enumerate(nomes):
+        desloc = (k - (n_ser - 1) / 2) * altura_barra
+        pos = [b - desloc for b in base]
+        valores = [v if v is not None else 0 for v in g.series[nome]]
+        ax.barh(pos, valores, color=SERIES[k % len(SERIES)], height=altura_barra * 0.92, edgecolor="white",
+                linewidth=1, label=nome)
+        if n_ser <= 4:
+            for y, v in zip(pos, valores):
+                lado = 1 if v >= 0 else -1
+                ax.text(v + lado * amplitude * 0.01, y, fmt(v), va="center", ha="left" if v >= 0 else "right",
+                        fontsize=7 if n_ser > 1 else 7.5, color=TEXTO)
+    ax.set_yticks(base, g.rotulos)
+    ax.set_xlim(menor - (amplitude * 0.22 if menor < 0 else 0), maior + (amplitude * 0.22 if maior > 0 else amplitude * 0.02))
+    if menor < 0:
+        ax.axvline(0, color="#8d8c84", linewidth=0.8)
+    ax.xaxis.set_visible(False)
+    for lado in ("top", "right", "bottom"):
+        ax.spines[lado].set_visible(False)
+    if n_ser >= 2:
+        ax.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, 0), ncol=min(4, n_ser))

@@ -81,3 +81,17 @@ def titulos_atuais() -> Tabela:
 def por_tipo(tabela: Tabela, chave: str) -> list[Titulo]:
     nomes = TIPOS[chave]
     return [t for t in tabela.titulos if t.tipo in nomes]
+
+
+def historico_taxas(chave: str) -> tuple[list[tuple[date, date, float]], str]:
+    """Todo o histórico de taxas de compra de um tipo de título: [(data-base, vencimento, taxa % a.a.)]."""
+    r = obter(URL_PRECOS, fonte="Tesouro Transparente", ttl=12 * 3600, formato="texto", codificacao="latin-1")
+    nomes = TIPOS[chave]
+    saida = []
+    for l in csv.DictReader(io.StringIO(r.conteudo), delimiter=";"):
+        if l["Tipo Titulo"].strip() in nomes:
+            taxa = numero_br(l.get("Taxa Compra Manha"))
+            if taxa is not None:
+                saida.append((_data(l["Data Base"]), _data(l["Data Vencimento"]), taxa))
+    saida.sort()
+    return saida, r.fonte

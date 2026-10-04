@@ -20,6 +20,8 @@ mcp = MCPServer(
         "é entregue ao Rickson no Telegram quando ficar pronto — diga isso a ele, com o número do pedido, sem inventar "
         "resultado. Modos: entregar (pronto), debater (prós/contras/perguntas) ou contestar (advogado do diabo); pergunte "
         "ou escolha pelo pedido e diga qual usou. Para contas rápidas use `calcular` (mostre a memória de cálculo). "
+        "Carteira de cliente: `ler_carteira` (texto) devolve um id CART-…; confira a leitura com o Rickson e peça "
+        "`analisar('carteira_diagnostico', {'carteira_id': ..., 'perfil': ..., 'aporte': ...})`. Cliente só como CLI-XXX. "
         "Tudo é uso interno: não é recomendação a cliente."
     ),
 )
@@ -76,6 +78,28 @@ def ler_relatorio(numero: int) -> str:
     """Conteúdo de um relatório pronto (Markdown: resumo, premissas, tabelas, fontes, limitações) para discutir."""
     rel = fila().relatorio(numero)
     return rel.markdown()[:15000] if rel else f"Relatório #{numero} não encontrado ou ainda não pronto."
+
+
+@mcp.tool()
+def ler_carteira(texto: str, perfil: str = "", cliente: str = "") -> str:
+    """Lê uma carteira em texto livre (uma posição por linha: ativo, valor ou quantidade, taxa, vencimento, custo),
+    guarda e devolve o id (CART-…) + o resumo para conferir. CPF/conta/e-mail/telefone são ocultados antes da leitura.
+    perfil: conservador | moderado | arrojado. cliente: código CLI-XXX (nunca o nome)."""
+    from quiron.servicos.carteira import arquivo, leitura
+
+    try:
+        c = leitura.avaliar(leitura.ler_texto(texto))
+    except (ValueError, RuntimeError) as e:
+        return f"Não consegui ler a carteira: {e}"
+    if perfil:
+        c.perfil = perfil.lower().strip()
+    if cliente:
+        c.cliente = cliente.strip() if cliente.strip().upper().startswith("CLI-") else ""
+    if not c.posicoes:
+        return "Não achei posições com valor. Mande uma por linha, ex.: “PETR4 200 ações” ou “CDB 110% CDI R$ 50 mil venc 2027”."
+    ident = arquivo.salvar(c)
+    return (arquivo.descrever(c, ident) + "\n\nConfira classes e valores. Para o diagnóstico completo: "
+            f"analisar('carteira_diagnostico', {{'carteira_id': '{ident}'}}).")
 
 
 @mcp.tool()

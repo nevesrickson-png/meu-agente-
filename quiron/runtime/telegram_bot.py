@@ -155,6 +155,39 @@ class BotQuiron:
             return [Saida(f"🎙️ {e}")]
         return [Saida(f"🎙️ “{texto}”"), *await self.tratar(usuario, chat, texto)]
 
+    async def tratar_arquivo(self, usuario: int, chat: int, conteudo: bytes, nome: str, legenda: str = "",
+                             imagem: bool = False) -> list[Saida]:
+        """Carteira por print (OCR local) ou planilha (xlsx/csv): lê aqui, guarda (CART-…) e passa só o resumo ao agente."""
+        if not self.autorizado(usuario):
+            return []
+        from quiron.servicos.carteira import arquivo, leitura
+
+        if not imagem and not nome.lower().endswith((".xlsx", ".xlsm", ".csv")):
+            return [Saida("Por enquanto leio carteira em print (foto), planilha .xlsx ou .csv. PDF de livro vai pelo Acervo do Terminal.")]
+        try:
+            if imagem:
+                c = await asyncio.to_thread(leitura.ler_print, conteudo)
+            else:
+                c = await asyncio.to_thread(leitura.ler_planilha, conteudo, nome)
+            c = await asyncio.to_thread(leitura.avaliar, c)
+        except (ValueError, RuntimeError) as e:
+            return [Saida(f"Não consegui ler a carteira: {e}")]
+        if not c.posicoes:
+            return [Saida("Não achei posições com valor nesse arquivo. Tente uma planilha com colunas Ativo e Valor.")]
+        ident = arquivo.salvar(c)
+        resumo = arquivo.descrever(c, ident)
+        saidas = [Saida(f"📥 Li a carteira ({'print' if imagem else nome}):\n{resumo}"[:LIMITE_TELEGRAM])]
+        if imagem:
+            saidas.append(Saida("🔒 Dica: recorte o nome do cliente antes de mandar print (use só CLI-XXX)."))
+        pedido = legenda.strip() or "Confira a leitura comigo e, se estiver certa, faça o diagnóstico completo."
+        texto = (f"O Rickson enviou uma carteira, já lida e guardada como {ident} (use carteira_id='{ident}' na "
+                 f"análise carteira_diagnostico; não retranscreva as posições):\n{resumo}\n\nPedido: {pedido}")
+        reg = await self.agente.responder(texto, chat=chat, skills=["analise"])
+        saidas += [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
+        for p in reg.pendencias:
+            saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
+        return saidas
+
     def garantir_rotinas_padrao(self) -> list[str]:
         """Cria as rotinas de config/agente.yaml (ex.: briefing das 7h30) se ainda não existirem."""
         from quiron.runtime import permissoes
@@ -231,6 +264,17 @@ async def _rodar() -> None:
                     conteudo = bytes(await arquivo.download_as_bytearray())
                     saidas = await bot.tratar_audio(update.effective_user.id, msg.chat_id, conteudo,
                                                     "voz.ogg" if msg.voice else (msg.audio.file_name or "audio.mp3"))
+                elif msg.photo or msg.document:
+                    origem = msg.photo[-1] if msg.photo else msg.document
+                    if getattr(origem, "file_size", 0) and origem.file_size > 20_000_000:
+                        saidas = [Saida("Arquivo grande demais para o Telegram entregar ao bot (limite de 20 MB).")]
+                    else:
+                        arquivo = await origem.get_file()
+                        conteudo = bytes(await arquivo.download_as_bytearray())
+                        imagem = bool(msg.photo) or (msg.document.mime_type or "").startswith("image/")
+                        nome = "print.jpg" if msg.photo else (msg.document.file_name or "arquivo")
+                        saidas = await bot.tratar_arquivo(update.effective_user.id, msg.chat_id, conteudo, nome,
+                                                          msg.caption or "", imagem)
                 else:
                     saidas = await bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "")
             finally:
@@ -339,7 +383,8 @@ async def _rodar() -> None:
 
         for criada in bot.garantir_rotinas_padrao():
             logging.info("rotina padrão criada: %s", criada)
-        app.add_handler(MessageHandler(filters.TEXT | filters.VOICE | filters.AUDIO, ao_receber))
+        app.add_handler(MessageHandler(filters.TEXT | filters.VOICE | filters.AUDIO | filters.PHOTO | filters.Document.ALL,
+                                       ao_receber))
         app.add_handler(CallbackQueryHandler(ao_clicar))
         async with app:
             await app.start()

@@ -109,6 +109,30 @@ def sgs(chave: str, n: int = 2) -> Serie:
     return Serie(chave, nome, unidade, pontos, r.fonte, r.obtido_em, r.desatualizado)
 
 
+URL_SGS_PERIODO = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo}/dados"
+
+
+def sgs_periodo(codigo: int, inicio: date, fim: date | None = None) -> tuple[list[Ponto], str]:
+    """Série do SGS entre duas datas (para históricos longos, ex.: CDI mensal desde 2006). Devolve (pontos, fonte)."""
+    global _api_fora_ate
+    fim = fim or date.today()
+    try:
+        if time.time() < _api_fora_ate:
+            raise FonteIndisponivel("api.bcb.gov.br recusou a conexão há pouco")
+        r = obter(URL_SGS_PERIODO.format(codigo=codigo), params={"formato": "json", "dataInicial": inicio.strftime("%d/%m/%Y"),
+                  "dataFinal": fim.strftime("%d/%m/%Y")}, fonte=f"Banco Central (SGS {codigo})", ttl=12 * 3600)
+        pontos = [Ponto(_data_sgs(p["data"]), numero_br(p["valor"])) for p in r.conteudo]
+    except FonteIndisponivel:
+        _api_fora_ate = time.time() + 600
+        corpo = _SOAP.format(codigo=codigo, inicio=inicio.strftime("%d/%m/%Y"), fim=fim.strftime("%d/%m/%Y"))
+        r = obter(URL_SGS_SOAP, metodo="POST", corpo=corpo,
+                  cabecalhos={"Content-Type": "text/xml; charset=utf-8", "SOAPAction": '""'},
+                  fonte=f"Banco Central (SGS {codigo}, web service)", ttl=12 * 3600, formato="texto")
+        itens = re.findall(r"<DATA>\s*([\d/]+)\s*</DATA>\s*<VALOR>\s*([^<]*)</VALOR>", html.unescape(r.conteudo))
+        pontos = [Ponto(_data_sgs(d), numero_br(v)) for d, v in itens if v.strip()]
+    return [p for p in pontos if p.valor is not None and p.data <= fim], r.fonte
+
+
 @dataclass
 class Expectativa:
     indicador: str

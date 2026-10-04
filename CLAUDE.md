@@ -155,6 +155,17 @@ Arquivos com DRM não são processados.
   resumo + PDF + planilha em `laco_analises`). Calculadoras: `ESQUEMAS` + `executar()` em `calculadoras.py` (fonte única
   do Terminal `/api/calc`, do MCP e do `/calc`). Terminal: `RPT` (`/api/relatorios`, `/relatorios/<id>/<arquivo>`).
   Decisão 04/10/2026: PDF com pymupdf em vez de weasyprint (weasyprint exige GTK no Windows).
+  Gráficos: `barras_h` (1 série ou agrupadas, aceita negativos), `linhas`, `dispersao` (campo `x` por série).
+- Carteira (Fase 8, `quiron/servicos/carteira/`): `modelo.py` (8 classes com proxy e duration, `Posicao`, `Carteira`,
+  perfis de `config/alocacao_perfis.yaml`), `leitura.py` (texto pelo cérebro com plano B por regras, planilha, print por
+  OCR local; `mascarar_identificadores` antes do modelo; ticker extraído do nome), `arquivo.py` (`dados/carteiras/CART-*.json`
+  — o agente passa só o id), `series.py` (mensais: SGS 4391/433, índices sintéticos PRE3/IPCA7 do histórico do Tesouro,
+  Yahoo ajustado com filtro de salto >60%, cesta de FII, MULTI = 70% CDI + 30% IBOV; cache 12 h em `dados/cache_series`),
+  `risco.py`, `stress.py` (`config/cenarios_stress.yaml`; renda fixa por duration modificada, ações por beta, pós-fixado
+  com efeito em 12 meses), `otimizacao.py` (Focus + Tesouro do dia, premissas de `config/premissas_carteira.yaml`, SLSQP
+  nas faixas do perfil), `rebalanceamento.py` (IR por tipo, isenção de R$ 20 mil, `aporte_sem_vender`) e `backtest.py`.
+  Tipo `carteira_diagnostico` em `analise/tipos/carteira.py`; MCP `ler_carteira`; bot lê foto/planilha (`tratar_arquivo`)
+  e comando `/carteira`. Testes offline com séries sintéticas em `testes/test_carteira.py`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.
