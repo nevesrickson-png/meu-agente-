@@ -12,7 +12,7 @@
 ## Etapa 1 — no seu PC (Windows)
 1. Tenha o `.env` na pasta do projeto com `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USER_IDS=7592218870` (o número,
    não o @usuário), `GEMINI_API_KEY` e `GROQ_API_KEY`.
-2. Dois cliques em **`Quiron Telegram.bat`**. Quando aparecer "Quíron no Telegram", mande uma mensagem ao bot.
+2. Dois cliques em **`Abrir Quiron.bat`** (ou no atalho **Quiron** da Área de Trabalho): atualiza e abre o bot. Quando aparecer "Quíron no Telegram", mande uma mensagem ao bot.
    Se cair, ele religa sozinho em 30 s. Fechar a janela desliga.
 3. Opcional: dois cliques em **`Quiron Inicio Automatico.bat`** → liga sozinho ao entrar no Windows e impede o PC de
    dormir na tomada. Rodar de novo permite remover.
