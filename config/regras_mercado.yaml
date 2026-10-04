@@ -63,11 +63,82 @@ previdencia:
 
 irpf_tabela_mensal:
   verificado_em:
-  fonte: "Receita Federal — tabela progressiva mensal vigente; Lei 15.270/2025"
+  fonte: "Receita Federal — tabela progressiva mensal (vigente desde mai/2025); Lei 15.270/2025 (redução a partir de 2026)"
   observacao: >
-    A partir de 2026 há isenção para rendimentos até R$ 5.000/mês e redução parcial até cerca de R$ 7.350/mês.
-    Copie aqui a tabela progressiva oficial vigente antes de usar em cálculos.
-  faixas: []           # ← preencher com a tabela oficial
+    Valores-base da tabela de mai/2025. A partir de 2026, a Lei 15.270/2025 criou uma REDUÇÃO do imposto: zera para
+    rendimentos tributáveis até R$ 5.000/mês e diminui gradualmente até R$ 7.350/mês. CONFIRA na Receita.
+  faixas:              # base mensal até (R$) → alíquota e parcela a deduzir; a última faixa sem teto
+    - {ate: 2428.80, aliquota: 0.0, deduzir: 0.0}
+    - {ate: 2826.65, aliquota: 0.075, deduzir: 182.16}
+    - {ate: 3751.05, aliquota: 0.15, deduzir: 394.16}
+    - {ate: 4664.68, aliquota: 0.225, deduzir: 675.49}
+    - {aliquota: 0.275, deduzir: 908.73}
+  reducao_2026:        # redução do imposto (Lei 15.270/2025), por mês e por ano
+    mensal: {zera_ate: 5000.00, reducao_maxima: 312.89, faixa_ate: 7350.00, constante: 978.62, fator: 0.133145}
+    anual: {zera_ate: 60000.00, reducao_maxima: 2694.15, faixa_ate: 88200.00, constante: 8429.73, fator: 0.095575}
+  deducoes_anuais:
+    dependente: 2275.08
+    educacao_por_pessoa: 3561.50
+    desconto_simplificado: 0.20
+    desconto_simplificado_teto: 16754.34
+    pgbl_maximo_renda_tributavel: 0.12   # só na declaração completa e para quem contribui ao INSS/regime próprio
+
+irpf_alta_renda:
+  verificado_em:
+  fonte: "Lei 15.270/2025 — imposto mínimo (IRPFM) a partir de 2026"
+  observacao: >
+    Quem tem renda anual total acima de R$ 600 mil paga uma alíquota mínima efetiva que sobe linearmente até 10% em
+    R$ 1,2 milhão (descontado o IR já pago). A base inclui dividendos; alguns rendimentos isentos ficam fora. CONFIRA.
+  renda_minima_anual: 600000.00
+  renda_aliquota_cheia: 1200000.00
+  aliquota_maxima: 0.10
+  dividendos_retencao: {acima_por_mes_por_empresa: 50000.00, aliquota: 0.10}
+
+inss:
+  verificado_em:
+  fonte: "Portaria interministerial MPS/MF vigente (valores de 2025 — atualize para o ano corrente)"
+  teto_mensal: 8157.41
+  empregado_faixas:    # contribuição progressiva do empregado (CLT)
+    - {ate: 1518.00, aliquota: 0.075}
+    - {ate: 2793.88, aliquota: 0.09}
+    - {ate: 4190.83, aliquota: 0.12}
+    - {ate: 8157.41, aliquota: 0.14}
+  contribuinte_individual: 0.20        # autônomo pessoa física (carnê), até o teto
+  pro_labore_retido: 0.11              # sócio, até o teto
+  patronal_lucro_presumido: 0.20       # empresa sobre o pró-labore (sem teto); no Simples III/V já está no DAS
+
+simples_nacional:
+  verificado_em:
+  fonte: "LC 123/2006 (anexos com redação da LC 155/2016)"
+  observacao: "Alíquota efetiva = (RBT12 × alíquota − parcela a deduzir) ÷ RBT12. Fator R ≥ 28% leva serviços do Anexo V ao III."
+  limite_anual: 4800000.00
+  fator_r_minimo: 0.28
+  anexo_iii:           # serviços (com fator R ≥ 28%) — inclui CPP e ISS
+    - {ate: 180000.00, aliquota: 0.06, deduzir: 0.0}
+    - {ate: 360000.00, aliquota: 0.112, deduzir: 9360.00}
+    - {ate: 720000.00, aliquota: 0.135, deduzir: 17640.00}
+    - {ate: 1800000.00, aliquota: 0.16, deduzir: 35640.00}
+    - {ate: 3600000.00, aliquota: 0.21, deduzir: 125640.00}
+    - {ate: 4800000.00, aliquota: 0.33, deduzir: 648000.00}
+  anexo_v:             # serviços intelectuais com fator R < 28%
+    - {ate: 180000.00, aliquota: 0.155, deduzir: 0.0}
+    - {ate: 360000.00, aliquota: 0.18, deduzir: 4500.00}
+    - {ate: 720000.00, aliquota: 0.195, deduzir: 9900.00}
+    - {ate: 1800000.00, aliquota: 0.205, deduzir: 17100.00}
+    - {ate: 3600000.00, aliquota: 0.23, deduzir: 62100.00}
+    - {ate: 4800000.00, aliquota: 0.305, deduzir: 540000.00}
+
+lucro_presumido:
+  verificado_em:
+  fonte: "Lei 9.249/1995; Lei 9.430/1996; LC 224/2025 (presunção maior acima de R$ 5 mi a partir de 2026 — CONFIRA)"
+  presuncao_servicos: 0.32
+  irpj: 0.15
+  irpj_adicional: 0.10
+  irpj_adicional_acima_anual: 240000.00   # base presumida acima de R$ 20 mil/mês
+  csll: 0.09
+  pis: 0.0065
+  cofins: 0.03
+  iss_padrao: 0.05                        # varia por município (2% a 5%): informe o do cliente
 
 fgc:
   verificado_em:
@@ -85,7 +156,8 @@ itcmd:
   observacao: >
     Após a EC 132/2023 os estados estão migrando para alíquotas progressivas. Os valores abaixo
     são referência antiga e precisam ser confirmados UF por UF antes de qualquer cálculo de sucessão.
-  estados:               # UF → alíquota (fixa) ou faixa [mínima, máxima]
+  previdencia: "STF (Tema 1214, dez/2024): não incide ITCMD sobre PGBL/VGBL na morte do titular — CONFIRA a lei do estado"
+  estados:               # UF → alíquota (fixa) ou faixa [mínima, máxima]; faixa → o cálculo usa a MÁXIMA (conservador)
     SP: 0.04
     RJ: [0.04, 0.08]
     MG: 0.05

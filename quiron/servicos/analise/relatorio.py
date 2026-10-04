@@ -438,7 +438,7 @@ def desenhar(g: Grafico) -> bytes:
                                 fontsize=7.5, color=TEXTO)
                 k_ponto += 1
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: formatar(v, g.formato_x)))
-        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: fmt(v)))
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: _eixo(v, g.formato)))
         ax.grid(color=GRADE, linewidth=0.6)
         ax.set_axisbelow(True)
         for lado in ("top", "right"):
@@ -461,7 +461,7 @@ def desenhar(g: Grafico) -> bytes:
                             textcoords="offset points", fontsize=8, color=TEXTO, va="center")
         passo = max(1, len(x) // 8)
         ax.set_xticks(x[::passo], [g.rotulos[i] for i in x[::passo]])
-        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: fmt(v)))
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: _eixo(v, g.formato)))
         ax.grid(axis="y", color=GRADE, linewidth=0.6)
         ax.set_axisbelow(True)
         for lado in ("top", "right"):
@@ -511,3 +511,12 @@ def _barras(plt, g: Grafico, fmt) -> None:
         ax.spines[lado].set_visible(False)
     if n_ser >= 2:
         ax.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, 0), ncol=min(4, n_ser))
+
+
+def _eixo(v: float, formato: str) -> str:
+    """Rótulo do eixo: valores em reais ficam compactos (R$ 850 mil, R$ 6,2 mi); o resto segue o formato."""
+    if formato in {"brl", "reais"} and abs(v) >= 10_000:
+        if abs(v) >= 1_000_000:
+            return "R$ " + f"{v / 1_000_000:.1f}".replace(".", ",").replace(",0", "") + " mi"
+        return f"R$ {v / 1000:.0f} mil"
+    return formatar(v, formato)

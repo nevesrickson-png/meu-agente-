@@ -178,9 +178,16 @@ Execute a FASE 8 do docs/00-ROTEIRO.md usando o motor da Fase 7.
 ```
 
 ## FASE 9 — Planejamento completo (padrão CFP)
-- [ ] 9.1 Ficha CLI-XXX · 9.2 Plano completo · 9.3 Aposentadoria · 9.4 Sucessão (ITCMD por estado)
-- [ ] 9.5 Tributário e proteção · 9.6 Módulo empresário (PF × PJ)
+- [x] 9.1 Ficha CLI-XXX — MCP `quiron-assessoria` (montada conversando, mescla, histórico de versões em `dados/fichas/`); `/esquecer CLI-XXX` apaga tudo do cliente (LGPD)
+- [x] 9.2 Plano completo — diagnóstico (fluxo, balanço, indicadores), objetivos, orçamento de aportes × sobra e plano de ação priorizado
+- [x] 9.3 Aposentadoria — capital necessário com INSS, aporte (cenário médio e 85% de chance no Monte Carlo), renda sustentável, aporte que cabe no orçamento, sensibilidade
+- [x] 9.4 Sucessão (ITCMD por estado) — meação por regime de bens, herança, ITCMD (máxima da faixa da UF), inventário, liquidez fora do inventário, instrumentos
+- [x] 9.5 Tributário e proteção — completa × simplificada, PGBL ideal, imposto mínimo de alta renda; seguro de vida pelo método das necessidades, invalidez, reserva e saúde
+- [x] 9.6 Módulo empresário (PF × PJ) — PF autônomo × Simples III (fator R) × Simples V × Lucro Presumido, líquido do dono
 **Teste de aceite:** cliente fictício recebe plano que você revisaria como CFP.
+✅ Aceite (04/10/2026): CLI-101 fictício (45 anos, SP, casado, 2 filhos, empresário) → PDF de 9 páginas com plano de ação;
+o plano mostra que a meta de R$ 25 mil/mês aos 60 tem 3% de chance com o aporte atual (85% exige R$ 27,3 mil/mês, acima
+da sobra de R$ 16,8 mil) e propõe as alavancas; falta de R$ 313 mil em seguro de vida e de R$ 1,35 mi em invalidez.
 ```
 Execute a FASE 9 do docs/00-ROTEIRO.md usando o motor da Fase 7.
 ```

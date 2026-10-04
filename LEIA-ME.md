@@ -142,6 +142,18 @@ comercial e comunicação) e as **certificações** (CFP, CNPI, CFA, CGA, CGE, F
 - **Ajuste à sua política:** faixas dos perfis em `config/alocacao_perfis.yaml`, retornos esperados em
   `config/premissas_carteira.yaml` e choques dos cenários em `config/cenarios_stress.yaml` (preencha `verificado_em`).
 
+## Planejamento financeiro de clientes (Fase 9)
+- **/cliente CLI-021** mostra ou começa a ficha: o Quíron pergunta aos poucos (família, renda e despesas, patrimônio e
+  dívidas, seguros e INSS, objetivos, aposentadoria, perfil e, se for empresário, a empresa). Só o código CLI-XXX —
+  nunca nome, CPF ou endereço.
+- **/planejamento CLI-021** gera o plano completo (resumo + PDF + planilha): plano de ação priorizado, diagnóstico,
+  objetivos, aposentadoria (com chance de dar certo), proteção, sucessão (ITCMD do estado), IR/PGBL e PF × PJ.
+  Também dá para pedir só uma parte: **/aposentadoria**, **/sucessao**, **/tributario**, **/protecao**, **/empresario**.
+- O PDF é um **rascunho para você revisar** antes de levar ao cliente.
+- **/esquecer CLI-021** apaga tudo daquele cliente (ficha, carteiras, relatórios, conversas) — pede confirmação.
+- **Revise:** as tabelas de IR, INSS, Simples, Presumido e ITCMD em `config/regras_mercado.yaml` e as premissas
+  (retornos, expectativa de vida, custos de inventário, seguros) em `config/premissas_planejamento.yaml`.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

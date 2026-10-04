@@ -8,6 +8,7 @@ permissoes:
     quiron_biblioteca__ingerir: confirmar       # processa livros (pesado)
     quiron_biblioteca__reclassificar: confirmar
     esquecer: confirmar                         # apagar memória
+    quiron_assessoria__esquecer_cliente: confirmar   # LGPD: apaga tudo de um cliente
     propor_skill: confirmar                     # o agente criar uma skill nova
 
 # Regras de compliance aplicadas na resposta (hooks).

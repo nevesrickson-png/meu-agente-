@@ -166,6 +166,17 @@ Arquivos com DRM não são processados.
   nas faixas do perfil), `rebalanceamento.py` (IR por tipo, isenção de R$ 20 mil, `aporte_sem_vender`) e `backtest.py`.
   Tipo `carteira_diagnostico` em `analise/tipos/carteira.py`; MCP `ler_carteira`; bot lê foto/planilha (`tratar_arquivo`)
   e comando `/carteira`. Testes offline com séries sintéticas em `testes/test_carteira.py`.
+- Planejamento (Fase 9, `quiron/servicos/planejamento/`): `ficha.py` (Ficha por CLI-XXX em `dados/fichas/`, mescla,
+  histórico, `validar` → pendências), `impostos.py` (IRPF mensal/anual com redução de 2026, imposto mínimo de alta renda,
+  INSS, Simples III/V, Presumido — tabelas em `regras_mercado.yaml`), `diagnostico.py` (renda líquida, fluxo, balanço,
+  indicadores, objetivos; `vf`/`pmt_para`/`vp_renda`), `aposentadoria.py` (capital com INSS, aporte médio, Monte Carlo
+  lognormal com bissecção para 85%, renda sustentável, aporte viável), `sucessao.py`, `tributario.py`, `protecao.py`,
+  `empresario.py` e `plano.py` (orçamento de aportes + plano de ação). Premissas em `config/premissas_planejamento.yaml`.
+  Tipos `planejamento_completo`, `aposentadoria`, `sucessao`, `tributario`, `protecao`, `empresario` em
+  `analise/tipos/planejamento.py` (rodapé de RASCUNHO para revisão). MCP `quiron-assessoria` (ficha + `esquecer_cliente`,
+  que pede confirmação); `servicos/lgpd.py` apaga ficha, carteiras, relatórios, conversas e memória que citam o código
+  (código inteiro: CLI-01 não apaga CLI-012). Skill `agente/skills/planejamento.md`; comandos /cliente, /planejamento,
+  /aposentadoria, /sucessao, /tributario, /protecao, /empresario, /esquecer.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.

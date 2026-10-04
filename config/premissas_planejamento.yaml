@@ -1,0 +1,40 @@
+# Premissas do PLANEJAMENTO FINANCEIRO (Fase 9). São OPINIÕES declaradas, não dados: todo relatório as mostra.
+# Ajuste à sua prática como planejador e preencha `verificado_em` quando revisar.
+verificado_em:
+
+# Retorno REAL (acima da inflação, líquido de IR e custos) e volatilidade anual por perfil, na acumulação.
+retorno_real_aa:      {conservador: 3.5, moderado: 4.5, arrojado: 5.5}
+volatilidade_aa:      {conservador: 4.0, moderado: 8.0, arrojado: 13.0}
+retorno_real_usufruto: 3.0      # % a.a. real na fase de renda (carteira mais conservadora)
+inflacao_longo_prazo: 4.0       # % a.a. (só para converter valores reais em nominais nos textos)
+crescimento_real_renda: 1.0     # % a.a. de aumento real da renda (para aportes que acompanham a renda)
+expectativa_vida_plano: 95      # idade até a qual o dinheiro precisa durar (planejar com folga de longevidade)
+simulacoes_monte_carlo: 3000
+sucesso_minimo: 0.85            # probabilidade de o dinheiro durar até a idade do plano considerada adequada
+
+# Reserva de emergência (meses de despesa) por ocupação.
+reserva_meses: {clt: 6, servidor: 3, autonomo: 12, profissional_liberal: 12, empresario: 12, aposentado: 12}
+
+# Indicadores do diagnóstico.
+poupanca_minima: 0.15           # parcela da renda líquida poupada considerada saudável
+comprometimento_dividas_max: 0.30   # parcelas de dívidas ÷ renda líquida
+
+# Proteção (seguro de vida pelo método das necessidades).
+protecao:
+  idade_independencia_filhos: 24
+  anos_minimos_renda_familia: 5     # mesmo sem filhos, o cônjuge precisa de um período de transição
+  parcela_despesa_familia: 0.70     # despesa da família sem o titular (a dele deixa de existir)
+  educacao_superior_por_filho: 200000.00   # R$ (valor de hoje) para graduação, por filho ainda não formado
+  despesas_funeral: 15000.00
+  invalidez_anos_renda: 10          # anos de renda a repor em caso de invalidez permanente
+
+# Sucessão (além do ITCMD).
+sucessao:
+  honorarios_inventario: 0.06       # % do monte (tabelas da OAB variam de ~4% a 10%)
+  custas_inventario: 0.015          # custas judiciais/cartório e emolumentos (varia por estado)
+  meses_inventario: 12              # tempo típico de bloqueio dos bens (judicial pode passar de 2 anos)
+
+# Empresário (PF × PJ).
+empresario:
+  pro_labore_minimo: 1518.00        # um salário mínimo (atualize)
+  contabilidade_pj_anual: 6000.00   # custo de contador/abertura que a PJ tem e a PF não
