@@ -31,6 +31,9 @@ def cliente(tmp_path, monkeypatch):
     http.definir_cliente(httpx.Client(transport=httpx.MockTransport(_roteador)))
     monkeypatch.setattr(coleta, "ler_fontes", lambda: gn.FONTES[:3])
     monkeypatch.setattr(nc, "_ultima_coleta", None)
+    from testes.test_noticias import Agora  # relógio fixo: as notícias gravadas são de 03/10/2026
+    monkeypatch.setattr(coleta, "datetime", Agora)
+    monkeypatch.setattr(nc, "datetime", Agora)
 
     def yahoo_falso(simbolo, periodo="5d"):
         n = {"5d": 5, "3mo": 60, "6mo": 120}.get(periodo, 60)

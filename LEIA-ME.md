@@ -91,7 +91,9 @@ Testes:
 2. **Descubra seu ID:** fale com **@userinfobot** → ele responde com seu número.
 3. No `.env`: `TELEGRAM_BOT_TOKEN=...` e `TELEGRAM_ALLOWED_USER_IDS=seu-numero` (só você fala com o Quíron).
 4. Comparativo dos runtimes (precisa de `GEMINI_API_KEY`): `uv run quiron-comparativo` → relatório em `dados\comparativo\`.
-5. Testar o agente: `uv run quiron-agente -q "faça meu briefing"` (sem Telegram) ou `uv run quiron-telegram` (no Telegram).
+5. Testar o agente: `uv run quiron-agente -q "faça meu briefing"` (sem Telegram). **Ligar no Telegram pelo PC:** dois cliques
+   em `Quiron Telegram.bat` (religa sozinho se cair); para ligar junto com o Windows, `Quiron Inicio Automatico.bat`.
+   O bot só roda em um lugar por vez — ao passar para o mini PC, desligue o do PC.
 6. O "cérebro" editável fica em `dados\workspace\`: `USUARIO.md` (quem é você), `MEMORIA.md` (o que ele aprendeu),
    `ROTINAS.md` (o que vigiar sozinho) e `diario\`. Comandos novos: crie `agente\comandos\<nome>.md`.
 7. No Telegram: `/ajuda`, `/briefing`, `/noticia <tema>`, `/estudar <tema>`, `/agenda`, `/memoria`, `/novo`; peça
@@ -99,7 +101,7 @@ Testes:
 8. **Áudio:** mande uma mensagem de voz — ele transcreve (Whisper grátis do Groq, usa a mesma `GROQ_API_KEY`) e responde.
 9. O briefing diário das 7h30 já vem criado (veja `/agenda`; cancele ou mude pedindo no chat).
 
-## Servidor 24h (mini PC ou VPS Linux)
+## Servidor 24h (mini PC em casa; VPS no futuro) — detalhes em `docs/03-HOSPEDAGEM.md`
 Tudo roda em Docker; o Terminal só é acessível pelo Tailscale (nenhuma porta aberta além da 22).
 1. No servidor novo, como root: `bash deploy/preparar_host.sh "sua-chave-ssh-publica"` (segurança, Docker, Tailscale).
 2. `sudo tailscale up` (entre com a sua conta Tailscale).

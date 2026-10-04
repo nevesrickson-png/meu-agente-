@@ -27,7 +27,12 @@ LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
 def ids_permitidos() -> set[int]:
     carregar_config()
     bruto = os.environ.get("TELEGRAM_ALLOWED_USER_IDS", "").split(" #")[0]
-    return {int(x) for x in bruto.replace(";", ",").split(",") if x.strip().isdigit()}
+    itens = [x.strip() for x in bruto.replace(";", ",").split(",") if x.strip()]
+    invalidos = [x for x in itens if not x.isdigit()]
+    if invalidos:
+        logging.warning("TELEGRAM_ALLOWED_USER_IDS tem %s, mas precisa ser o NÚMERO do seu ID (ex.: 7592218870), "
+                        "não o @usuário. Descubra o número falando com @userinfobot no Telegram.", ", ".join(invalidos))
+    return {int(x) for x in itens if x.isdigit()}
 
 
 def dividir(texto: str, limite: int = LIMITE_TELEGRAM) -> list[str]:
@@ -187,7 +192,11 @@ async def _rodar() -> None:
 
         async def ao_receber(update: Update, contexto: ContextTypes.DEFAULT_TYPE) -> None:
             msg = update.effective_message
-            if not msg or not update.effective_user or update.effective_user.id not in permitidos:
+            if not msg or not update.effective_user:
+                return
+            if update.effective_user.id not in permitidos:
+                logging.warning("ignorei mensagem do ID %s (@%s): não está em TELEGRAM_ALLOWED_USER_IDS",
+                                update.effective_user.id, update.effective_user.username or "-")
                 return
             sinal = asyncio.create_task(digitando(msg.chat_id))
             try:

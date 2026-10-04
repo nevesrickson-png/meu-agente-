@@ -308,3 +308,13 @@ def test_rotina_padrao_do_briefing_criada_uma_vez():
     assert bot.garantir_rotinas_padrao() == []  # não duplica
     a = bot.agente.agendador.listar()[0]
     assert (a.tipo, a.recorrencia, a.proxima.strftime("%H:%M")) == ("tarefa", "diario 07:30", "07:30")
+
+
+def test_ids_permitidos_ignora_usuario_com_arroba(monkeypatch, caplog):
+    from quiron.runtime import telegram_bot
+
+    monkeypatch.setattr(telegram_bot, "carregar_config", lambda: None)
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USER_IDS", "@ricksonrkn, 7592218870")
+    with caplog.at_level("WARNING"):
+        assert telegram_bot.ids_permitidos() == {7592218870}
+    assert "@ricksonrkn" in caplog.text and "userinfobot" in caplog.text

@@ -1,5 +1,41 @@
 # Hospedagem — decidida na Fase 5 (o kit é portátil)
 
+> **Decisão do Rickson (04/10/2026): custo mínimo, em três etapas.**
+> 1. **Agora: no seu PC Windows** — `Quiron Telegram.bat` (+ `Quiron Inicio Automatico.bat`). Custo zero; funciona
+>    enquanto o PC estiver ligado (briefing das 7h30 só chega com o PC ligado).
+> 2. **Depois: mini PC em casa** (Linux, 24h) — mesmos scripts de `deploy/`, passo a passo abaixo.
+> 3. **Futuro, se valer a pena: VPS** — `deploy/migrar.sh` leva tudo do mini PC para a VPS em menos de 1 hora.
+>
+> Regra de ouro: **o bot só pode rodar em UM lugar por vez** (o Telegram recusa duas cópias com o mesmo token).
+> Ao mudar de etapa, desligue a anterior.
+
+## Etapa 1 — no seu PC (Windows)
+1. Tenha o `.env` na pasta do projeto com `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USER_IDS=7592218870` (o número,
+   não o @usuário), `GEMINI_API_KEY` e `GROQ_API_KEY`.
+2. Dois cliques em **`Quiron Telegram.bat`**. Quando aparecer "Quíron no Telegram", mande uma mensagem ao bot.
+   Se cair, ele religa sozinho em 30 s. Fechar a janela desliga.
+3. Opcional: dois cliques em **`Quiron Inicio Automatico.bat`** → liga sozinho ao entrar no Windows e impede o PC de
+   dormir na tomada. Rodar de novo permite remover.
+4. Consumo: ~300–500 MB de RAM com os servidores de ferramentas; cabe nos 8 GB.
+
+## Etapa 2 — mini PC em casa (passo a passo)
+**Que máquina:** mini PC usado ou novo com processador Intel N100/N150 (ou similar), **8 GB de RAM no mínimo
+(16 GB ideal)**, SSD de 256 GB+. Consome pouca energia (≈ 6–15 W, poucos reais por mês).
+1. Grave o **Ubuntu Server 24.04 LTS** num pendrive (Rufus no Windows) e instale no mini PC. Na instalação, marque
+   **"Install OpenSSH server"**. Use cabo de rede (mais estável que Wi‑Fi).
+2. Na BIOS, ative **"Restore on AC Power Loss" = Power On** (religa sozinho depois de queda de energia).
+3. No seu PC, gere uma chave SSH (PowerShell: `ssh-keygen -t ed25519`) e copie o conteúdo de `~/.ssh/id_ed25519.pub`.
+4. No mini PC: `git clone <repositório> && sudo bash meu-agente-/deploy/preparar_host.sh "ssh-ed25519 AAAA..."`
+5. `sudo tailscale up` → entre com a sua conta Tailscale (instale o Tailscale também no PC e no celular).
+6. Entre como `quiron` (`ssh quiron@<nome-tailscale>`), clone em `~/quiron` e rode `bash deploy/instalar.sh`
+   (1ª vez cria o `.env` para você preencher, com `TERMINAL_SENHA`; depois rode de novo).
+7. **Desligue o bot no PC** (feche a janela e remova o início automático). Teste com o PC desligado.
+8. Leve o que já existe no PC (conversas, memória, biblioteca): copie as pastas `dados/` e `biblioteca/` para
+   `~/quiron/` no mini PC (WinSCP ou `scp -r`), antes do passo 6 ou com `docker compose restart` depois.
+
+## Etapa 3 — VPS (futuro)
+Mesma coisa da etapa 2 na VPS (passos 3 a 6), depois `bash deploy/migrar.sh quiron@<vps>` a partir do mini PC.
+
 Nas Fases 0 a 4 tudo roda no seu PC. O host 24h só entra na Fase 5, junto com a escolha do runtime.
 
 O Quíron roda em qualquer máquina Linux com Docker. Você pode começar num lugar e migrar depois em menos de 1 hora.
