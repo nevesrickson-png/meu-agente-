@@ -260,3 +260,51 @@ def test_bot_telegram(monkeypatch):
     agora = datetime.now(BRT)
     bot.agente.agendador.criar("ligar para o CLI-012", "lembrete", "uma vez", agora + timedelta(minutes=1), agora=agora)
     assert asyncio.run(bot.agenda_vencida(agora + timedelta(minutes=2))) == ["⏰ Lembrete: ligar para o CLI-012"]
+
+
+# ---------------------------------------------------------------- velocidade, áudio e rotinas
+
+def test_comando_pre_carrega_a_skill(monkeypatch):
+    conversar, recebidos = cerebro_roteirizado(["☀️ Briefing"])
+    monkeypatch.setattr(cerebro, "conversar", conversar)
+    bot = BotQuiron(Agente(SemMCP(), Config()), {111})
+    assert carregar_comandos()["briefing"].skill == "briefing"
+    asyncio.run(bot.tratar(111, 1, "/briefing"))
+    assert "Skill já carregada para este pedido: briefing" in recebidos[0]["mensagens"][0]["content"]
+    assert bot.skills_para("Faça meu briefing.") == ["briefing"] and bot.skills_para("outra coisa") == []
+
+
+def test_audio_transcreve_pelo_groq(monkeypatch):
+    import httpx
+
+    from quiron.runtime import audio
+
+    def groq(req):
+        assert req.headers["Authorization"] == "Bearer gk" and b"whisper-large-v3-turbo" in req.content
+        return httpx.Response(200, json={"text": " Faça meu briefing. "})
+
+    monkeypatch.setenv("GROQ_API_KEY", "gk")
+    assert audio.transcrever(b"OggS...", cliente=httpx.Client(transport=httpx.MockTransport(groq))) == "Faça meu briefing."
+    monkeypatch.delenv("GROQ_API_KEY")
+    with pytest.raises(audio.AudioIndisponivel, match="GROQ_API_KEY"):
+        audio.transcrever(b"x")
+
+
+def test_bot_responde_audio(monkeypatch):
+    from quiron.runtime import audio
+
+    monkeypatch.setattr(audio, "transcrever", lambda c, n="voz.ogg": "como está a Selic?")
+    conversar, _ = cerebro_roteirizado(["Selic em 13,75%."])
+    monkeypatch.setattr(cerebro, "conversar", conversar)
+    bot = BotQuiron(Agente(SemMCP(), Config()), {111})
+    saidas = asyncio.run(bot.tratar_audio(111, 1, b"OggS"))
+    assert [s.texto for s in saidas] == ["🎙️ “como está a Selic?”", "Selic em 13,75%."]
+    assert asyncio.run(bot.tratar_audio(999, 1, b"OggS")) == []
+
+
+def test_rotina_padrao_do_briefing_criada_uma_vez():
+    bot = BotQuiron(Agente(SemMCP(), Config()), {111})
+    assert bot.garantir_rotinas_padrao() == ["Faça meu briefing."]
+    assert bot.garantir_rotinas_padrao() == []  # não duplica
+    a = bot.agente.agendador.listar()[0]
+    assert (a.tipo, a.recorrencia, a.proxima.strftime("%H:%M")) == ("tarefa", "diario 07:30", "07:30")

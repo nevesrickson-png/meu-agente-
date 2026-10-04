@@ -119,12 +119,12 @@ Quero visual profissional, denso, rápido e leve.
 - [x] 5.1 Teste comparativo de runtime (Hermes × bot próprio; Claude se houver orçamento) — `docs/07-DECISAO-RUNTIME.md`
   > 04/10/2026: os dois runtimes estão montados e ligados às ferramentas do Quíron; o roteiro de 10 pedidos está pronto (`uv run quiron-comparativo`). O Rickson decidiu pelo bot próprio; o comparativo segue disponível como régua de qualidade.
 - [~] 5.2 **Você decide** o runtime e o host (`docs/03-HOSPEDAGEM.md`) — **runtime decidido em 04/10/2026: bot próprio** com o melhor de Hermes, Claude Code e OpenClaw (`docs/08-AGENTE-QUIRON.md`). Falta escolher o host.
-- [ ] 5.3 Preparar o host: `deploy/preparar_host.sh`, Docker Compose, Tailscale
+- [~] 5.3 Preparar o host: `deploy/preparar_host.sh`, Docker Compose, Tailscale — **pacote pronto e testado** (imagem Docker construída, agente respondeu de dentro do contêiner). Falta rodar no host escolhido.
 - [ ] 5.4 Subir MCPs + Terminal + runtime no host
-- [ ] 5.5 Telegram com lista branca (só seu ID); áudio com transcrição
+- [x] 5.5 Telegram com lista branca (só seu ID); áudio com transcrição (Whisper grátis do Groq)
 - [ ] 5.6 Processar a **biblioteca completa** no host
-- [ ] 5.7 Rotinas: briefing 7h30, limite de 3 mensagens automáticas/dia, fins de semana normais
-- [ ] 5.8 Backup noturno (Google Drive) + **simulado de desastre** com `deploy/migrar.sh`
+- [x] 5.7 Rotinas: briefing 7h30 (criado sozinho na 1ª vez, com pré-aquecimento às 7h10), limite de 3 mensagens automáticas/dia, fins de semana normais
+- [~] 5.8 Backup noturno (Google Drive) + **simulado de desastre** com `deploy/migrar.sh` — scripts prontos (`backup.sh`, `restaurar.sh`, `migrar.sh`); simulado no host.
 **Teste de aceite:** com o PC desligado, o Quíron responde no Telegram usando a biblioteca toda; a restauração funciona.
 ```
 Execute a FASE 5 do docs/00-ROTEIRO.md. Comece pelo item 5.1 e me apresente o comparativo antes de eu decidir.

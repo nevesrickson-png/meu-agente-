@@ -64,7 +64,7 @@ class BotQuiron:
         return True
 
     def ajuda(self) -> str:
-        linhas = ["Quíron no ar. Pergunte livremente, mande áudio (em breve) ou use:"]
+        linhas = ["Quíron no ar. Pergunte livremente, mande áudio ou use:"]
         linhas += [f"/{c.nome} — {c.descricao}" for c in self.comandos.values()]
         linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
         return "\n".join(linhas)
@@ -84,13 +84,15 @@ class BotQuiron:
         if texto == "/memoria":
             fatos = self.agente.workspace.fatos()
             return [Saida("O que eu sei sobre você:\n" + "\n".join(f"• {f}" for f in fatos) if fatos else "Ainda não guardei nada. Diga “lembre que…”.")]
+        skills: list[str] = []
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
             cmd = self.comandos.get(nome.split("@")[0].lower())
             if not cmd:
                 return [Saida(f"Comando desconhecido. {self.ajuda()}")]
             texto = cmd.montar(args)
-        reg = await self.agente.responder(texto, chat=chat)
+            skills = [cmd.skill] if cmd.skill else []
+        reg = await self.agente.responder(texto, chat=chat, skills=skills)
         saidas = [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
@@ -110,6 +112,34 @@ class BotQuiron:
         resultado = await self.agente.executar_aprovada(p)
         return f"✅ Aprovado e feito: {p.resumo}\n{resultado[:3000]}"
 
+    def skills_para(self, texto: str) -> list[str]:
+        """Pedido igual ao de um comando (ex.: 'Faça meu briefing.') já leva a skill do comando."""
+        return [c.skill for c in self.comandos.values() if c.skill and c.modelo.strip() == texto.strip()]
+
+    async def tratar_audio(self, usuario: int, chat: int, conteudo: bytes, nome: str = "voz.ogg") -> list[Saida]:
+        if not self.autorizado(usuario):
+            return []
+        from quiron.runtime import audio
+
+        try:
+            texto = await asyncio.to_thread(audio.transcrever, conteudo, nome)
+        except audio.AudioIndisponivel as e:
+            return [Saida(f"🎙️ {e}")]
+        return [Saida(f"🎙️ “{texto}”"), *await self.tratar(usuario, chat, texto)]
+
+    def garantir_rotinas_padrao(self) -> list[str]:
+        """Cria as rotinas de config/agente.yaml (ex.: briefing das 7h30) se ainda não existirem."""
+        from quiron.runtime import permissoes
+
+        existentes = {(a.texto, a.recorrencia) for a in self.agente.agendador.listar()}
+        criadas = []
+        for r in permissoes.config().get("rotinas_padrao") or []:
+            chave = (str(r["texto"]).strip(), str(r["recorrencia"]).strip().lower())
+            if chave not in existentes:
+                self.agente.agendador.criar(chave[0], r.get("tipo", "tarefa"), chave[1], None)
+                criadas.append(chave[0])
+        return criadas
+
     async def agenda_vencida(self, agora: datetime | None = None) -> list[str]:
         """Lembretes/tarefas na hora. Lembretes pedidos pelo Rickson sempre saem; contam no limite diário."""
         saidas = []
@@ -117,7 +147,7 @@ class BotQuiron:
             if a.tipo == "lembrete":
                 texto = f"⏰ Lembrete: {a.texto}"
             else:
-                reg = await self.agente.responder(a.texto)
+                reg = await self.agente.responder(a.texto, skills=self.skills_para(a.texto))
                 texto = reg.resposta
             self.agente.agendador.registrar_envio(f"agenda #{a.id}", agora)
             self.agente.workspace.anotar_diario(f"Agenda #{a.id} enviada: {a.texto[:120]}", agora)
@@ -147,12 +177,30 @@ async def _rodar() -> None:
             teclado = InlineKeyboardMarkup([[InlineKeyboardButton(r, callback_data=d) for r, d in s.botoes]]) if s.botoes else None
             await app.bot.send_message(chat, s.texto, reply_markup=teclado, disable_web_page_preview=True)
 
+        async def digitando(chat: int) -> None:
+            while True:  # o "digitando…" do Telegram dura 5 s: renova até a resposta sair
+                try:
+                    await app.bot.send_chat_action(chat, ChatAction.TYPING)
+                except Exception:  # noqa: BLE001
+                    pass
+                await asyncio.sleep(4)
+
         async def ao_receber(update: Update, contexto: ContextTypes.DEFAULT_TYPE) -> None:
             msg = update.effective_message
-            if not msg or not update.effective_user:
+            if not msg or not update.effective_user or update.effective_user.id not in permitidos:
                 return
-            await contexto.bot.send_chat_action(msg.chat_id, ChatAction.TYPING)
-            for s in await bot.tratar(update.effective_user.id, msg.chat_id, msg.text or ""):
+            sinal = asyncio.create_task(digitando(msg.chat_id))
+            try:
+                if msg.voice or msg.audio:
+                    arquivo = await (msg.voice or msg.audio).get_file()
+                    conteudo = bytes(await arquivo.download_as_bytearray())
+                    saidas = await bot.tratar_audio(update.effective_user.id, msg.chat_id, conteudo,
+                                                    "voz.ogg" if msg.voice else (msg.audio.file_name or "audio.mp3"))
+                else:
+                    saidas = await bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "")
+            finally:
+                sinal.cancel()
+            for s in saidas:
                 await enviar(msg.chat_id, s)
 
         async def ao_clicar(update: Update, contexto: ContextTypes.DEFAULT_TYPE) -> None:
@@ -174,6 +222,21 @@ async def _rodar() -> None:
                     logging.exception("falha no laço da agenda")
                 await asyncio.sleep(30)
 
+        async def laco_preaquecer() -> None:
+            """Às 7h10 busca os dados do briefing para o das 7h30 sair rápido (cache das fontes)."""
+            from quiron.servicos.mercado import painel
+
+            feito = None
+            while True:
+                agora = datetime.now(BRT)
+                if agora.strftime("%H:%M") >= "07:10" and agora.strftime("%H:%M") < "07:30" and feito != agora.date():
+                    feito = agora.date()
+                    try:
+                        await asyncio.to_thread(painel.briefing)
+                    except Exception:  # noqa: BLE001
+                        logging.exception("falha ao pré-carregar o briefing")
+                await asyncio.sleep(60)
+
         async def laco_batimento() -> None:
             while True:
                 cfg = batimento.ConfigBatimento.ler()
@@ -186,12 +249,14 @@ async def _rodar() -> None:
                 except Exception:  # noqa: BLE001
                     logging.exception("falha no batimento")
 
-        app.add_handler(MessageHandler(filters.TEXT, ao_receber))
+        for criada in bot.garantir_rotinas_padrao():
+            logging.info("rotina padrão criada: %s", criada)
+        app.add_handler(MessageHandler(filters.TEXT | filters.VOICE | filters.AUDIO, ao_receber))
         app.add_handler(CallbackQueryHandler(ao_clicar))
         async with app:
             await app.start()
             await app.updater.start_polling(drop_pending_updates=True)
-            tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento())]
+            tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer())]
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

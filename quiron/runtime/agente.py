@@ -95,12 +95,18 @@ class Agente:
             return await asyncio.to_thread(self.internas.executar, nome, args)
         return await self.conexao.chamar(nome, args)
 
-    async def responder(self, pergunta: str, historico: list[dict[str, Any]] | None = None, *, chat: int | None = None) -> Registro:
+    async def responder(self, pergunta: str, historico: list[dict[str, Any]] | None = None, *, chat: int | None = None,
+                        skills: list[str] | None = None) -> Registro:
         reg = Registro(pergunta)
         inicio = time.time()
         if historico is None and chat is not None:
             historico = self.memoria.historico(chat)
-        mensagens: list[dict[str, Any]] = [{"role": "system", "content": prompt_sistema(workspace=self.workspace)},
+        sistema = prompt_sistema(workspace=self.workspace)
+        for s in skills or []:  # skill pré-carregada (ideia do Hermes `-s`): o modelo não precisa pedir
+            texto = self.internas.executar("ler_skill", {"nome": s})
+            if not texto.startswith("Skill '"):
+                sistema += f"\n\n## Skill já carregada para este pedido: {s}\n{texto}"
+        mensagens: list[dict[str, Any]] = [{"role": "system", "content": sistema},
                                            *(historico or []), {"role": "user", "content": pergunta}]
         try:
             for _ in range(MAX_PASSOS):

@@ -96,6 +96,17 @@ Testes:
    `ROTINAS.md` (o que vigiar sozinho) e `diario\`. Comandos novos: crie `agente\comandos\<nome>.md`.
 7. No Telegram: `/ajuda`, `/briefing`, `/noticia <tema>`, `/estudar <tema>`, `/agenda`, `/memoria`, `/novo`; peça
    "todo dia útil às 7h30 me manda o briefing" ou "me lembre amanhã às 10h de…". Ações sensíveis chegam com botões ✅/❌.
+8. **Áudio:** mande uma mensagem de voz — ele transcreve (Whisper grátis do Groq, usa a mesma `GROQ_API_KEY`) e responde.
+9. O briefing diário das 7h30 já vem criado (veja `/agenda`; cancele ou mude pedindo no chat).
+
+## Servidor 24h (mini PC ou VPS Linux)
+Tudo roda em Docker; o Terminal só é acessível pelo Tailscale (nenhuma porta aberta além da 22).
+1. No servidor novo, como root: `bash deploy/preparar_host.sh "sua-chave-ssh-publica"` (segurança, Docker, Tailscale).
+2. `sudo tailscale up` (entre com a sua conta Tailscale).
+3. Como usuário `quiron`: `git clone <repositório> ~/quiron && cd ~/quiron && bash deploy/instalar.sh`
+   (na 1ª vez ele cria o `.env`: preencha as chaves e uma `TERMINAL_SENHA`, depois rode de novo).
+4. Backup automático às 3h (`deploy/backup.sh`; Google Drive opcional com `rclone`). Restaurar: `deploy/restaurar.sh`.
+   Mudar de servidor: `bash deploy/migrar.sh quiron@novo-servidor`.
 
 ## Próximas fases
 Siga o `docs/00-ROTEIRO.md`: abra o `claude` na pasta e cole o prompt da próxima fase.

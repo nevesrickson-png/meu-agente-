@@ -23,3 +23,7 @@ batimento:                          # "heartbeat": o Quíron confere ROTINAS.md 
   ativo: true
   intervalo_min: 120
   horario: ["07:00", "22:00"]
+
+# Rotinas criadas automaticamente na primeira vez que o bot liga (você pode cancelar no Telegram com /agenda).
+rotinas_padrao:
+  - {texto: "Faça meu briefing.", tipo: tarefa, recorrencia: "diario 07:30"}   # persona: fins de semana normais

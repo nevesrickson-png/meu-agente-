@@ -94,6 +94,7 @@ class Comando:
     nome: str
     descricao: str
     modelo: str  # texto do pedido; {args} é trocado pelo que vem depois do comando
+    skill: str = ""  # skill carregada junto (poupa uma ida e volta ao modelo)
 
     def montar(self, args: str) -> str:
         return self.modelo.replace("{args}", args.strip() or "o mercado hoje").strip()
@@ -105,11 +106,13 @@ def carregar_comandos(pasta: Path | None = None) -> dict[str, Comando]:
     saida = {}
     for arq in sorted(pasta.glob("*.md")):
         texto = arq.read_text(encoding="utf-8")
-        descricao = ""
+        descricao = skill = ""
         m = re.match(r"---\s*\n(.*?)\n---\s*\n", texto, re.S)
         if m:
             d = re.search(r"descricao:\s*(.+)", m.group(1))
             descricao = d.group(1).strip() if d else ""
+            s = re.search(r"skill:\s*(.+)", m.group(1))
+            skill = s.group(1).strip() if s else ""
             texto = texto[m.end():]
-        saida[arq.stem] = Comando(arq.stem, descricao, texto.strip())
+        saida[arq.stem] = Comando(arq.stem, descricao, texto.strip(), skill)
     return saida

@@ -1,0 +1,28 @@
+# Quíron no servidor 24h (mini PC ou VPS). Subir: `docker compose up -d --build`. Ver logs: `docker compose logs -f`.
+# Dados, livros, configurações e o "cérebro" ficam em pastas do servidor (entram no backup noturno).
+x-quiron: &quiron
+  build: .
+  image: quiron:local
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    TZ: America/Sao_Paulo
+  volumes:
+    - ./dados:/app/dados
+    - ./biblioteca:/app/biblioteca
+    - ./config:/app/config
+    - ./agente:/app/agente
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+
+services:
+  agente:          # o Quíron no Telegram (agenda, batimento, briefing das 7h30)
+    <<: *quiron
+    command: ["quiron-telegram"]
+
+  terminal:        # Quíron Terminal — só no próprio servidor (127.0.0.1); acesso de fora pelo Tailscale
+    <<: *quiron
+    command: ["quiron-terminal", "--host", "0.0.0.0", "--porta", "8765", "--sem-navegador"]
+    ports:
+      - "127.0.0.1:8765:8765"

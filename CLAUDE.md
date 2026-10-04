@@ -118,6 +118,12 @@ Arquivos com DRM não são processados.
   memória em `dados/conversas.db`), `hermes.py` (gera um HERMES_HOME próprio em `dados/hermes/` com SOUL.md, skills,
   MCP e toolsets perigosos desligados) e `comparativo.py` (10 pedidos, conferências de compliance, relatório em
   `dados/comparativo/`). `cerebro.conversar` devolve a mensagem original do provedor (assinaturas de pensamento do Gemini 3).
+  Comandos com `skill:` no frontmatter pré-carregam a skill (`responder(..., skills=[...])`); `audio.py` transcreve voz pelo
+  Whisper do Groq (`whisper-large-v3-turbo`, pt, vocabulário de mercado); `rotinas_padrao` de `config/agente.yaml` são
+  criadas uma vez (briefing 7h30) e o bot pré-aquece as fontes às 7h10.
+- Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
+  `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
+  backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
 - Relatórios: Markdown → PDF (`weasyprint`), `matplotlib`, `openpyxl`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.
