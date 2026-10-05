@@ -94,6 +94,7 @@ def criar(texto: str, agora: datetime | None = None, origem: str = "") -> Tarefa
     limpo, d, h = datas.extrair(texto, agora.date())
     if quando:
         d, h = quando.date(), (quando.hour, quando.minute)
+    limpo = re.sub(r"^(?:de|que)\s+", "", limpo.strip(), flags=re.I)  # "me lembra amanhã às 9h DE revisar…"
     if len(limpo) < 2:
         raise TarefaInvalida("diga o que é a tarefa (ex.: “amanhã às 10h ligar para o CLI-012”)")
     if h and not d:  # só a hora: hoje se ainda não passou, senão amanhã
@@ -164,6 +165,8 @@ def adiar(ident: int, para: str, agora: datetime | None = None) -> Tarefa:
     if t.concluida_em:
         raise TarefaInvalida(f"a tarefa #{ident} já foi concluída")
     m = re.fullmatch(r"\s*(\d+)\s*(h|min)\s*", para or "")
+    if m and m[2] == "h" and int(m[1]) > 6:  # "11h" é horário; "2h" é daqui a 2 horas
+        m = None
     _, rel = datas.relativo(para or "", agora)
     if m:
         novo = (agora + timedelta(hours=int(m[1])) if m[2] == "h" else agora + timedelta(minutes=int(m[1]))).replace(second=0, microsecond=0)
@@ -174,7 +177,7 @@ def adiar(ident: int, para: str, agora: datetime | None = None) -> Tarefa:
         _, d, h = datas.extrair(para or "", agora.date())
         if not d and not h:
             raise TarefaInvalida(f"não entendi para quando: “{para}”")
-        d = d or agora.date()
+        d = d or (date.fromisoformat(t.prazo) if t.prazo else agora.date())  # "passa para as 11h" mantém o dia
         h = h or ((tuple(map(int, t.hora.split(":"))) if t.hora else None))
     _cancelar_lembrete(t)
     t.prazo, t.hora = d.isoformat(), f"{h[0]:02d}:{h[1]:02d}" if h else ""

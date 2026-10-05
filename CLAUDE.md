@@ -163,6 +163,14 @@ Arquivos com DRM não são processados.
 - Interface do agente (05/10/2026): `para_html` (Markdown do modelo → HTML do Telegram, tudo escapado; tabelas em
   `<pre>` alinhado; envio com `parse_mode="HTML"` e plano B em texto simples), `/start` com `ATALHOS` (`qa:/…`), chat do
   Terminal com `textoChat` (títulos, listas, código, links seguros, tabelas).
+- Fluidez (`quiron/runtime/roteamento.py`, 05/10/2026): `rotear(texto, ultima_tarefa)` (padrões de alta confiança,
+  frase inteira, sem acento → `/comando args`; o bot chama antes da IA, depois dos modos de captura; texto >400 ou com
+  quebra de linha vai para a IA; "passa para…"/"feito" usam a tarefa criada/mexida há < 30 min) e
+  `selecionar_ferramentas` (internas sempre + ~32 MCP por área (`AREAS`) + IDF da descrição + citadas na skill carregada;
+  `ler_skill` no meio do laço amplia o contexto). Trocas diretas entram em `agente.memoria` (continuidade). Progresso:
+  `responder(..., progresso=)` → `Andamento` no `_rodar` ("⏳ Consultando …", `descrever_ferramenta`, apagada no fim).
+  Sugestões: linhas finais "» …" (prompt) → `separar_sugestoes` → botões `ms:<id>` (`clicar_sugestao`); no Terminal,
+  `separarSugestoes` + `.chat-sugestoes`. Testes `testes/test_fluidez.py`.
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.

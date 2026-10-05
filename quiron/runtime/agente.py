@@ -27,6 +27,7 @@ from quiron.runtime.ferramentas_internas import DEFINICOES, PASTA_SKILLS, Ferram
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
 from quiron.runtime.memoria import Memoria
 from quiron.runtime.memoria_longa import INATIVIDADE_EPISODIO, MAX_MSGS_EPISODIO, Escriba, MemoriaLonga
+from quiron.runtime.roteamento import selecionar_ferramentas
 from quiron.runtime.workspace import Workspace
 
 MAX_PASSOS = 8  # limite de idas e vindas com ferramentas por pergunta
@@ -83,9 +84,12 @@ def prompt_sistema(agora: datetime | None = None, workspace: Workspace | None = 
         "- Você tem memória persistente: o que é durável nas conversas é guardado sozinho. Use `lembrar` quando ele pedir "
         "explicitamente ou quando algo for claramente importante; `buscar_conversas` para recuperar o que foi dito antes. "
         "Nunca guarde dado identificável de cliente (só CLI-XXX).\n"
-        "- Lembretes e rotinas: use `agendar`. Só diga que agendou depois que a ferramenta confirmar.\n"
+        "- Tarefas pontuais (com ou sem hora) são do quiron_organizacao: criar_tarefa, adiar_tarefa, concluir_tarefa (pelo nº #N "
+        "que aparece na conversa). `agendar` é só para rotinas recorrentes. Só diga que fez depois que a ferramenta confirmar.\n"
         "- Ações que pedem aprovação ficam pendentes: diga que pediu a aprovação dele, sem fingir que já fez.\n"
-        "- Respostas curtas, para ler no celular. Português do Brasil.",
+        "- Respostas curtas, para ler no celular. Português do Brasil.\n"
+        "- Quando houver um próximo passo útil, termine com até 3 sugestões curtas, uma por linha, começando com \"» \" "
+        "e escritas como pedido dele (ex.: \"» Simular com aporte de 10 mil\"). Elas viram botões. Sem sugestão quando não fizer sentido.",
         f"## Skills disponíveis\n{indice_skills()}",
     ]
     return "\n\n".join(partes)
@@ -137,7 +141,9 @@ class Agente:
         return await self.conexao.chamar(nome, args)
 
     async def responder(self, pergunta: str, historico: list[dict[str, Any]] | None = None, *, chat: int | None = None,
-                        skills: list[str] | None = None) -> Registro:
+                        skills: list[str] | None = None, progresso=None) -> Registro:
+        """`progresso(nome_da_ferramenta)` (assíncrono, opcional) é avisado antes de cada ferramenta — o bot mostra
+        "⏳ consultando…" enquanto espera."""
         reg = Registro(pergunta)
         inicio = time.time()
         canal = canal_de(chat)
@@ -154,17 +160,23 @@ class Agente:
         sistema = prompt_sistema(workspace=self.workspace, memoria=lembranca)
         if explicito:
             sistema += f"\n\n(Memória: {explicito}. Confirme a ele em poucas palavras.)"
+        contexto_skills = ""
         for s in skills or []:  # skill pré-carregada (ideia do Hermes `-s`): o modelo não precisa pedir
             texto = self.internas.executar("ler_skill", {"nome": s})
             if not texto.startswith("Skill '"):
                 sistema += f"\n\n## Skill já carregada para este pedido: {s}\n{texto}"
+                contexto_skills += "\n" + texto
+        anterior = next((m.get("content") or "" for m in reversed(historico or []) if m.get("role") == "user"), "")
+        consulta = f"{pergunta} {anterior[:300] if len(pergunta) < 60 else ''}"  # "e para sexta?" herda o assunto
+        todas = self.ferramentas()
         mensagens: list[dict[str, Any]] = [{"role": "system", "content": sistema},
                                            *(historico or []), {"role": "user", "content": pergunta}]
         try:
             from quiron.nucleo import offline
 
             for _ in range(int(offline.config().get("passos_agente", MAX_PASSOS)) if offline.ativo() else MAX_PASSOS):
-                turno = await asyncio.to_thread(cerebro.conversar, mensagens, self.ferramentas(), config=self.config)
+                oferecidas = selecionar_ferramentas(todas, consulta, contexto_skills)
+                turno = await asyncio.to_thread(cerebro.conversar, mensagens, oferecidas, config=self.config)
                 reg.modelos.append(turno.modelo)
                 reg.tokens += getattr(turno, "tokens", 0)
                 mensagens.append(turno.mensagem)
@@ -173,9 +185,16 @@ class Agente:
                     break
                 for c in turno.chamadas:
                     reg.ferramentas.append(c["nome"])
+                    if progresso is not None:
+                        try:
+                            await progresso(c["nome"])
+                        except Exception:  # noqa: BLE001 — aviso de progresso nunca atrapalha a resposta
+                            logging.exception("aviso de progresso")
                     self.longa.registrar(canal, chat, "ferramenta", f"{c['nome']} {json.dumps(c['argumentos'], ensure_ascii=False)[:600]}")
                     resultado = await self._com_permissao(c["nome"], c["argumentos"], reg)
                     self.longa.registrar(canal, chat, "ferramenta_resultado", resultado[:4000], {"ferramenta": c["nome"]})
+                    if c["nome"] == "ler_skill":  # a skill lida pode citar ferramentas que não estavam na seleção
+                        contexto_skills += "\n" + resultado
                     mensagens.append({"role": "tool", "tool_call_id": c["id"], "name": c["nome"], "content": resultado[:12000]})
             else:
                 reg.resposta = "Não consegui concluir em poucas etapas. Pode reformular ou dividir o pedido?"

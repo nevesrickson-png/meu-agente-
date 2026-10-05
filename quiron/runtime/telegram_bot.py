@@ -32,6 +32,7 @@ from quiron.runtime.conteudo_bot import ConteudoBot
 from quiron.runtime.agendador import BRT
 from quiron.runtime.agente import Agente
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
+from quiron.runtime.roteamento import descrever_ferramenta, rotear
 from quiron.runtime.workspace import carregar_comandos
 
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
@@ -124,6 +125,17 @@ class Saida:
         return self.linhas or ([self.botoes] if self.botoes else [])
 
 
+def separar_sugestoes(texto: str, maximo: int = 3) -> tuple[str, list[str]]:
+    """Linhas finais "» …" da resposta viram botões de próximo passo; o resto é o texto."""
+    linhas = (texto or "").rstrip().splitlines()
+    sugestoes: list[str] = []
+    while linhas and (linhas[-1].strip().startswith(("»", "&raquo;")) or not linhas[-1].strip()):
+        item = linhas.pop().strip().lstrip("»").replace("&raquo;", "").strip(" *_`")
+        if item:
+            sugestoes.insert(0, item[:120])
+    return "\n".join(linhas).rstrip(), sugestoes[:maximo]
+
+
 class BotQuiron:
     """Lógica do bot separada da biblioteca do Telegram (facilita testar)."""
 
@@ -137,6 +149,9 @@ class BotQuiron:
         self.conteudo = ConteudoBot()
         self._ultima_captura = 0.0  # última mensagem capturada por treino/entrevista (para encerrar por inatividade)
         self._pos_desde: dict[int, float] = {}
+        self.sugestoes: dict[str, str] = {}  # id do botão "ms:<id>" → texto da sugestão
+        self._direto = False  # a última mensagem foi atendida por uma função direta (entra no contexto da conversa)
+        self._ultima_tarefa: dict[int, tuple[int, float]] = {}  # chat → (nº da tarefa recém-criada/mexida, quando)
 
     # ------------------------------------------------------------ modos que capturam mensagens (treino, entrevista, /pos)
     def _modos_abertos(self, chat: int) -> list[str]:
@@ -195,7 +210,8 @@ class BotQuiron:
         return True
 
     def ajuda(self) -> str:
-        linhas = ["Quíron no ar. Pergunte livremente, mande áudio ou use:"]
+        linhas = ["Quíron no ar. Fale normalmente (ou mande áudio): “me lembra amanhã às 10h de ligar pro CLI-012”, "
+                  "“terminei a 3”, “o que tenho hoje?”, “me dá uma questão de renda fixa”. Ou use:"]
         linhas += [f"/{c.nome} — {c.descricao}" for c in self.comandos.values()]
         linhas += ["", "🎓 Academia (20 campos + certificações): /academia painel · /area [nome] · "
                    "/questoes [área] [módulo|tema] · /simulado [área] [mini|40|completo] · /flashcards · /diagnostico · "
@@ -217,16 +233,51 @@ class BotQuiron:
                    "/agenda — lembretes e rotinas", "/novo — novo assunto (a conversa anterior fica guardada)"]
         return "\n".join(linhas)
 
-    async def tratar(self, usuario: int, chat: int, texto: str) -> list[Saida]:
-        """Responde e grava tudo no registro completo da memória (o agente grava o próprio caminho dele)."""
+    async def tratar(self, usuario: int, chat: int, texto: str, progresso=None) -> list[Saida]:
+        """Responde e grava tudo no registro completo da memória (o agente grava o próprio caminho dele).
+        `progresso(nome)` recebe as ferramentas que a IA vai usar (para o "⏳ consultando…")."""
         self._via_agente = False
+        self._direto = False
+        self._progresso = progresso
         saidas = await self._tratar(usuario, chat, texto)
         if saidas and not self._via_agente and usuario in self.permitidos:
             longa = self.agente.longa
             longa.registrar("telegram", chat, "comando" if (texto or "").strip().startswith("/") else "entrada", (texto or "").strip())
             for s in saidas:
                 longa.registrar("telegram", chat, "resposta_comando", s.texto, {"arquivo": s.arquivo} if s.arquivo else None)
+            if self._direto:  # continuidade: "e passa para sexta" depois de um /tarefa precisa saber do que se fala
+                try:
+                    resposta = "\n\n".join(s.texto for s in saidas)[:1500]
+                    self.agente.memoria.guardar(chat, "user", (texto or "").strip())
+                    self.agente.memoria.guardar(chat, "assistant", resposta)
+                except Exception:  # noqa: BLE001
+                    logging.exception("não guardei a troca direta no contexto")
         return saidas
+
+    def com_sugestoes(self, saidas: list[Saida]) -> list[Saida]:
+        """Sugestões "» …" no fim da resposta da IA viram botões (ms:<id>) na última mensagem."""
+        if not saidas or saidas[-1].teclado():
+            return saidas
+        texto, itens = separar_sugestoes(saidas[-1].texto)
+        if not itens:
+            return saidas
+        botoes = []
+        for item in itens:
+            self._contador_sugestoes = getattr(self, "_contador_sugestoes", int(time.time()) % 100000) + 1
+            chave = f"{self._contador_sugestoes:x}"
+            self.sugestoes[chave] = item
+            botoes.append([(f"» {item[:40]}", f"ms:{chave}")])
+        while len(self.sugestoes) > 300:  # guarda só as recentes
+            self.sugestoes.pop(next(iter(self.sugestoes)))
+        saidas[-1].texto = texto or saidas[-1].texto
+        saidas[-1].linhas = botoes
+        return saidas
+
+    async def clicar_sugestao(self, usuario: int, chat: int, dado: str, progresso=None) -> list[Saida]:
+        texto = self.sugestoes.get(dado.removeprefix("ms:"))
+        if texto is None:
+            return [Saida("Essa sugestão expirou (o bot foi reiniciado). Escreva o pedido normalmente.")] if self.autorizado(usuario) else []
+        return await self.tratar(usuario, chat, texto, progresso)
 
     def registrar_proativo(self, chat: int, texto: str, origem: str) -> None:
         """Mensagens que o Quíron manda sozinho (lembretes, rotinas, alertas, análises prontas, batimento)."""
@@ -251,6 +302,7 @@ class BotQuiron:
             itens = self.agente.agendador.listar()
             return [Saida("\n".join(a.descrever() for a in itens) if itens else "Nada agendado. Ex.: “todo dia útil às 7h30 me manda o briefing”.")]
         if texto.split(" ", 1)[0].split("@")[0].lower() in {"/simular", "/simulador", "/patrimonio"}:
+            self._direto = True
             return await asyncio.to_thread(self.comando_simular, texto.partition(" ")[2])
         if texto.split(" ", 1)[0].split("@")[0] in {"/memoria", "/memória", "/lembrar"}:
             if texto.split(" ", 1)[-1].strip().lower() in {"exportar", "baixar"}:
@@ -272,6 +324,12 @@ class BotQuiron:
                 if (abertos := self._modos_abertos(chat)) and saidas:
                     saidas[-1].texto += f"\n\n— {abertos[0]} em andamento · /sair volta ao Quíron"
                 return saidas
+            ultima = self._ultima_tarefa.get(chat)
+            if rota := rotear(texto, ultima[0] if ultima and time.time() - ultima[1] < 1800 else None):  # fala normal que pede uma função direta ("terminei a 3", "o que tenho hoje?")
+                saidas = await self._tratar(usuario, chat, f"/{rota[0]} {rota[1]}".strip())
+                if saidas and aviso:
+                    saidas[0].texto = aviso + saidas[0].texto
+                return saidas
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
             self._preparar_modo(chat, nome.split("@")[0].lower(), args.strip().lower())
@@ -291,7 +349,12 @@ class BotQuiron:
             elif n in COMANDOS_ACADEMIA:
                 direto = [self._saida(t) for t in await self.academia.comando(n, args)]
             if direto is not None:
+                if n in {"tarefa", "adiar"} and direto and (m := re.search(r"#(\d+)", direto[0].texto)):
+                    self._ultima_tarefa[chat] = (int(m[1]), time.time())
+                elif n == "feito":
+                    self._ultima_tarefa.pop(chat, None)
                 self._registrar_evento(n, args, direto)
+                self._direto = True
                 return direto
             cmd = self.comandos.get(nome.split("@")[0].lower())
             if not cmd:
@@ -299,8 +362,8 @@ class BotQuiron:
             texto = cmd.montar(args)
             skills = [cmd.skill] if cmd.skill else []
         self._via_agente = True
-        reg = await self.agente.responder(texto, chat=chat, skills=skills)
-        saidas = [Saida(p) for p in dividir(aviso + (reg.resposta or "(sem resposta)"))]
+        reg = await self.agente.responder(texto, chat=chat, skills=skills, progresso=getattr(self, "_progresso", None))
+        saidas = self.com_sugestoes([Saida(p) for p in dividir(aviso + (reg.resposta or "(sem resposta)"))])
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
         return saidas
@@ -498,7 +561,7 @@ class BotQuiron:
         """Pedido igual ao de um comando (ex.: 'Faça meu briefing.') já leva a skill do comando."""
         return [c.skill for c in self.comandos.values() if c.skill and c.modelo.strip() == texto.strip()]
 
-    async def tratar_audio(self, usuario: int, chat: int, conteudo: bytes, nome: str = "voz.ogg") -> list[Saida]:
+    async def tratar_audio(self, usuario: int, chat: int, conteudo: bytes, nome: str = "voz.ogg", progresso=None) -> list[Saida]:
         if not self.autorizado(usuario):
             return []
         from quiron.runtime import audio
@@ -508,7 +571,7 @@ class BotQuiron:
         except audio.AudioIndisponivel as e:
             return [Saida(f"🎙️ {e}")]
         self.agente.longa.registrar("telegram", chat, "audio", texto, {"arquivo": nome, "bytes": len(conteudo)})
-        return [Saida(f"🎙️ “{texto}”"), *await self.tratar(usuario, chat, texto)]
+        return [Saida(f"🎙️ “{texto}”"), *await self.tratar(usuario, chat, texto, progresso)]
 
     async def tratar_arquivo(self, usuario: int, chat: int, conteudo: bytes, nome: str, legenda: str = "",
                              imagem: bool = False) -> list[Saida]:
@@ -632,6 +695,30 @@ async def _rodar() -> None:
                     pass
                 await asyncio.sleep(4)
 
+        class Andamento:
+            """Mensagem "⏳ consultando…" que mostra o que a IA está fazendo e some quando a resposta chega."""
+
+            def __init__(self, chat: int):
+                self.chat, self.msg, self.vistos = chat, None, []
+
+            async def __call__(self, nome: str) -> None:
+                desc = descrever_ferramenta(nome)
+                if desc in self.vistos:
+                    return
+                self.vistos.append(desc)
+                texto = "⏳ Consultando " + ", ".join(self.vistos) + "…"
+                if self.msg is None:
+                    self.msg = await app.bot.send_message(self.chat, texto)
+                else:
+                    await self.msg.edit_text(texto)
+
+            async def apagar(self) -> None:
+                if self.msg is not None:
+                    try:
+                        await self.msg.delete()
+                    except Exception:  # noqa: BLE001
+                        pass
+
         async def ao_receber(update: Update, contexto: ContextTypes.DEFAULT_TYPE) -> None:
             msg = update.effective_message
             if not msg or not update.effective_user:
@@ -644,12 +731,13 @@ async def _rodar() -> None:
                 logging.info("ignorei mensagem antiga (%s) recebida depois de o bot ficar desligado", msg.date)
                 return
             sinal = asyncio.create_task(digitando(msg.chat_id))
+            andamento = Andamento(msg.chat_id)
             try:
                 if msg.voice or msg.audio:
                     arquivo = await (msg.voice or msg.audio).get_file()
                     conteudo = bytes(await arquivo.download_as_bytearray())
                     saidas = await bot.tratar_audio(update.effective_user.id, msg.chat_id, conteudo,
-                                                    "voz.ogg" if msg.voice else (msg.audio.file_name or "audio.mp3"))
+                                                    "voz.ogg" if msg.voice else (msg.audio.file_name or "audio.mp3"), andamento)
                 elif msg.photo or msg.document:
                     origem = msg.photo[-1] if msg.photo else msg.document
                     if getattr(origem, "file_size", 0) and origem.file_size > 20_000_000:
@@ -662,13 +750,14 @@ async def _rodar() -> None:
                         saidas = await bot.tratar_arquivo(update.effective_user.id, msg.chat_id, conteudo, nome,
                                                           msg.caption or "", imagem)
                 else:
-                    saidas = await bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "")
+                    saidas = await bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "", andamento)
             except Exception as e:  # noqa: BLE001 — nunca deixar o Rickson sem resposta
                 logging.exception("erro ao tratar a mensagem")
                 saidas = [Saida(f"⚠️ Deu um erro aqui ({type(e).__name__}). Já ficou registrado; tente de novo ou reformule. "
                                 "Se repetir, veja Configurações → Registro do Telegram.")]
             finally:
                 sinal.cancel()
+                await andamento.apagar()
             for s in saidas:
                 await enviar(msg.chat_id, s)
 
@@ -694,15 +783,25 @@ async def _rodar() -> None:
                 for s in saidas:
                     await enviar(q.message.chat_id, s)
                 return
-            if (q.data or "").startswith("qa:"):  # botões rápidos do /start
+            if (q.data or "").startswith(("qa:", "ms:")):  # botões rápidos do /start e sugestões de próximo passo
                 sinal = asyncio.create_task(digitando(q.message.chat_id))
+                andamento = Andamento(q.message.chat_id)
                 try:
-                    saidas = await bot.tratar(q.from_user.id, q.message.chat_id, q.data[3:])
+                    if q.data.startswith("ms:"):
+                        try:  # tira os botões da mensagem antiga e mostra o que foi pedido
+                            await q.edit_message_reply_markup(None)
+                            await app.bot.send_message(q.message.chat_id, f"➡️ {bot.sugestoes.get(q.data[3:], '')}"[:LIMITE_TELEGRAM])
+                        except Exception:  # noqa: BLE001
+                            pass
+                        saidas = await bot.clicar_sugestao(q.from_user.id, q.message.chat_id, q.data, andamento)
+                    else:
+                        saidas = await bot.tratar(q.from_user.id, q.message.chat_id, q.data[3:], andamento)
                 except Exception as e:  # noqa: BLE001
                     logging.exception("erro no atalho")
                     saidas = [Saida(f"⚠️ Deu um erro aqui ({type(e).__name__}). Tente de novo.")]
                 finally:
                     sinal.cancel()
+                    await andamento.apagar()
                 for s in saidas:
                     await enviar(q.message.chat_id, s)
                 return

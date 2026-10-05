@@ -357,6 +357,16 @@ final; 0,5 ms por gravação, busca em 3 mil registros em 4 ms. 246 testes.
 ✅ Aceite (05/10/2026): navegador (desktop e celular, sem erros), agente real escolheu o simulador sozinho e respondeu
 "aos 67 anos (64–70), capital ≈ R$ 5,72 mi" com premissas e aviso. 253 testes.
 
+## Bot mais fluido (05/10/2026) — pedido do Rickson ("as funções estão engessadas")
+- [x] Fala normal → função direta sem IA (tarefas, hoje, notas, questões, simulado, memória, radar, pauta, simulador)
+- [x] Continuidade: trocas pelos comandos entram no contexto da IA; "passa para as 11h" / "pronto, fiz" valem para a
+  tarefa recém-criada; "às 11h" no /adiar mantém o dia da tarefa e é horário (não "daqui a 11 horas")
+- [x] Seleção de ferramentas por mensagem (~30 de 118, ≈ 15 mil caracteres em vez de 47 mil)
+- [x] "⏳ Consultando…" no Telegram enquanto as ferramentas rodam
+- [x] Sugestões de próximo passo em botões (Telegram) e no chat do Terminal
+✅ Aceite (05/10/2026) com a IA real: "qual a selic e o dólar hoje?" → 2 ferramentas com aviso de progresso, resposta com
+3 botões de sugestão; "e o IPCA dos últimos 12 meses?" entendeu o contexto; lembrete criado por frase, sem IA. 283 testes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

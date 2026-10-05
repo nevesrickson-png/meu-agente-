@@ -49,6 +49,20 @@ Pelo terminal: `uv run quiron` (`--offline` para abrir na versão offline).
 
 ![Configurações](docs/img/configuracoes.png)
 
+## Fale normalmente com o bot
+Não precisa decorar comandos: escreva (ou mande áudio) como falaria com um assistente.
+- **Frases do dia a dia viram a função na hora, sem IA**: “me lembra amanhã às 10h de ligar pro CLI-012”, “terminei a 3”,
+  “adia a 3 para sexta”, “o que tenho hoje?”, “minhas tarefas”, “anota: estudar duration”, “me dá uma questão de renda
+  fixa”, “quero fazer um simulado”, “o que você sabe sobre mim?”, “tem norma nova?”, “me dá ideias de post”,
+  “quando posso parar de trabalhar com 1 milhão e 8 mil por mês?”.
+- **Ele entende a continuação**: depois de criar um lembrete, “na verdade passa para as 11h” ou “pronto, fiz” valem para
+  ele; e a IA enxerga o que você acabou de fazer pelos comandos.
+- **Você vê o que ele está fazendo**: “⏳ Consultando dados de mercado…” aparece enquanto ele busca e some quando responde.
+- **Próximos passos em botões**: no fim das respostas aparecem até 3 sugestões (“» Ver a curva de juros”); tocar = pedir.
+  No chat do Terminal elas aparecem como botões também.
+- Por trás: a cada mensagem ele manda à IA só as ~30 ferramentas ligadas ao assunto (eram 118), o que deixa a resposta
+  mais rápida, gasta menos cota gratuita e reduz erro de escolha. Os comandos de barra continuam funcionando.
+
 ## Simulador de patrimônio
 Responde as quatro perguntas que todo cliente faz, em R$ de hoje (sem inflação), com 3 cenários de retorno e a chance
 de chegar lá (2.000 simulações de Monte Carlo):

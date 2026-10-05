@@ -199,4 +199,6 @@ details summary { cursor: pointer; margin: 4px 0; }
 .sim-txt { font-size: 12.5px; line-height: 1.45; color: var(--texto); margin-top: 3px; }
 .chat-pre { white-space: pre-wrap; background: #0b0b0a; border: 1px solid var(--borda); border-radius: 4px; padding: 6px; font: 12px var(--mono); margin: 4px 0; }
 .chat-tabela { margin: 4px 0; font-size: 12px; }
+.chat-sugestoes { display: flex; flex-wrap: wrap; gap: 6px; align-self: flex-start; }
+.chat-sugestoes .mini { border-color: var(--ambar); color: var(--ambar); text-align: left; white-space: normal; }
 .msg code { font: 12px var(--mono); background: #0b0b0a; padding: 0 3px; border-radius: 3px; }

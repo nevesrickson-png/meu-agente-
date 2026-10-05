@@ -762,6 +762,14 @@ function textoChat(s) { // Markdown simples do modelo → HTML seguro (tudo esca
     .replace(/\n/g, "<br>");
   return t.replace(/\u0000(\d+)\u0000/g, (_, i) => blocos[Number(i)]);
 }
+function separarSugestoes(s) { // linhas finais "» …" da resposta viram botões de próximo passo
+  const linhas = String(s ?? "").trimEnd().split("\n"), itens = [];
+  while (linhas.length && (/^\s*»/.test(linhas[linhas.length - 1]) || !linhas[linhas.length - 1].trim())) {
+    const item = linhas.pop().trim().replace(/^»\s*/, "").replace(/^[*_`]+|[*_`]+$/g, "").trim();
+    if (item) itens.unshift(item.slice(0, 120));
+  }
+  return { texto: linhas.join("\n").trimEnd() || String(s ?? ""), itens: itens.slice(0, 3) };
+}
 async function renderChat(corpo, _d, painel) {
   corpo.classList.add("coluna");
   corpo.innerHTML = `<div class="chat-msgs" data-msgs></div>
@@ -777,24 +785,43 @@ async function renderChat(corpo, _d, painel) {
     $("[data-s]", el).onclick = () => decidir(true);
     $("[data-n]", el).onclick = () => decidir(false);
   });
+  const chips = (itens) => {
+    msgs.querySelectorAll(".chat-sugestoes").forEach((el) => el.remove()); // só as da última resposta valem
+    if (!itens.length) return;
+    const el = document.createElement("div");
+    el.className = "chat-sugestoes";
+    itens.forEach((item) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "mini"; b.textContent = "» " + item; b.title = "Enviar este pedido";
+      b.onclick = () => enviar(item);
+      el.append(b);
+    });
+    msgs.append(el); msgs.scrollTop = msgs.scrollHeight;
+  };
   try {
     const h = await (await fetch("/api/chat/historico")).json();
-    h.mensagens.forEach((m) => balao(m.papel === "user" ? "eu" : "quiron", textoChat(m.texto)));
+    h.mensagens.forEach((m, i) => {
+      const { texto, itens } = m.papel === "user" ? { texto: m.texto, itens: [] } : separarSugestoes(m.texto);
+      balao(m.papel === "user" ? "eu" : "quiron", textoChat(texto));
+      if (i === h.mensagens.length - 1) chips(itens);
+    });
     if (!h.mensagens.length) balao("sistema", "Converse com o Quíron como no Telegram: análises, estudo, fundos, empresas, clientes (só CLI-XXX).");
   } catch (e) { balao("sistema", "Sem conexão com o servidor."); }
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const texto = caixa.value.trim();
-    if (!texto) return;
+  form.onsubmit = (e) => { e.preventDefault(); enviar(caixa.value.trim()); };
+  const enviar = async (texto) => {
+    if (!texto || form.querySelector("button").disabled) return;
     caixa.value = "";
+    chips([]);
     balao("eu", textoChat(texto));
     const espera = balao("sistema", '<span class="carregando">Quíron pensando… (pode levar até 1 minuto)</span>');
     form.querySelector("button").disabled = true;
     try {
       const r = await acao("/api/chat", { texto });
       espera.remove();
-      balao("quiron", textoChat(r.resposta) + (r.ferramentas?.length ? `<div class="memoria">ferramentas: ${esc(r.ferramentas.join(", "))}${r.segundos ? ` · ${fmt(r.segundos, 0)} s` : ""}</div>` : ""));
+      const sep = separarSugestoes(r.resposta);
+      balao("quiron", textoChat(sep.texto) + (r.ferramentas?.length ? `<div class="memoria">ferramentas: ${esc(r.ferramentas.join(", "))}${r.segundos ? ` · ${fmt(r.segundos, 0)} s` : ""}</div>` : ""));
       pendencias(r.pendencias || []);
+      chips(sep.itens);
       if (r.ferramentas?.some((f) => f.includes("analisar"))) paineis.filter((p) => p.tipo === "rpt").forEach((p) => renderRpt($(".painel-corpo", document.getElementById(p.id)), null, p));
     } catch (err) { espera.innerHTML = `<span class="erro">${esc(err.message)}</span>`; }
     form.querySelector("button").disabled = false;
