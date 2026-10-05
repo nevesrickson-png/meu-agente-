@@ -164,7 +164,9 @@ class BotQuiron:
                    "/radar [dias] (normas da CVM, Receita, BC e Câmara)", "",
                    "✍️ Conteúdo: /pauta [tema] · /roteiro reels|youtube|carrossel|fio|artigo <tema> · /fio <tema> · /ideia · /ideias · "
                    "/conferir <seu texto> (sai como RASCUNHO, com disclaimer e fontes)", ""]
-        linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
+        linhas += ["🧠 Memória: eu aprendo sozinho com as conversas · /memoria (ver) · /memoria conversas · /memoria buscar <tema> · "
+                   "/memoria esquecer <nº> · /memoria mudar <nº> <texto> · /lembrar <fato>", "",
+                   "/agenda — lembretes e rotinas", "/novo — novo assunto (a conversa anterior fica guardada)"]
         return "\n".join(linhas)
 
     async def tratar(self, usuario: int, chat: int, texto: str) -> list[Saida]:
@@ -180,14 +182,13 @@ class BotQuiron:
             return [Saida(f"✅ Encerrado: {', '.join(fechados)}. Voltamos à conversa normal." if fechados
                           else "Nada aberto: já estamos na conversa normal.")]
         if texto == "/novo":
-            self.agente.memoria.reiniciar(chat)
-            return [Saida("Conversa reiniciada (o histórico continua pesquisável).")]
+            self.agente.novo_assunto(chat)
+            return [Saida("Novo assunto. A conversa anterior foi guardada na memória (resumo + o que era importante).")]
         if texto == "/agenda":
             itens = self.agente.agendador.listar()
             return [Saida("\n".join(a.descrever() for a in itens) if itens else "Nada agendado. Ex.: “todo dia útil às 7h30 me manda o briefing”.")]
-        if texto == "/memoria":
-            fatos = self.agente.workspace.fatos()
-            return [Saida("O que eu sei sobre você:\n" + "\n".join(f"• {f}" for f in fatos) if fatos else "Ainda não guardei nada. Diga “lembre que…”.")]
+        if texto.split(" ", 1)[0].split("@")[0] in {"/memoria", "/memória", "/lembrar"}:
+            return [Saida(await asyncio.to_thread(self.comando_memoria, texto))]
         skills: list[str] = []
         aviso = self._expirar_modos(chat)
         if not texto.startswith("/"):
@@ -205,24 +206,24 @@ class BotQuiron:
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
             self._preparar_modo(chat, nome.split("@")[0].lower(), args.strip().lower())
-            if nome.split("@")[0].lower() in COMANDOS_CONTEUDO:
-                return [self._saida(t) for t in await self.conteudo.comando(nome.split("@")[0].lower(), args)]
-            if nome.split("@")[0].lower() in COMANDOS_CARREIRA:
-                n = nome.split("@")[0].lower()
+            n = nome.split("@")[0].lower()
+            direto = None
+            if n in COMANDOS_CONTEUDO:
+                direto = [self._saida(t) for t in await self.conteudo.comando(n, args)]
+            elif n in COMANDOS_CARREIRA:
                 self.carreira.ultimo_pdf = None
-                saidas = [self._saida(t) for t in await self.carreira.comando(n, args)]
+                direto = [self._saida(t) for t in await self.carreira.comando(n, args)]
                 if n == "portfolio" and self.carreira.ultimo_pdf:
-                    saidas[-1].arquivo = str(self.carreira.ultimo_pdf)
-                return saidas
-            if nome.split("@")[0].lower() in COMANDOS_ORGANIZACAO:
-                telas = await self.organizacao.comando(nome.split("@")[0].lower(), args)
-                return [self._saida(t) for t in telas]
-            if nome.split("@")[0].lower() in COMANDOS_ASSESSORIA:
-                telas = await self.assessoria.comando(nome.split("@")[0].lower(), args, chat)
-                return [self._saida(t) for t in telas]
-            if nome.split("@")[0].lower() in COMANDOS_ACADEMIA:
-                telas = await self.academia.comando(nome.split("@")[0].lower(), args)
-                return [self._saida(t) for t in telas]
+                    direto[-1].arquivo = str(self.carreira.ultimo_pdf)
+            elif n in COMANDOS_ORGANIZACAO:
+                direto = [self._saida(t) for t in await self.organizacao.comando(n, args)]
+            elif n in COMANDOS_ASSESSORIA:
+                direto = [self._saida(t) for t in await self.assessoria.comando(n, args, chat)]
+            elif n in COMANDOS_ACADEMIA:
+                direto = [self._saida(t) for t in await self.academia.comando(n, args)]
+            if direto is not None:
+                self._registrar_evento(n, args, direto)
+                return direto
             cmd = self.comandos.get(nome.split("@")[0].lower())
             if not cmd:
                 return [Saida(self.desconhecido(nome.split("@")[0].lower()))]
@@ -233,6 +234,57 @@ class BotQuiron:
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
         return saidas
+
+    # ------------------------------------------------------------ memória persistente
+    def comando_memoria(self, texto: str) -> str:
+        from quiron.runtime.memoria_longa import CATEGORIAS
+
+        longa = self.agente.longa
+        cmd, _, a = texto.strip().partition(" ")
+        a = a.strip()
+        if cmd.split("@")[0] == "/lembrar":
+            return longa.adicionar(a, "geral", 4, "dito")[0] if a else "Use /lembrar <o que guardar> (ex.: /lembrar prefiro respostas curtas)."
+        al = a.lower()
+        if al.startswith("buscar ") or al.startswith("procurar "):
+            achado = longa.buscar(a.split(" ", 1)[1])
+            return "🔎 Na memória:\n" + achado if achado else "Nada na memória sobre isso."
+        if m := re.fullmatch(r"(?:esquecer|apagar|tirar)\s+(.+)", a, re.I):
+            return longa.esquecer(m[1])
+        if m := re.fullmatch(r"(?:mudar|corrigir|editar)\s+#?(\d+)\s+(.+)", a, re.I | re.S):
+            return longa.atualizar(int(m[1]), m[2].strip())
+        if al in {"conversas", "episodios", "episódios", "historico", "histórico"}:
+            eps = longa.episodios(10)
+            return "🗂️ Últimas conversas guardadas:\n" + "\n".join(f"• {e.linha()}" for e in eps) if eps else "Nenhuma conversa resumida ainda."
+        if al in {"consolidar", "organizar"}:
+            r = longa.consolidar()
+            return f"🧹 Memória organizada: {r['juntados']} repetido(s) juntado(s), {r['arquivados']} detalhe(s) antigo(s) arquivado(s)."
+        longa.importar_edicoes_md()
+        fatos = longa.fatos()
+        if not fatos:
+            return ("Ainda não guardei nada. Eu aprendo sozinho com as conversas; para guardar algo agora: "
+                    "/lembrar <fato> ou “lembre que …”.")
+        linhas = ["🧠 O que eu sei sobre você (★ = importância):"]
+        for cat, titulo in CATEGORIAS.items():
+            itens = [f for f in fatos if f.categoria == cat]
+            if itens:
+                linhas.append(f"\n{titulo}")
+                linhas += [f"#{f.id} {'★' * f.importancia} {f.texto}" for f in itens]
+        r = longa.resumo()
+        linhas.append(f"\n{r['fatos']} fato(s) · {r['episodios']} conversa(s) resumida(s). "
+                      "/memoria conversas · /memoria buscar <tema> · /memoria esquecer <nº> · /memoria mudar <nº> <texto> · /lembrar <fato>")
+        return "\n".join(linhas)
+
+    def _registrar_evento(self, nome: str, args: str, saidas: list[Saida]) -> None:
+        """O que ele faz pelos comandos diretos entra na memória (listagens não, só ações)."""
+        so_leitura = {"tarefas", "notas", "metas", "ideias", "hoje", "revisao", "carreira", "portfolio", "academia",
+                      "diagnostico", "plano", "area", "flashcards", "radar", "pauta", "questoes"}
+        if (nome in so_leitura and not args.strip()) or not saidas:
+            return
+        primeira = next((l for l in saidas[0].texto.splitlines() if l.strip()), "")[:160]
+        try:
+            self.agente.longa.registrar_evento(nome, f"/{nome} {args.strip()[:80]} → {primeira}".replace("  ", " "))
+        except Exception:  # noqa: BLE001
+            logging.exception("não registrei o evento na memória")
 
     def _preparar_modo(self, chat: int, nome: str, args: str) -> None:
         """Começar um modo de conversa fecha o outro (senão as respostas iriam para o modo errado)."""
@@ -253,7 +305,7 @@ class BotQuiron:
             self._pos_desde[chat] = time.time()
 
     def nomes_comandos(self) -> list[str]:
-        fixos = ["start", "ajuda", "novo", "agenda", "memoria", "sair"]
+        fixos = ["start", "ajuda", "novo", "agenda", "memoria", "lembrar", "sair"]
         return fixos + sorted(set(self.comandos) | COMANDOS_ACADEMIA | COMANDOS_ASSESSORIA | COMANDOS_ORGANIZACAO
                               | COMANDOS_CARREIRA | COMANDOS_CONTEUDO)
 
@@ -265,7 +317,8 @@ class BotQuiron:
     def menu_telegram(self) -> list[tuple[str, str]]:
         """Itens do menu “/” do Telegram (até 100; descrição até 256 caracteres)."""
         descricoes = {"start": "Começar", "ajuda": "Todos os comandos", "novo": "Começar a conversa do zero",
-                      "agenda": "Lembretes e rotinas", "memoria": "O que eu sei sobre você",
+                      "agenda": "Lembretes e rotinas", "memoria": "O que eu sei sobre você (ver, buscar, corrigir)",
+                      "lembrar": "Guardar algo na memória",
                       "sair": "Sair do treino/entrevista/pós-reunião", "academia": "Painel de estudo",
                       "area": "Trocar a área de estudo", "questoes": "Questões de prova", "simulado": "Simulado",
                       "flashcards": "Revisar flashcards", "diagnostico": "Diagnóstico da prova", "plano": "Plano de estudo",
@@ -606,6 +659,22 @@ async def _rodar() -> None:
                     logging.exception("falha ao entregar análises")
                 await asyncio.sleep(10)
 
+        async def laco_memoria() -> None:
+            """A cada 5 min: conversa parada há 30 min vira episódio + fatos. Às 3h: organiza a memória (junta e arquiva)."""
+            consolidado = None
+            while True:
+                await asyncio.sleep(300)
+                try:
+                    for chat, _, _ in bot.agente.memoria.ultimas_por_chat():
+                        bot.agente.fechar_se_ocioso(chat)
+                    agora = datetime.now(BRT)
+                    if agora.hour == 3 and consolidado != agora.date():
+                        consolidado = agora.date()
+                        r = await asyncio.to_thread(bot.agente.longa.consolidar)
+                        logging.info("memória organizada: %s", r)
+                except Exception:  # noqa: BLE001 — o laço nunca morre
+                    logging.exception("falha no laço da memória")
+
         async def laco_academia() -> None:
             """De madrugada, aumenta o banco de questões aos poucos (dentro dos limites grátis)."""
             from quiron.servicos.academia import estudo
@@ -642,7 +711,7 @@ async def _rodar() -> None:
             await app.updater.start_polling(drop_pending_updates=False)
             tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer()),
                        asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises()),
-                       asyncio.create_task(laco_alertas())]
+                       asyncio.create_task(laco_alertas()), asyncio.create_task(laco_memoria())]
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

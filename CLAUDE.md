@@ -130,6 +130,20 @@ Arquivos com DRM não são processados.
   Comandos com `skill:` no frontmatter pré-carregam a skill (`responder(..., skills=[...])`); `audio.py` transcreve voz pelo
   Whisper do Groq (`whisper-large-v3-turbo`, pt, vocabulário de mercado); `rotinas_padrao` de `config/agente.yaml` são
   criadas uma vez (briefing 7h30) e o bot pré-aquece as fontes às 7h10.
+- Memória persistente (`quiron/runtime/memoria_longa.py`, `dados/memoria.db`, 05/10/2026): camadas trabalho
+  (`memoria.py`, limite duro de 40 msgs) → fatos (categoria, importância 1–5, origem dito/extraido/editado/importado,
+  ativo/substituído; dedupe por texto normalizado ou similaridade ≥ 0,93; recusa dado pessoal em Python) → episódios
+  (permanentes, FTS5 + vetor) → eventos dos comandos diretos (120 dias). `Escriba` (modelo começa pelo Groq via
+  `config_escriba`): fecha episódio (30 min ocioso, 40 msgs, `/novo`) com título/resumo/pendências + operações
+  adicionar/atualizar/apagar sobre os fatos existentes (estilo Mem0; apagar nunca remove fato "dito"); pistas ("prefiro",
+  "a partir de agora"…) disparam extração da troca; "lembre que…" guarda na hora sem modelo. `contexto(pergunta)` entra
+  no prompt: núcleo (importância ≥ 4) + relevantes (0,55 significado + 0,25 BM25 + importância + recência) + episódios +
+  eventos 48 h. Embeddings da biblioteca (Lexico se o modelo não estiver baixado; `revetorizar`). `consolidar` às 3h no
+  `laco_memoria` (junta repetidos, arquiva importância ≤ 2 sem uso há 120 dias). `MEMORIA.md` é espelho editável
+  (`importar_edicoes_md` por hash; migra o formato antigo). Agente: `em_segundo_plano` (escriba em thread),
+  `fechar_se_ocioso`, `novo_assunto`; Workspace.fatos/lembrar/esquecer delegam aqui; LGPD `apagar_por_cliente`. Bot:
+  `/memoria` (conversas, buscar, esquecer, mudar, consolidar), `/lembrar`, eventos em `_registrar_evento`.
+  Testes: `testes/test_memoria_longa.py`.
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.

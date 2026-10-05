@@ -10,7 +10,7 @@
 |---|---|---|
 | **Arquivos do "cérebro" em Markdown**, editáveis à mão | OpenClaw (SOUL/USER/MEMORY/HEARTBEAT) | `agente/workspace/`: `SOUL.md` (persona, gerada), `USUARIO.md` (quem é o Rickson), `MEMORIA.md` (fatos duráveis), `ROTINAS.md` (o que vigiar), `diario/AAAA-MM-DD.md` |
 | **Batimento (heartbeat) proativo** | OpenClaw | A cada 30 min (7h–22h) confere agenda, alertas de notícias da watchlist e `ROTINAS.md`; só chama o modelo se houver motivo; respeita **3 mensagens automáticas/dia** |
-| **Memória que aprende** + busca em conversas antigas | Hermes (memory, session_search) | Ferramentas `lembrar` / `esquecer` / `buscar_conversas` (busca de texto completo em todas as conversas) |
+| **Memória que aprende** + busca em conversas antigas | Hermes (memory, session_search), MemGPT/Letta, Mem0, Generative Agents | Memória persistente em camadas (`runtime/memoria_longa.py`, 05/10/2026): trabalho → fatos (extraídos sozinhos, com categoria, importância, atualização e arquivo) → episódios (cada conversa resumida, permanente) → eventos dos comandos; recuperação híbrida automática a cada resposta; consolidação às 3h; `MEMORIA.md` editável; ferramentas `lembrar` / `esquecer` / `buscar_conversas` |
 | **Agendamentos em linguagem natural** | Hermes (cron) | "todo dia útil às 7h30 me manda o briefing", "amanhã às 10h me lembre de ligar para o CLI-012" → `agendar` |
 | **Troca automática de modelo** | Hermes (fallback providers) | Já existe: Gemini grátis → Groq grátis |
 | **Compactação do contexto** | Claude Code / Hermes | Conversa longa vira resumo automático; o essencial não se perde e a cota grátis rende mais |

@@ -23,11 +23,16 @@ def _f(nome: str, descricao: str, props: dict[str, Any] | None = None, obrig: li
 DEFINICOES = [
     _f("ler_skill", "Lê as instruções completas de uma skill do Quíron. Leia a skill indicada ANTES de responder pedidos desse tipo.",
        {"nome": {"type": "string"}}, ["nome"]),
-    _f("lembrar", "Guarda um fato durável sobre o Rickson, as preferências dele ou o trabalho (vai para MEMORIA.md). "
-                  "Use quando ele disser algo que vale lembrar no futuro ou pedir 'lembre que…'. Nunca guarde dado identificável de cliente.",
-       {"fato": {"type": "string"}}, ["fato"]),
-    _f("esquecer", "Apaga da memória os fatos que contêm um trecho (pede aprovação do Rickson).", {"trecho": {"type": "string"}}, ["trecho"]),
-    _f("buscar_conversas", "Procura em todas as conversas anteriores com o Rickson (ex.: 'o que falamos sobre CLI-012').",
+    _f("lembrar", "Guarda na memória persistente um fato durável sobre o Rickson (perfil, preferência, objetivo, trabalho, estudo, "
+                  "rotina, visão de mercado dele, cliente por CLI-XXX). Fato curto, em 3ª pessoa. Nunca dado identificável de cliente.",
+       {"fato": {"type": "string"},
+        "categoria": {"type": "string", "enum": ["perfil", "preferencia", "objetivo", "trabalho", "estudo", "cliente", "rotina",
+                                                 "mercado", "geral"]},
+        "importancia": {"type": "integer", "description": "1 a 5 (5 = essencial e permanente)"}}, ["fato"]),
+    _f("esquecer", "Apaga da memória um fato pelo número (#12) ou os que contêm um trecho (pede aprovação do Rickson).",
+       {"trecho": {"type": "string"}}, ["trecho"]),
+    _f("buscar_conversas", "Procura na memória: fatos guardados, resumos de conversas anteriores e mensagens antigas "
+                           "(ex.: 'o que falamos sobre CLI-012', 'qual era minha meta de estudo').",
        {"termo": {"type": "string"}}, ["termo"]),
     _f("agendar", "ROTINAS e pedidos que o Quíron executa na hora (para uma tarefa/lembrete pontual do Rickson, como 'amanhã às 10h "
                   "ligar para o CLI-012', use quiron_organizacao__criar_tarefa). tipo='lembrete' manda o texto na hora; tipo='tarefa' faz o pedido na hora "
@@ -50,6 +55,7 @@ class FerramentasInternas:
     workspace: Workspace
     memoria: Memoria
     agendador: Agendador
+    longa: Any = None  # MemoriaLonga (memória persistente); sem ela, cai no MEMORIA.md antigo
 
     nomes = frozenset(d["function"]["name"] for d in DEFINICOES)
 
@@ -69,15 +75,24 @@ class FerramentasInternas:
                 return f"Skill '{nome_skill}' não existe. Disponíveis: {', '.join(p.stem for p in PASTA_SKILLS.glob('*.md'))}"
             return arq.read_text(encoding="utf-8")
         if nome == "lembrar":
-            return self.workspace.lembrar(str(a.get("fato", "")))
+            if self.longa is None:
+                return self.workspace.lembrar(str(a.get("fato", "")))
+            return self.longa.adicionar(str(a.get("fato", "")), str(a.get("categoria") or "geral"),
+                                        int(a.get("importancia") or 4), "dito")[0]
         if nome == "esquecer":
-            return self.workspace.esquecer(str(a.get("trecho", "")))
+            return self.longa.esquecer(str(a.get("trecho", ""))) if self.longa is not None else \
+                self.workspace.esquecer(str(a.get("trecho", "")))
         if nome == "buscar_conversas":
-            achados = self.memoria.buscar(str(a.get("termo", "")))
-            if not achados:
-                return "Nada encontrado nas conversas anteriores."
-            return "\n".join(f"- {t.quando.astimezone(BRT):%d/%m/%Y %H:%M} {'Rickson' if t.papel == 'user' else 'Quíron'}: {t.texto[:300]}"
-                             for t in achados)
+            termo = str(a.get("termo", ""))
+            partes = []
+            if self.longa is not None and (lembrado := self.longa.buscar(termo)):
+                partes.append("Memória (fatos e conversas resumidas):\n" + lembrado)
+            achados = self.memoria.buscar(termo)
+            if achados:
+                partes.append("Mensagens antigas:\n" + "\n".join(
+                    f"- {t.quando.astimezone(BRT):%d/%m/%Y %H:%M} {'Rickson' if t.papel == 'user' else 'Quíron'}: {t.texto[:300]}"
+                    for t in achados))
+            return "\n\n".join(partes) or "Nada encontrado na memória nem nas conversas anteriores."
         if nome == "agendar":
             try:
                 quando = datetime.fromisoformat(a["quando_iso"]) if a.get("quando_iso") else None

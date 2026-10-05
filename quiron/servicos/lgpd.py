@@ -67,6 +67,9 @@ def esquecer_cliente(cliente: str) -> Apagado:
     r.itens["lembretes"] = _apagar_lembretes(raiz / "agenda.db", cod)
     r.itens["tarefas/notas"] = _apagar_organizacao(raiz / "organizacao.db", cod)
     r.itens["mensagens de conversa"] = _apagar_conversas(raiz / "conversas.db", cod)
+    from quiron.runtime.memoria_longa import MemoriaLonga
+
+    r.itens["memória persistente (fatos, conversas resumidas, eventos)"] = MemoriaLonga().apagar_por_cliente(cod)
 
     n = 0
     ws = raiz / "workspace"

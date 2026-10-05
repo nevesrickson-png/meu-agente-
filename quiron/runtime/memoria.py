@@ -14,6 +14,9 @@ from typing import Any, Callable
 from quiron.nucleo.config import pasta_dados
 
 
+LIMITE_DURO = 40  # mensagens recentes no contexto, no máximo
+
+
 @dataclass
 class Trecho:
     chat: int
@@ -54,8 +57,18 @@ class Memoria:
         if r and r[0]:
             saida.append({"role": "user", "content": f"[Resumo da nossa conversa até aqui]\n{r[0]}"})
             saida.append({"role": "assistant", "content": "Entendido, sigo a partir desse contexto."})
-        saida += [{"role": p, "content": t} for _, p, t in self._desde_resumo(chat)]
+        recentes = self._desde_resumo(chat)[-LIMITE_DURO:]  # se o resumo falhar (sem IA), o contexto não explode
+        saida += [{"role": p, "content": t} for _, p, t in recentes]
         return saida
+
+    def mensagens_desde(self, chat: int, desde_id: int) -> list[tuple[int, str, str, str]]:
+        """(id, quando, papel, texto) depois de `desde_id` — matéria-prima dos episódios da memória longa."""
+        return self.con.execute("SELECT id, quando, papel, texto FROM mensagens WHERE chat = ? AND id > ? ORDER BY id",
+                                (chat, desde_id)).fetchall()
+
+    def ultimas_por_chat(self) -> list[tuple[int, int, str]]:
+        """(chat, último id, quando) de cada conversa."""
+        return self.con.execute("SELECT chat, MAX(id), MAX(quando) FROM mensagens GROUP BY chat").fetchall()
 
     def compactar(self, chat: int, manter: int, limite: int, resumir: Callable[[str, str], str]) -> bool:
         """Se houver mais de `limite` mensagens desde o último resumo, resume as antigas e mantém as `manter` últimas."""

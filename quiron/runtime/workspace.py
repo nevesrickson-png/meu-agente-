@@ -4,7 +4,7 @@ Modelos ficam em `agente/workspace/` (no Git). A cópia viva fica em `dados/work
 porque a memória e o diário guardam coisas pessoais.
 - SOUL.md     → gerado de `agente/persona.md` (não se edita aqui)
 - USUARIO.md  → quem é o Rickson
-- MEMORIA.md  → fatos duráveis aprendidos (ferramenta `lembrar`)
+- MEMORIA.md  → espelho legível e editável da memória persistente (`dados/memoria.db`, ver memoria_longa.py)
 - ROTINAS.md  → o que vigiar no batimento proativo
 - diario/AAAA-MM-DD.md → registro do dia (resumos de conversa, avisos enviados)
 """
@@ -47,31 +47,20 @@ class Workspace:
         caminho = self.raiz / nome
         return caminho.read_text(encoding="utf-8") if caminho.exists() else ""
 
-    # ------------------------------------------------------------ memória de longo prazo
+    # ------------------------------------------------------------ memória de longo prazo (fonte única: memoria_longa)
+    def _longa(self):
+        from quiron.runtime.memoria_longa import MemoriaLonga
+
+        return MemoriaLonga(arquivo_md=self.raiz / "MEMORIA.md")
+
     def fatos(self) -> list[str]:
-        return [re.sub(r"\s*_\(desde [^)]*\)_\s*$", "", l[2:]).strip() for l in self.ler("MEMORIA.md").splitlines() if l.startswith("- ")]
+        return [f.texto for f in self._longa().fatos()]
 
     def lembrar(self, fato: str) -> str:
-        fato = re.sub(r"\s+", " ", fato).strip().lstrip("- ")
-        if not fato:
-            return "Nada para lembrar."
-        if any(fato.casefold() == f.casefold() for f in self.fatos()):
-            return f"Já estava na memória: {fato}"
-        hoje = datetime.now(BRT).strftime("%d/%m/%Y")
-        with (self.raiz / "MEMORIA.md").open("a", encoding="utf-8") as f:
-            f.write(f"- {fato} _(desde {hoje})_\n")
-        return f"Guardado na memória: {fato}"
+        return self._longa().adicionar(fato, "geral", 4, "dito")[0]
 
     def esquecer(self, trecho: str) -> str:
-        texto = self.ler("MEMORIA.md")
-        linhas = texto.splitlines()
-        alvo = trecho.casefold().strip()
-        restantes = [l for l in linhas if not (l.startswith("- ") and alvo and alvo in l.casefold())]
-        removidas = len(linhas) - len(restantes)
-        if not removidas:
-            return f"Nada na memória com “{trecho}”."
-        (self.raiz / "MEMORIA.md").write_text("\n".join(restantes) + "\n", encoding="utf-8")
-        return f"Esquecido: {removidas} item(ns) com “{trecho}”."
+        return self._longa().esquecer(trecho)
 
     # ------------------------------------------------------------ diário
     def anotar_diario(self, texto: str, quando: datetime | None = None) -> None:

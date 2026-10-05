@@ -9,7 +9,9 @@ Independente de canal: Telegram, linha de comando e comparativo usam a mesma cla
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
+import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -23,6 +25,7 @@ from quiron.runtime.agendador import Agendador
 from quiron.runtime.ferramentas_internas import DEFINICOES, PASTA_SKILLS, FerramentasInternas
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
 from quiron.runtime.memoria import Memoria
+from quiron.runtime.memoria_longa import INATIVIDADE_EPISODIO, MAX_MSGS_EPISODIO, Escriba, MemoriaLonga
 from quiron.runtime.workspace import Workspace
 
 MAX_PASSOS = 8  # limite de idas e vindas com ferramentas por pergunta
@@ -49,25 +52,32 @@ PROMPT_OFFLINE = (
 )
 
 
-def prompt_sistema(agora: datetime | None = None, workspace: Workspace | None = None) -> str:
+def prompt_sistema(agora: datetime | None = None, workspace: Workspace | None = None, memoria: str | None = None) -> str:
     from quiron.nucleo import offline
 
     agora = agora or datetime.now(BRT)
-    if offline.ativo():  # modelo pequeno: prompt curto e direto
-        return f"{PROMPT_OFFLINE}\n\nAgora: {agora:%d/%m/%Y %H:%M}."
+    if offline.ativo():  # modelo pequeno: prompt curto e direto (com a memória enxuta)
+        extra = f"\n\nO que você sabe do Rickson:\n{memoria[:1200]}" if memoria else ""
+        return f"{PROMPT_OFFLINE}\n\nAgora: {agora:%d/%m/%Y %H:%M}.{extra}"
     ws = workspace
     persona = ws.ler("SOUL.md") if ws else (PASTA_AGENTE / "persona.md").read_text(encoding="utf-8")
     partes = [persona, f"## Agora\n{agora:%A, %d/%m/%Y %H:%M} (horário de Brasília)."]
     if ws:
         partes.append(f"## Sobre o Rickson\n{ws.ler('USUARIO.md')}")
-        fatos = ws.fatos()
-        if fatos:
-            partes.append("## O que você já sabe (memória de longo prazo)\n" + "\n".join(f"- {f}" for f in fatos[-60:]))
+        if memoria is not None:
+            if memoria:
+                partes.append("## Sua memória de longo prazo (use com naturalidade; não liste isso a ele sem motivo)\n" + memoria)
+        else:
+            fatos = ws.fatos()
+            if fatos:
+                partes.append("## O que você já sabe (memória de longo prazo)\n" + "\n".join(f"- {f}" for f in fatos[-60:]))
     partes += [
         "## Como trabalhar\n"
         "- Use as ferramentas para qualquer dado (mercado, notícias, livros). Nunca responda número de memória.\n"
         "- Antes de responder um pedido coberto por uma skill, chame `ler_skill` e siga as instruções.\n"
-        "- Se o Rickson disser algo durável (preferência, objetivo, contexto de trabalho), use `lembrar`. Nunca guarde dado identificável de cliente.\n"
+        "- Você tem memória persistente: o que é durável nas conversas é guardado sozinho. Use `lembrar` quando ele pedir "
+        "explicitamente ou quando algo for claramente importante; `buscar_conversas` para recuperar o que foi dito antes. "
+        "Nunca guarde dado identificável de cliente (só CLI-XXX).\n"
         "- Lembretes e rotinas: use `agendar`. Só diga que agendou depois que a ferramenta confirmar.\n"
         "- Ações que pedem aprovação ficam pendentes: diga que pediu a aprovação dele, sem fingir que já fez.\n"
         "- Respostas curtas, para ler no celular. Português do Brasil.",
@@ -92,14 +102,19 @@ class Registro:
 
 class Agente:
     def __init__(self, conexao: ConexaoMCP, config: Config | None = None, *, workspace: Workspace | None = None,
-                 memoria: Memoria | None = None, agendador: Agendador | None = None, aprovacoes: permissoes.Aprovacoes | None = None):
+                 memoria: Memoria | None = None, agendador: Agendador | None = None, aprovacoes: permissoes.Aprovacoes | None = None,
+                 longa: MemoriaLonga | None = None, em_segundo_plano: bool = True):
         self.conexao = conexao
         self.config = config or carregar_config()
         self.workspace = workspace or Workspace.padrao()
         self.memoria = memoria or Memoria()
         self.agendador = agendador or Agendador()
         self.aprovacoes = aprovacoes or permissoes.Aprovacoes()
-        self.internas = FerramentasInternas(self.workspace, self.memoria, self.agendador)
+        self.longa = longa or MemoriaLonga()
+        self.escriba = Escriba(self.longa, config=self.config)
+        self.em_segundo_plano = em_segundo_plano  # testes rodam o escriba na hora
+        self._fechando: set[int] = set()
+        self.internas = FerramentasInternas(self.workspace, self.memoria, self.agendador, self.longa)
 
     def ferramentas(self) -> list[dict[str, Any]]:
         from quiron.nucleo import offline
@@ -121,8 +136,17 @@ class Agente:
         reg = Registro(pergunta)
         inicio = time.time()
         if historico is None and chat is not None:
+            self.fechar_se_ocioso(chat)
             historico = self.memoria.historico(chat)
-        sistema = prompt_sistema(workspace=self.workspace)
+        try:
+            lembranca = await asyncio.to_thread(self.longa.contexto, pergunta)
+        except Exception:  # noqa: BLE001 — memória com problema nunca impede a resposta
+            logging.exception("memória longa indisponível")
+            lembranca = None
+        explicito = self.escriba.lembrete_explicito(pergunta) if chat is not None else None
+        sistema = prompt_sistema(workspace=self.workspace, memoria=lembranca)
+        if explicito:
+            sistema += f"\n\n(Memória: {explicito}. Confirme a ele em poucas palavras.)"
         for s in skills or []:  # skill pré-carregada (ideia do Hermes `-s`): o modelo não precisa pedir
             texto = self.internas.executar("ler_skill", {"nome": s})
             if not texto.startswith("Skill '"):
@@ -156,7 +180,57 @@ class Agente:
             self.memoria.guardar(chat, "user", pergunta)
             self.memoria.guardar(chat, "assistant", reg.resposta)
             await asyncio.to_thread(self._compactar, chat)
+            self._depois_de_responder(chat, pergunta, reg.resposta, bool(explicito))
         return reg
+
+    # ------------------------------------------------------------ memória longa (escriba em segundo plano)
+    def _rodar(self, chave: int, funcao, *args) -> None:
+        """Escriba fora do caminho da resposta (o Rickson não espera); um por conversa de cada vez."""
+        if chave in self._fechando:
+            return
+
+        def alvo() -> None:
+            try:
+                funcao(*args)
+            except Exception:  # noqa: BLE001
+                logging.exception("falha no escriba da memória")
+            finally:
+                self._fechando.discard(chave)
+
+        self._fechando.add(chave)
+        if self.em_segundo_plano:
+            threading.Thread(target=alvo, name="escriba-memoria", daemon=True).start()
+        else:
+            alvo()
+
+    def fechar_episodio(self, chat: int, forcar: bool = False) -> None:
+        msgs = self.memoria.mensagens_desde(chat, self.longa.ultimo_id_episodio(chat))
+        if msgs:
+            self.escriba.fechar(chat, msgs, forcar=forcar)
+
+    def fechar_se_ocioso(self, chat: int, agora: datetime | None = None) -> bool:
+        """Conversa parada há 30 min (ou longa demais) vira episódio + fatos extraídos."""
+        msgs = self.memoria.mensagens_desde(chat, self.longa.ultimo_id_episodio(chat))
+        if not msgs:
+            return False
+        ultima = datetime.fromisoformat(msgs[-1][1])
+        agora = agora or datetime.now(ultima.tzinfo)
+        if agora - ultima >= INATIVIDADE_EPISODIO or len(msgs) >= MAX_MSGS_EPISODIO:
+            self._rodar(chat, self.fechar_episodio, chat)
+            return True
+        return False
+
+    def _depois_de_responder(self, chat: int, pergunta: str, resposta: str, explicito: bool) -> None:
+        if not explicito and self.escriba.tem_pista(pergunta):
+            self._rodar(-abs(chat) - 1_000_000, self.escriba.extrair_troca, pergunta, resposta)
+        n = len(self.memoria.mensagens_desde(chat, self.longa.ultimo_id_episodio(chat)))
+        if n >= MAX_MSGS_EPISODIO:
+            self._rodar(chat, self.fechar_episodio, chat)
+
+    def novo_assunto(self, chat: int) -> None:
+        """/novo: a conversa atual vira episódio (nada se perde) e o contexto recomeça."""
+        self._rodar(chat, self.fechar_episodio, chat, True)
+        self.memoria.reiniciar(chat)
 
     async def _com_permissao(self, nome: str, args: dict[str, Any], reg: Registro) -> str:
         regra = permissoes.politica(nome)

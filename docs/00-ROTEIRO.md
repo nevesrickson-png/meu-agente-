@@ -335,6 +335,14 @@ Falta: você abrir pelo atalho no seu PC e salvar as chaves por lá uma vez para
 - [x] Configurações: "Verificar tudo"; motivo claro quando o Telegram cai (ex.: token recusado); lançador explica porta ocupada
 - [x] Cálculos e datas: IOF < 30 dias; "próxima sexta", "meio-dia", "daqui a 2 horas"
 
+## Memória persistente (05/10/2026) — pedido do Rickson: "o melhor mecanismo possível de memória persistente"
+- [x] Fatos aprendidos sozinhos das conversas (categoria, importância, atualização, privacidade), episódios permanentes,
+  eventos dos comandos, recuperação automática por significado + palavras, consolidação noturna, `MEMORIA.md` editável
+- [x] `/memoria` (ver, conversas, buscar, esquecer, mudar), `/lembrar`, `/novo` sem perder nada, LGPD apaga a memória do cliente
+✅ Aceite (05/10/2026) com a IA real: numa conversa ele contou prova do CFP, horário de estudo, público e preferência
+(sem dizer "lembre"); o escriba guardou 3 fatos e o resumo; em OUTRA conversa o Quíron respondeu certo, sem ferramentas.
+239 testes (`testes/test_memoria_longa.py`). Falta: você conversar uns dias e conferir com `/memoria`.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

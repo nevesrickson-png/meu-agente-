@@ -224,7 +224,8 @@ def test_esquecer_cliente_apaga_tudo_e_so_dele(dados):
     (ws / "MEMORIA.md").write_text("- CLI-012 prefere renda fixa\n- CLI-01 é aposentado\n", encoding="utf-8")
     r = lgpd.esquecer_cliente("CLI-012")
     assert r.itens["fichas/versões"] == 2 and r.itens["carteiras"] == 1 and r.itens["relatórios"] == 1
-    assert r.itens["mensagens de conversa"] == 1 and r.itens["linhas de memória/diário"] == 1
+    assert r.itens["mensagens de conversa"] == 1
+    assert r.itens["linhas de memória/diário"] + r.itens["memória persistente (fatos, conversas resumidas, eventos)"] == 1
     assert ficha.existe("CLI-01") and not ficha.existe("CLI-012")
     assert (dados / "carteiras" / "CART-2.json").exists() and fila.obter(t.id) is None
     assert "CLI-01 é aposentado" in (ws / "MEMORIA.md").read_text(encoding="utf-8")

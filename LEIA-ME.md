@@ -49,6 +49,19 @@ Pelo terminal: `uv run quiron` (`--offline` para abrir na versão offline).
 
 ![Configurações](docs/img/configuracoes.png)
 
+## Memória do Quíron
+O Quíron **lembra de você entre conversas, no Telegram e no Terminal**, sem você precisar pedir:
+- Ao fim de cada conversa (30 min sem mensagens, `/novo` ou conversa longa), ele guarda um **resumo** (o que foi tratado,
+  decidido e o que ficou pendente) e tira dela os **fatos duráveis** (preferências, objetivos, rotina, estudo, clientes por
+  CLI-XXX). Fato que muda substitui o antigo. Nunca guarda CPF, telefone, e-mail ou conta (clientes só como CLI-XXX).
+- Antes de cada resposta, ele busca sozinho o que tem a ver com a pergunta (fatos, conversas antigas e o que você fez
+  pelos comandos — tarefas, simulados, pós-reunião).
+- `/memoria` mostra tudo por categoria (★ = importância) · `/memoria conversas` · `/memoria buscar <tema>` ·
+  `/memoria esquecer <nº>` · `/memoria mudar <nº> <texto>` · `/lembrar <fato>` (ou "lembre que …").
+- O arquivo `dados\workspace\MEMORIA.md` é a mesma memória em texto: você pode editar à mão (mudar, apagar ou
+  acrescentar linhas) e o Quíron aplica. De madrugada ele junta repetidos e arquiva detalhes velhos sem uso.
+- `/esquecer CLI-XXX` (LGPD) apaga também a memória daquele cliente. Tudo fica em `dados\memoria.db` (entra no backup).
+
 ## Rodar no seu PC (Windows)
 Uma vez só:
 1. Instale o `uv` (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
