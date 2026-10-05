@@ -4,23 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quíron — Acervo</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111110'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23f0a020' font-family='monospace'%3EQ%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="/icone.svg" type="image/svg+xml">
+<script src="/tema.js"></script>
+<link rel="stylesheet" href="/tema.css">
 <style>
-  :root {
-    color-scheme: dark;
-    --fundo: #0f0f0e; --painel: #1a1a19; --painel-2: #222220; --borda: #2e2e2b;
-    --texto: #f2f1ec; --texto-2: #c3c2b7; --texto-3: #8d8c84;
-    --ambar: #f0a020; --ok: #0ca30c; --erro: #e05252; --azul: #3987e5;
-    --mono: "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
-    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  }
+  :root { --ambar: var(--aviso-cor); --ok: var(--alta); --erro: var(--queda); --azul: var(--acento); }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
   a { color: var(--texto-2); }
   header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 14px; padding: 10px 18px;
-           background: #141413; border-bottom: 1px solid var(--borda); }
-  .marca { font-weight: 700; letter-spacing: 1px; }
-  .marca span { color: var(--ambar); margin-left: 6px; }
+           background: var(--vidro); border-bottom: 1px solid var(--borda); }
   header .voltar { margin-left: auto; font-size: 13px; text-decoration: none; }
   header .voltar:hover { color: var(--ambar); }
   main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 60px; display: grid; gap: 16px;
@@ -39,20 +32,20 @@
   .area { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 99px; cursor: pointer;
           background: var(--painel-2); border: 1px solid var(--borda); color: var(--texto); font: inherit; font-size: 13px; }
   .area:hover { border-color: var(--texto-3); }
-  .area[aria-pressed="true"] { border-color: var(--ambar); background: #f0a02018; }
+  .area[aria-pressed="true"] { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 9%, transparent); }
   .area .n { font: 11px var(--mono); color: var(--texto-3); }
-  .area[aria-pressed="true"] .n { color: var(--ambar); }
+  .area[aria-pressed="true"] .n { color: var(--acento); }
   button { background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: 6px;
            padding: 7px 11px; cursor: pointer; font: inherit; font-size: 13px; }
   button:hover { border-color: var(--texto-3); }
-  button.primario { background: var(--ambar); border-color: var(--ambar); color: #1a1205; font-weight: 700; }
+  button.primario { background: var(--ambar); border-color: var(--ambar); color: var(--acento-contraste); font-weight: 700; }
   button:disabled { opacity: .5; cursor: not-allowed; }
   .selecionada { font-size: 15px; margin-bottom: 4px; }
-  .selecionada b { color: var(--ambar); }
+  .selecionada b { color: var(--acento); }
   .descricao { color: var(--texto-3); font-size: 13px; margin-bottom: 12px; min-height: 1em; }
   .zona { border: 2px dashed var(--borda); border-radius: 10px; padding: 28px 16px; text-align: center; color: var(--texto-2);
           cursor: pointer; transition: border-color .15s, background .15s; }
-  .zona:hover, .zona.sobre { border-color: var(--ambar); background: #f0a0200d; }
+  .zona:hover, .zona.sobre { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 5%, transparent); }
   .zona.bloqueada { opacity: .5; cursor: not-allowed; }
   .zona .grande { font-size: 15px; color: var(--texto); margin-bottom: 4px; }
   .envios { margin-top: 10px; display: grid; gap: 6px; }
@@ -73,11 +66,11 @@
                    padding: 3px 4px; font: inherit; font-size: 12px; max-width: 150px; }
   .mono { font-family: var(--mono); font-size: 12px; color: var(--texto-2); white-space: nowrap; }
   .sit { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 99px; border: 1px solid var(--borda); white-space: nowrap; }
-  .sit.ok { color: var(--ok); border-color: #0ca30c55; }
+  .sit.ok { color: var(--ok); border-color: color-mix(in srgb, var(--alta) 33%, transparent); }
   .sit.fila { color: var(--texto-2); }
-  .sit.proc { color: var(--azul); border-color: #3987e555; }
-  .sit.erro { color: var(--erro); border-color: #e0525255; }
-  .sit.aviso { color: var(--ambar); border-color: #f0a02055; }
+  .sit.proc { color: var(--azul); border-color: color-mix(in srgb, var(--acento) 33%, transparent); }
+  .sit.erro { color: var(--erro); border-color: color-mix(in srgb, var(--queda) 33%, transparent); }
+  .sit.aviso { color: var(--ambar); border-color: color-mix(in srgb, var(--aviso-cor) 33%, transparent); }
   .vazio { color: var(--texto-3); padding: 14px; text-align: center; }
   .full { grid-column: 1 / -1; }
   dialog { background: var(--painel); color: var(--texto); border: 1px solid var(--borda); border-radius: 10px; padding: 18px;
@@ -99,12 +92,29 @@
     .tabela td.arq { flex: 1 1 100%; }
     .tabela td:last-child { margin-left: auto; }
   }
+
+  /* ---- visual novo (tema.css): cabeçalho translúcido, cartões arredondados, títulos sem caixa-alta */
+  header { background: var(--vidro); -webkit-backdrop-filter: saturate(160%) blur(14px); backdrop-filter: saturate(160%) blur(14px); }
+  h1 { font: 650 26px var(--titulo); letter-spacing: -0.02em; }
+  section { border-radius: var(--raio); box-shadow: var(--sombra); }
+  section > h2 { font: 600 15px var(--titulo); text-transform: none; letter-spacing: -0.005em; color: var(--texto); padding: 14px 18px; }
+  .cartao { border-radius: var(--raio-m); border-color: transparent; }
+  .cartao h3, .grupo-titulo, details.opcionais > summary, .grupo h3 { text-transform: none; letter-spacing: 0; font: 600 13px var(--sans); color: var(--texto-2); }
+  button { border-radius: var(--raio-p); font-weight: 500; transition: background var(--transicao), border-color var(--transicao); }
+  button:hover { background: var(--painel-3); border-color: var(--borda-forte); }
+  button.primario { background: var(--acento); border-color: transparent; color: var(--acento-contraste); font-weight: 600; }
+  button.primario:hover { background: var(--acento); filter: brightness(1.08); }
+  input[type=text], input[type=password], .busca, dialog input, dialog select { font-family: var(--sans); background: var(--campo); border-radius: var(--raio-p); }
+  input[type=text]:focus, input[type=password]:focus, .busca:focus, dialog input:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
+  .banner { border-radius: var(--raio-m); }
+  .indice a[aria-current], .indice a:focus-visible { color: var(--texto); background: var(--painel-2); }
+  dialog { border-radius: var(--raio); box-shadow: var(--sombra-flutuante); }
 </style>
 <link rel="stylesheet" href="/nav.css">
 </head>
 <body>
 <header>
-  <div class="marca">QUÍRON<span>ACERVO</span></div>
+  <a class="marca" href="/">Quíron<span>Acervo</span></a>
   <span class="sub" style="color:var(--texto-3);font-size:13px">livros e materiais por campo de conhecimento</span>
   <nav id="abas" style="margin-left:auto"></nav>
 </header>

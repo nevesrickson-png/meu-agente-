@@ -3,7 +3,7 @@
 (function () {
   const alvo = document.getElementById("abas");
   if (!alvo) return;
-  const abas = [["/", "TERMINAL", "TERM"], ["/acervo", "ACERVO", "ACERVO"], ["/config", "CONFIGURAÇÕES", "⚙ CONFIG"]];
+  const abas = [["/", "Terminal", "Terminal"], ["/acervo", "Acervo", "Acervo"], ["/config", "Configurações", "Ajustes"]];
   const aqui = location.pathname.replace(/\/+$/, "") || "/";
   alvo.classList.add("abas");
   alvo.setAttribute("aria-label", "Telas do Quíron");
@@ -14,16 +14,43 @@
     if (aqui === href) a.setAttribute("aria-current", "page");
     alvo.append(a);
   }
+  const extra = document.createElement("span");
+  extra.className = "nav-extra";
   const selo = document.createElement("a");
   selo.className = "selo-sistema";
   selo.href = "/config#visao";
   selo.textContent = "…";
-  alvo.append(selo);
+  // tema: automático (segue o sistema) → claro → escuro
+  const ROTULO = { auto: ["◐", "Tema automático (segue o sistema)"], claro: ["☀", "Tema claro"], escuro: ["☾", "Tema escuro"] };
+  const botaoTema = document.createElement("button");
+  botaoTema.type = "button";
+  botaoTema.className = "botao-tema";
+  const lerTema = () => { try { return localStorage.getItem("quiron-tema") || "auto"; } catch (e) { return "auto"; } };
+  const mostrarTema = () => {
+    const [icone, rotulo] = ROTULO[lerTema()] || ROTULO.auto;
+    botaoTema.textContent = icone;
+    botaoTema.title = rotulo + " — clique para trocar";
+    botaoTema.setAttribute("aria-label", rotulo);
+  };
+  botaoTema.onclick = () => {
+    const ordem = ["auto", "claro", "escuro"];
+    const novo = ordem[(ordem.indexOf(lerTema()) + 1) % ordem.length];
+    try { localStorage.setItem("quiron-tema", novo); } catch (e) { /* sem armazenamento: vale só nesta página */ }
+    const efetivo = novo === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "claro" : "escuro") : novo;
+    document.documentElement.setAttribute("data-tema", efetivo);
+    mostrarTema();
+    document.dispatchEvent(new CustomEvent("quiron:tema", { detail: efetivo }));
+  };
+  mostrarTema();
+  extra.append(selo, botaoTema);
+  const lugar = document.getElementById("nav-extra");  // a página pode reservar o lugar (ex.: canto direito do Terminal)
+  if (lugar) lugar.replaceWith(extra); else alvo.after(extra);
 
   const TEXTO = {
-    ligado: ["ok", "● ", "Telegram ligado"], religando: ["aviso", "◐ ", "Telegram religando"],
-    desligado: ["", "○ ", "Telegram desligado"], sem_config: ["aviso", "! ", "Faltam chaves"],
-    offline: ["aviso", "⊘ ", "OFFLINE"], externo: ["", "● ", "Servidor"], erro: ["erro", "✖ ", "Telegram com erro"],
+    // classes s-* (não "aviso"/"erro": o Terminal já usa esses nomes para outras coisas)
+    ligado: ["s-ok", "", "Telegram ligado"], religando: ["s-aviso", "", "Telegram religando"],
+    desligado: ["", "", "Telegram desligado"], sem_config: ["s-aviso", "", "Faltam chaves"],
+    offline: ["s-aviso", "", "Offline"], externo: ["s-ok", "", "Servidor"], erro: ["s-erro", "", "Telegram com erro"],
   };
   async function atualizar() {
     try {
@@ -38,8 +65,8 @@
       selo.title = texto + " — abrir Configurações";
       document.dispatchEvent(new CustomEvent("quiron:resumo", { detail: d }));
     } catch (e) {
-      selo.className = "selo-sistema erro";
-      selo.innerHTML = `✖ <span class="texto">sem conexão</span>`;
+      selo.className = "selo-sistema s-erro";
+      selo.innerHTML = `<span class="texto">Sem conexão</span>`;
     }
   }
   atualizar();

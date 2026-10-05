@@ -105,7 +105,7 @@ Arquivos com DRM não são processados.
   `/api/calc/*`, `/api/layouts`, `/ws` com assinatura por painel e memo compartilhado válido por 80% do intervalo; só
   127.0.0.1 por padrão; `TERMINAL_SENHA` ativa login por cookie). Frontend sem build em `quiron/terminal/frontend/`
   (JS puro + lightweight-charts 4.2 local em `vendor/`). Calculadoras em `quiron/servicos/calculadoras.py` (Python, com
-  memória de cálculo). Cores: séries azul/laranja/aqua da paleta validada; alta/queda sempre com ▲/▼. Datas sem fuso:
+  memória de cálculo). Cores: tokens de `tema.css` (séries azul/laranja/aqua da paleta validada); alta/queda sempre com ▲/▼. Datas sem fuso:
   hora do sistema (consultas) ou de Brasília (agenda) — ver `_iso`. Aceite no navegador: `testes/test_terminal_navegador.py`.
   Terminal v2 (Fase 12): tópicos `fa`/`fundos`/`plano`/`academia`/`tarefas`/`alertas`; ações em `app.py` (`/api/analisar`
   → mesma fila do Telegram com origem `terminal`, que o Terminal também processa; `/api/carteira/ler`, `/api/alertas`,
@@ -190,6 +190,13 @@ Arquivos com DRM não são processados.
   `agenda_vencida`) vão direto; o MCP `briefing` devolve o texto pronto. `skills_provaveis` pré-carrega a skill de
   notícias/briefing. Direto do bot com títulos em negrito (/hoje com próximos 3 dias e agenda econômica, /revisao,
   /radar com link curto, /academia sem a lista de campos).
+- Visual (05/10/2026): sistema de design único em `terminal/frontend/tema.css` (tokens de cor/forma/tipografia, escuro
+  padrão e `[data-tema="claro"]`; acento azul, verde/vermelho só para alta/queda com ▲/▼, números tabulares, cartões com
+  raio 14 px, cabeçalho translúcido) + `tema.js` no `<head>` (aplica o tema salvo em `localStorage["quiron-tema"]` =
+  auto/claro/escuro antes de desenhar). Todas as páginas (index, config, acervo, login) carregam os dois; `nav.js`
+  coloca o selo do sistema (classes `s-ok/s-aviso/s-erro` — `aviso` já é o toast do Terminal) e o botão de tema em
+  `#nav-extra` (ou depois das abas) e dispara `quiron:tema`; o `app.js` lê cores do tema via `COR` (getters de CSS) e
+  redesenha os painéis na troca. Novo painel ocupa o primeiro espaço livre da grade (`proximaPosicao`).
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.

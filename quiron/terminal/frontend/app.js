@@ -11,7 +11,14 @@ const linkSeguro = (u) => (/^https?:\/\//i.test(u || "") ? esc(u) : "#");
 const BRT = { timeZone: "America/Sao_Paulo" };
 const hora = (iso) => (iso ? new Date(iso).toLocaleString("pt-BR", { ...BRT, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—");
 const dia = (iso) => (iso ? new Date(iso + (iso.length === 10 ? "T12:00:00" : "")).toLocaleDateString("pt-BR", { ...BRT, day: "2-digit", month: "2-digit", year: "2-digit" }) : "—");
-const COR = { s1: "#3987e5", s2: "#d95926", s3: "#199e70", texto3: "#8d8c84", borda: "#2e2e2b" };
+// Cores lidas do tema (tema.css): mudam junto com claro/escuro.
+const corCss = (v, padrao) => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || padrao;
+const COR = {
+  get s1() { return corCss("--serie-1", "#3987e5"); }, get s2() { return corCss("--serie-2", "#e07a3f"); },
+  get s3() { return corCss("--serie-3", "#26a87e"); }, get texto3() { return corCss("--texto-3", "#6f7782"); },
+  get borda() { return corCss("--borda", "#2e2e2b"); }, get grade() { return corCss("--grade-grafico", "rgba(255,255,255,.06)"); },
+  get mira() { return corCss("--mira", "rgba(255,255,255,.28)"); },
+};
 
 function variacao(v, casas = 2) {
   if (v === null || v === undefined || isNaN(v)) return '<span class="neutro">—</span>';
@@ -106,8 +113,13 @@ async function carregarLayouts() {
 }
 
 function proximaPosicao(w, h) {
-  // primeira linha livre abaixo dos painéis existentes, à esquerda
+  // primeiro espaço livre (de cima para baixo, da esquerda para a direita) onde o painel cabe sem sobrepor outro
+  w = Math.min(w, 12);
+  const sobrepoe = (x, y) => paineis.some((p) => x < p.x + p.w && x + w > p.x && y < p.y + p.h && y + h > p.y);
   const fundo = paineis.reduce((m, p) => Math.max(m, p.y + p.h), 1);
+  for (let y = 1; y <= fundo; y++) {
+    for (let x = 1; x <= 13 - w; x++) if (!sobrepoe(x, y)) return { x, y, w, h };
+  }
   return { x: 1, y: fundo, w, h };
 }
 
@@ -290,8 +302,8 @@ function desenharLinhas(id, alvo, d, compacto, legenda) {
   if (!window.LightweightCharts) { alvo.innerHTML = '<div class="dica">Biblioteca de gráficos não carregou.</div>'; return; }
   const chart = LightweightCharts.createChart(alvo, {
     autoSize: true,
-    layout: { background: { color: "transparent" }, textColor: COR.texto3, fontFamily: getComputedStyle(document.body).getPropertyValue("--mono"), fontSize: 11 },
-    grid: { vertLines: { visible: false }, horzLines: { color: "#262624" } },
+    layout: { background: { color: "transparent" }, textColor: COR.texto3, fontFamily: corCss("--sans", "system-ui"), fontSize: 11 },
+    grid: { vertLines: { visible: false }, horzLines: { color: COR.grade } },
     rightPriceScale: { borderVisible: false },
     timeScale: { borderVisible: false, timeVisible: false },
     crosshair: { mode: 0 },
@@ -381,14 +393,14 @@ function svgCurva(alvo, vs) {
   const ymin = Math.floor(Math.min(...todos) - 0.5), ymax = Math.ceil(Math.max(...todos) + 0.5), xmax = Math.max(...vs.map((v) => v.anos));
   const X = (a) => m.l + (a / xmax) * (W - m.l - m.r), Y = (v) => m.t + (1 - (v - ymin) / (ymax - ymin)) * (H - m.t - m.b);
   let s = `<svg width="${W}" height="${H}" style="display:block" role="img" aria-label="Curva de juros por prazo">`;
-  for (let y = ymin; y <= ymax; y += Math.max(1, Math.round((ymax - ymin) / 5))) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(y)}" y2="${Y(y)}" stroke="#262624"/><text x="${m.l - 4}" y="${Y(y) + 3}" text-anchor="end">${y}%</text>`;
+  for (let y = ymin; y <= ymax; y += Math.max(1, Math.round((ymax - ymin) / 5))) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(y)}" y2="${Y(y)}" stroke="${COR.grade}"/><text x="${m.l - 4}" y="${Y(y) + 3}" text-anchor="end">${y}%</text>`;
   const passo = Math.max(xmax > 8 ? 2 : 1, Math.ceil(xmax / Math.max(1, Math.floor((W - m.l - m.r) / 55))));
   for (let a = 0; a <= xmax; a += passo) s += `<text x="${X(a)}" y="${H - 6}" text-anchor="${a === 0 ? "start" : "middle"}">${a} ${a === 1 ? "ano" : "anos"}</text>`;
   for (const [k, cor] of chaves) {
     const pts = vs.filter((v) => v[k] !== null).map((v) => `${X(v.anos).toFixed(1)},${Y(v[k]).toFixed(1)}`);
     if (pts.length) s += `<polyline fill="none" stroke="${cor}" stroke-width="2" points="${pts.join(" ")}"/>`;
   }
-  s += `<line data-mira x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="#55544f" stroke-dasharray="3 3" visibility="hidden"/></svg><div class="dica-svg"></div>`;
+  s += `<line data-mira x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="${COR.mira}" stroke-dasharray="3 3" visibility="hidden"/></svg><div class="dica-svg"></div>`;
   alvo.innerHTML = s;
   const svg = $("svg", alvo), dica = $(".dica-svg", alvo), mira = $("[data-mira]", alvo);
   svg.addEventListener("pointermove", (e) => {
@@ -792,7 +804,7 @@ async function renderChat(corpo, _d, painel) {
     el.className = "chat-sugestoes";
     itens.forEach((item) => {
       const b = document.createElement("button");
-      b.type = "button"; b.className = "mini"; b.textContent = "» " + item; b.title = "Enviar este pedido";
+      b.type = "button"; b.className = "mini"; b.textContent = item; b.title = "Enviar este pedido";
       b.onclick = () => enviar(item);
       el.append(b);
     });
@@ -977,7 +989,7 @@ function graficoPatrimonio(alvo, r) {
   const passo = Math.max(1, Math.round(xs.length / 8));
   const meta = r.entrada.meta ? `<line x1="${m.e}" x2="${W - m.d}" y1="${Y(r.entrada.meta)}" y2="${Y(r.entrada.meta)}" stroke="${COR.texto3}" stroke-dasharray="3 3"/><text x="${m.e + 4}" y="${Y(r.entrada.meta) - 4}" class="sim-eixo">meta ${esc(brl(r.entrada.meta))}</text>` : "";
   alvo.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução do patrimônio por cenário" preserveAspectRatio="none">
-    ${ticksY.map((v) => `<line x1="${m.e}" x2="${W - m.d}" y1="${Y(v)}" y2="${Y(v)}" stroke="#262624"/><text x="${m.e - 6}" y="${Y(v) + 3}" text-anchor="end" class="sim-eixo">${esc(brl(v))}</text>`).join("")}
+    ${ticksY.map((v) => `<line x1="${m.e}" x2="${W - m.d}" y1="${Y(v)}" y2="${Y(v)}" stroke="${COR.grade}"/><text x="${m.e - 6}" y="${Y(v) + 3}" text-anchor="end" class="sim-eixo">${esc(brl(v))}</text>`).join("")}
     ${xs.map((a, i) => (i % passo === 0 || i === xs.length - 1) ? `<text x="${X(i)}" y="${H - 6}" text-anchor="middle" class="sim-eixo">${a}</text>` : "").join("")}
     <path d="${faixa}" fill="${COR.s1}" opacity=".16"/>${meta}
     <path d="${caminho(r.series.pessimista)}" fill="none" stroke="${COR.s2}" stroke-width="2" stroke-dasharray="5 3"/>
@@ -1078,10 +1090,20 @@ $("#salvar").addEventListener("click", async () => {
 });
 window.addEventListener("resize", () => { clearTimeout(window._r); window._r = setTimeout(() => paineis.filter((p) => p.tipo === "curva").forEach((p) => enviar({ tipo: "atualizar", id: p.id })), 400); });
 
+// troca de tema: redesenha os painéis (os gráficos leem as cores do tema na hora de desenhar)
+document.addEventListener("quiron:tema", () => paineis.forEach((p) => TIPOS[p.tipo]?.topico && enviar({ tipo: "atualizar", id: p.id })));
+window.matchMedia?.("(prefers-color-scheme: light)").addEventListener?.("change", (e) => {
+  let t = "auto";
+  try { t = localStorage.getItem("quiron-tema") || "auto"; } catch (_) { /* segue o sistema */ }
+  if (t !== "auto") return;
+  document.documentElement.setAttribute("data-tema", e.matches ? "claro" : "escuro");
+  document.dispatchEvent(new CustomEvent("quiron:tema"));
+});
+
 const semLayoutSalvo = !carregarLocal();
 fetch("/api/modo").then((r) => r.json()).then((m) => {
   if (!m.offline) return;
-  const selo = Object.assign(document.createElement("span"), { className: "selo-offline", textContent: "OFFLINE", title: `Sem internet · modelo local ${m.modelo} · dados de mercado do último cache` });
+  const selo = Object.assign(document.createElement("span"), { className: "selo-offline", textContent: "Offline", title: `Sem internet · modelo local ${m.modelo} · dados de mercado do último cache` });
   $(".marca").append(selo);
   if (semLayoutSalvo) aplicarLayout(PRESETS["Offline"]);
 }).catch(() => {});

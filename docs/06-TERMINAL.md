@@ -9,7 +9,7 @@ Nome e visual próprios: "Quíron Terminal" (não usar marcas de terceiros).
 - **Grade de painéis** redimensionáveis e arrastáveis; layouts salvos ("Manhã", "Análise", "Estudo").
 - **Faixa de cotações** rolando no rodapé (watchlist).
 - **Painel de chat** lateral com o Quíron (mesmo agente do Telegram).
-- Tema escuro com destaques âmbar/verde/vermelho; fonte monoespaçada nos números; modo claro opcional.
+- Visual moderno e minimalista (tema.css): escuro ou claro (botão no topo, "automático" segue o sistema), cartões arredondados, acento azul, alta/queda em verde/vermelho sempre com ▲/▼, números com algarismos alinhados.
 
 ## Comandos da barra (estilo terminal)
 | Comando | Abre |

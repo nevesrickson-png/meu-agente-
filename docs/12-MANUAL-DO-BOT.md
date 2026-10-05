@@ -159,6 +159,10 @@ Ele aprende sozinho com as conversas (preferências, objetivos, rotina, estudo, 
 e no Terminal. `/memoria` (ver) · `/memoria buscar <tema>` · `/memoria esquecer <nº>` · `/memoria mudar <nº> <texto>` ·
 `/memoria hoje` (tudo o que aconteceu no dia) · `/memoria conversas` · `/memoria exportar` · `/lembrar <fato>`
 
+### 🎨 Aparência do Terminal
+Visual escuro ou claro: botão no canto superior direito (◐ automático, segue o computador/celular · ☀ claro · ☾ escuro).
+A escolha fica guardada no navegador. Ctrl K (ou /) abre a busca de ativos e comandos.
+
 ### ⚙️ Conversa e sistema
 `/novo` (novo assunto) · `/agenda` (lembretes e rotinas) · `/sair` (fecha treino, entrevista ou pós-reunião) ·
 `/ajuda` · `/start` (botões rápidos). No Terminal, a aba **CONFIGURAÇÕES** liga/desliga o bot, guarda as chaves,

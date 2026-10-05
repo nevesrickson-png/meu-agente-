@@ -53,7 +53,7 @@ def _autorizado(cookies: dict[str, str]) -> bool:
 
 @app.middleware("http")
 async def exigir_senha(request: Request, call_next):
-    livre = request.url.path in {"/login", "/app.css", "/manifest.webmanifest", "/icone.svg"} or request.url.path.startswith("/vendor/")
+    livre = request.url.path in {"/login", "/app.css", "/tema.css", "/tema.js", "/manifest.webmanifest", "/icone.svg"} or request.url.path.startswith("/vendor/")
     if not livre and not _autorizado(request.cookies):
         if request.url.path.startswith("/api/"):
             return JSONResponse({"erro": "senha necessária"}, status_code=401)

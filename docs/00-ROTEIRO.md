@@ -392,6 +392,17 @@ HGLG11 e PETR4 responderam com dados e botões. 295 testes.
 (4 veículos), NTN-B, bps do Tesouro e comentário para os clientes; "o que está saindo sobre juros?" no formato novo
 com "confirmado por 3 veículos". 306 testes + 24 de fontes online.
 
+## Visual moderno + nova verificação (05/10/2026) — pedido do Rickson
+- [x] Sistema de design único (`tema.css`): estilo dos apps de finanças atuais — superfícies neutras, cartões
+  arredondados, tipografia limpa com números alinhados, um acento azul, ▲/▼ verde/vermelho
+- [x] Tema escuro e claro (botão ◐/☀/☾ no topo; "automático" segue o Windows/celular), gráficos acompanham o tema
+- [x] Terminal, Configurações, Acervo e login redesenhados; busca em pílula com Ctrl K; controles dos painéis aparecem
+  ao passar o mouse; chat com balões e sugestões em pílulas; celular revisado
+- [x] Erros corrigidos: selo do Telegram sumia no Terminal (conflito de nome com o aviso flutuante); painéis novos se
+  empilhavam numa coluna (agora ocupam o primeiro espaço livre)
+✅ Aceite (05/10/2026): 29 comandos/painéis abertos no navegador nos dois temas sem nenhum erro de JavaScript; desktop,
+celular, Configurações e Acervo conferidos por imagem; 306 testes + testes de navegador.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

@@ -1,0 +1,129 @@
+/* Quíron — sistema de design (todas as telas).
+   Linguagem dos apps de finanças atuais: superfícies neutras em camadas, bordas finíssimas, cantos arredondados,
+   tipografia sem serifa com números tabulares, um único acento (azul) e verde/vermelho só para alta/queda — sempre
+   com ▲/▼, nunca só a cor. Escuro e claro com os mesmos tokens; a escolha fica em localStorage ("quiron-tema"). */
+
+:root {
+  color-scheme: dark;
+  /* superfícies (do fundo para cima) */
+  --fundo: #0b0c0e;
+  --painel: #121417;
+  --painel-2: #181b1f;
+  --painel-3: #1f2328;
+  --campo: #0e1013;
+  --borda: rgba(255, 255, 255, 0.07);
+  --borda-forte: rgba(255, 255, 255, 0.13);
+  /* texto */
+  --texto: #eceef1;
+  --texto-2: #a8afb9;
+  --texto-3: #6f7782;
+  /* acento e estados */
+  --acento: #4f8ef7;
+  --acento-texto: #84b1ff;
+  --acento-suave: rgba(79, 142, 247, 0.13);
+  --acento-contraste: #ffffff;
+  --alta: #2fbf71;
+  --alta-suave: rgba(47, 191, 113, 0.12);
+  --queda: #f2636f;
+  --queda-suave: rgba(242, 99, 111, 0.12);
+  --aviso-cor: #e8a93a;
+  --aviso-suave: rgba(232, 169, 58, 0.12);
+  /* séries de gráfico (paleta validada: azul, laranja, verde-água) e linhas de grade */
+  --serie-1: #3987e5;
+  --serie-2: #e07a3f;
+  --serie-3: #26a87e;
+  --grade-grafico: rgba(255, 255, 255, 0.06);
+  --mira: rgba(255, 255, 255, 0.28);
+  /* forma */
+  --raio: 14px;
+  --raio-m: 10px;
+  --raio-p: 7px;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.18);
+  --sombra-flutuante: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --vidro: rgba(11, 12, 14, 0.78);
+  /* tipografia */
+  --sans: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --titulo: "Inter", "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "SF Pro Display", sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Mono", "SF Mono", "Consolas", "Menlo", "DejaVu Sans Mono", monospace;
+  --num: var(--sans);
+  --transicao: 140ms ease;
+}
+
+:root[data-tema="claro"] {
+  color-scheme: light;
+  --fundo: #f4f5f7;
+  --painel: #ffffff;
+  --painel-2: #f6f7f9;
+  --painel-3: #eceff3;
+  --campo: #ffffff;
+  --borda: rgba(16, 24, 40, 0.08);
+  --borda-forte: rgba(16, 24, 40, 0.16);
+  --texto: #0f1729;
+  --texto-2: #4a5568;
+  --texto-3: #8a94a6;
+  --acento: #2a6fdb;
+  --acento-texto: #1f5fc4;
+  --acento-suave: rgba(42, 111, 219, 0.10);
+  --alta: #12915a;
+  --alta-suave: rgba(18, 145, 90, 0.10);
+  --queda: #d63b48;
+  --queda-suave: rgba(214, 59, 72, 0.09);
+  --aviso-cor: #b5761b;
+  --aviso-suave: rgba(181, 118, 27, 0.10);
+  --serie-1: #2a78d6;
+  --serie-2: #d0632a;
+  --serie-3: #138a65;
+  --grade-grafico: rgba(16, 24, 40, 0.07);
+  --mira: rgba(16, 24, 40, 0.3);
+  --sombra: 0 1px 2px rgba(16, 24, 40, 0.05), 0 6px 20px rgba(16, 24, 40, 0.05);
+  --sombra-flutuante: 0 12px 40px rgba(16, 24, 40, 0.14);
+  --vidro: rgba(244, 245, 247, 0.8);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; background: var(--fundo); color: var(--texto); }
+body { font: 14px/1.45 var(--sans); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+       font-feature-settings: "cv11", "ss01"; }
+a { color: var(--acento-texto); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+button, select, input, textarea { font: inherit; color: inherit; }
+::selection { background: var(--acento-suave); }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 4px; }
+code { font: 12.5px var(--mono); background: var(--painel-2); padding: 1px 6px; border-radius: 6px; }
+
+/* números sempre alinhados (tabulares), sem fonte de terminal */
+.n, .num-t, .grande, .kpi-v, .relogio, td.n { font-variant-numeric: tabular-nums; }
+
+/* barra de rolagem discreta */
+* { scrollbar-width: thin; scrollbar-color: var(--borda-forte) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--borda-forte); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- componentes base */
+.botao, button.botao { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 14px;
+  background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: var(--raio-p);
+  font-size: 13px; font-weight: 500; cursor: pointer; transition: background var(--transicao), border-color var(--transicao); }
+.botao:hover { background: var(--painel-3); border-color: var(--borda-forte); text-decoration: none; }
+.botao.primario { background: var(--acento); color: var(--acento-contraste); border-color: transparent; font-weight: 600; }
+.botao.primario:hover { filter: brightness(1.08); }
+.campo-texto { height: 36px; padding: 0 12px; background: var(--campo); border: 1px solid var(--borda); border-radius: var(--raio-p);
+  color: var(--texto); transition: border-color var(--transicao), box-shadow var(--transicao); }
+.campo-texto:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
+
+/* marca */
+.marca { display: inline-flex; align-items: center; gap: 9px; font: 650 15px var(--titulo); letter-spacing: -0.01em; color: var(--texto);
+  white-space: nowrap; text-decoration: none; }
+.marca::before { content: ""; width: 22px; height: 22px; border-radius: 7px; flex: none;
+  background: linear-gradient(135deg, var(--acento) 0%, #7c5cf6 100%);
+  -webkit-mask: radial-gradient(circle at 50% 50%, transparent 5.5px, #000 6px); mask: radial-gradient(circle at 50% 50%, transparent 5.5px, #000 6px); }
+.marca span { color: var(--texto-3); font-weight: 500; margin-left: 2px; }
+
+/* selo do modo offline */
+.selo-offline { margin-left: 8px; font: 600 10.5px var(--sans); letter-spacing: .04em; color: var(--aviso-cor); background: var(--aviso-suave);
+  border-radius: 99px; padding: 2px 8px; vertical-align: middle; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation-duration: 0.01ms !important; }
+}
