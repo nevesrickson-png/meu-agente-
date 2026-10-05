@@ -165,11 +165,27 @@ class BotQuiron:
                    "✍️ Conteúdo: /pauta [tema] · /roteiro reels|youtube|carrossel|fio|artigo <tema> · /fio <tema> · /ideia · /ideias · "
                    "/conferir <seu texto> (sai como RASCUNHO, com disclaimer e fontes)", ""]
         linhas += ["🧠 Memória: eu aprendo sozinho com as conversas · /memoria (ver) · /memoria conversas · /memoria buscar <tema> · "
-                   "/memoria esquecer <nº> · /memoria mudar <nº> <texto> · /lembrar <fato>", "",
+                   "/memoria esquecer <nº> · /memoria mudar <nº> <texto> · /memoria hoje (tudo o que aconteceu no dia) · "
+                   "/memoria exportar · /lembrar <fato>", "",
                    "/agenda — lembretes e rotinas", "/novo — novo assunto (a conversa anterior fica guardada)"]
         return "\n".join(linhas)
 
     async def tratar(self, usuario: int, chat: int, texto: str) -> list[Saida]:
+        """Responde e grava tudo no registro completo da memória (o agente grava o próprio caminho dele)."""
+        self._via_agente = False
+        saidas = await self._tratar(usuario, chat, texto)
+        if saidas and not self._via_agente and usuario in self.permitidos:
+            longa = self.agente.longa
+            longa.registrar("telegram", chat, "comando" if (texto or "").strip().startswith("/") else "entrada", (texto or "").strip())
+            for s in saidas:
+                longa.registrar("telegram", chat, "resposta_comando", s.texto, {"arquivo": s.arquivo} if s.arquivo else None)
+        return saidas
+
+    def registrar_proativo(self, chat: int, texto: str, origem: str) -> None:
+        """Mensagens que o Quíron manda sozinho (lembretes, rotinas, alertas, análises prontas, batimento)."""
+        self.agente.longa.registrar("telegram", chat, "proativo", texto, {"origem": origem})
+
+    async def _tratar(self, usuario: int, chat: int, texto: str) -> list[Saida]:
         if not self.autorizado(usuario):
             return []  # silêncio: não revela que o bot existe
         texto = (texto or "").strip()
@@ -188,6 +204,10 @@ class BotQuiron:
             itens = self.agente.agendador.listar()
             return [Saida("\n".join(a.descrever() for a in itens) if itens else "Nada agendado. Ex.: “todo dia útil às 7h30 me manda o briefing”.")]
         if texto.split(" ", 1)[0].split("@")[0] in {"/memoria", "/memória", "/lembrar"}:
+            if texto.split(" ", 1)[-1].strip().lower() in {"exportar", "baixar"}:
+                arq = await asyncio.to_thread(self.agente.longa.exportar)
+                return [Saida(f"📦 Memória completa exportada ({arq.stat().st_size / 1e6:.1f} MB): fatos, conversas resumidas e o "
+                              "registro de tudo. O arquivo é seu — guarde em lugar seguro.", arquivo=str(arq))]
             return [Saida(await asyncio.to_thread(self.comando_memoria, texto))]
         skills: list[str] = []
         aviso = self._expirar_modos(chat)
@@ -229,6 +249,7 @@ class BotQuiron:
                 return [Saida(self.desconhecido(nome.split("@")[0].lower()))]
             texto = cmd.montar(args)
             skills = [cmd.skill] if cmd.skill else []
+        self._via_agente = True
         reg = await self.agente.responder(texto, chat=chat, skills=skills)
         saidas = [Saida(p) for p in dividir(aviso + (reg.resposta or "(sem resposta)"))]
         for p in reg.pendencias:
@@ -255,6 +276,26 @@ class BotQuiron:
         if al in {"conversas", "episodios", "episódios", "historico", "histórico"}:
             eps = longa.episodios(10)
             return "🗂️ Últimas conversas guardadas:\n" + "\n".join(f"• {e.linha()}" for e in eps) if eps else "Nenhuma conversa resumida ainda."
+        if al in {"hoje", "dia"} or (m := re.fullmatch(r"(?:dia\s+)?(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?", al)):
+            from zoneinfo import ZoneInfo
+
+            hoje = datetime.now(ZoneInfo("America/Sao_Paulo"))
+            dia = hoje
+            if al not in {"hoje", "dia"}:
+                ano = int(m[3]) + (2000 if m[3] and len(m[3]) == 2 else 0) if m[3] else hoje.year
+                try:
+                    dia = hoje.replace(year=ano, month=int(m[2]), day=int(m[1]))
+                except ValueError:
+                    return "Data inválida. Use /memoria hoje ou /memoria 05/10."
+            return f"📜 Registro de {dia:%d/%m/%Y}:\n" + longa.linha_do_tempo(dia)
+        if al in {"copia", "cópia", "backup"}:
+            pasta = longa.fazer_copia()
+            return f"💾 Cópia de segurança feita em {pasta}. (Todo dia às 3h ela é feita sozinha; guardo as 30 mais recentes.)"
+        if al in {"estado", "status", "saude", "saúde"}:
+            r = longa.resumo()
+            return (f"🧠 Memória: {r['fatos']} fato(s) ativos, {r['arquivados']} arquivado(s), {r['episodios']} conversa(s) resumida(s), "
+                    f"{r['registros']} registro(s) no total · banco {r['tamanho_mb']} MB · integridade: {longa.verificar_integridade()} · "
+                    f"última cópia: {r['ultima_copia'] or 'ainda nenhuma'}")
         if al in {"consolidar", "organizar"}:
             r = longa.consolidar()
             return f"🧹 Memória organizada: {r['juntados']} repetido(s) juntado(s), {r['arquivados']} detalhe(s) antigo(s) arquivado(s)."
@@ -271,7 +312,8 @@ class BotQuiron:
                 linhas += [f"#{f.id} {'★' * f.importancia} {f.texto}" for f in itens]
         r = longa.resumo()
         linhas.append(f"\n{r['fatos']} fato(s) · {r['episodios']} conversa(s) resumida(s). "
-                      "/memoria conversas · /memoria buscar <tema> · /memoria esquecer <nº> · /memoria mudar <nº> <texto> · /lembrar <fato>")
+                      "/memoria conversas · /memoria hoje · /memoria 05/10 · /memoria buscar <tema> · /memoria esquecer <nº> · "
+                      "/memoria mudar <nº> <texto> · /memoria estado · /memoria exportar · /lembrar <fato>")
         return "\n".join(linhas)
 
     def _registrar_evento(self, nome: str, args: str, saidas: list[Saida]) -> None:
@@ -386,6 +428,7 @@ class BotQuiron:
             texto = await asyncio.to_thread(audio.transcrever, conteudo, nome)
         except audio.AudioIndisponivel as e:
             return [Saida(f"🎙️ {e}")]
+        self.agente.longa.registrar("telegram", chat, "audio", texto, {"arquivo": nome, "bytes": len(conteudo)})
         return [Saida(f"🎙️ “{texto}”"), *await self.tratar(usuario, chat, texto)]
 
     async def tratar_arquivo(self, usuario: int, chat: int, conteudo: bytes, nome: str, legenda: str = "",
@@ -394,6 +437,9 @@ class BotQuiron:
         if not self.autorizado(usuario):
             return []
         from quiron.servicos.carteira import arquivo, leitura
+
+        self.agente.longa.registrar("telegram", chat, "arquivo", f"{'print' if imagem else nome}" + (f" — {legenda}" if legenda else ""),
+                                    {"arquivo": nome, "bytes": len(conteudo), "imagem": imagem})
 
         if not imagem and not nome.lower().endswith((".xlsx", ".xlsm", ".csv")):
             return [Saida("Por enquanto leio carteira em print (foto), planilha .xlsx ou .csv. PDF de livro vai pelo Acervo do Terminal.")]
@@ -591,6 +637,7 @@ async def _rodar() -> None:
             while True:
                 try:
                     for s in await bot.agenda_vencida():
+                        bot.registrar_proativo(dono, s.texto, "agenda")
                         await enviar(dono, s)
                 except Exception:  # noqa: BLE001 — o laço nunca morre
                     logging.exception("falha no laço da agenda")
@@ -604,6 +651,7 @@ async def _rodar() -> None:
                 try:
                     if alertas.listar():
                         for a in await asyncio.to_thread(alertas.avaliar):
+                            bot.registrar_proativo(dono, alertas.mensagem(a), "alerta")
                             await app.bot.send_message(dono, alertas.mensagem(a))
                 except Exception:  # noqa: BLE001 — o laço nunca morre
                     logging.exception("falha no laço de alertas")
@@ -631,6 +679,7 @@ async def _rodar() -> None:
                 try:
                     texto = await batimento.bater(bot.agente, datetime.now(BRT))
                     if texto:
+                        bot.registrar_proativo(dono, texto, "batimento")
                         for parte in dividir(texto):
                             await app.bot.send_message(dono, parte)
                 except Exception:  # noqa: BLE001
@@ -645,10 +694,12 @@ async def _rodar() -> None:
                     f = fila()
                     for t in f.a_entregar("telegram"):
                         if t.situacao == "erro":
+                            bot.registrar_proativo(dono, f"⚠️ A análise #{t.id} falhou: {t.erro[:500]}", "analise")
                             await app.bot.send_message(dono, f"⚠️ A análise #{t.id} falhou: {t.erro[:500]}")
                         else:
                             rel = f.relatorio(t.id)
                             texto = rel.resumo_curto() if rel else f"📑 {t.titulo}\n{t.resumo}"
+                            bot.registrar_proativo(dono, f"✅ Análise #{t.id} pronta\n{texto}", "analise")
                             await enviar(dono, Saida(f"✅ Análise #{t.id} pronta\n{texto}"))
                             for tipo_arq, caminho in t.arquivos().items():
                                 if tipo_arq in {"pdf", "planilha"}:
@@ -672,6 +723,12 @@ async def _rodar() -> None:
                         consolidado = agora.date()
                         r = await asyncio.to_thread(bot.agente.longa.consolidar)
                         logging.info("memória organizada: %s", r)
+                        integridade = await asyncio.to_thread(bot.agente.longa.verificar_integridade)
+                        if integridade != "ok":
+                            await app.bot.send_message(dono, f"⚠️ A memória do Quíron acusou um problema ({integridade[:200]}). "
+                                                             "Nada foi apagado; use /memoria estado e fale comigo no Claude Code.")
+                        pasta = await asyncio.to_thread(bot.agente.longa.fazer_copia)
+                        logging.info("cópia da memória: %s", pasta)
                 except Exception:  # noqa: BLE001 — o laço nunca morre
                     logging.exception("falha no laço da memória")
 

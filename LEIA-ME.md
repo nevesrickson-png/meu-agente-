@@ -60,7 +60,16 @@ O Quíron **lembra de você entre conversas, no Telegram e no Terminal**, sem vo
   `/memoria esquecer <nº>` · `/memoria mudar <nº> <texto>` · `/lembrar <fato>` (ou "lembre que …").
 - O arquivo `dados\workspace\MEMORIA.md` é a mesma memória em texto: você pode editar à mão (mudar, apagar ou
   acrescentar linhas) e o Quíron aplica. De madrugada ele junta repetidos e arquiva detalhes velhos sem uso.
-- `/esquecer CLI-XXX` (LGPD) apaga também a memória daquele cliente. Tudo fica em `dados\memoria.db` (entra no backup).
+- **Registro completo:** tudo fica gravado num banco de dados (SQLite, `dados\memoria.db` — mesma família do
+  Postgres, só que num arquivo, sem instalar nada): cada pergunta e resposta (Telegram e Terminal), comandos e o que
+  eles responderam, ferramentas usadas e o que devolveram, áudios transcritos, arquivos recebidos, lembretes e alertas
+  enviados, e cada mudança na memória. Só acrescenta; nada é alterado ou apagado (exceto pela LGPD).
+  `/memoria hoje` ou `/memoria 05/10` mostra a linha do tempo do dia · `/memoria estado` (tamanho, integridade, última
+  cópia) · `/memoria exportar` (arquivo com tudo, é seu) · `/memoria copia`.
+- **Cópia de segurança automática** todo dia (às 3h pelo Telegram, ou ao abrir o Quíron), guardando as 30 mais recentes
+  em `dados\backups\memoria\`. Manutenção pelo terminal: `uv run quiron-memoria estado | copia | verificar | exportar |
+  dia 05/10/2026 | restaurar 2026-10-05` (restaurar guarda antes o estado atual).
+- `/esquecer CLI-XXX` (LGPD) apaga também a memória daquele cliente (fatos, resumos e registros).
 
 ## Rodar no seu PC (Windows)
 Uma vez só:

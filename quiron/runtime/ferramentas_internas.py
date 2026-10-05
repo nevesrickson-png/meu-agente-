@@ -87,6 +87,10 @@ class FerramentasInternas:
             partes = []
             if self.longa is not None and (lembrado := self.longa.buscar(termo)):
                 partes.append("Memória (fatos e conversas resumidas):\n" + lembrado)
+            if self.longa is not None and (regs := self.longa.buscar_registros(termo, 6)):
+                partes.append("Registro completo (comandos, avisos enviados, arquivos):\n" + "\n".join(
+                    f"- {datetime.fromisoformat(r['quando']).astimezone(BRT):%d/%m/%Y %H:%M} [{r['tipo']}] {(r['conteudo'] or '')[:300]}"
+                    for r in regs))
             achados = self.memoria.buscar(termo)
             if achados:
                 partes.append("Mensagens antigas:\n" + "\n".join(

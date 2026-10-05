@@ -15,6 +15,7 @@ Segurança: toda rota daqui exige o cabeçalho da tela; as que mexem em chaves/s
 from __future__ import annotations
 
 import json
+import logging
 import os
 import platform
 import subprocess
@@ -209,6 +210,24 @@ def motivo_da_queda(registro: str) -> str:
 
 
 SUPERVISOR = Supervisor()
+
+
+def copia_diaria_da_memoria(intervalo_s: float = 3600, vezes: int | None = None) -> None:
+    """No PC (modo central), garante uma cópia da memória por dia mesmo sem o Telegram ligado."""
+    from quiron.runtime.memoria_longa import MemoriaLonga
+
+    n = 0
+    while vezes is None or n < vezes:
+        n += 1
+        try:
+            m = MemoriaLonga()
+            hoje = datetime.now().astimezone().strftime("%Y-%m-%d")
+            if not (m.pasta_copias() / hoje / m.caminho.name).exists():
+                m.fazer_copia()
+        except Exception:  # noqa: BLE001
+            logging.exception("falha na cópia diária da memória")
+        if vezes is None or n < vezes:
+            time.sleep(intervalo_s)
 
 
 # ---------------------------------------------------------------- proteção
@@ -470,6 +489,20 @@ def verificar_tudo(testar_rede: bool = True, ferramentas: Callable[[], tuple[int
     itens.append(_item("Regras de mercado (IR, FGC, poupança…)", None if pendentes else True,
                        f"{len(pendentes)} bloco(s) sem a sua conferência" if pendentes else "todas conferidas",
                        "Confira config/regras_mercado.yaml e preencha verificado_em (o Quíron avisa nas respostas)." if pendentes else ""))
+    try:
+        from quiron.runtime.memoria_longa import MemoriaLonga
+
+        mem = MemoriaLonga()
+        r, integra = mem.resumo(), mem.verificar_integridade()
+        copia = r["ultima_copia"]
+        recente = bool(copia) and (datetime.now().astimezone() - datetime.fromisoformat(copia)).days < 2
+        itens.append(_item("Memória persistente", integra == "ok" and (recente or not r["registros"]),
+                           f"{r['fatos']} fatos · {r['episodios']} conversas resumidas · {r['registros']} registros · {r['tamanho_mb']} MB · "
+                           f"integridade {integra} · última cópia {copia[:16].replace('T', ' ') if copia else 'nenhuma'}",
+                           "" if integra == "ok" and (recente or not r["registros"]) else
+                           "No Telegram: /memoria copia (cópia agora) e /memoria estado."))
+    except Exception as e:  # noqa: BLE001
+        itens.append(_item("Memória persistente", False, f"não abriu ({type(e).__name__}: {e})"[:200]))
     g = GOOGLE.estado()
     itens.append(_item("Google Agenda", True if g["autorizado"] else None, "conectado" if g["autorizado"] else "não conectado (opcional)"))
     return itens

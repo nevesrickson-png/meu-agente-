@@ -188,6 +188,7 @@ class MemoriaLonga:
         self.con.row_factory = sqlite3.Row
         with self.con:
             self.con.execute("PRAGMA journal_mode=WAL")
+            self.con.execute("PRAGMA synchronous=FULL")  # cada gravação vai para o disco (queda de luz não perde memória)
             self.con.executescript("""
             CREATE TABLE IF NOT EXISTS fatos (id INTEGER PRIMARY KEY, texto TEXT NOT NULL, categoria TEXT DEFAULT 'geral',
                 importancia INTEGER DEFAULT 3, origem TEXT DEFAULT 'extraido', criado_em TEXT, atualizado_em TEXT,
@@ -205,8 +206,16 @@ class MemoriaLonga:
             CREATE VIRTUAL TABLE IF NOT EXISTS episodios_busca USING fts5(texto, tokenize='unicode61 remove_diacritics 2');
             CREATE TABLE IF NOT EXISTS eventos (id INTEGER PRIMARY KEY, quando TEXT, tipo TEXT, texto TEXT);
             CREATE TABLE IF NOT EXISTS estado (chave TEXT PRIMARY KEY, valor TEXT);
+            CREATE TABLE IF NOT EXISTS registros (id INTEGER PRIMARY KEY, quando TEXT NOT NULL, canal TEXT, chat INTEGER,
+                tipo TEXT NOT NULL, conteudo TEXT, meta TEXT DEFAULT '');
+            CREATE INDEX IF NOT EXISTS registros_quando ON registros(quando);
+            CREATE VIRTUAL TABLE IF NOT EXISTS registros_busca USING fts5(conteudo, content='registros', content_rowid='id',
+                tokenize='unicode61 remove_diacritics 2');
+            CREATE TRIGGER IF NOT EXISTS registros_ai AFTER INSERT ON registros BEGIN
+                INSERT INTO registros_busca(rowid, conteudo) VALUES (new.id, new.conteudo); END;
             """)
         self._migrar_memoria_md_antiga()
+        self._migrar_conversas()
 
     # ------------------------------------------------------------ estado
     def _estado(self, chave: str, padrao: str = "") -> str:
@@ -279,6 +288,7 @@ class MemoriaLonga:
                                        "modelo_vetor) VALUES (?,?,?,?,?,?,?,?)",
                                        (texto, categoria, importancia, origem, _iso(), _iso(), vetor, modelo))
         self._exportar_md()
+        self.registrar("sistema", None, "memoria_fato", f"guardado #{cur.lastrowid} ({categoria}, {importancia}★, {origem}): {texto}")
         return f"Guardado na memória: {texto}", self.obter(cur.lastrowid)
 
     def _refazer_vetor(self, ident: int) -> None:
@@ -307,6 +317,7 @@ class MemoriaLonga:
             self.con.execute("UPDATE fatos SET ativo = 0, substituido_por = ?, atualizado_em = ? WHERE id = ?",
                              (cur.lastrowid, _iso(), ident))
         self._exportar_md()
+        self.registrar("sistema", None, "memoria_fato", f"atualizado #{ident} → #{cur.lastrowid}: {antigo.texto} → {texto.strip()}")
         return f"Atualizado: {antigo.texto} → {texto.strip()}"
 
     def esquecer(self, alvo: str) -> str:
@@ -322,6 +333,7 @@ class MemoriaLonga:
         with self.con:
             self.con.executemany("UPDATE fatos SET ativo = 0, atualizado_em = ? WHERE id = ?", [(_iso(), i) for i in ids])
         self._exportar_md()
+        self.registrar("sistema", None, "memoria_fato", f"esquecido(s) {', '.join(f'#{i}' for i in ids)}")
         return f"Esquecido: {len(ids)} item(ns)."
 
     def apagar_por_cliente(self, codigo: str) -> int:
@@ -331,14 +343,19 @@ class MemoriaLonga:
         eps = [r["id"] for r in self.con.execute("SELECT id, titulo, resumo, pendencias FROM episodios")
                if padrao.search(f"{r['titulo']} {r['resumo']} {r['pendencias']}")]
         evs = [r["id"] for r in self.con.execute("SELECT id, texto FROM eventos") if padrao.search(r["texto"])]
+        regs = [r["id"] for r in self.con.execute("SELECT id, conteudo, meta FROM registros WHERE conteudo LIKE ? OR meta LIKE ?",
+                                                  (f"%{codigo}%", f"%{codigo}%"))
+                if padrao.search(f"{r['conteudo']} {r['meta']}")]
         with self.con:
+            self.con.executemany("DELETE FROM registros WHERE id = ?", [(i,) for i in regs])
+            self.con.execute("INSERT INTO registros_busca(registros_busca) VALUES ('rebuild')")
             self.con.executemany("DELETE FROM fatos WHERE id = ?", [(i,) for i in ids])
             self.con.execute("INSERT INTO fatos_busca(fatos_busca) VALUES ('rebuild')")
             self.con.executemany("DELETE FROM episodios WHERE id = ?", [(i,) for i in eps])
             self.con.executemany("DELETE FROM eventos WHERE id = ?", [(i,) for i in evs])
         self._reindexar_episodios()
         self._exportar_md()
-        return len(ids) + len(eps) + len(evs)
+        return len(ids) + len(eps) + len(evs) + len(regs)
 
     # ------------------------------------------------------------ operações vindas da extração automática
     def aplicar(self, operacoes: Iterable[dict[str, Any]]) -> list[str]:
@@ -404,6 +421,7 @@ class MemoriaLonga:
             self.con.execute("INSERT INTO episodios_busca(rowid, texto) VALUES (?,?)",
                              (cur.lastrowid, f"{titulo} {resumo} {' '.join(pendencias)}"))
         r = self.con.execute("SELECT * FROM episodios WHERE id = ?", (cur.lastrowid,)).fetchone()
+        self.registrar("sistema", chat, "memoria_episodio", f"conversa resumida #{cur.lastrowid}: {titulo} — {resumo}")
         return self._episodio(r)
 
     def _reindexar_episodios(self) -> None:
@@ -631,13 +649,140 @@ class MemoriaLonga:
                 n += len(bloco)
         return n
 
+    # ------------------------------------------------------------ registro completo (tudo o que acontece, só acrescenta)
+    def registrar(self, canal: str, chat: int | None, tipo: str, conteudo: str, meta: dict[str, Any] | None = None) -> None:
+        """Grava qualquer acontecimento (mensagem, resposta, comando, ferramenta, aviso enviado, mudança na memória).
+        Nunca altera nem apaga o que já foi gravado (só a LGPD apaga). Nunca derruba quem chamou."""
+        try:
+            with self._trava, self.con:
+                self.con.execute("INSERT INTO registros(quando, canal, chat, tipo, conteudo, meta) VALUES (?,?,?,?,?,?)",
+                                 (_iso(), canal or "", chat, tipo, (conteudo or "")[:20000],
+                                  json.dumps(meta, ensure_ascii=False, default=str)[:4000] if meta else ""))
+        except sqlite3.Error:
+            logging.exception("não consegui gravar no registro da memória")
+
+    def registros_do_dia(self, dia: datetime | None = None, tipos: set[str] | None = None) -> list[sqlite3.Row]:
+        dia = (dia or datetime.now(_brt())).astimezone(_brt())
+        ini = dia.replace(hour=0, minute=0, second=0, microsecond=0)
+        linhas = self.con.execute("SELECT * FROM registros WHERE quando >= ? AND quando < ? ORDER BY id",
+                                  (_iso(ini.astimezone(timezone.utc)), _iso((ini + timedelta(days=1)).astimezone(timezone.utc)))).fetchall()
+        return [r for r in linhas if not tipos or r["tipo"] in tipos]
+
+    def linha_do_tempo(self, dia: datetime | None = None, limite: int = 60) -> str:
+        """O que aconteceu num dia, em ordem: o que ele disse/pediu, o que o Quíron respondeu e fez sozinho."""
+        nomes = {"entrada": "🗣️", "resposta": "🤖", "comando": "⌨️", "resposta_comando": "📋", "audio": "🎙️", "arquivo": "📎",
+                 "proativo": "🔔", "ferramenta": "🔧", "memoria_fato": "🧠", "memoria_episodio": "🗂️"}
+        linhas = [r for r in self.registros_do_dia(dia) if r["tipo"] != "ferramenta_resultado"]
+        if not linhas:
+            return "Nada registrado nesse dia."
+        saida = []
+        for r in linhas[-limite:]:
+            hora = datetime.fromisoformat(r["quando"]).astimezone(_brt()).strftime("%H:%M")
+            texto = re.sub(r"\s+", " ", r["conteudo"] or "")[:160]
+            saida.append(f"{hora} {nomes.get(r['tipo'], '•')} {texto}")
+        extra = f"(mostrando os últimos {limite} de {len(linhas)})\n" if len(linhas) > limite else ""
+        return extra + "\n".join(saida)
+
+    def buscar_registros(self, termo: str, limite: int = 8) -> list[sqlite3.Row]:
+        q = self._consulta_fts(termo)
+        if not q:
+            return []
+        try:
+            return self.con.execute("SELECT r.* FROM registros_busca b JOIN registros r ON r.id = b.rowid WHERE registros_busca "
+                                    "MATCH ? AND r.tipo != 'ferramenta_resultado' ORDER BY bm25(registros_busca) LIMIT ?",
+                                    (q, limite)).fetchall()
+        except sqlite3.OperationalError:
+            return []
+
+    def _migrar_conversas(self) -> None:
+        """Primeira vez: as conversas antigas (conversas.db) entram no registro completo, para ele começar inteiro."""
+        if self._estado("conversas_migradas"):
+            return
+        antigo = self.caminho.with_name("conversas.db")
+        n = 0
+        if antigo.exists():
+            try:
+                with sqlite3.connect(antigo) as con:
+                    linhas = con.execute("SELECT chat, quando, papel, texto FROM mensagens ORDER BY id").fetchall()
+                with self.con:
+                    self.con.executemany("INSERT INTO registros(quando, canal, chat, tipo, conteudo, meta) VALUES (?,?,?,?,?,?)",
+                                         [(q, "terminal" if c == -12 else "telegram", c, "entrada" if p == "user" else "resposta", t,
+                                           '{"migrado": true}') for c, q, p, t in linhas])
+                n = len(linhas)
+            except sqlite3.Error:
+                logging.exception("não consegui trazer as conversas antigas para o registro")
+                return
+        self._gravar_estado("conversas_migradas", str(n))
+
+    # ------------------------------------------------------------ cópias de segurança, integridade e exportação
+    def pasta_copias(self) -> Path:
+        return self.caminho.parent / "backups" / "memoria"
+
+    def fazer_copia(self, manter: int = 30, quando: datetime | None = None, nome: str | None = None) -> Path:
+        """Cópia consistente (API de backup do SQLite, funciona com o Quíron ligado) da memória e das conversas.
+        Uma pasta por dia (AAAA-MM-DD); as 30 mais recentes ficam. `nome` = pasta avulsa (não entra na rotação)."""
+        quando = (quando or datetime.now(_brt())).astimezone(_brt())
+        pasta = self.pasta_copias() / (nome or f"{quando:%Y-%m-%d}")
+        pasta.mkdir(parents=True, exist_ok=True)
+        for origem in (self.caminho, self.caminho.with_name("conversas.db")):
+            if not origem.exists():
+                continue
+            with sqlite3.connect(origem, timeout=30) as fonte, sqlite3.connect(pasta / origem.name) as destino:
+                fonte.backup(destino)
+        copias = sorted(p for p in self.pasta_copias().iterdir() if p.is_dir() and re.fullmatch(r"\d{4}-\d{2}-\d{2}", p.name))
+        for velha in copias[:-manter]:
+            import shutil
+
+            shutil.rmtree(velha, ignore_errors=True)
+        self._gravar_estado("ultima_copia", _iso())
+        return pasta
+
+    def verificar_integridade(self) -> str:
+        """'ok' ou a descrição do problema (PRAGMA integrity_check)."""
+        try:
+            r = self.con.execute("PRAGMA integrity_check").fetchone()[0]
+        except sqlite3.Error as e:
+            return f"erro: {e}"
+        return "ok" if r == "ok" else r
+
+    def restaurar_copia(self, dia: str) -> str:
+        """Volta a memória para a cópia de um dia (a atual é guardada antes, nada se perde)."""
+        pasta = self.pasta_copias() / dia
+        if not (pasta / self.caminho.name).exists():
+            disponiveis = ", ".join(p.name for p in sorted(self.pasta_copias().iterdir())) if self.pasta_copias().exists() else "nenhuma"
+            raise FileNotFoundError(f"Não há cópia de {dia}. Disponíveis: {disponiveis}")
+        self.fazer_copia(nome=f"antes-de-restaurar-{datetime.now(_brt()):%Y%m%d-%H%M%S}")  # guarda o estado atual antes
+        for nome in (self.caminho.name, "conversas.db"):
+            if (pasta / nome).exists():
+                with sqlite3.connect(pasta / nome) as fonte, sqlite3.connect(self.caminho.with_name(nome), timeout=30) as destino:
+                    fonte.backup(destino)
+        return f"Memória restaurada para a cópia de {dia}. Feche e abra o Quíron para recarregar."
+
+    def exportar(self, destino: Path | None = None) -> Path:
+        """Tudo em um JSON legível (fatos, conversas resumidas, registro completo) — os dados são do Rickson."""
+        destino = destino or self.caminho.parent / "exportacoes" / f"memoria-{datetime.now(_brt()):%Y%m%d-%H%M}.json"
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        dados = {
+            "exportado_em": _iso(),
+            "fatos": [dict(r) for r in self.con.execute("SELECT id, texto, categoria, importancia, origem, criado_em, atualizado_em, "
+                                                         "usos, ativo, substituido_por FROM fatos ORDER BY id")],
+            "conversas_resumidas": [dict(r) for r in self.con.execute("SELECT id, chat, inicio, fim, titulo, resumo, pendencias "
+                                                                       "FROM episodios ORDER BY id")],
+            "registro": [dict(r) for r in self.con.execute("SELECT id, quando, canal, chat, tipo, conteudo, meta FROM registros ORDER BY id")],
+        }
+        destino.write_text(json.dumps(dados, ensure_ascii=False, indent=1), encoding="utf-8")
+        return destino
+
     # ------------------------------------------------------------ números para a tela
     def resumo(self) -> dict[str, Any]:
         por = dict(self.con.execute("SELECT categoria, COUNT(*) FROM fatos WHERE ativo = 1 GROUP BY categoria").fetchall())
         return {"fatos": sum(por.values()), "por_categoria": por,
                 "episodios": self.con.execute("SELECT COUNT(*) FROM episodios").fetchone()[0],
                 "arquivados": self.con.execute("SELECT COUNT(*) FROM fatos WHERE ativo = 0").fetchone()[0],
-                "consolidado_em": self._estado("consolidado_em")}
+                "registros": self.con.execute("SELECT COUNT(*) FROM registros").fetchone()[0],
+                "tamanho_mb": round(sum(p.stat().st_size for p in (self.caminho, self.caminho.with_name(self.caminho.name + "-wal"))
+                                        if p.exists()) / 1e6, 2),
+                "ultima_copia": self._estado("ultima_copia"), "consolidado_em": self._estado("consolidado_em")}
 
 
 # ---------------------------------------------------------------- o "escriba": fecha episódios e extrai fatos com o modelo
@@ -742,3 +887,32 @@ class Escriba:
     @staticmethod
     def tem_pista(texto: str) -> bool:
         return bool(RE_PISTAS.search(texto or ""))
+
+
+# ---------------------------------------------------------------- linha de comando (manutenção sem Telegram)
+def main() -> None:
+    """`uv run quiron-memoria estado | copia | verificar | exportar | dia [DD/MM/AAAA] | restaurar AAAA-MM-DD`."""
+    import argparse
+
+    p = argparse.ArgumentParser(description="Memória persistente do Quíron")
+    p.add_argument("acao", choices=["estado", "copia", "verificar", "exportar", "dia", "restaurar"])
+    p.add_argument("valor", nargs="?", default="")
+    a = p.parse_args()
+    m = MemoriaLonga(vetorizador=_Vetorizador())
+    if a.acao == "estado":
+        for k, v in m.resumo().items():
+            print(f"{k}: {v}")
+        print(f"integridade: {m.verificar_integridade()}")
+    elif a.acao == "copia":
+        print(f"Cópia feita em {m.fazer_copia()}")
+    elif a.acao == "verificar":
+        r = m.verificar_integridade()
+        print("Integridade: ok" if r == "ok" else f"PROBLEMA: {r}")
+        raise SystemExit(0 if r == "ok" else 1)
+    elif a.acao == "exportar":
+        print(f"Exportado em {m.exportar()}")
+    elif a.acao == "dia":
+        dia = datetime.strptime(a.valor, "%d/%m/%Y").replace(tzinfo=_brt()) if a.valor else None
+        print(m.linha_do_tempo(dia, limite=500))
+    elif a.acao == "restaurar":
+        print(m.restaurar_copia(a.valor))

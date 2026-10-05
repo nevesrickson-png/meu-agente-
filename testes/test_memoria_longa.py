@@ -192,7 +192,7 @@ def test_lgpd_apaga_de_verdade_o_cliente():
     from quiron.servicos import lgpd
 
     r = lgpd.esquecer_cliente("CLI-012")
-    assert r.itens["memória persistente (fatos, conversas resumidas, eventos)"] == 3
+    assert r.itens["memória persistente (fatos, conversas resumidas, eventos)"] >= 3  # + registros que citam o código
     m2 = MemoriaLonga()
     assert [f.texto for f in m2.fatos()] == ["CLI-0123 é empresário"]  # código inteiro: CLI-012 não apaga CLI-0123
     assert not m2.episodios() and not m2.eventos_recentes()
@@ -269,3 +269,104 @@ def test_revetoriza_quando_o_modelo_muda():
         m.con.execute("UPDATE fatos SET modelo_vetor = 'modelo-antigo'")
     assert m.relevantes("prova do CFP")  # ainda acha por palavras
     assert m.revetorizar() == 1 and m.revetorizar() == 0
+
+
+# ---------------------------------------------------------------- registro completo: tudo gravado
+def test_agente_grava_pergunta_ferramentas_e_resposta(monkeypatch):
+    passos = iter([
+        cerebro.Turno("", [{"id": "c1", "nome": "lembrar", "argumentos": {"fato": "Rickson prefere FIIs de tijolo"}}],
+                      {"role": "assistant", "content": "", "tool_calls": [{"id": "c1", "type": "function",
+                       "function": {"name": "lembrar", "arguments": "{}"}}]}, "simulado"),
+        cerebro.Turno("Guardado.", [], {"role": "assistant", "content": "Guardado."}, "simulado"),
+    ])
+    monkeypatch.setattr(cerebro, "conversar", lambda *a, **k: next(passos))
+    ag = Agente(SemMCP(), Config(), em_segundo_plano=False)
+    asyncio.run(ag.responder("guarde que prefiro FIIs de tijolo", chat=-12))
+    tipos = [(r["canal"], r["tipo"]) for r in ag.longa.registros_do_dia()]
+    assert ("terminal", "entrada") in tipos and ("terminal", "ferramenta") in tipos and ("terminal", "ferramenta_resultado") in tipos
+    assert ("terminal", "resposta") in tipos and ("sistema", "memoria_fato") in tipos
+    linha = ag.longa.linha_do_tempo()
+    assert "🗣️ guarde que prefiro FIIs de tijolo" in linha and "🤖 Guardado." in linha and "🧠 guardado #1" in linha
+    assert ag.longa.buscar_registros("tijolo") and all(r["tipo"] != "ferramenta_resultado" for r in ag.longa.buscar_registros("tijolo"))
+
+
+def test_bot_grava_comandos_diretos_audio_arquivo_e_avisos(monkeypatch):
+    from quiron.runtime import audio
+    from quiron.runtime.telegram_bot import BotQuiron
+
+    monkeypatch.setattr(audio, "transcrever", lambda conteudo, nome: "/tarefa sexta revisar carteira do CLI-020")
+    bot = BotQuiron(Agente(SemMCP(), Config(), em_segundo_plano=False), {111})
+    asyncio.run(bot.tratar(111, 111, "/tarefa amanhã às 9h estudar duration"))
+    asyncio.run(bot.tratar_audio(111, 111, b"OggS"))
+    asyncio.run(bot.tratar_arquivo(111, 111, b"%PDF", "livro.pdf"))
+    bot.registrar_proativo(111, "⏰ Lembrete: estudar duration", "agenda")
+    asyncio.run(bot.tratar(999, 999, "/tarefa intruso"))  # estranho: nada gravado
+    regs = bot.agente.longa.registros_do_dia()
+    pares = [(r["tipo"], r["conteudo"][:22]) for r in regs]
+    assert ("comando", "/tarefa amanhã às 9h e") in pares and any(t == "resposta_comando" for t, _ in pares)
+    assert any(t == "audio" and c.startswith("/tarefa sexta") for t, c in pares)
+    assert any(t == "arquivo" and c.startswith("livro.pdf") for t, c in pares)
+    assert any(t == "proativo" for t, _ in pares) and not any("intruso" in r["conteudo"] for r in regs)
+
+
+def test_conversas_antigas_entram_no_registro(dados):
+    mem = Memoria()
+    mem.guardar(7, "user", "qual a Selic?")
+    mem.guardar(7, "assistant", "13,75% a.a.")
+    m = MemoriaLonga()
+    assert [r["tipo"] for r in m.registros_do_dia()] == ["entrada", "resposta"]
+    assert len(MemoriaLonga().registros_do_dia()) == 2  # não migra de novo
+
+
+def test_copia_restauracao_integridade_e_exportacao(dados):
+    m = MemoriaLonga()
+    m.adicionar("Rickson prefere relatórios em PDF", "preferencia", 4)
+    pasta = m.fazer_copia()
+    assert (pasta / "memoria.db").exists() and m.verificar_integridade() == "ok"
+    assert m.resumo()["ultima_copia"]
+    m.esquecer("#1")
+    assert not m.fatos()
+    dia = pasta.name
+    assert "restaurada" in m.restaurar_copia(dia)
+    assert [f.texto for f in MemoriaLonga().fatos()] == ["Rickson prefere relatórios em PDF"]
+    with pytest.raises(FileNotFoundError):
+        m.restaurar_copia("1999-01-01")
+    arq = MemoriaLonga().exportar()
+    conteudo = json.loads(arq.read_text(encoding="utf-8"))
+    assert conteudo["fatos"] and conteudo["registro"] and "conversas_resumidas" in conteudo
+    for i in range(35):  # guarda só as 30 mais recentes
+        m.fazer_copia(quando=datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(days=i))
+    assert len([p for p in m.pasta_copias().iterdir() if not p.name.startswith("antes-")]) == 30
+    assert any(p.name.startswith("antes-de-restaurar-") for p in m.pasta_copias().iterdir())
+
+
+def test_lgpd_apaga_tambem_do_registro():
+    m = MemoriaLonga()
+    m.registrar("telegram", 7, "entrada", "o CLI-012 quer previdência")
+    m.registrar("telegram", 7, "entrada", "o CLI-0123 quer FII")
+    assert m.apagar_por_cliente("CLI-012") >= 1
+    textos = [r["conteudo"] for r in MemoriaLonga().registros_do_dia()]
+    assert not any("CLI-012 " in t for t in textos) and any("CLI-0123" in t for t in textos)
+    assert not MemoriaLonga().buscar_registros("previdência")
+
+
+def test_bot_memoria_hoje_estado_exportar(monkeypatch):
+    from quiron.runtime.telegram_bot import BotQuiron
+
+    bot = BotQuiron(Agente(SemMCP(), Config(), em_segundo_plano=False), {111})
+    asyncio.run(bot.tratar(111, 111, "/lembrar prefiro reuniões às terças"))
+    hoje = asyncio.run(bot.tratar(111, 111, "/memoria hoje"))[0].texto
+    assert hoje.startswith("📜 Registro de") and "/lembrar prefiro reuniões" in hoje
+    assert "integridade: ok" in asyncio.run(bot.tratar(111, 111, "/memoria estado"))[0].texto
+    assert "Cópia de segurança feita" in asyncio.run(bot.tratar(111, 111, "/memoria copia"))[0].texto
+    exp = asyncio.run(bot.tratar(111, 111, "/memoria exportar"))[0]
+    assert exp.arquivo and exp.arquivo.endswith(".json")
+    assert "Data inválida" in asyncio.run(bot.tratar(111, 111, "/memoria 31/02"))[0].texto
+
+
+def test_terminal_faz_a_copia_do_dia(dados):
+    from quiron.terminal.backend import central
+
+    central.copia_diaria_da_memoria(vezes=1)
+    hoje = datetime.now().astimezone().strftime("%Y-%m-%d")
+    assert (dados / "backups" / "memoria" / hoje / "memoria.db").exists()

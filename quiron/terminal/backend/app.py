@@ -767,6 +767,7 @@ def main(argv: list[str] | None = None) -> int:
             relogio.start()
 
         central.SAIR = sair
+        threading.Thread(target=central.copia_diaria_da_memoria, name="copia-memoria", daemon=True).start()
         if completo and not offline.ativo():
             try:
                 central.SUPERVISOR.ligar()

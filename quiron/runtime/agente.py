@@ -9,6 +9,7 @@ Independente de canal: Telegram, linha de comando e comparativo usam a mesma cla
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 import threading
@@ -31,6 +32,10 @@ from quiron.runtime.workspace import Workspace
 MAX_PASSOS = 8  # limite de idas e vindas com ferramentas por pergunta
 BRT = ZoneInfo("America/Sao_Paulo")
 FERRAMENTA_SKILL = DEFINICOES[0]  # compatibilidade
+
+
+def canal_de(chat: int | None) -> str:
+    return "cli" if chat is None else "terminal" if chat == -12 else "telegram"
 
 
 def indice_skills() -> str:
@@ -135,6 +140,8 @@ class Agente:
                         skills: list[str] | None = None) -> Registro:
         reg = Registro(pergunta)
         inicio = time.time()
+        canal = canal_de(chat)
+        self.longa.registrar(canal, chat, "entrada", pergunta, {"skills": skills} if skills else None)
         if historico is None and chat is not None:
             self.fechar_se_ocioso(chat)
             historico = self.memoria.historico(chat)
@@ -166,7 +173,9 @@ class Agente:
                     break
                 for c in turno.chamadas:
                     reg.ferramentas.append(c["nome"])
+                    self.longa.registrar(canal, chat, "ferramenta", f"{c['nome']} {json.dumps(c['argumentos'], ensure_ascii=False)[:600]}")
                     resultado = await self._com_permissao(c["nome"], c["argumentos"], reg)
+                    self.longa.registrar(canal, chat, "ferramenta_resultado", resultado[:4000], {"ferramenta": c["nome"]})
                     mensagens.append({"role": "tool", "tool_call_id": c["id"], "name": c["nome"], "content": resultado[:12000]})
             else:
                 reg.resposta = "Não consegui concluir em poucas etapas. Pode reformular ou dividir o pedido?"
@@ -176,6 +185,8 @@ class Agente:
         if not reg.erro:
             reg.resposta = permissoes.aplicar_compliance(pergunta, reg.resposta)
         reg.segundos = round(time.time() - inicio, 1)
+        self.longa.registrar(canal, chat, "resposta", reg.resposta,
+                             {"modelos": sorted(set(reg.modelos)), "segundos": reg.segundos, **({"erro": reg.erro} if reg.erro else {})})
         if chat is not None and not reg.erro:
             self.memoria.guardar(chat, "user", pergunta)
             self.memoria.guardar(chat, "assistant", reg.resposta)

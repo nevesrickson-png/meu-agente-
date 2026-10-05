@@ -343,6 +343,13 @@ Falta: você abrir pelo atalho no seu PC e salvar as chaves por lá uma vez para
 (sem dizer "lembre"); o escriba guardou 3 fatos e o resumo; em OUTRA conversa o Quíron respondeu certo, sem ferramentas.
 239 testes (`testes/test_memoria_longa.py`). Falta: você conversar uns dias e conferir com `/memoria`.
 
+## Registro completo da memória (05/10/2026) — pedido do Rickson: "um sistema leve que grave as memórias todas"
+- [x] Banco de dados SQLite (mesma família do Postgres, sem servidor) gravando tudo: conversas, comandos e respostas,
+  ferramentas e resultados, áudios, arquivos, avisos enviados, mudanças na memória — só acrescenta
+- [x] Linha do tempo por dia, busca, exportação, cópia automática diária (30 dias), verificação de integridade, restauração
+✅ Aceite (05/10/2026) com a IA real: `/memoria hoje` mostrou comando, resposta, pergunta, ferramenta usada e resposta
+final; 0,5 ms por gravação, busca em 3 mil registros em 4 ms. 246 testes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

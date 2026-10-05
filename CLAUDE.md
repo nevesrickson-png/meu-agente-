@@ -143,7 +143,15 @@ Arquivos com DRM não são processados.
   (`importar_edicoes_md` por hash; migra o formato antigo). Agente: `em_segundo_plano` (escriba em thread),
   `fechar_se_ocioso`, `novo_assunto`; Workspace.fatos/lembrar/esquecer delegam aqui; LGPD `apagar_por_cliente`. Bot:
   `/memoria` (conversas, buscar, esquecer, mudar, consolidar), `/lembrar`, eventos em `_registrar_evento`.
-  Testes: `testes/test_memoria_longa.py`.
+  Registro completo (append-only, tabela `registros` + FTS5, `synchronous=FULL`): `registrar(canal, chat, tipo, conteudo,
+  meta)` — tipos entrada/resposta/ferramenta/ferramenta_resultado (agente, canal por `canal_de`), comando/resposta_comando
+  (sub-bots, em `BotQuiron.tratar` quando não passa pelo agente), audio, arquivo, proativo (`registrar_proativo` nos
+  laços), memoria_fato/memoria_episodio; migra `conversas.db` uma vez; `linha_do_tempo`, `buscar_registros` (também no
+  `buscar_conversas`), `fazer_copia` (API de backup do SQLite, pasta por dia, 30 mantidas; `nome=` avulsa),
+  `restaurar_copia` (guarda `antes-de-restaurar-*`), `verificar_integridade`, `exportar` (JSON). Cópia às 3h no
+  `laco_memoria` + `central.copia_diaria_da_memoria` no modo central; "Verificar tudo" mostra a saúde da memória.
+  CLI `quiron-memoria`. Bot: `/memoria hoje|DD/MM|estado|copia|exportar`. Postgres: não usado de propósito (um usuário,
+  PC de 8 GB; SQLite é o mesmo modelo relacional sem servidor) — o esquema é simples de levar para Postgres no servidor.
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.
