@@ -18,6 +18,8 @@ from quiron.nucleo.config import carregar_config
 from quiron.runtime import batimento
 from quiron.runtime.academia_bot import COMANDOS as COMANDOS_ACADEMIA
 from quiron.runtime.academia_bot import AcademiaBot, Tela
+from quiron.runtime.assessoria_bot import COMANDOS as COMANDOS_ASSESSORIA
+from quiron.runtime.assessoria_bot import AssessoriaBot
 from quiron.runtime.agendador import BRT
 from quiron.runtime.agente import Agente
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
@@ -68,6 +70,7 @@ class BotQuiron:
         self.agente, self.permitidos = agente, permitidos
         self.comandos = carregar_comandos()
         self.academia = AcademiaBot()
+        self.assessoria = AssessoriaBot()
 
     def autorizado(self, usuario: int) -> bool:
         if usuario not in self.permitidos:
@@ -80,7 +83,9 @@ class BotQuiron:
         linhas += [f"/{c.nome} — {c.descricao}" for c in self.comandos.values()]
         linhas += ["", "🎓 Academia (20 campos + certificações): /academia painel · /area [nome] · "
                    "/questoes [área] [módulo|tema] · /simulado [área] [mini|40|completo] · /flashcards · /diagnostico · "
-                   "/plano [horas]", ""]
+                   "/plano [horas]", "",
+                   "🤝 Assessoria: /pos CLI-XXX (depois mande o áudio da reunião → resumo e lembretes) · "
+                   "/treino [personagem] [cenário] [dificuldade] · /treino fim (feedback) · /treino opcoes · /treino evolucao", ""]
         linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
         return "\n".join(linhas)
 
@@ -100,8 +105,15 @@ class BotQuiron:
             fatos = self.agente.workspace.fatos()
             return [Saida("O que eu sei sobre você:\n" + "\n".join(f"• {f}" for f in fatos) if fatos else "Ainda não guardei nada. Diga “lembre que…”.")]
         skills: list[str] = []
+        if not texto.startswith("/"):
+            telas = await self.assessoria.texto_livre(chat, texto)  # pós-reunião aguardando ou treino ativo
+            if telas is not None:
+                return [self._saida(t) for t in telas]
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
+            if nome.split("@")[0].lower() in COMANDOS_ASSESSORIA:
+                telas = await self.assessoria.comando(nome.split("@")[0].lower(), args, chat)
+                return [self._saida(t) for t in telas]
             if nome.split("@")[0].lower() in COMANDOS_ACADEMIA:
                 telas = await self.academia.comando(nome.split("@")[0].lower(), args)
                 return [self._saida(t) for t in telas]
@@ -125,6 +137,12 @@ class BotQuiron:
             return None, []
         c = await self.academia.clique(dado)
         return c.editar, [self._saida(t) for t in c.novas]
+
+    async def clicar_assessoria(self, usuario: int, dado: str) -> list[Saida]:
+        if not self.autorizado(usuario):
+            return []
+        c = await self.assessoria.clique(dado)
+        return [self._saida(t) for t in c.novas]
 
     async def decidir(self, usuario: int, dado: str) -> str:
         if not self.autorizado(usuario):
@@ -297,6 +315,15 @@ async def _rodar() -> None:
                     else:
                         await q.edit_message_reply_markup(None)
                 except Exception:  # noqa: BLE001 — mensagem antiga ou igual: segue o fluxo
+                    pass
+                for s in saidas:
+                    await enviar(q.message.chat_id, s)
+                return
+            if (q.data or "").startswith("as:"):
+                saidas = await bot.clicar_assessoria(q.from_user.id, q.data)
+                try:
+                    await q.edit_message_reply_markup(None)
+                except Exception:  # noqa: BLE001
                     pass
                 for s in saidas:
                     await enviar(q.message.chat_id, s)

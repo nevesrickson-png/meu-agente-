@@ -1,0 +1,98 @@
+# Objeções comuns de clientes e um roteiro para tratá-las (Fase 13). Método em 5 passos:
+# 1) validar (sem concordar com o erro) · 2) perguntar para entender o que há por trás · 3) reenquadrar pelo objetivo
+# do cliente · 4) evidência (fato com fonte, números do caso) · 5) próximo passo pequeno.
+# Fatos com número (FGC, IR) vêm de config/regras_mercado.yaml — confira `verificado_em` lá.
+verificado_em:
+
+objecoes:
+  gerente_banco:
+    frases: ["já tenho gerente", "meu banco cuida", "por que sair do banco", "confio no meu banco"]
+    por_tras: "medo de mudar, lealdade, falta de comparação de custos"
+    perguntas: ["O que você mais valoriza no atendimento de hoje?", "Quando foi a última revisão da sua carteira com ele?"]
+    reenquadrar: "não é trocar de banco: é ter alguém olhando o todo (custos, impostos, objetivos), com mais opções que um só emissor"
+    evidencias: ["compare taxa de administração e rentabilidade líquida dos produtos atuais vs. alternativas de mesmo risco"]
+    evitar: ["falar mal do gerente ou do banco"]
+  comissao_conflito:
+    frases: ["vocês ganham comissão", "vai me empurrar produto", "conflito de interesse"]
+    por_tras: "desconfiança legítima sobre remuneração"
+    perguntas: ["O que te deixaria tranquilo sobre a forma como eu sou remunerado?"]
+    reenquadrar: "transparência: explique como é remunerado e que a recomendação passa pelo suitability (Res. CVM 30) e pelas regras de conduta do assessor (Res. CVM 178)"
+    evidencias: ["a remuneração do assessor deve ser informada ao cliente (Res. CVM 178)", "mostre o custo total da carteira proposta"]
+    evitar: ["negar que existe remuneração", "ficar na defensiva"]
+  bolsa_cassino:
+    frases: ["bolsa é cassino", "ações é jogo", "medo de bolsa", "já perdi na bolsa"]
+    por_tras: "experiência ruim, falta de horizonte, confusão entre especular e investir"
+    perguntas: ["O que aconteceu da vez que você perdeu?", "Para quando é esse dinheiro?"]
+    reenquadrar: "renda variável só com horizonte longo e na dose do perfil; ninguém precisa ter bolsa para cumprir o objetivo"
+    evidencias: ["mostre a pior queda e o tempo de recuperação do Ibovespa em janelas longas (calcule com dados do Quíron)"]
+    evitar: ["dizer que bolsa sempre sobe no longo prazo como certeza"]
+  poupanca_segura:
+    frases: ["na poupança nunca perdi", "poupança é segura", "prefiro a poupança"]
+    por_tras: "aversão a risco, simplicidade, liquidez"
+    perguntas: ["O que é mais importante: poder sacar a qualquer momento ou render mais?"]
+    reenquadrar: "dá para manter a mesma segurança (FGC ou Tesouro) e liquidez rendendo mais"
+    evidencias: ["Tesouro Selic tem risco soberano e liquidez diária", "CDB/LCI com FGC até o limite por CPF por instituição (regras_mercado.fgc)", "compare a poupança com o CDI do período (calculadora)"]
+    evitar: ["chamar a escolha de errada"]
+  banco_quebrar:
+    frases: ["e se o banco quebrar", "e se a corretora quebrar", "medo de golpe"]
+    por_tras: "medo de perder tudo, notícias de fraude"
+    perguntas: ["Você já passou por alguma situação assim?"]
+    reenquadrar: "separe risco do emissor (FGC até o limite) do risco da corretora (ativos ficam em nome do cliente na B3/Tesouro)"
+    evidencias: ["FGC: limite por CPF por instituição e teto global (regras_mercado.fgc)", "títulos e ações ficam registrados no CPF do cliente na B3 (custódia)"]
+    evitar: ["dizer que é impossível perder"]
+  sem_tempo:
+    frases: ["não tenho tempo", "depois a gente vê", "estou muito ocupado"]
+    por_tras: "prioridade baixa ou medo de mais uma tarefa"
+    perguntas: ["Se eu resolver o trabalho chato e você só decidir em 15 minutos, faz sentido?"]
+    reenquadrar: "o trabalho é do assessor; o cliente só decide"
+    evidencias: ["mostre o custo de adiar (ex.: diferença de rentabilidade em 12 meses no caso dele)"]
+    evitar: ["reunião longa", "insistir no mesmo dia"]
+  invisto_sozinho:
+    frases: ["invisto sozinho", "ganho mais que vocês", "faço sozinho pelo app"]
+    por_tras: "orgulho, desconfiança, resultado recente bom"
+    perguntas: ["Que bom! Como você decide quando vender?", "Quanto da sua carteira está em uma única aposta?"]
+    reenquadrar: "não competir: oferecer o que ele não faz (sucessão, IR, proteção, risco de concentração)"
+    evidencias: ["calcule a concentração e a volatilidade da carteira dele (PORT / diagnóstico)"]
+    evitar: ["desmerecer o resultado dele"]
+  previdencia_furada:
+    frases: ["previdência é furada", "previdência tem taxa alta", "não gosto de previdência"]
+    por_tras: "experiência com plano caro de banco"
+    perguntas: ["Você sabe a taxa de administração e o regime de IR do seu plano?"]
+    reenquadrar: "previdência é ferramenta (IR, sucessão sem inventário em muitos estados), o problema costuma ser o plano caro"
+    evidencias: ["compare taxa e rentabilidade com previdencia_portabilidade", "PGBL deduz até 12% da renda tributável na declaração completa"]
+    evitar: ["defender plano caro"]
+  vou_pensar:
+    frases: ["vou pensar", "deixa eu pensar", "preciso falar com minha esposa", "preciso falar com meu marido"]
+    por_tras: "dúvida não dita, decisão compartilhada ou falta de urgência"
+    perguntas: ["O que ainda não ficou claro?", "Faz sentido a gente conversar junto com sua esposa/seu marido?"]
+    reenquadrar: "respeite o tempo; combine data e o que falta para decidir"
+    evidencias: []
+    evitar: ["pressão", "urgência artificial"]
+  comparacao_vizinho:
+    frases: ["meu vizinho ganhou mais", "meu amigo ganhou 20%", "rendeu pouco"]
+    por_tras: "frustração, comparação com período/risco diferentes"
+    perguntas: ["Que investimento era o dele e quanto risco ele correu?"]
+    reenquadrar: "compare com o objetivo e o risco combinados, não com o melhor ativo do ano"
+    evidencias: ["mostre rentabilidade × CDI e × benchmark do perfil, e a volatilidade da carteira (sempre com ressalva de rentabilidade passada)"]
+    evitar: ["prometer recuperar", "culpar o mercado sem números"]
+  imoveis:
+    frases: ["prefiro imóveis", "imóvel não desvaloriza", "meu tio disse para comprar imóvel"]
+    por_tras: "tangibilidade, cultura familiar"
+    perguntas: ["O que te atrai no imóvel: renda, segurança ou deixar para os filhos?"]
+    reenquadrar: "comparar renda líquida (aluguel − custos − vacância − IR) com alternativas, incluindo FIIs e liquidez"
+    evidencias: ["calcule o rendimento líquido do aluguel do caso vs. NTN-B/FII (calculadoras)"]
+    evitar: ["dizer que imóvel é mau investimento"]
+  esperar_momento:
+    frases: ["vou esperar o mercado melhorar", "esperar a eleição", "esperar os juros caírem"]
+    por_tras: "medo de timing errado"
+    perguntas: ["O que precisaria acontecer para você se sentir confortável?"]
+    reenquadrar: "entrada gradual (aportes programados) e parte em pós-fixado enquanto decide"
+    evidencias: []
+    evitar: ["prever o mercado com certeza"]
+  taxa_alta:
+    frases: ["a taxa é alta", "é caro", "esse fundo cobra muito"]
+    por_tras: "atenção a custo (legítima)"
+    perguntas: ["Comparado com o quê?"]
+    reenquadrar: "olhar retorno LÍQUIDO de taxas e impostos, e pares de mesma estratégia"
+    evidencias: ["percentil entre pares e rentabilidade líquida (FUND/CMPF)"]
+    evitar: ["dizer que taxa não importa"]

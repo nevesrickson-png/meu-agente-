@@ -11,7 +11,8 @@ MODELO = "whisper-large-v3-turbo"
 LIMITE_BYTES = 24 * 1024 * 1024  # o Groq aceita até 25 MB por arquivo
 # Vocabulário que o Whisper deve reconhecer (nomes próprios e jargão de mercado)
 VOCABULARIO = ("Quíron, Selic, CDI, IPCA, IPCA+, Copom, Focus, Tesouro Direto, Ibovespa, CDB, LCI, LCA, CRI, CRA, "
-               "debênture, PGBL, VGBL, FII, duration, CLI-012, PETR4, VALE3, ITUB4, CFP, CNPI, briefing")
+               "debênture, PGBL, VGBL, portabilidade, multimercado, previdência, suitability, FII, duration, CLI-012, PETR4, VALE3, "
+               "ITUB4, CFP, CNPI, briefing")
 
 
 class AudioIndisponivel(RuntimeError):

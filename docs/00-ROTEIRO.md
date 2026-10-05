@@ -235,9 +235,17 @@ Execute a FASE 12 do docs/00-ROTEIRO.md seguindo o docs/06-TERMINAL.md.
 ```
 
 ## FASE 13 — Assessoria do dia a dia
-- [ ] 13.1 Dossiê de reunião · 13.2 Pós-reunião por áudio · 13.3 Treino com cliente simulado
-- [ ] 13.4 Objeções, explicações, mensagens (RASCUNHO), vencimentos · 13.5 `/esquecer` (LGPD)
+- [x] 13.1 Dossiê de reunião (`/reuniao CLI-XXX`: ficha, carteira e enquadramento, vencimentos, últimas reuniões,
+  lembretes e relatórios → roteiro) · 13.2 Pós-reunião por áudio (`/pos CLI-XXX` + áudio → resumo, decisões, tarefas com
+  prazos calculados em Python, lembretes, sugestões para a ficha com botão, alertas de compliance) · 13.3 Treino com
+  cliente simulado (`/treino`: 5 personagens, 5 cenários, 3 dificuldades; feedback com métricas calculadas + rubrica)
+- [x] 13.4 Objeções (`config/objecoes.yaml`), explicações, mensagens (RASCUNHO + `conferir_compliance`), vencimentos
+  das carteiras · 13.5 `/esquecer` (LGPD) também apaga anotações de reunião e lembretes do cliente
 **Teste de aceite:** áudio pós-reunião vira resumo e tarefas; treino gera feedback útil.
+✅ Aceite (05/10/2026): um áudio falado (voz sintética em português) foi transcrito pelo Whisper e virou resumo,
+3 tarefas (sexta e amanhã calculadas, 1 com prazo sugerido), lembrete da próxima reunião e sugestões para a ficha; um
+treino com o "Dr. Henrique" gerou nota por critério, objetivo oculto descoberto, compliance zerado pela promessa de 20%
+e reescrita da frase (`testes/test_assessoria_online.py`).
 ```
 Execute a FASE 13 do docs/00-ROTEIRO.md.
 ```

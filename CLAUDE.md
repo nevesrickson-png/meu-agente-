@@ -204,6 +204,18 @@ Arquivos com DRM não são processados.
   com rodapé "Uso interno — não constitui relatório de análise (Resolução CVM 20)". Financeiras: sem DCF da firma.
   MCP `quiron-mercado` `buscar_empresa`; skill `agente/skills/valuation.md`; comandos /empresa, /valuation, /tese,
   /setor, /resultado; premissas em `config/valuation.yaml`; aceite online em `testes/test_valuation_online.py`.
+- Assessoria (Fase 13, `quiron/servicos/assessoria/`): `datas.py` (expressões ditas → data em Python; o modelo só copia
+  a expressão), `compliance.py` (regras de promessa/risco/certeza/rentabilidade passada/FGC/pressão + dados pessoais;
+  ignora negação), `pos_reuniao.py` (transcrição mascarada → JSON do cérebro ou plano B por regras → tarefas viram
+  lembretes `[CLI-XXX]` (sem prazo dito = 2 dias úteis), próximo contato, sugestões de ficha só de campos simples
+  validados e aplicadas com confirmação; `dados/reunioes/<CLI>/`), `treino.py` (`config/treino.yaml`; `dados/treino.db`;
+  cliente via `cerebro.conversar`; feedback = métricas Python + rubrica do modelo, nota ponderada aqui, compliance ≤ 3
+  com alerta grave), `objecoes.py` (`config/objecoes.yaml`), `vencimentos.py` (carteira mais recente por cliente) e
+  `dossie.py`. MCP `quiron-assessoria` ganhou dossie_reuniao, registrar_pos_reuniao, aplicar_reuniao_na_ficha
+  (confirmar), reunioes_do_cliente, objecoes, conferir_compliance, vencimentos e as ferramentas de treino. Telegram:
+  `runtime/assessoria_bot.py` (direto, sem LLM no laço: `/pos` espera o próximo áudio/texto; treino ativo captura as
+  mensagens; botões `as:*`). Skill `agente/skills/assessoria.md`; comandos /reuniao, /objecao, /explicar, /mensagem,
+  /vencimentos. `lgpd.py` apaga também reuniões e lembretes. Aceite online em `testes/test_assessoria_online.py`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.

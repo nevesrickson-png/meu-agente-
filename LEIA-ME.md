@@ -184,6 +184,18 @@ Digite na barra do Terminal (ou escolha o layout **Assessoria**):
 - **Celular:** com o Terminal no servidor, abra o endereço do Tailscale no navegador do celular (app Tailscale ligado) e
   use “Adicionar à tela inicial”. Use sempre uma `TERMINAL_SENHA`.
 
+## Assessoria do dia a dia (Fase 13)
+- **Antes da reunião:** `/reuniao CLI-012` — o que mudou, perguntas para fazer, pontos a levar e próximo passo.
+- **Depois da reunião:** `/pos CLI-012` e mande um **áudio** contando o que foi falado, decidido e combinado (com prazos).
+  Volta o resumo, as tarefas viram **lembretes** (o Quíron calcula "sexta que vem", "dia 20"…) e as sugestões para a
+  ficha só entram se você tocar em **Aplicar na ficha**. Errou? **Desfazer lembretes**. Fale o **código**, nunca o nome.
+- **Treino:** `/treino` sorteia um cliente fictício (ou `/treino medico_ocupado primeira_reuniao dificil`); responda por
+  texto ou áudio e mande `/treino fim` para o feedback. `/treino opcoes` lista personagens; `/treino evolucao` mostra
+  sua evolução. Personagens e cenários em `config/treino.yaml`.
+- `/objecao meu gerente já cuida disso` · `/explicar LCI para aposentada conservadora` · `/mensagem WhatsApp CLI-012
+  vencimento do CDB` (sai como RASCUNHO e passa por conferência de compliance) · `/vencimentos 60`.
+- `/esquecer CLI-012` apaga também as anotações de reunião e os lembretes do cliente.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

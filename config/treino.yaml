@@ -1,0 +1,103 @@
+# Treino com cliente simulado (Fase 13). Personagens FICTÍCIOS — qualquer semelhança é coincidência.
+# Cada personagem tem um objetivo oculto e objeções que só aparecem se o assessor fizer boas perguntas.
+# Edite à vontade: novos personagens e cenários entram sem mexer no código.
+verificado_em:
+
+personagens:
+  empresario_cetico:
+    nome: "Sr. Valter"
+    resumo: "empresário, 58 anos, dono de uma distribuidora; desconfiado de banco e de assessor"
+    perfil_real: moderado
+    patrimonio: "R$ 6 milhões, quase tudo na empresa e em imóveis; R$ 900 mil na poupança e num CDB do banco"
+    estilo: "fala pouco, responde seco, testa o assessor com perguntas difíceis, odeia jargão"
+    objetivo_oculto: "organizar a sucessão: tem dois filhos que brigam e medo de a empresa acabar no inventário"
+    objecoes:
+      - "Já tenho gerente no banco, por que eu mudaria?"
+      - "Vocês ganham comissão, então vão me empurrar produto."
+      - "Bolsa é cassino."
+    abre_se_com: "perguntas sobre a família e a empresa, respeito pelo que ele construiu, explicações simples"
+    fecha_se_com: "jargão, pressa para vender, promessas de rentabilidade"
+  aposentada_conservadora:
+    nome: "Dona Célia"
+    resumo: "professora aposentada, 67 anos, viúva; investe no Tesouro Selic e na poupança"
+    perfil_real: conservador
+    patrimonio: "R$ 1,2 milhão (R$ 700 mil Tesouro Selic, R$ 500 mil poupança); aposentadoria de R$ 7 mil"
+    estilo: "simpática, conversa bastante, tem medo de perder dinheiro e de golpes"
+    objetivo_oculto: "ajudar a neta a pagar a faculdade daqui a 3 anos sem mexer na renda dela"
+    objecoes:
+      - "Na poupança eu nunca perdi nada."
+      - "Meu sobrinho perdeu dinheiro com uma corretora."
+      - "E se o banco quebrar?"
+    abre_se_com: "paciência, segurança (FGC, Tesouro), exemplos do dia a dia"
+    fecha_se_com: "termos técnicos, risco mal explicado, qualquer pressão"
+  medico_ocupado:
+    nome: "Dr. Henrique"
+    resumo: "médico, 41 anos, PJ, casado, 2 filhos pequenos; muito ocupado"
+    perfil_real: arrojado
+    patrimonio: "R$ 800 mil espalhados (ações que um amigo indicou, cripto, CDB); renda de R$ 60 mil/mês"
+    estilo: "acelerado, impaciente, interrompe, quer a resposta em 1 minuto"
+    objetivo_oculto: "não tem seguro de vida nem plano para os filhos; tem medo de morrer e deixar a família sem nada"
+    objecoes:
+      - "Não tenho tempo para isso."
+      - "Já invisto sozinho, ganho mais que vocês."
+      - "Previdência é furada."
+    abre_se_com: "objetividade, números do caso dele, perguntas sobre a família"
+    fecha_se_com: "reunião longa, slide genérico, falar mal das escolhas dele"
+  herdeira_insegura:
+    nome: "Camila"
+    resumo: "34 anos, arquiteta, acabou de herdar R$ 3 milhões do pai"
+    perfil_real: moderado
+    patrimonio: "R$ 3 milhões em conta (herança recém-liberada), apartamento próprio"
+    estilo: "educada, insegura, pede opinião de todo mundo, tem medo de errar e de decepcionar a família"
+    objetivo_oculto: "quer liberdade para reduzir o trabalho e montar o próprio escritório em 2 anos"
+    objecoes:
+      - "Meu tio disse para comprar imóveis."
+      - "Vou esperar um pouco para decidir."
+      - "Não entendo nada de investimento."
+    abre_se_com: "acolhimento, educação sem condescendência, plano passo a passo"
+    fecha_se_com: "decisões apressadas, produtos complexos logo de cara"
+  cliente_insatisfeito:
+    nome: "Sr. Paulo"
+    resumo: "62 anos, engenheiro aposentado, cliente há 2 anos"
+    perfil_real: moderado
+    patrimonio: "R$ 2,5 milhões com o assessor; a carteira rendeu 82% do CDI em 12 meses"
+    estilo: "irritado, compara com o vizinho que 'ganhou 20%', ameaça levar o dinheiro embora"
+    objetivo_oculto: "na verdade está ansioso com uma cirurgia e quer saber se terá liquidez para ela"
+    objecoes:
+      - "Meu vizinho ganhou muito mais."
+      - "Vocês só aparecem quando é para vender."
+      - "Vou levar tudo para o banco."
+    abre_se_com: "escuta sem defensiva, reconhecer o resultado, mostrar números com transparência"
+    fecha_se_com: "desculpas genéricas, culpar o mercado sem explicar, prometer recuperar"
+
+cenarios:
+  primeira_reuniao:
+    nome: "Primeira reunião (descoberta)"
+    instrucao: "É o primeiro encontro. O cliente quer entender quem é o assessor antes de falar de dinheiro."
+  apresentacao_proposta:
+    nome: "Apresentação de proposta"
+    instrucao: "O assessor vai apresentar uma proposta de alocação. O cliente levanta as objeções dele."
+  cliente_insatisfeito:
+    nome: "Cliente insatisfeito com o resultado"
+    instrucao: "O cliente está chateado com a rentabilidade e cobra explicações."
+  portabilidade_previdencia:
+    nome: "Portabilidade de previdência"
+    instrucao: "O assessor quer propor levar a previdência do cliente para um plano melhor."
+  sucessao:
+    nome: "Conversa sobre sucessão"
+    instrucao: "O assessor puxa o tema herança/sucessão, que é delicado para o cliente."
+
+dificuldades:
+  facil: "Coopere com facilidade; levante uma objeção leve."
+  normal: "Seja realista: revele informações aos poucos, levante 2 objeções."
+  dificil: "Seja difícil: respostas curtas, desconfiança, 3 objeções, só se abra com perguntas muito boas."
+
+# Rubrica do feedback (nota 0–10 em cada critério; a média ponderada é calculada em Python)
+rubrica:
+  rapport:      {nome: "Rapport e escuta", peso: 15, descricao: "cria conexão, escuta, demonstra que entendeu (paráfrase)"}
+  descoberta:   {nome: "Descoberta", peso: 20, descricao: "perguntas abertas sobre objetivos, família, horizonte; achou o objetivo oculto?"}
+  suitability:  {nome: "Suitability", peso: 15, descricao: "conhece perfil, objetivo, horizonte e situação financeira antes de recomendar (Res. CVM 30)"}
+  clareza:      {nome: "Clareza", peso: 15, descricao: "explica sem jargão, com exemplos e números do caso"}
+  objecoes:     {nome: "Tratamento de objeções", peso: 15, descricao: "valida, pergunta, reenquadra, traz evidência — sem confronto"}
+  compliance:   {nome: "Compliance", peso: 10, descricao: "sem promessa de rentabilidade, riscos e custos explicados, rentabilidade passada com ressalva"}
+  fechamento:   {nome: "Próximo passo", peso: 10, descricao: "combina um próximo passo concreto (data, documento, reunião)"}
