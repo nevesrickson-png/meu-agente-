@@ -42,6 +42,21 @@ function fonte(nome, iso, extra) {
   return `📊 ${esc(nome)} — ${hora(iso)}${extra ? " · " + esc(extra) : ""}`;
 }
 
+// ------------------------------------------------------------------ comandos (ajuda e sugestões da busca)
+const COMANDOS = [
+    ["PETR4", "Visão do ativo: cotação, gráfico de 3 meses e notícias"], ["PETR4 GP", "Gráfico com médias móveis e comparação com o Ibovespa"],
+    ["TOP", "Principais notícias agora"], ["RPT", "Relatórios do motor de análise (PDF e planilha)"], ["NEWS <tema>", "Notícias de um tema ou ticker (ex.: NEWS COPOM)"], ["SOC <tema>", "O que as redes dizem"],
+    ["ECO", "Agenda econômica"], ["CURV", "Curva de juros pré, real e inflação implícita"], ["MACRO", "Painel macro e Focus"],
+    ["JUROS", "Selic, CDI e Tesouro"], ["WEI", "Índices mundiais"], ["FX", "Moedas"], ["CMDTY", "Commodities"], ["W", "Watchlist"],
+    ["CALC", "Calculadoras"], ["STATUS", "Saúde do sistema"], ["CONFIG", "Configurações: chaves, Telegram, Google Agenda, offline"], ["ACERVO", "Enviar livros e materiais"], ["HELP", "Esta ajuda"],
+    ["WEGE3 FA", "Demonstrações da CVM e múltiplos (uso interno)"], ["WEGE3 DCF", "Dispara o valuation completo; o PDF aparece em RPT"],
+    ["FUND <nome>", "Busca fundos na CVM (12 meses, PL); análise ou comparação"], ["CMPF", "Compara de 2 a 6 fundos"],
+    ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["SIM [CLI-XXX]", "Simulador de patrimônio: quanto investir, quando parar, meta, imóvel × aplicações"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
+    ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
+    ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
+    ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
+];
+
 // ------------------------------------------------------------------ tipos de painel
 // cada tipo: titulo, topico, params(p), render(corpo, dados, painel) e tamanho padrão
 const TIPOS = {
@@ -243,7 +258,10 @@ function receber(msg) {
     corpo.innerHTML = `<div class="erro">Falha ao desenhar: ${esc(e.message)}</div>`;
     console.error(e);
   }
-  $(".painel-sub", el).textContent = "atualizado " + new Date(msg.enviado_em).toLocaleTimeString("pt-BR", BRT);
+  const quando = new Date(msg.enviado_em);
+  const sub = $(".painel-sub", el);
+  sub.textContent = quando.toLocaleTimeString("pt-BR", { ...BRT, hour: "2-digit", minute: "2-digit" });
+  sub.title = "Atualizado às " + quando.toLocaleTimeString("pt-BR", BRT);
 }
 
 // ------------------------------------------------------------------ renderizadores
@@ -419,7 +437,7 @@ function itemNoticia(n) {
   const tags = [...n.ativos.map((a) => `<span class="tag">${esc(a)}</span>`), ...n.alertas.map((a) => `<span class="tag alerta">⚠ ${esc(a)}</span>`)].join("");
   const tom = n.tom === "positivo" ? '<span class="alta" title="tom das palavras">▲</span>' : n.tom === "negativo" ? '<span class="queda" title="tom das palavras">▼</span>' : "";
   return `<div class="noticia"><a href="${linkSeguro(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.titulo)}</a>
-    <div class="meta">${tom} ${esc(n.fonte)} · ${hora(n.publicado_em)} ${n.outras_fontes.length ? "· também em " + esc(n.outras_fontes.join(", ")) : ""} ${tags}</div></div>`;
+    <div class="meta">${tom} ${esc(n.fonte)} · ${hora(n.publicado_em)} ${n.outras_fontes.length ? `· <span class="tag" title="Também em: ${esc(n.outras_fontes.join(", "))}">+${n.outras_fontes.length} veículo${n.outras_fontes.length > 1 ? "s" : ""}</span>` : ""} ${tags}</div></div>`;
 }
 function renderNoticias(corpo, d, painel) {
   corpo.innerHTML = d.itens.length ? d.itens.map(itemNoticia).join("") : '<div class="dica">Nada encontrado no período.</div>';
@@ -507,19 +525,7 @@ function renderRpt(corpo, _d, painel) {
 }
 
 function renderAjuda(corpo) {
-  const cmds = [
-    ["PETR4", "Visão do ativo: cotação, gráfico de 3 meses e notícias"], ["PETR4 GP", "Gráfico com médias móveis e comparação com o Ibovespa"],
-    ["TOP", "Principais notícias agora"], ["RPT", "Relatórios do motor de análise (PDF e planilha)"], ["NEWS <tema>", "Notícias de um tema ou ticker (ex.: NEWS COPOM)"], ["SOC <tema>", "O que as redes dizem"],
-    ["ECO", "Agenda econômica"], ["CURV", "Curva de juros pré, real e inflação implícita"], ["MACRO", "Painel macro e Focus"],
-    ["JUROS", "Selic, CDI e Tesouro"], ["WEI", "Índices mundiais"], ["FX", "Moedas"], ["CMDTY", "Commodities"], ["W", "Watchlist"],
-    ["CALC", "Calculadoras"], ["STATUS", "Saúde do sistema"], ["CONFIG", "Configurações: chaves, Telegram, Google Agenda, offline"], ["ACERVO", "Enviar livros e materiais"], ["HELP", "Esta ajuda"],
-    ["WEGE3 FA", "Demonstrações da CVM e múltiplos (uso interno)"], ["WEGE3 DCF", "Dispara o valuation completo; o PDF aparece em RPT"],
-    ["FUND <nome>", "Busca fundos na CVM (12 meses, PL); análise ou comparação"], ["CMPF", "Compara de 2 a 6 fundos"],
-    ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["SIM [CLI-XXX]", "Simulador de patrimônio: quanto investir, quando parar, meta, imóvel × aplicações"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
-    ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
-    ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
-    ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
-  ];
+  const cmds = COMANDOS;
   corpo.innerHTML = `<dl class="ajuda">${cmds.map(([c, d]) => `<dt>${esc(c)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>
     <div class="dica">Atalhos: <b>/</b> ou <b>Ctrl+K</b> barra de comando · <b>Esc</b> sai da barra · <b>Alt+1/2/3/4</b> layouts Manhã/Análise/Estudo/Assessoria · arraste o cabeçalho para mover, o canto para redimensionar.<br>
     Celular: abra pelo endereço do Tailscale e use “Adicionar à tela inicial”.</div>`;
@@ -1074,7 +1080,45 @@ document.addEventListener("keydown", (e) => {
   } else if (e.key === "Escape" && naBarra) { $("#comando").blur(); }
   else if (e.altKey && ["1", "2", "3", "4"].includes(e.key)) { e.preventDefault(); aplicarLayout(Object.values(PRESETS)[+e.key - 1]); }
 });
-$("#barra").addEventListener("submit", (e) => { e.preventDefault(); executar($("#comando").value); $("#comando").value = ""; });
+$("#barra").addEventListener("submit", (e) => { e.preventDefault(); fecharSugestoes(); executar($("#comando").value); $("#comando").value = ""; });
+
+// sugestões da busca: comandos que combinam com o que foi digitado (setas, Enter ou Tab escolhem; Esc fecha)
+const semAcento = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const caixaSug = Object.assign(document.createElement("div"), { className: "sugestoes-cmd", role: "listbox", id: "sugestoes-cmd" });
+$("#barra").append(caixaSug);
+$("#comando").setAttribute("aria-controls", "sugestoes-cmd");
+let sugAtual = [], sugIdx = -1, sugNavegou = false;  // Enter só escolhe a sugestão se a pessoa usou as setas
+function fecharSugestoes() { caixaSug.classList.remove("aberta"); sugAtual = []; sugIdx = -1; sugNavegou = false; }
+function mostrarSugestoes() {
+  const q = semAcento($("#comando").value.trim());
+  if (!q) { fecharSugestoes(); return; }
+  const base = (c) => semAcento(c.split(" ")[0]);
+  const prim = q.split(" ")[0];
+  const nota = ([c, d]) => (base(c) === prim ? 3 : base(c).startsWith(prim) ? 2 : q.length >= 3 && semAcento(d).includes(q) ? 1 : 0);
+  sugAtual = COMANDOS.map((c) => [c, nota(c)]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([c]) => c).slice(0, 7);
+  if (!sugAtual.length) { fecharSugestoes(); return; }
+  sugIdx = Math.min(Math.max(sugIdx, 0), sugAtual.length - 1);
+  caixaSug.innerHTML = sugAtual.map(([c, d], i) => `<div class="sug${i === sugIdx ? " ativa" : ""}" role="option" data-i="${i}"><b>${esc(c)}</b><span>${esc(d)}</span></div>`).join("")
+    + '<div class="sug-rodape">↑↓ escolher · Enter abrir · Esc fechar</div>';
+  caixaSug.classList.add("aberta");
+}
+function escolherSugestao(i) {
+  const [c] = sugAtual[i] || [];
+  if (!c) return;
+  const precisaArgumento = /[<\[]/.test(c);
+  const palavra = /^[A-Z]{4}\d{1,2}\b/.test(c) ? "" : c.split(" ")[0];  // "PETR4 GP" é exemplo: o usuário digita o ticker
+  if (precisaArgumento || !palavra) { $("#comando").value = palavra ? palavra + " " : ""; fecharSugestoes(); $("#comando").focus(); return; }
+  fecharSugestoes(); executar(c); $("#comando").value = "";
+}
+$("#comando").addEventListener("input", () => { sugIdx = 0; sugNavegou = false; mostrarSugestoes(); });
+$("#comando").addEventListener("keydown", (e) => {
+  if (!caixaSug.classList.contains("aberta")) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sugNavegou = true; sugIdx = (sugIdx + (e.key === "ArrowDown" ? 1 : -1) + sugAtual.length) % sugAtual.length; mostrarSugestoes(); }
+  else if (e.key === "Tab" || (e.key === "Enter" && sugNavegou)) { e.preventDefault(); escolherSugestao(sugIdx); }
+  else if (e.key === "Escape") { fecharSugestoes(); }
+});
+caixaSug.addEventListener("mousedown", (e) => { const s = e.target.closest(".sug"); if (s) { e.preventDefault(); escolherSugestao(+s.dataset.i); } });
+$("#comando").addEventListener("blur", () => setTimeout(fecharSugestoes, 120));
 $("#layout").addEventListener("change", (e) => {
   const v = e.target.value;
   if (v.startsWith("p:")) aplicarLayout(PRESETS[v.slice(2)]);

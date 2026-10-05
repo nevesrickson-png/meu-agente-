@@ -197,6 +197,17 @@ Arquivos com DRM não são processados.
   coloca o selo do sistema (classes `s-ok/s-aviso/s-erro` — `aviso` já é o toast do Terminal) e o botão de tema em
   `#nav-extra` (ou depois das abas) e dispara `quiron:tema`; o `app.js` lê cores do tema via `COR` (getters de CSS) e
   redesenha os painéis na troca. Novo painel ocupa o primeiro espaço livre da grade (`proximaPosicao`).
+- Preferências e revisão (05/10/2026, `testes/test_preferencias.py`): `config.ler_yaml` mescla `dados/ajustes/<nome>.yaml`
+  por cima de `config/` (dicts recursivos; `com_ajustes=False` lê o padrão; ajuste corrompido é ignorado);
+  `salvar_ajuste`/`escrever_ajuste`/`ler_ajuste`. `servicos/preferencias.py` (`ler`/`salvar`: watchlist validada e só o que
+  difere do padrão, mensagens/dia, fontes `desligadas` (filtradas em `coleta.ler_fontes` e `coleta.listar`), briefing =
+  uma rotina no agendador, `_marcar_briefing_configurado`) + rotas `GET/POST /api/sistema/preferencias` + seção
+  Preferências em `config.html`. Rotinas padrão criadas uma vez na vida (`dados/rotinas_padrao_criadas.json`); rotina
+  só vai direto pelo `rotear` se for leitura (`ROTINAS_DIRETAS`); pré-aquecimento 20 min antes da rotina do briefing.
+  Desempenho: `coleta.coletar` baixa em paralelo (8), `tesouro._linhas` lê o CSV uma vez por download (memo + trava),
+  `briefing.montar` busca os blocos em paralelo (frio 63 s → 26 s; quente 8 s → 0,3 s). Terminal: sugestões na busca
+  (`COMANDOS`, ↑↓/Enter após navegar/Tab/Esc), "+N veículos" nas notícias, horário do painel em HH:MM (title com
+  segundos).
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.

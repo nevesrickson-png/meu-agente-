@@ -72,7 +72,8 @@ def listar(horas: int = 24, limite: int = 500) -> list[Noticia]:
         linhas = con.execute(
             "SELECT * FROM noticias WHERE publicado_em >= ? ORDER BY publicado_em DESC LIMIT ?", (desde, limite)
         ).fetchall()
-    return [_linha_para_noticia(l) for l in linhas]
+    desligadas = set((ler_yaml("fontes_noticias") or {}).get("desligadas") or [])  # fonte desligada some na hora
+    return [n for n in (_linha_para_noticia(l) for l in linhas) if n.fonte not in desligadas]
 
 
 # ---------------------------------------------------------------- normalização
@@ -109,7 +110,9 @@ def _data_feed(entrada) -> datetime:
 
 
 def ler_fontes() -> list[dict]:
-    return [f for f in (ler_yaml("fontes_noticias") or {}).get("fontes", []) if f.get("ativo", True)]
+    cfg = ler_yaml("fontes_noticias") or {}
+    desligadas = set(cfg.get("desligadas") or [])  # desligadas pela tela de Configurações
+    return [f for f in cfg.get("fontes", []) if f.get("ativo", True) and f["nome"] not in desligadas]
 
 
 def _itens_rss(fonte: dict) -> list[Noticia]:
@@ -182,12 +185,23 @@ def _gravar(noticias: list[Noticia]) -> int:
     return novas
 
 
+def _baixar(f: dict) -> list[Noticia]:
+    itens = _itens_ibge(f) if f.get("tipo") == "ibge_api" else _itens_rss(f)
+    return [_classificar(n) for n in itens]
+
+
 def coletar(fontes: list[dict] | None = None) -> list[ResultadoFonte]:
+    """Baixa as fontes em paralelo (24 feeds: ~25 s em fila → poucos segundos) e grava em ordem, uma de cada vez."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    lista = fontes if fontes is not None else ler_fontes()
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futuros = [(f, ex.submit(_baixar, f)) for f in lista]
     resultados = []
-    for f in fontes if fontes is not None else ler_fontes():
+    for f, futuro in futuros:
         try:
-            itens = _itens_ibge(f) if f.get("tipo") == "ibge_api" else _itens_rss(f)
-            novas = _gravar([_classificar(n) for n in itens])
+            itens = futuro.result()
+            novas = _gravar(itens)
             resultados.append(ResultadoFonte(f["nome"], True, len(itens), f"{novas} novas"))
         except Exception as e:  # noqa: BLE001 — uma fonte com problema não derruba as outras
             resultados.append(ResultadoFonte(f["nome"], False, 0, f"{type(e).__name__}: {str(e)[:120]}"))

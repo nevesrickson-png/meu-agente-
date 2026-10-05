@@ -40,6 +40,7 @@ from quiron.runtime.workspace import carregar_comandos
 # objeto se misturariam; ContextVar é separado por tarefa assíncrona).
 _ESTADO: contextvars.ContextVar[dict] = contextvars.ContextVar("estado_mensagem")
 TEMPO_MAXIMO_RESPOSTA_S = 420  # uma resposta travada não pode prender o bot (as mensagens são atendidas em fila)
+ROTINAS_DIRETAS = {"briefing", "hoje", "tarefas", "revisao", "radar", "metas", "notas", "pauta", "diagnostico", "flashcards"}
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
 INATIVIDADE_MODO_S = 3 * 3600  # treino/entrevista/pós-reunião parados há mais que isso se encerram sozinhos
 SAIR = {"/sair", "sair", "/cancelar"}
@@ -631,13 +632,29 @@ class BotQuiron:
         """Cria as rotinas de config/agente.yaml (ex.: briefing das 7h30) se ainda não existirem."""
         from quiron.runtime import permissoes
 
-        existentes = {(a.texto, a.recorrencia) for a in self.agente.agendador.listar()}
+        import json
+
+        from quiron.nucleo.config import pasta_dados
+
+        # Cada rotina padrão é criada UMA vez na vida: se o Rickson cancelar (/agenda) ou mudar o horário (Configurações),
+        # ela não volta sozinha a cada reinício do bot.
+        registro = pasta_dados() / "rotinas_padrao_criadas.json"
+        try:
+            ja = set(json.loads(registro.read_text(encoding="utf-8")))
+        except (OSError, ValueError):
+            ja = set()
+        existentes = {a.texto for a in self.agente.agendador.listar()}
         criadas = []
         for r in permissoes.config().get("rotinas_padrao") or []:
-            chave = (str(r["texto"]).strip(), str(r["recorrencia"]).strip().lower())
-            if chave not in existentes:
-                self.agente.agendador.criar(chave[0], r.get("tipo", "tarefa"), chave[1], None)
-                criadas.append(chave[0])
+            texto = str(r["texto"]).strip()
+            if texto in ja:
+                continue
+            if texto not in existentes:
+                self.agente.agendador.criar(texto, r.get("tipo", "tarefa"), str(r["recorrencia"]).strip().lower(), None)
+                criadas.append(texto)
+            ja.add(texto)
+        registro.parent.mkdir(parents=True, exist_ok=True)
+        registro.write_text(json.dumps(sorted(ja), ensure_ascii=False), encoding="utf-8")
         return criadas
 
     async def agenda_vencida(self, agora: datetime | None = None) -> list[Saida]:
@@ -653,7 +670,8 @@ class BotQuiron:
                     saidas.append(Saida(f"⏰ Lembrete: {t.texto}" + (f" ({t.hora})" if t.hora else ""), linhas=botoes_tarefa(t)))
                 else:
                     saidas.append(Saida(f"⏰ Lembrete: {re.sub(r'^\[T\d+\] ', '', a.texto)}"))
-            elif (a.texto.startswith("/") or rotear(a.texto)) and self.permitidos:  # "/revisao", "Faça meu briefing."…
+            elif (a.texto.startswith("/") or (rotear(a.texto) or ("",))[0] in ROTINAS_DIRETAS) and self.permitidos:
+                # "/revisao", "Faça meu briefing."… (só leituras: rotina com "lembre que…" não pode gravar fato todo dia)
                 saidas += await self.tratar(next(iter(self.permitidos)), next(iter(self.permitidos)), a.texto)
             else:
                 reg = await self.agente.responder(a.texto, skills=self.skills_para(a.texto))
@@ -887,18 +905,20 @@ async def _rodar() -> None:
                 await asyncio.sleep(300)
 
         async def laco_preaquecer() -> None:
-            """Às 7h10 busca os dados do briefing para o das 7h30 sair rápido (cache das fontes)."""
-            from quiron.servicos.mercado import painel
+            """20 min antes do briefing (no horário que estiver configurado) busca os dados, para ele sair na hora."""
+            from quiron.servicos import preferencias
+            from quiron.servicos.mercado import briefing as mod_briefing
 
             feito = None
             while True:
-                agora = datetime.now(BRT)
-                if agora.strftime("%H:%M") >= "07:10" and agora.strftime("%H:%M") < "07:30" and feito != agora.date():
-                    feito = agora.date()
-                    try:
-                        await asyncio.to_thread(painel.briefing)
-                    except Exception:  # noqa: BLE001
-                        logging.exception("falha ao pré-carregar o briefing")
+                try:
+                    r = preferencias.rotina_briefing(bot.agente.agendador)
+                    agora = datetime.now(BRT)
+                    if r and r.proxima != feito and 0 <= (r.proxima - agora).total_seconds() <= 20 * 60:
+                        feito = r.proxima
+                        await asyncio.to_thread(mod_briefing.montar)
+                except Exception:  # noqa: BLE001 — o laço nunca morre
+                    logging.exception("falha ao pré-carregar o briefing")
                 await asyncio.sleep(60)
 
         async def laco_batimento() -> None:

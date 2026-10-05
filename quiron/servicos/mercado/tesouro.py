@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+import threading
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -53,27 +54,42 @@ def _data(t: str) -> date:
     return datetime.strptime(t.strip(), "%d/%m/%Y").date()
 
 
+_TRAVA = threading.Lock()
+_MEMO: dict = {}  # arquivo já lido: (obtido_em, tamanho) → linhas (o CSV traz todo o histórico e é grande)
+
+
+def _linhas(ttl: int):
+    """Linhas do CSV como tuplas (tipo, data-base, vencimento, taxa compra, taxa venda, PU compra, PU venda), lidas uma
+    vez por download — `titulos_atuais` e `historico_taxas` usam o mesmo arquivo."""
+    r = obter(URL_PRECOS, fonte="Tesouro Transparente", ttl=ttl, formato="texto", codificacao="latin-1")
+    chave = (r.obtido_em, len(r.conteudo))
+    with _TRAVA:
+        return _ler_memo(chave, r), r
+
+
+def _ler_memo(chave, r):
+    if _MEMO.get("chave") != chave:
+        linhas = []
+        for l in csv.DictReader(io.StringIO(r.conteudo), delimiter=";"):
+            try:
+                linhas.append((l["Tipo Titulo"].strip(), _data(l["Data Base"]), _data(l["Data Vencimento"]),
+                               numero_br(l.get("Taxa Compra Manha")), numero_br(l.get("Taxa Venda Manha")),
+                               numero_br(l.get("PU Compra Manha")), numero_br(l.get("PU Venda Manha"))))
+            except (KeyError, ValueError, AttributeError):
+                continue  # linha quebrada no arquivo oficial: ignora
+        _MEMO.clear()
+        _MEMO.update(chave=chave, linhas=linhas)
+    return _MEMO["linhas"]
+
+
 def titulos_atuais() -> Tabela:
     """Títulos da data-base mais recente do arquivo (o arquivo traz todo o histórico)."""
-    r = obter(URL_PRECOS, fonte="Tesouro Transparente", ttl=3 * 3600, formato="texto", codificacao="latin-1")
-    leitor = csv.DictReader(io.StringIO(r.conteudo), delimiter=";")
-    linhas = list(leitor)
+    linhas, r = _linhas(3 * 3600)
     if not linhas:
         raise ValueError("Arquivo do Tesouro vazio")
-    ultima = max(_data(l["Data Base"]) for l in linhas)
-    titulos = [
-        Titulo(
-            l["Tipo Titulo"].strip(),
-            _data(l["Data Vencimento"]),
-            ultima,
-            numero_br(l.get("Taxa Compra Manha")),
-            numero_br(l.get("Taxa Venda Manha")),
-            numero_br(l.get("PU Compra Manha")),
-            numero_br(l.get("PU Venda Manha")),
-        )
-        for l in linhas
-        if _data(l["Data Base"]) == ultima and _data(l["Data Vencimento"]) > ultima
-    ]
+    ultima = max(l[1] for l in linhas)
+    titulos = [Titulo(tipo, venc, ultima, tc, tv, pc, pv) for tipo, base, venc, tc, tv, pc, pv in linhas
+               if base == ultima and venc > ultima]
     titulos.sort(key=lambda t: (t.tipo, t.vencimento))
     return Tabela(titulos, ultima, r.fonte, r.obtido_em, r.desatualizado)
 
@@ -85,13 +101,8 @@ def por_tipo(tabela: Tabela, chave: str) -> list[Titulo]:
 
 def historico_taxas(chave: str) -> tuple[list[tuple[date, date, float]], str]:
     """Todo o histórico de taxas de compra de um tipo de título: [(data-base, vencimento, taxa % a.a.)]."""
-    r = obter(URL_PRECOS, fonte="Tesouro Transparente", ttl=12 * 3600, formato="texto", codificacao="latin-1")
+    linhas, r = _linhas(12 * 3600)
     nomes = TIPOS[chave]
-    saida = []
-    for l in csv.DictReader(io.StringIO(r.conteudo), delimiter=";"):
-        if l["Tipo Titulo"].strip() in nomes:
-            taxa = numero_br(l.get("Taxa Compra Manha"))
-            if taxa is not None:
-                saida.append((_data(l["Data Base"]), _data(l["Data Vencimento"]), taxa))
+    saida = [(base, venc, tc) for tipo, base, venc, tc, *_ in linhas if tipo in nomes and tc is not None]
     saida.sort()
     return saida, r.fonte

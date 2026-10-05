@@ -104,8 +104,65 @@ def carregar_config(arquivo_env: str | None = None) -> Config:
     )
 
 
-def ler_yaml(nome: str) -> Any:
-    """Lê `config/<nome>` (com ou sem a extensão .yaml)."""
+def _mesclar(base: Any, ajuste: Any) -> Any:
+    """Ajuste por cima da base: dicionários mesclados por chave (recursivo); o resto é trocado."""
+    if isinstance(base, dict) and isinstance(ajuste, dict):
+        return {**base, **{k: _mesclar(base.get(k), v) for k, v in ajuste.items()}}
+    return ajuste
+
+
+def arquivo_ajuste(nome: str) -> Path:
+    """`dados/ajustes/<nome>.yaml`: o que o Rickson muda pela tela de Configurações. Fica fora do git (não é apagado
+    quando o Quíron se atualiza) e vale por cima do arquivo padrão em `config/`."""
+    return pasta_dados() / "ajustes" / (nome if nome.endswith(".yaml") else f"{nome}.yaml")
+
+
+def ler_yaml(nome: str, *, com_ajustes: bool = True) -> Any:
+    """Lê `config/<nome>` (com ou sem a extensão .yaml), com os ajustes da tela por cima."""
     caminho = PASTA_CONFIG / (nome if nome.endswith(".yaml") else f"{nome}.yaml")
     with caminho.open(encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        base = yaml.safe_load(f)
+    ajuste = arquivo_ajuste(nome) if com_ajustes else None
+    if ajuste is not None and ajuste.exists():
+        try:
+            return _mesclar(base, yaml.safe_load(ajuste.read_text(encoding="utf-8")) or {})
+        except (OSError, yaml.YAMLError):
+            return base  # ajuste corrompido nunca derruba o Quíron
+    return base
+
+
+def escrever_ajuste(nome: str, dados: dict) -> Path:
+    """Troca o arquivo de ajustes inteiro (vazio = apaga: volta tudo ao padrão)."""
+    arq = arquivo_ajuste(nome)
+    if not dados:
+        arq.unlink(missing_ok=True)
+        return arq
+    arq.parent.mkdir(parents=True, exist_ok=True)
+    tmp = arq.with_suffix(".tmp")
+    tmp.write_text(yaml.safe_dump(dados, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    tmp.replace(arq)
+    return arq
+
+
+def ler_ajuste(nome: str) -> dict:
+    arq = arquivo_ajuste(nome)
+    try:
+        return (yaml.safe_load(arq.read_text(encoding="utf-8")) or {}) if arq.exists() else {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+
+def salvar_ajuste(nome: str, parcial: dict) -> Path:
+    """Mescla `parcial` no arquivo de ajustes (troca atômica)."""
+    arq = arquivo_ajuste(nome)
+    arq.parent.mkdir(parents=True, exist_ok=True)
+    atual = {}
+    if arq.exists():
+        try:
+            atual = yaml.safe_load(arq.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            atual = {}
+    tmp = arq.with_suffix(".tmp")
+    tmp.write_text(yaml.safe_dump(_mesclar(atual, parcial), allow_unicode=True, sort_keys=False), encoding="utf-8")
+    tmp.replace(arq)
+    return arq

@@ -240,24 +240,32 @@ def _historias(fontes: list[str]) -> tuple[list[str], list[str]]:
 
 def montar(agora: datetime | None = None, noticias: bool = True) -> Briefing:
     agora = (agora or datetime.now(BRT)).astimezone(BRT)
-    fontes: list[str] = []
-    avisos: list[str] = []
+    from concurrent.futures import ThreadPoolExecutor
+
+    # cada bloco busca suas fontes ao mesmo tempo (cada um com a própria lista de fontes/avisos, juntadas na ordem fixa)
+    partes: dict[str, tuple[list[str], list[str]]] = {k: ([], []) for k in ("noticias", "juros", "inflacao", "mercados")}
+    with ThreadPoolExecutor(max_workers=5) as ex:
+        f_not = ex.submit(_historias, partes["noticias"][0]) if noticias else None
+        f_jur = ex.submit(_juros, *partes["juros"])
+        f_inf = ex.submit(_inflacao, *partes["inflacao"], agora.year)
+        f_mer = ex.submit(_mercados, *partes["mercados"])
+        f_age = ex.submit(_agenda, agora.date())
+    noticias_l, noticias_ctx = f_not.result() if f_not else ([], [])
+    juros, inflacao, (mercados, ref), agenda = f_jur.result(), f_inf.result(), f_mer.result(), f_age.result()
+    fontes = [f for k in ("noticias", "juros", "inflacao", "mercados") for f in partes[k][0]]
+    avisos = [a for k in ("noticias", "juros", "inflacao", "mercados") for a in partes[k][1]]
     blocos = [f"☀️ **Briefing — {DIAS[agora.weekday()]}, {agora:%d/%m}** · {agora:%H:%M}"]
-    noticias_l, noticias_ctx = _historias(fontes) if noticias else ([], [])
     if noticias_l:
         blocos.append("**O que está mexendo com o mercado**\n" + "\n".join(noticias_l))
-    juros = _juros(fontes, avisos)
     if juros:
         base = next((f for f in fontes if f.startswith("Tesouro (base")), "")
         titulo = f"**Juros** (Tesouro: taxas de {base[14:-1]}, variação no dia)" if base else "**Juros**"
         blocos.append(titulo + "\n" + "\n".join(juros))
-    inflacao = _inflacao(fontes, avisos, agora.year)
     if inflacao:
         blocos.append("**Inflação e expectativas**\n" + "\n".join(inflacao))
-    mercados, ref = _mercados(fontes, avisos)
     if mercados:
         blocos.append(f"**Mercados**{f' ({ref})' if ref else ''}\n" + "\n".join(mercados))
-    blocos.append("**Agenda**\n" + "\n".join(_agenda(agora.date())))
+    blocos.append("**Agenda**\n" + "\n".join(agenda))
     if avisos:
         blocos.append("⚠️ " + " · ".join(avisos))
     rodape = f"_Fontes: {' · '.join(dict.fromkeys(fontes))}_" if fontes else ""

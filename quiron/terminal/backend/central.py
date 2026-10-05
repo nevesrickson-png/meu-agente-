@@ -673,3 +673,23 @@ def api_inicio(request: Request, corpo: dict = Body(...)) -> dict[str, Any]:
         return definir_inicio_automatico(bool(corpo.get("ligar")))
     except (ValueError, OSError, subprocess.TimeoutExpired) as e:
         raise HTTPException(400, str(e)) from e
+
+
+# ---------------------------------------------------------------- preferências (tela de Configurações)
+@router.get("/preferencias")
+def api_preferencias(request: Request) -> dict[str, Any]:
+    _proteger_sistema(request)
+    from quiron.servicos import preferencias
+
+    return preferencias.ler()
+
+
+@router.post("/preferencias")
+def api_preferencias_salvar(request: Request, corpo: dict = Body(...)) -> dict[str, Any]:
+    _proteger_sistema(request)
+    from quiron.servicos import preferencias
+
+    try:
+        return {"preferencias": preferencias.salvar(corpo), "mensagem": "Preferências salvas. Valem na próxima atualização do painel e do bot."}
+    except preferencias.PreferenciaInvalida as e:
+        raise HTTPException(400, str(e)) from e

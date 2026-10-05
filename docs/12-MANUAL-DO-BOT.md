@@ -161,7 +161,17 @@ e no Terminal. `/memoria` (ver) · `/memoria buscar <tema>` · `/memoria esquece
 
 ### 🎨 Aparência do Terminal
 Visual escuro ou claro: botão no canto superior direito (◐ automático, segue o computador/celular · ☀ claro · ☾ escuro).
-A escolha fica guardada no navegador. Ctrl K (ou /) abre a busca de ativos e comandos.
+A escolha fica guardada no navegador. **Ctrl K** (ou /) abre a busca: comece a digitar (ex.: “ju”, “fundo”, “simul”) e
+aparecem os comandos com explicação — setas para escolher, Enter para abrir, Tab para completar.
+
+### 🎛️ Preferências (Configurações → Preferências)
+Sem editar arquivo nenhum:
+- **Briefing:** ligar/desligar, horário e se vem todos os dias ou só em dias úteis (os dados são buscados 20 min antes).
+- **Mensagens automáticas por dia** (0 a 10; lembretes que você pediu sempre chegam).
+- **Watchlist:** ações, FIIs, ETFs, índices, moedas e commodities do Terminal e da fita de cotações.
+- **Fontes de notícias:** liga/desliga cada uma das 24 fontes (some na hora do Terminal, das notícias e do briefing).
+Os ajustes ficam em `dados/ajustes/` (só neste computador) e não se perdem quando o Quíron se atualiza. Rotina cancelada
+ou com horário mudado não volta sozinha.
 
 ### ⚙️ Conversa e sistema
 `/novo` (novo assunto) · `/agenda` (lembretes e rotinas) · `/sair` (fecha treino, entrevista ou pós-reunião) ·

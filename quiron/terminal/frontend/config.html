@@ -116,6 +116,30 @@
   .banner { border-radius: var(--raio-m); }
   .indice a[aria-current], .indice a:focus-visible { color: var(--texto); background: var(--painel-2); }
   dialog { border-radius: var(--raio); box-shadow: var(--sombra-flutuante); }
+
+  /* ---- preferências */
+  .pref-grupo { padding: 4px 0 16px; border-bottom: 1px solid var(--borda); margin-bottom: 14px; }
+  .pref-grupo:last-child { border-bottom: 0; margin-bottom: 0; }
+  .pref-grupo h3 { margin: 0 0 4px; font: 600 14px var(--titulo); }
+  .pref-grupo .ajuda { margin-bottom: 10px; }
+  .pref-linha { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .pref-linha label, .pref-campos label { display: flex; flex-direction: column; gap: 5px; font-weight: 500; font-size: 12.5px; color: var(--texto-2); }
+  .pref-linha input, .pref-linha select, .pref-campos input { height: 36px; padding: 0 10px; background: var(--campo); color: var(--texto);
+    border: 1px solid var(--borda); border-radius: var(--raio-p); font: 13px var(--sans); }
+  .pref-linha input:focus, .pref-linha select:focus, .pref-campos input:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
+  .pref-campos { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .pref-campos input { width: 100%; flex: none; }
+  .pref-linha .chave-liga { flex-direction: row; font-size: 13.5px; color: var(--texto); }
+  .chave-liga { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; color: var(--texto); height: 36px; }
+  .chave-liga input { appearance: none; -webkit-appearance: none; width: 38px; height: 22px; border-radius: 99px; background: var(--painel-3);
+    border: 1px solid var(--borda-forte); position: relative; cursor: pointer; transition: background var(--transicao); margin: 0; flex: none; }
+  .chave-liga input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--texto-2); transition: transform var(--transicao), background var(--transicao); }
+  .chave-liga input:checked { background: var(--acento); border-color: transparent; }
+  .chave-liga input:checked::after { transform: translateX(16px); background: #fff; }
+  .fontes-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 4px 14px; }
+  .fontes-grade .chave-liga { height: 32px; font-size: 13px; }
+  .fontes-grade h4 { grid-column: 1 / -1; margin: 10px 0 2px; font: 600 12px var(--sans); color: var(--texto-3); }
 </style>
 <link rel="stylesheet" href="/nav.css">
 </head>
@@ -126,7 +150,7 @@
   <nav id="abas"></nav>
 </header>
 <div class="indice" role="navigation" aria-label="Seções">
-  <a href="#visao">Visão geral</a><a href="#chaves">Chaves e contas</a><a href="#google">Google Agenda</a>
+  <a href="#visao">Visão geral</a><a href="#preferencias">Preferências</a><a href="#chaves">Chaves e contas</a><a href="#google">Google Agenda</a>
   <a href="#offline">Versão offline</a><a href="#registro">Registro do Telegram</a>
 </div>
 </div>
@@ -145,6 +169,15 @@
     <h2 id="t-visao">Visão geral <span class="acoes"><button type="button" id="verificar-tudo" class="primario" title="Testa chaves, Telegram, IA, ferramentas, disco e memória">✔ Verificar tudo</button><button type="button" id="atualizar-visao" title="Atualizar">↻ Atualizar</button></span></h2>
     <div class="cartoes" id="cartoes"><div class="corpo">carregando…</div></div>
     <div class="corpo oculto" id="verificacao" aria-live="polite"></div>
+  </section>
+
+  <section id="preferencias" aria-labelledby="t-pref">
+    <h2 id="t-pref">Preferências</h2>
+    <div id="pref-corpo" class="corpo">carregando…</div>
+    <div class="rodape-sec">
+      <span class="aviso-salvo" id="pref-aviso">Os ajustes ficam guardados só neste computador e não se perdem nas atualizações.</span>
+      <button type="button" id="pref-salvar" class="primario">Salvar preferências</button>
+    </div>
   </section>
 
   <section id="chaves" aria-labelledby="t-chaves">
@@ -496,6 +529,58 @@ $("#verificar-tudo").addEventListener("click", (ev) => acao(ev.currentTarget, as
     })));
   carregar();
 }));
+
+// ------------------------------------------------------------------ preferências
+const ROTULOS_WATCH = { acoes: "Ações", fiis: "Fundos imobiliários (FIIs)", etfs: "ETFs", indices: "Índices", moedas: "Moedas", commodities: "Commodities" };
+const EXEMPLO_WATCH = { acoes: "PETR4, WEGE3, ITUB4", fiis: "HGLG11, KNRI11", etfs: "BOVA11, IVVB11", indices: "IBOV, IFIX, ^GSPC", moedas: "USDBRL, EURBRL", commodities: "petroleo_brent, ouro" };
+const GRUPOS_FONTE = { brasil: "Brasil", global: "Internacional", oficiais: "Órgãos oficiais" };
+function chaveLiga(rotulo, ligado, attrs = {}) {
+  return el("label", { class: "chave-liga" }, el("input", { type: "checkbox", role: "switch", ...attrs, checked: ligado || false }), rotulo);
+}
+async function carregarPreferencias() {
+  const corpo = $("#pref-corpo");
+  let P;
+  try { P = await api("/api/sistema/preferencias"); }
+  catch (e) { corpo.replaceChildren(el("p", { class: "erro" }, "Não abriu as preferências: " + e.message)); return; }
+  const b = P.briefing;
+  const grupoBriefing = el("div", { class: "pref-grupo" }, el("h3", {}, "Briefing da manhã"),
+    el("p", { class: "ajuda" }, "Mercado, notícias que importam, juros, agenda e o que muda para os clientes — no Telegram."),
+    el("div", { class: "pref-linha" },
+      chaveLiga("Receber o briefing", b.ativo, { id: "pb-ativo" }),
+      el("label", {}, "Horário", el("input", { type: "time", id: "pb-hora", value: b.hora, step: 300 })),
+      el("label", {}, "Dias", el("select", { id: "pb-dias" },
+        el("option", { value: "diario", selected: b.dias === "diario" }, "Todos os dias"),
+        el("option", { value: "dias_uteis", selected: b.dias === "dias_uteis" }, "Só dias úteis")))));
+  const grupoMsg = el("div", { class: "pref-grupo" }, el("h3", {}, "Mensagens automáticas"),
+    el("p", { class: "ajuda" }, "Quantas mensagens o Quíron pode mandar sozinho por dia (rotinas e avisos). Lembretes que você pediu sempre chegam."),
+    el("div", { class: "pref-linha" }, el("label", {}, "Máximo por dia", el("input", { type: "number", id: "pm-dia", min: 0, max: 10, value: P.mensagens_dia, style: "width:110px" }))));
+  const grupoWatch = el("div", { class: "pref-grupo" }, el("h3", {}, "Watchlist"),
+    el("p", { class: "ajuda" }, "Ativos que aparecem no Terminal e na fita de cotações. Separe por vírgula."),
+    el("div", { class: "pref-campos" }, ...Object.keys(ROTULOS_WATCH).map((k) =>
+      el("label", {}, ROTULOS_WATCH[k], el("input", { type: "text", "data-watch": k, value: (P.watchlist[k] || []).join(", "), placeholder: "ex.: " + EXEMPLO_WATCH[k], spellcheck: "false" })))));
+  const porGrupo = {};
+  P.noticias.forEach((f) => (porGrupo[f.grupo] = porGrupo[f.grupo] || []).push(f));
+  const grupoNot = el("div", { class: "pref-grupo" }, el("h3", {}, "Fontes de notícias"),
+    el("p", { class: "ajuda" }, "Desligue o que não quer ver nas notícias, no briefing e no Terminal."),
+    el("div", { class: "fontes-grade" }, ...Object.entries(porGrupo).flatMap(([g, fs]) => [el("h4", {}, GRUPOS_FONTE[g] || g),
+      ...fs.map((f) => chaveLiga(f.nome, f.ativa, { "data-fonte": f.nome }))])));
+  corpo.replaceChildren(grupoBriefing, grupoMsg, grupoWatch, grupoNot);
+}
+$("#pref-salvar").addEventListener("click", (ev) => acao(ev.currentTarget, async () => {
+  const watch = {};
+  document.querySelectorAll("[data-watch]").forEach((i) => (watch[i.dataset.watch] = i.value));
+  const corpo = {
+    briefing: { ativo: $("#pb-ativo").checked, hora: $("#pb-hora").value || "07:30", dias: $("#pb-dias").value },
+    mensagens_dia: Number($("#pm-dia").value),
+    watchlist: watch,
+    noticias: [...document.querySelectorAll("[data-fonte]")].map((i) => ({ nome: i.dataset.fonte, ativa: i.checked })),
+  };
+  const r = await api("/api/sistema/preferencias", { corpo });
+  $("#pref-aviso").textContent = "✔ " + r.mensagem;
+  mensagem("");
+  await carregarPreferencias();
+}));
+carregarPreferencias();
 carregar().then(() => { if (location.hash.length > 1) { const alvo = document.querySelector(location.hash); alvo && alvo.scrollIntoView(); } });
 carregarLog();
 document.addEventListener("quiron:resumo", (ev) => {

@@ -75,9 +75,9 @@ def test_petr4_e_curv_atualizam_sozinhos(servidor):
 
         # atualização automática: o painel de status (15 s) muda o horário sem recarregar a página
         status = pagina.locator(".painel").filter(has=pagina.locator(".painel-titulo", has_text="Status")).first
-        status.locator(".painel-sub", has_text="atualizado").wait_for(timeout=30_000)
-        antes = status.locator(".painel-sub").inner_text()
-        pagina.wait_for_function("(a) => [...document.querySelectorAll('.painel-sub')].some(e => e.textContent.startsWith('atualizado') && e.textContent !== a)",
+        status.locator(".painel-sub[title^='Atualizado']").wait_for(timeout=30_000)
+        antes = status.locator(".painel-sub").get_attribute("title")
+        pagina.wait_for_function("(a) => [...document.querySelectorAll('.painel-sub')].some(e => (e.title || '').startsWith('Atualizado') && e.title !== a)",
                                  arg=antes, timeout=40_000)
         juros = pagina.locator(".painel").filter(has=pagina.locator(".painel-titulo", has_text="Juros")).first
         juros.locator(".kpi-v").first.wait_for(timeout=30_000)  # Selic/CDI aparecem logo

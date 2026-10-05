@@ -403,6 +403,19 @@ com "confirmado por 3 veículos". 306 testes + 24 de fontes online.
 ✅ Aceite (05/10/2026): 29 comandos/painéis abertos no navegador nos dois temas sem nenhum erro de JavaScript; desktop,
 celular, Configurações e Acervo conferidos por imagem; 306 testes + testes de navegador.
 
+## Revisão profissional + UX (05/10/2026) — pedido do Rickson
+- [x] Bug: rotinas padrão eram recriadas a cada reinício do bot (briefing cancelado voltava; horário mudado = briefing
+  duplicado) → criadas uma vez na vida
+- [x] Bug: rotina recorrente com "lembre que…" gravaria um fato por dia → só rotinas de leitura vão direto
+- [x] Bug: pré-aquecimento fixo em 7h10 e usando a função antiga → 20 min antes do briefing configurado
+- [x] Desempenho: notícias em paralelo, CSV do Tesouro lido uma vez, blocos do briefing em paralelo (63 s → 26 s frio,
+  8 s → 0,3 s quente)
+- [x] Preferências na tela: briefing (liga/desliga, horário, dias), mensagens/dia, watchlist, fontes de notícias —
+  guardadas em `dados/ajustes/`, sem se perder nas atualizações
+- [x] Terminal: busca com sugestões de comandos; notícias com "+N veículos"; horário dos painéis mais limpo
+✅ Aceite (05/10/2026): preferências salvas pelo navegador e conferidas no disco; 29 comandos nos dois temas sem erro de
+JavaScript; 316 testes + teste de navegador.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)
