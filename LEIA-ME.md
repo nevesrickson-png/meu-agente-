@@ -218,6 +218,12 @@ Digite na barra do Terminal (ou escolha o layout **Assessoria**):
 - **/radar** [dias] — normas novas da CVM, Receita, Banco Central e projetos na Câmara, por relevância (chega sozinho
   às segundas 8h20).
 
+## Versão offline no PC (Fase 16)
+Quíron sem internet, com IA local e os **clientes reais** num cofre criptografado. Passo a passo em
+`docs/10-OFFLINE.md`. Resumo: instale o Ollama (ollama.com/download), rode `ollama pull qwen2.5:3b` e dê dois cliques
+em **Quiron - Offline**. No Terminal: **CLI** (clientes com nome real — pede a senha do cofre), **BIB duration**
+(biblioteca) e **CHAT** (o Quíron local). O nome real nunca vai para a nuvem e não aparece fora da tela CLI.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

@@ -280,9 +280,17 @@ Execute a FASE 15 do docs/00-ROTEIRO.md.
 ```
 
 ## FASE 16 — Versão offline (PC)
-- [ ] 16.1 Ollama com modelo de 3–4B · 16.2 MCPs leves locais + cópia do índice · 16.3 Clientes reais criptografados
-- [ ] 16.4 Terminal local com dados em cache · 16.5 Pasta portátil com atalho
+- [x] 16.1 Ollama com modelo de 3–4B (`QUIRON_MODO=offline` → só `ollama_chat/qwen2.5:3b`, contexto de 8 mil tokens,
+  prompt curto) · 16.2 MCPs leves locais (biblioteca, fichas, tarefas, calculadoras — 9 ferramentas, só parâmetros
+  obrigatórios) + cópia do índice (`quiron-offline pacote | importar | baixar`) · 16.3 Clientes reais criptografados
+  (`cofre/clientes.cofre`, Scrypt + Fernet; só abre offline, sem modelo de nuvem e só em 127.0.0.1; tela CLI)
+- [x] 16.4 Terminal local com dados em cache (rede nunca é tentada: último dado marcado DESATUALIZADO; selo OFFLINE;
+  BIB = biblioteca) · 16.5 Pasta portátil com atalho (`Quiron Offline.bat` + atalho "Quiron - Offline"; guia
+  `docs/10-OFFLINE.md`)
 **Teste de aceite:** sem internet, o Quíron consulta a biblioteca e mostra um cliente real.
+✅ Aceite (05/10/2026): com a internet do processo cortada, o Terminal offline destrancou o cofre e mostrou "Marcos
+Antônio Pereira" (CLI-012) com o dossiê; o Quíron local (qwen2.5 3B no Ollama, CPU) buscou na biblioteca e respondeu
+citando "Manual de Renda Fixa do Quíron, p. 1–2" em ~1 minuto (`testes/test_offline_aceite.py`).
 ```
 Execute a FASE 16 do docs/00-ROTEIRO.md. Lembre: Windows com 8 GB de RAM.
 ```

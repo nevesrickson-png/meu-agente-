@@ -22,6 +22,7 @@ from quiron.servicos.planejamento.ficha import codigo
 class Apagado:
     cliente: str
     itens: dict[str, int] = field(default_factory=dict)
+    aviso: str = ""
 
     @property
     def total(self) -> int:
@@ -29,9 +30,9 @@ class Apagado:
 
     def descrever(self) -> str:
         if not self.total:
-            return f"Nada guardado sobre {self.cliente}."
+            return f"Nada guardado sobre {self.cliente}." + (f"\n⚠️ {self.aviso}" if self.aviso else "")
         partes = [f"{n} {nome}" for nome, n in self.itens.items() if n]
-        return f"🧹 {self.cliente} esquecido: " + ", ".join(partes) + "."
+        return f"🧹 {self.cliente} esquecido: " + ", ".join(partes) + "." + (f"\n⚠️ {self.aviso}" if self.aviso else "")
 
 
 def _cita(texto: str, cod: str) -> bool:
@@ -78,6 +79,10 @@ def esquecer_cliente(cliente: str) -> Apagado:
             n += len(linhas) - len(restantes)
             arq.write_text("\n".join(restantes) + "\n", encoding="utf-8")
     r.itens["linhas de memória/diário"] = n
+    from quiron.servicos.offline import cofre
+
+    if cofre.existe():
+        r.aviso = f"o nome real fica no cofre da versão offline (criptografado): no PC, rode `uv run quiron-offline cofre remover {cod}`."
     return r
 
 

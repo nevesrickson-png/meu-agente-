@@ -91,6 +91,10 @@ def _historico_memo(simbolo: str, periodo: str):
     guardado = _memo.get((simbolo, periodo))
     if guardado and agora - guardado[0] < TTL_YAHOO:
         return guardado[1]
+    from quiron.nucleo import offline
+
+    if offline.ativo():
+        raise FonteIndisponivel(f"Yahoo ({simbolo}): offline")
     hist = _historico_yahoo(simbolo, periodo)
     _memo[(simbolo, periodo)] = (agora, hist)
     return hist

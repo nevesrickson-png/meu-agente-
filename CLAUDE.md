@@ -240,6 +240,18 @@ Arquivos com DRM não são processados.
   (/carreira /diario /portfolio /entrevista /radar; entrevista ativa captura mensagens; `Saida.arquivo` manda o PDF);
   rotina `/radar novidades` segunda 8h20; teses a revisar entram no `/revisao`. Skill `agente/skills/carreira.md`.
   Aceite online em `testes/test_carreira_online.py`.
+- Offline (Fase 16): `quiron/nucleo/offline.py` (`QUIRON_MODO=offline`; `config/offline.yaml`): `carregar_config` só
+  com o modelo local (`ollama_chat/qwen2.5:3b`, `api_base` + `num_ctx` no cérebro), `http.obter` nunca vai à rede (cache
+  marcado desatualizado), Yahoo recusa, `ConexaoMCP` só carrega os servidores/ferramentas listados e corta parâmetros
+  opcionais (`_enxuto`), agente com `PROMPT_OFFLINE` curto, sem internas, 5 passos (com 33 ferramentas o 3B errava).
+  `quiron/servicos/offline/`: `cofre.py` (mapa CLI-XXX → nome/contatos em `cofre/clientes.cofre`, Scrypt n=2^15 +
+  Fernet, troca atômica; abre só offline e sem modelo de nuvem; nunca entra em ferramenta do agente nem no pacote),
+  `pacote.py` (tar.gz com índice, embeddings e dados; SQLite pela API de backup; importação guarda o anterior em
+  `dados/antes-da-importacao-*`; bloqueia caminhos fora de dados/biblioteca), `cli.py` (`quiron-offline verificar |
+  pacote | importar | baixar | cofre …`). Terminal: `/api/modo`, `/api/biblioteca` (BIB), `/api/cofre/*` (CLI; só
+  offline + 127.0.0.1 + cabeçalho; sessão fecha em 15 min), `/api/offline/pacote` (exige TERMINAL_SENHA); selo OFFLINE
+  e layout "Offline". `Quiron Offline.bat` (UV_OFFLINE, sobe o Ollama, verifica, abre). LGPD avisa para remover do
+  cofre. Guia `docs/10-OFFLINE.md`; aceite em `testes/test_offline_aceite.py` (precisa do Ollama).
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente, segredos.

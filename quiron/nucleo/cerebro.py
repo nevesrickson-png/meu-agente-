@@ -13,6 +13,7 @@ import time
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from quiron.nucleo import offline
 from quiron.nucleo.config import Config, carregar_config
 
 
@@ -100,8 +101,8 @@ def perguntar(
                 temperature=temperatura,
                 max_tokens=max_tokens,
                 num_retries=1,
-                timeout=60,
-                **extras,
+                timeout=180 if offline.e_local(modelo) else 60,
+                **{**offline.extras_modelo(modelo), **extras},
             )
             texto = r.choices[0].message.content or ""
             return Resposta(texto, modelo, mensagens, falhas)
@@ -150,7 +151,8 @@ def conversar(
         try:
             r = llm.completion(
                 model=modelo, messages=mensagens, tools=ferramentas or None, api_key=_chave(config, modelo),
-                temperature=temperatura, num_retries=2, timeout=90, **extras,
+                temperature=temperatura, num_retries=2, timeout=300 if offline.e_local(modelo) else 90,
+                **{**offline.extras_modelo(modelo), **extras},
             )
             msg = r.choices[0].message
             chamadas = []

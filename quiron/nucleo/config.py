@@ -42,7 +42,7 @@ class Config:
     groq_api_key: str = ""
     llm_principal: str = "gemini/gemini-flash-latest"
     llm_reserva: str = "groq/openai/gpt-oss-120b"
-    llm_local: str = "ollama/qwen2.5:3b"
+    llm_local: str = "ollama_chat/qwen2.5:3b"
     # Modelos tentados entre o principal e a reserva. Cada modelo Gemini grátis tem cota diária própria
     # (o Flash mais novo dá só ~20 pedidos/dia), então uma fila de modelos grátis evita cair cedo no Groq.
     llm_alternativos: tuple[str, ...] = ()
@@ -85,6 +85,12 @@ def _alternativos() -> tuple[str, ...]:
 @lru_cache(maxsize=1)
 def carregar_config(arquivo_env: str | None = None) -> Config:
     load_dotenv(arquivo_env or RAIZ / ".env", override=False)
+    from quiron.nucleo import offline
+
+    if offline.ativo():  # versão offline: só o modelo local, nada de nuvem
+        offline.preparar_ambiente()
+        return Config(llm_principal=offline.modelo(), llm_reserva="", llm_alternativos=(), llm_local=offline.modelo(),
+                      ordem=(offline.modelo(),), fuso_horario=_texto("FUSO_HORARIO", Config.fuso_horario), host_atual="offline")
     return Config(
         gemini_api_key=_texto("GEMINI_API_KEY"),
         groq_api_key=_texto("GROQ_API_KEY"),

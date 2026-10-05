@@ -185,3 +185,6 @@ details summary { cursor: pointer; margin: 4px 0; }
   .painel:has(.chat-msgs) { min-height: 75vh; }
   .fita { height: 24px; }
 }
+
+/* ---------- versão offline (Fase 16) */
+.selo-offline { margin-left: 8px; font: 700 10px var(--mono); letter-spacing: .1em; color: #111; background: var(--ambar); border-radius: 3px; padding: 1px 5px; vertical-align: middle; }

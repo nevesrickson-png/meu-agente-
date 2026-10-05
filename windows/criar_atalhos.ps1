@@ -9,7 +9,8 @@ $atalhos = @(
   @{ Nome = 'Quiron';                 Alvo = 'Abrir Quiron.bat';         Icone = 76 },
   @{ Nome = 'Quiron - Configuracoes'; Alvo = 'Quiron Configuracoes.bat'; Icone = 109 },
   @{ Nome = 'Quiron - Acervo';        Alvo = 'Quiron Acervo.bat';        Icone = 112 },
-  @{ Nome = 'Quiron - Terminal';      Alvo = 'Quiron Terminal.bat';      Icone = 174 }
+  @{ Nome = 'Quiron - Terminal';      Alvo = 'Quiron Terminal.bat';      Icone = 174 },
+  @{ Nome = 'Quiron - Offline';       Alvo = 'Quiron Offline.bat';       Icone = 54 }
 )
 $criados = 0
 foreach ($a in $atalhos) {
@@ -26,4 +27,4 @@ foreach ($a in $atalhos) {
     Write-Host "  Nao consegui criar o atalho '$($a.Nome)': $($_.Exception.Message)"
   }
 }
-Write-Host "  Atalhos na Area de Trabalho: $criados (Quiron, Configuracoes, Acervo, Terminal)."
+Write-Host "  Atalhos na Area de Trabalho: $criados (Quiron, Configuracoes, Acervo, Terminal, Offline)."

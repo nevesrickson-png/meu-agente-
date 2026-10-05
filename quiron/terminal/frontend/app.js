@@ -506,6 +506,7 @@ function renderAjuda(corpo) {
     ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
     ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
     ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
+    ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
   ];
   corpo.innerHTML = `<dl class="ajuda">${cmds.map(([c, d]) => `<dt>${esc(c)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>
     <div class="dica">Atalhos: <b>/</b> ou <b>Ctrl+K</b> barra de comando · <b>Esc</b> sai da barra · <b>Alt+1/2/3/4</b> layouts Manhã/Análise/Estudo/Assessoria · arraste o cabeçalho para mover, o canto para redimensionar.<br>
@@ -780,6 +781,75 @@ async function renderChat(corpo, _d, painel) {
   rodape(painel, "mesmo agente do Telegram (persona, ferramentas e compliance) · conversa própria do Terminal");
 }
 
+// BIB — biblioteca (funciona sem internet)
+function renderBib(corpo, _d, painel) {
+  corpo.innerHTML = `<form class="form-v2 linha-form"><label style="flex:3 1 220px">Procurar nos livros<input name="q" value="${esc(painel.p.q || "")}" placeholder="duration e convexidade"></label><button type="submit">Buscar</button></form><div data-res class="texto-pre"></div>`;
+  const res = $("[data-res]", corpo);
+  const buscar = async () => {
+    if (!painel.p.q) { res.textContent = "Digite um tema."; return; }
+    res.innerHTML = '<span class="carregando">procurando…</span>';
+    try {
+      const r = await fetch(`/api/biblioteca?q=${encodeURIComponent(painel.p.q)}`);
+      const d = await r.json();
+      res.textContent = r.ok ? d.texto : (d.detail || "erro");
+    } catch (e) { res.textContent = "Sem conexão com o servidor"; }
+  };
+  $("form", corpo).onsubmit = (e) => { e.preventDefault(); painel.p.q = new FormData(e.target).get("q"); salvarLocal(); titular(painel); buscar(); };
+  buscar();
+  rodape(painel, "📚 índice local da biblioteca · cite livro e capítulo");
+}
+
+// CLI — clientes reais (só na versão offline, só neste PC; cofre criptografado)
+async function renderCli(corpo, _d, painel) {
+  const modo = await (await fetch("/api/modo")).json().catch(() => ({}));
+  if (!modo.offline) { corpo.innerHTML = '<div class="dica">Os nomes reais dos clientes só aparecem na versão offline (atalho “Quiron Offline”), neste PC.</div>'; return; }
+  if (!modo.cofre_aberto) {
+    corpo.innerHTML = `<form class="form-v2" data-abrir><label>${modo.cofre_existe ? "Senha do cofre" : "Crie a senha do cofre (mín. 10 caracteres — sem ela não há recuperação)"}<input name="senha" type="password" autocomplete="current-password" required></label>
+      <button type="submit">${modo.cofre_existe ? "Abrir" : "Criar cofre"}</button></form>`;
+    $("[data-abrir]", corpo).onsubmit = async (e) => {
+      e.preventDefault();
+      try { await acao("/api/cofre/abrir", { senha: new FormData(e.target).get("senha"), criar: !modo.cofre_existe }); renderCli(corpo, null, painel); }
+      catch (err) { aviso(err.message); }
+    };
+    rodape(painel, "cofre criptografado (Scrypt + AES) · fecha sozinho após 15 min");
+    return;
+  }
+  const lista = await (await fetch(`/api/cofre/clientes?q=${encodeURIComponent(painel.p.q || "")}`, { headers: { "X-Quiron": "terminal" } })).json();
+  corpo.innerHTML = `<form class="form-v2 linha-form" data-busca><label style="flex:3 1 160px">Nome, código ou telefone<input name="q" value="${esc(painel.p.q || "")}"></label><button type="submit">Filtrar</button><button type="button" data-fechar>🔒 Fechar</button></form>
+    <table class="t">${(lista.itens || []).map((c) => `<tr class="clicavel" data-cod="${esc(c.codigo)}"><td>${esc(c.codigo)}</td><td class="nome">${esc(c.nome)}</td><td class="dica">${esc(c.cidade || "")}</td></tr>`).join("") || '<tr><td class="dica">Nenhum cliente no cofre.</td></tr>'}</table>
+    <details><summary class="dica">+ cadastrar / editar cliente</summary><form class="form-v2" data-novo>
+      <div class="linha-form"><label>Código<input name="codigo" required placeholder="CLI-012"></label><label style="flex:2 1 160px">Nome<input name="nome" required></label></div>
+      <div class="linha-form"><label>Telefone<input name="telefone"></label><label>E-mail<input name="email"></label><label>Cidade<input name="cidade"></label></div>
+      <button type="submit">Salvar no cofre</button></form></details><div data-cli></div>`;
+  $("[data-busca]", corpo).onsubmit = (e) => { e.preventDefault(); painel.p.q = new FormData(e.target).get("q"); renderCli(corpo, null, painel); };
+  $("[data-fechar]", corpo).onclick = async () => { await acao("/api/cofre/fechar"); renderCli(corpo, null, painel); };
+  $("[data-novo]", corpo).onsubmit = async (e) => {
+    e.preventDefault();
+    try { await acao("/api/cofre/cliente", Object.fromEntries(new FormData(e.target))); aviso("Salvo no cofre."); renderCli(corpo, null, painel); } catch (err) { aviso(err.message); }
+  };
+  corpo.querySelectorAll("[data-cod]").forEach((tr) => (tr.onclick = async () => {
+    const alvo = $("[data-cli]", corpo);
+    try {
+      const r = await fetch(`/api/cofre/cliente/${encodeURIComponent(tr.dataset.cod)}`, { headers: { "X-Quiron": "terminal" } });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail);
+      const c = d.cliente;
+      alvo.innerHTML = `<div class="grande" style="font-size:18px">${esc(c.nome)} <span class="dica">${esc(c.codigo)}</span></div>
+        <div class="dica">${[c.telefone, c.email, c.cidade].filter(Boolean).map(esc).join(" · ")}</div><pre class="texto-pre">${esc(d.dossie)}</pre>`;
+    } catch (err) { alvo.innerHTML = `<div class="erro">${esc(err.message)}</div>`; }
+  }));
+  rodape(painel, "só neste PC, versão offline · o agente e os relatórios continuam usando só o código CLI-XXX");
+}
+
+Object.assign(TIPOS, {
+  bib: { titulo: (p) => (p.q ? `Biblioteca: ${p.q}` : "Biblioteca — BIB"), topico: null, w: 6, h: 11, render: renderBib },
+  cli: { titulo: "Clientes — CLI (offline)", topico: null, w: 6, h: 12, render: renderCli },
+});
+PRESETS["Offline"] = [
+  { tipo: "cli", x: 1, y: 1, w: 6, h: 13 }, { tipo: "chat", x: 7, y: 1, w: 6, h: 13 },
+  { tipo: "bib", x: 1, y: 14, w: 6, h: 10 }, { tipo: "task", x: 7, y: 14, w: 6, h: 10 },
+];
+
 Object.assign(TIPOS, {
   fa: { titulo: (p) => `${p.ticker} FA`, topico: "fa", params: (p) => ({ ticker: p.ticker }), w: 6, h: 12, render: renderFa },
   fundos: { titulo: (p) => `Fundos: ${p.termo}`, topico: "fundos", params: (p) => ({ termo: p.termo }), w: 6, h: 11, render: renderFundos },
@@ -799,7 +869,8 @@ PRESETS["Assessoria"] = [
 
 // comandos da v2; devolve true se tratou
 function executarV2(original, a, b, resto) {
-  const unico = { PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat" };
+  const unico = { PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat", CLI: "cli", BIB: "bib" };
+  if (a === "BIB" && b) { adicionarPainel("bib", { q: original.trim().split(/\s+/).slice(1).join(" ") }); return true; }
   if (unico[a] && !b) { adicionarPainel(unico[a]); return true; }
   if (a === "CHAT" || a === "IA") { // CHAT <pergunta>: abre o chat já com a pergunta
     const p = adicionarPainel("chat");
@@ -871,6 +942,13 @@ $("#salvar").addEventListener("click", async () => {
 });
 window.addEventListener("resize", () => { clearTimeout(window._r); window._r = setTimeout(() => paineis.filter((p) => p.tipo === "curva").forEach((p) => enviar({ tipo: "atualizar", id: p.id })), 400); });
 
+const semLayoutSalvo = !carregarLocal();
+fetch("/api/modo").then((r) => r.json()).then((m) => {
+  if (!m.offline) return;
+  const selo = Object.assign(document.createElement("span"), { className: "selo-offline", textContent: "OFFLINE", title: `Sem internet · modelo local ${m.modelo} · dados de mercado do último cache` });
+  $(".marca").append(selo);
+  if (semLayoutSalvo) aplicarLayout(PRESETS["Offline"]);
+}).catch(() => {});
 relogio();
 setInterval(relogio, 1000);
 carregarLayouts();

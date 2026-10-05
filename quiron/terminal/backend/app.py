@@ -483,6 +483,150 @@ def api_tarefa_remover(request: Request, ident: int) -> dict:
     return {"ok": Agendador().cancelar(ident)}
 
 
+# ---------------------------------------------------------------- versão offline (Fase 16): biblioteca e cofre
+@app.get("/api/modo")
+def api_modo() -> dict:
+    from quiron.nucleo import offline
+    from quiron.servicos.offline import cofre
+
+    return {"offline": offline.ativo(), "modelo": offline.modelo() if offline.ativo() else "",
+            "cofre_existe": offline.ativo() and cofre.existe(), "cofre_aberto": _cofre.aberto()}
+
+
+@app.get("/api/biblioteca")
+def api_biblioteca(q: str = "", n: int = 6) -> dict:
+    """BIB: trechos da biblioteca com citação (funciona sem internet — o índice é local)."""
+    from quiron.servicos.biblioteca import consultas
+
+    if len(q.strip()) < 2:
+        raise HTTPException(400, "digite o que procurar")
+    return {"texto": consultas.buscar(q.strip(), max(1, min(n, 12)))}
+
+
+class _CofreSessao:
+    """Cofre aberto na memória do Terminal local; fecha sozinho após 15 minutos sem uso."""
+
+    MINUTOS = 15
+
+    def __init__(self) -> None:
+        self.cofre = None
+        self.ultimo = 0.0
+
+    def aberto(self) -> bool:
+        import time as _t
+
+        if self.cofre is not None and _t.time() - self.ultimo > self.MINUTOS * 60:
+            self.cofre = None
+        return self.cofre is not None
+
+    def obter(self):
+        import time as _t
+
+        if not self.aberto():
+            raise HTTPException(423, "cofre fechado — digite a senha")
+        self.ultimo = _t.time()
+        return self.cofre
+
+
+_cofre = _CofreSessao()
+
+
+def _so_offline_local(request: Request) -> None:
+    """Cofre: só na versão offline e só no próprio PC (nunca pelo Tailscale ou outro endereço)."""
+    from quiron.nucleo import offline
+
+    _proteger(request)
+    if not offline.ativo():
+        raise HTTPException(403, "o cofre só existe na versão offline")
+    host = (request.headers.get("host") or "").rsplit(":", 1)[0]
+    cliente = request.client.host if request.client else ""
+    if host not in HOSTS_LOCAIS | {"testserver"} or cliente not in {"127.0.0.1", "::1", "testclient"}:
+        raise HTTPException(403, "o cofre só abre no próprio PC")
+
+
+@app.post("/api/cofre/abrir")
+def api_cofre_abrir(request: Request, corpo: dict = Body(...)) -> dict:
+    import time as _t
+
+    from quiron.servicos.offline import cofre
+
+    _so_offline_local(request)
+    senha = str(corpo.get("senha", ""))
+    try:
+        _cofre.cofre = cofre.abrir(senha) if cofre.existe() or not corpo.get("criar") else cofre.criar(senha)
+    except (cofre.SenhaErrada, cofre.CofreBloqueado, FileNotFoundError, FileExistsError, ValueError) as e:
+        raise HTTPException(401 if isinstance(e, cofre.SenhaErrada) else 400, str(e)) from e
+    _cofre.ultimo = _t.time()
+    return {"ok": True, "clientes": len(_cofre.cofre.clientes)}
+
+
+@app.post("/api/cofre/fechar")
+def api_cofre_fechar(request: Request) -> dict:
+    _so_offline_local(request)
+    _cofre.cofre = None
+    return {"ok": True}
+
+
+@app.get("/api/cofre/clientes")
+def api_cofre_clientes(request: Request, q: str = "") -> dict:
+    from dataclasses import asdict
+
+    _so_offline_local(request)
+    c = _cofre.obter()
+    itens = c.buscar(q) if q.strip() else sorted(c.clientes.values(), key=lambda x: x.nome)
+    return {"itens": [asdict(x) for x in itens]}
+
+
+@app.get("/api/cofre/cliente/{codigo}")
+def api_cofre_cliente(request: Request, codigo: str) -> dict:
+    """Cliente real: dados do cofre + dossiê (ficha, carteira, vencimentos, reuniões, tarefas) pelo código."""
+    from dataclasses import asdict
+
+    from quiron.servicos.assessoria import dossie
+    from quiron.servicos.planejamento.ficha import codigo as normalizar
+
+    _so_offline_local(request)
+    c = _cofre.obter()
+    try:
+        cod = normalizar(codigo)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    if cod not in c.clientes:
+        raise HTTPException(404, f"{cod} não está no cofre")
+    return {"cliente": asdict(c.clientes[cod]), "dossie": dossie.montar(cod)}
+
+
+@app.post("/api/cofre/cliente")
+def api_cofre_gravar(request: Request, corpo: dict = Body(...)) -> dict:
+    from dataclasses import asdict
+
+    _so_offline_local(request)
+    c = _cofre.obter()
+    try:
+        x = c.gravar(str(corpo.get("codigo", "")), **{k: corpo.get(k) for k in ("nome", "cpf", "telefone", "email", "cidade", "observacoes")})
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    return {"cliente": asdict(x)}
+
+
+@app.delete("/api/cofre/cliente/{codigo}")
+def api_cofre_remover(request: Request, codigo: str) -> dict:
+    _so_offline_local(request)
+    return {"ok": _cofre.obter().remover(codigo)}
+
+
+@app.get("/api/offline/pacote")
+def api_offline_pacote(request: Request) -> FileResponse:
+    """Pacote de dados para o PC offline (índice da biblioteca, fichas, Academia…). Só com TERMINAL_SENHA configurada."""
+    from quiron.servicos.offline import pacote
+
+    _proteger(request)
+    if not _senha():
+        raise HTTPException(403, "configure a TERMINAL_SENHA no servidor para liberar o pacote offline")
+    arq = pacote.gerar()
+    return FileResponse(arq, media_type="application/gzip", filename=arq.name)
+
+
 # ---------------------------------------------------------------- chat com o agente (Fase 12.3)
 CHAT_TERMINAL = -12  # conversa do Terminal na memória do agente (o Telegram usa o id do chat)
 

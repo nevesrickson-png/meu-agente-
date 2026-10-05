@@ -1,0 +1,24 @@
+# Versão offline (Fase 16) — o Quíron no PC do Rickson, sem internet, com modelo local (Ollama).
+# PC com 8 GB de RAM: modelo de 3–4B (~2–3 GB) + poucos servidores MCP. Ajuste aqui sem mexer no código.
+verificado_em: 2026-10-05
+
+modelo: "ollama_chat/qwen2.5:3b"      # alternativas: ollama_chat/llama3.2:3b · ollama_chat/qwen3:4b (mais lento no CPU)
+ollama_url: "http://127.0.0.1:11434"
+contexto_tokens: 8192                 # o padrão do Ollama (2–4 mil) corta o prompt do agente
+passos_agente: 5                      # modelo pequeno se perde em laços longos
+
+# Servidores MCP carregados offline e as ferramentas permitidas. Modelo de 3B escolhe mal entre muitas ferramentas:
+# no teste com 33 ele abriu a ficha do livro em vez de buscar; com ~8 acerta. Acrescente com parcimônia.
+servidores:
+  quiron-biblioteca: [buscar, listar_livros]
+  quiron-assessoria: [ver_ficha, dossie_reuniao]
+  quiron-organizacao: [criar_tarefa, listar_tarefas, hoje_do_rickson, anotar]
+  quiron-analise: [calcular]
+ferramentas_internas: []              # ler_skill, lembrar, agendar… ficam de fora no offline
+
+# O que vai no pacote para o PC (gerado no servidor 24h ou no PC principal).
+pacote:
+  pastas: [biblioteca/indice, biblioteca/fichas, biblioteca/texto, dados/modelos, dados/fichas, dados/carteiras, dados/reunioes,
+           dados/relatorios, dados/workspace]
+  arquivos: [dados/academia.db, dados/organizacao.db, dados/carreira.db, dados/analise.db,
+             dados/quiron.db, dados/agenda.db, dados/treino.db]

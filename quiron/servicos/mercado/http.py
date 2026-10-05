@@ -90,6 +90,12 @@ def obter(
         linha = con.execute("SELECT conteudo, obtido_em FROM cache WHERE chave = ?", (chave,)).fetchone()
     if linha and time.time() - linha[1] < ttl:
         return Resposta(_decodificar(linha[0], formato, codificacao), fonte, datetime.fromtimestamp(linha[1]))
+    from quiron.nucleo import offline
+
+    if offline.ativo():  # versão offline: nunca sai para a internet; usa o último dado guardado
+        if linha:
+            return Resposta(_decodificar(linha[0], formato, codificacao), fonte, datetime.fromtimestamp(linha[1]), True)
+        raise FonteIndisponivel(f"{fonte}: offline e sem dado guardado")
     try:
         extras = {"content": corpo.encode("utf-8")} if corpo is not None else {"data": dados}
         r = cliente().request(metodo, url, params=params, headers=cabecalhos, **extras)

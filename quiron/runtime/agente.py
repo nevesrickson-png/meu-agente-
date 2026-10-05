@@ -38,8 +38,23 @@ def indice_skills() -> str:
     return "\n".join(linhas)
 
 
+PROMPT_OFFLINE = (
+    "Você é o Quíron, assistente do Rickson (assessor de investimentos), rodando OFFLINE no PC dele com um modelo local.\n"
+    "Regras:\n"
+    "1. Para livros, fichas de clientes, tarefas e contas, CHAME A FERRAMENTA e responda só com o que ela devolver.\n"
+    "2. Ao citar um livro, copie o título e o autor exatamente como aparecem no resultado (📚 Livro — Autor, p. X).\n"
+    "3. Se a ferramenta não trouxer a resposta, diga que não encontrou. Não invente nada.\n"
+    "4. Clientes só pelo código CLI-XXX. Dados de mercado aqui podem estar desatualizados.\n"
+    "5. Responda em português do Brasil, em até 6 frases."
+)
+
+
 def prompt_sistema(agora: datetime | None = None, workspace: Workspace | None = None) -> str:
+    from quiron.nucleo import offline
+
     agora = agora or datetime.now(BRT)
+    if offline.ativo():  # modelo pequeno: prompt curto e direto
+        return f"{PROMPT_OFFLINE}\n\nAgora: {agora:%d/%m/%Y %H:%M}."
     ws = workspace
     persona = ws.ler("SOUL.md") if ws else (PASTA_AGENTE / "persona.md").read_text(encoding="utf-8")
     partes = [persona, f"## Agora\n{agora:%A, %d/%m/%Y %H:%M} (horário de Brasília)."]
@@ -87,7 +102,13 @@ class Agente:
         self.internas = FerramentasInternas(self.workspace, self.memoria, self.agendador)
 
     def ferramentas(self) -> list[dict[str, Any]]:
-        todas = [*DEFINICOES, *self.conexao.ferramentas]
+        from quiron.nucleo import offline
+
+        internas = DEFINICOES
+        if offline.ativo():  # modelo pequeno: só as internas listadas em config/offline.yaml
+            permitidas = set(offline.config().get("ferramentas_internas") or [])
+            internas = [d for d in DEFINICOES if d["function"]["name"] in permitidas]
+        todas = [*internas, *self.conexao.ferramentas]
         return [f for f in todas if permissoes.politica(f["function"]["name"]) != "bloqueado"]
 
     async def executar_ferramenta(self, nome: str, args: dict[str, Any]) -> str:
@@ -109,7 +130,9 @@ class Agente:
         mensagens: list[dict[str, Any]] = [{"role": "system", "content": sistema},
                                            *(historico or []), {"role": "user", "content": pergunta}]
         try:
-            for _ in range(MAX_PASSOS):
+            from quiron.nucleo import offline
+
+            for _ in range(int(offline.config().get("passos_agente", MAX_PASSOS)) if offline.ativo() else MAX_PASSOS):
                 turno = await asyncio.to_thread(cerebro.conversar, mensagens, self.ferramentas(), config=self.config)
                 reg.modelos.append(turno.modelo)
                 reg.tokens += getattr(turno, "tokens", 0)

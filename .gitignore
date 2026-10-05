@@ -22,3 +22,6 @@ dist/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Cofre de clientes reais (versão offline) — criptografado, mesmo assim nunca vai para o GitHub
+cofre/

@@ -26,6 +26,14 @@ def ler_mcp_json(caminho: Path | None = None) -> dict[str, dict]:
     return json.loads((caminho or RAIZ / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]
 
 
+def _enxuto(esquema: dict[str, Any] | None) -> dict[str, Any]:
+    """Offline: modelo pequeno se perde em parâmetros opcionais (ex.: põe um filtro de bloco à toa) — só os obrigatórios."""
+    esquema = esquema or {}
+    obrig = list(esquema.get("required") or [])
+    props = {k: v for k, v in (esquema.get("properties") or {}).items() if k in obrig}
+    return {"type": "object", "properties": props, "required": obrig}
+
+
 @dataclass
 class ConexaoMCP:
     servidores: list[str] | None = None  # None = todos do .mcp.json
@@ -35,9 +43,14 @@ class ConexaoMCP:
     falhas: dict[str, str] = field(default_factory=dict, init=False)
 
     async def __aenter__(self) -> "ConexaoMCP":
+        from quiron.nucleo import offline
+
         cfg = ler_mcp_json()
+        permitidas = offline.servidores() if offline.ativo() else {}  # offline: servidores leves e poucas ferramentas
         for nome, s in cfg.items():
             if self.servidores and nome not in self.servidores:
+                continue
+            if offline.ativo() and nome not in permitidas:
                 continue
             params = StdioServerParameters(command=shutil.which(s["command"]) or s["command"], args=s.get("args", []),
                                            cwd=str(RAIZ), env={**os.environ, **s.get("env", {})})
@@ -47,12 +60,14 @@ class ConexaoMCP:
                 await sessao.initialize()
                 self._sessoes[nome] = sessao
                 for t in (await sessao.list_tools()).tools:
+                    if permitidas.get(nome) and t.name not in permitidas[nome]:
+                        continue
                     self.ferramentas.append({
                         "type": "function",
                         "function": {
                             "name": f"{nome}{SEPARADOR}{t.name}".replace("-", "_"),
                             "description": (t.description or "")[:1000],
-                            "parameters": t.input_schema or {"type": "object", "properties": {}},
+                            "parameters": _enxuto(t.input_schema) if permitidas else (t.input_schema or {"type": "object", "properties": {}}),
                         },
                     })
             except Exception as e:  # noqa: BLE001 — um servidor com problema não impede os outros
