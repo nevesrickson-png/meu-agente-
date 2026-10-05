@@ -30,7 +30,7 @@ fica para a Fase 5, quando você já terá testado o Quíron na prática. Nada c
 | 16º | **Fase 15 — Carreira, diário e radar** | Host | Plano de carreira, diário de teses, monitor de normas | 6, 11 |
 | 17º | **Fase 16 — Versão offline** | PC | Quíron sem internet, com clientes reais criptografados | 13, 14 |
 | 18º | **Fase 17 — Conteúdo** | Host | Pautas, roteiros, banco de ideias | 3 |
-| 19º | **Fase 18 — Integrações** | Host + PC | CRM próprio e SDR | todas |
+| 19º | **Fase 18 — Integrações** ⏸️ adiada | Host + PC | CRM próprio e SDR | todas |
 
 **Por que essa ordem:**
 - As Fases 0–4 são leves, gratuitas e rodam no seu PC: você começa já e vê resultado em dias.
@@ -309,7 +309,21 @@ Execute a FASE 17 do docs/00-ROTEIRO.md.
 ```
 
 ## FASE 18 — Integrações
-- [ ] 18.1 CRM próprio (nunca o da EQI) · 18.2 SDR (lead qualificado → dossiê) · 18.3 Sincronização com a versão offline
+- [~] 18.1 CRM próprio (nunca o da EQI) · 18.2 SDR (lead qualificado → dossiê) · 18.3 Sincronização com a versão offline
+> ⏸️ 05/10/2026: desenho proposto e **adiado pelo Rickson** ("depois vou integrar com o CRM") — `docs/11-INTEGRACOES.md`.
 ```
 Execute a FASE 18 do docs/00-ROTEIRO.md. Antes, leia o CRM e o SDR e me proponha o desenho para eu aprovar.
 ```
+
+---
+
+## Depois do roteiro — pendências do seu lado (05/10/2026)
+Todas as fases foram construídas e aprovadas no ambiente de desenvolvimento, menos a 18 (adiada). O que falta é colocar no ar:
+- [ ] 5.3/5.4 Rodar no host definitivo (mini PC): `deploy/preparar_host.sh` + `deploy/instalar.sh` (`docs/03-HOSPEDAGEM.md`)
+- [ ] 5.6 Processar a biblioteca completa no host
+- [ ] 5.8 Simulado de desastre: `deploy/backup.sh` → `deploy/migrar.sh` em outra máquina
+- [ ] 0.5 Conferir `config/regras_mercado.yaml` e preencher `verificado_em`
+- [ ] 1.1 Preencher os 22 blocos em `config/guia_22_blocos.yaml` e rodar `reclassificar`
+- [ ] Deixar os repositórios do GitHub como **privados** (hoje estão públicos)
+- [ ] Fase 18 quando quiser: responder as 3 perguntas de `docs/11-INTEGRACOES.md`
+
