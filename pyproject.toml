@@ -47,6 +47,8 @@ quiron-ingerir = "quiron.servicos.biblioteca.cli:main"
 quiron-testar-cerebro = "quiron.nucleo.cerebro:testar_conexao_cli"
 quiron-gerar-persona = "quiron.nucleo.persona:main"
 quiron-configurar = "quiron.configurador.app:main"
+quiron-google = "quiron.servicos.organizacao.google_agenda:main"
+quiron-mcp-organizacao = "quiron.mcp.organizacao.servidor:main"
 
 [dependency-groups]
 dev = [

@@ -29,3 +29,4 @@ batimento:                          # "heartbeat": o Quíron confere ROTINAS.md 
 # Rotinas criadas automaticamente na primeira vez que o bot liga (você pode cancelar no Telegram com /agenda).
 rotinas_padrao:
   - {texto: "Faça meu briefing.", tipo: tarefa, recorrencia: "diario 07:30"}   # persona: fins de semana normais
+  - {texto: "/revisao", tipo: tarefa, recorrencia: "semanal domingo 18:00"}   # revisão semanal (Fase 14), direto, sem IA

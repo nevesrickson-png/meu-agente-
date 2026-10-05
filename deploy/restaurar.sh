@@ -7,5 +7,6 @@ ARQUIVO="${1:?Informe o arquivo de backup (.tar.gz)}"
 docker compose down 2>/dev/null || true
 tar -xzf "$ARQUIVO"
 chmod 600 .env
+chmod -R go-rwx segredos 2>/dev/null || true
 docker compose up -d --build
 echo "Restaurado de $ARQUIVO. Confira no Telegram com /agenda e /memoria."

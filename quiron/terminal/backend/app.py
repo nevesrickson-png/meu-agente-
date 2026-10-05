@@ -445,6 +445,36 @@ def api_tarefa_criar(request: Request, corpo: dict = Body(...)) -> dict:
     return {"id": a.id, "descricao": a.descrever()}
 
 
+@app.post("/api/organizacao/tarefa")
+def api_org_tarefa(request: Request, corpo: dict = Body(...)) -> dict:
+    """Tarefa rápida em linguagem natural ("amanhã às 10h ligar para o CLI-012")."""
+    from quiron.servicos.organizacao import tarefas as org
+
+    _proteger(request)
+    try:
+        t = org.criar(str(corpo.get("texto", "")), origem="terminal")
+    except org.TarefaInvalida as e:
+        raise HTTPException(400, str(e)) from e
+    return {"id": t.id, "descricao": org.confirmar(t)}
+
+
+@app.post("/api/organizacao/tarefa/{ident}/{acao}")
+def api_org_acao(request: Request, ident: int, acao: str) -> dict:
+    from quiron.servicos.organizacao import tarefas as org
+
+    _proteger(request)
+    try:
+        if acao == "feito":
+            return {"descricao": "✅ " + org.concluir(ident).texto}
+        if acao == "apagar":
+            return {"ok": org.remover(ident)}
+        if acao == "amanha":
+            return {"descricao": org.confirmar(org.adiar(ident, "amanhã"))}
+    except org.TarefaInvalida as e:
+        raise HTTPException(400, str(e)) from e
+    raise HTTPException(404, "ação desconhecida")
+
+
 @app.delete("/api/tarefas/{ident}")
 def api_tarefa_remover(request: Request, ident: int) -> dict:
     from quiron.runtime.agendador import Agendador

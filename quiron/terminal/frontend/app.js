@@ -674,7 +674,12 @@ function renderAcad(corpo, d, painel) {
 
 // TASK — lembretes e tarefas (os mesmos do Telegram)
 function renderTask(corpo, d, painel) {
-  corpo.innerHTML = `${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="n" style="text-align:left">${hora(a.proxima)}</td><td class="nome" title="${esc(a.texto)}">${a.tipo === "lembrete" ? "⏰" : "⚙️"} ${esc(a.texto)}</td><td class="dica">${esc(a.recorrencia)}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Cancelar">✕</button></td></tr>`).join("")}</tbody></table>`
+  const tarefas = d.tarefas || [];
+  corpo.innerHTML = `<form class="form-v2 linha-form" data-rapida><label style="flex:3 1 220px">Tarefa rápida<input name="texto" required placeholder="amanhã às 10h ligar para o CLI-012"></label><button type="submit">Criar</button></form>
+    ${tarefas.length ? `<table class="t">${tarefas.map((t) => `<tr><td class="nome" title="${esc(t.texto)}">${esc(t.descricao)}</td>
+      <td><button type="button" class="mini" data-org="${t.id}:feito" aria-label="Concluir">✓</button> <button type="button" class="mini" data-org="${t.id}:amanha" title="Adiar para amanhã">→</button></td></tr>`).join("")}</table>` : '<div class="dica">Nenhuma tarefa pendente.</div>'}
+    <div class="painel-titulo" style="margin:8px 0 2px">Rotinas e lembretes</div>
+    ${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="n" style="text-align:left">${hora(a.proxima)}</td><td class="nome" title="${esc(a.texto)}">${a.tipo === "lembrete" ? "⏰" : "⚙️"} ${esc(a.texto)}</td><td class="dica">${esc(a.recorrencia)}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Cancelar">✕</button></td></tr>`).join("")}</tbody></table>`
     : '<div class="dica">Nenhum agendamento.</div>'}
     <form class="form-v2 linha-form" style="margin-top:6px"><label style="flex:2 1 180px">Texto<input name="texto" required placeholder="Ligar para CLI-004"></label>
       <label>Tipo<select name="tipo"><option value="lembrete">lembrete</option><option value="tarefa">tarefa do agente</option></select></label>
@@ -684,7 +689,15 @@ function renderTask(corpo, d, painel) {
   corpo.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
     try { await acao(`/api/tarefas/${b.dataset.del}`, undefined, "DELETE"); atualizarPainel(painel); } catch (e) { aviso(e.message); }
   }));
-  $("form", corpo).onsubmit = async (e) => {
+  corpo.querySelectorAll("[data-org]").forEach((b) => (b.onclick = async () => {
+    const [id, ac] = b.dataset.org.split(":");
+    try { const r = await acao(`/api/organizacao/tarefa/${id}/${ac}`); aviso(r.descricao || "ok"); atualizarPainel(painel); } catch (e) { aviso(e.message); }
+  }));
+  $("[data-rapida]", corpo).onsubmit = async (e) => {
+    e.preventDefault();
+    try { const r = await acao("/api/organizacao/tarefa", Object.fromEntries(new FormData(e.target))); aviso(r.descricao, 6000); atualizarPainel(painel); } catch (err) { aviso(err.message, 6000); }
+  };
+  $("form:not([data-rapida])", corpo).onsubmit = async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
     if (f.recorrencia !== "uma vez") { // o agendador pede o dia e a hora da repetição: tirados do campo "Quando"

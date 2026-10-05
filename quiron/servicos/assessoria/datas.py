@@ -41,6 +41,8 @@ def interpretar(expressao: str | None, hoje: date) -> date | None:
     if not expressao:
         return None
     t = _sem_acento(str(expressao)).strip()
+    if re.search(r"\b(passad[oa]|ultim[oa])\b", t):
+        return None  # "sexta passada": já foi
     d: date | None = None
     if m := re.search(r"\b(\d{4})-(\d{2})-(\d{2})\b", t):
         d = date(int(m[1]), int(m[2]), int(m[3]))
@@ -111,17 +113,52 @@ def interpretar(expressao: str | None, hoje: date) -> date | None:
 
 
 def hora(expressao: str | None) -> tuple[int, int] | None:
-    """'às 10h', '14h30', '9:15', '10 da manhã', '3 da tarde' → (h, m)."""
+    """'às 10h', '14h30', '9:15', 'às 10 horas', '3 da tarde' → (h, m)."""
     if not expressao:
         return None
-    t = _sem_acento(str(expressao))
-    m = re.search(r"\b(\d{1,2})\s*(?:h|:)\s*(\d{2})?\b", t) or re.search(r"\b(\d{1,2})\s+(?:horas?\s+)?da\s+(manha|tarde|noite)\b", t)
-    if not m:
-        return None
-    h = int(m[1])
-    minutos = int(m[2]) if m.lastindex and m[2] and m[2].isdigit() else 0
-    if m.lastindex and m[2] in {"tarde", "noite"} and h < 12:
-        h += 12
-    if h > 23 or minutos > 59:
-        return None
-    return h, minutos
+    return extrair(str(expressao), date(2000, 1, 1))[2]
+
+
+# ---------------------------------------------------------------- extrair data e hora de uma frase (tarefas)
+RE_DATA = re.compile(
+    r"\b(depois de amanh[ãa]|amanh[ãa]|hoje|(?:na |nesta |n[ao] próxim[ao] |n[ao] proxim[ao] )?(?:segunda|terça|terca|quarta|quinta|"
+    r"sexta|sábado|sabado|domingo)(?:-feira)?(?: que vem| da semana que vem| da próxima semana| passada)?|semana que vem|próxima semana|"
+    r"proxima semana|(?:no )?(?:fim|final) do mês|m[êe]s que vem(?: dia \d{1,2})?|(?:no )?dia \d{1,2}(?:/\d{1,2}(?:/\d{2,4})?)?|"
+    r"\d{1,2}/\d{1,2}(?:/\d{2,4})?|(?:daqui a|em|dentro de) \w+ (?:dias? úteis|dias? uteis|dias?|semanas?|m[eê]s(?:es)?))\b", re.I)
+RE_HORA = re.compile(r"(?:\b(?:às|as|a partir das|lá pelas|umas)\s*)?\b(?P<h>\d{1,2})\s*(?:h|:)\s*(?P<m>\d{2})?\b(?:min)?"
+                     r"|\b(?:às|as)\s+(?P<h2>\d{1,2})(?:\s+horas?|\s*hs)?(?:\s+(?:da\s+)?(?P<p2>manhã|manha|tarde|noite))?\b"
+                     r"|\b(?P<h3>\d{1,2})\s+(?:horas?\s+)?da\s+(?P<p3>manhã|manha|tarde|noite)\b", re.I)
+_PREFIXOS = re.compile(r"^(?:me\s+lembr[ae]\s+(?:de\s+)?|lembr(?:ar|e-me|e)\s+(?:de\s+)?|lembrete:?\s*|tarefa:?\s*|anota(?:r)?\s+(?:a[ií]\s+)?(?:que\s+)?|"
+                       r"preciso\s+|tenho\s+que\s+|não\s+esquecer\s+de\s+|nao\s+esquecer\s+de\s+)", re.I)
+
+
+def extrair(texto: str, hoje: date) -> tuple[str, date | None, tuple[int, int] | None]:
+    """'amanhã às 10h ligar para o CLI-012' → ('Ligar para o CLI-012', amanhã, (10, 0)). A data é calculada em Python."""
+    resto = texto.strip()
+    d = None
+    if m := RE_DATA.search(resto):
+        d = interpretar(m.group(0), hoje)
+        if d is not None:
+            resto = resto[:m.start()] + " " + resto[m.end():]
+    h = None
+    m = RE_HORA.search(resto)
+    if m and m.group("h") and re.match(r"\s*(de|por|semanais|diárias|diarias|seguidas)\b", resto[m.end():], re.I) \
+            and not re.match(r"(às|as)\b", m.group(0), re.I):
+        m = None  # "estudar 2h por dia" é duração, não horário
+    if m:
+        if m.group("h"):
+            hh, mm = int(m.group("h")), int(m.group("m") or 0)
+        else:
+            hh, mm = int(m.group("h2") or m.group("h3")), 0
+            if (m.group("p2") or m.group("p3") or "").lower() in {"tarde", "noite"} and hh < 12:
+                hh += 12
+        if hh <= 23 and mm <= 59:
+            h = (hh, mm)
+            resto = resto[:m.start()] + " " + resto[m.end():]
+    resto = re.sub(r"\s+", " ", resto)
+    resto = re.sub(r"^[\s,;:.\-–]+|[\s,;:.\-–]+$", "", resto)
+    resto = re.sub(r"\s+([,;.])", r"\1", resto)
+    for _ in range(3):  # "anota aí que preciso comprar…" tem prefixos em sequência
+        resto = _PREFIXOS.sub("", resto).strip()
+    resto = re.sub(r"\b(às|as|no|na|em|de|para|até|ate)$", "", resto, flags=re.I).strip(" ,")
+    return (resto[:1].upper() + resto[1:]) if resto else "", d, h

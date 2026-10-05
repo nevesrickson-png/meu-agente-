@@ -1,6 +1,7 @@
 """LGPD — `/esquecer CLI-XXX` apaga tudo o que o Quíron guardou sobre um cliente.
 
 Apaga: ficha (e histórico), carteiras lidas, relatórios (tarefas da fila + arquivos), anotações de reunião, lembretes,
+tarefas e notas da organização,
 trechos de conversa, linhas da memória e do diário que citam o código. Não há mapa código → nome aqui (ele só existe na versão offline do Rickson).
 """
 
@@ -63,6 +64,7 @@ def esquecer_cliente(cliente: str) -> Apagado:
     r.itens["anotações de reunião"] = len(list(pasta_reunioes.glob("*.json"))) if pasta_reunioes.exists() else 0
     shutil.rmtree(pasta_reunioes, ignore_errors=True)
     r.itens["lembretes"] = _apagar_lembretes(raiz / "agenda.db", cod)
+    r.itens["tarefas/notas"] = _apagar_organizacao(raiz / "organizacao.db", cod)
     r.itens["mensagens de conversa"] = _apagar_conversas(raiz / "conversas.db", cod)
 
     n = 0
@@ -95,6 +97,22 @@ def _apagar_relatorios(banco: Path, cod: str) -> int:
             con.execute("DELETE FROM busca_relatorios WHERE tarefa_id = ?", (ident,))
         con.commit()
         return len(linhas)
+    finally:
+        con.close()
+
+
+def _apagar_organizacao(banco: Path, cod: str) -> int:
+    if not banco.exists():
+        return 0
+    con = sqlite3.connect(banco)
+    try:
+        n = 0
+        for tabela in ("tarefas", "notas"):
+            ids = [i for i, t in con.execute(f"SELECT id, texto FROM {tabela} WHERE texto LIKE ?", (f"%{cod}%",)) if _cita(t, cod)]
+            con.executemany(f"DELETE FROM {tabela} WHERE id = ?", [(i,) for i in ids])  # o gatilho limpa a busca das notas
+            n += len(ids)
+        con.commit()
+        return n
     finally:
         con.close()
 

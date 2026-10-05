@@ -196,6 +196,16 @@ Digite na barra do Terminal (ou escolha o layout **Assessoria**):
   vencimento do CDB` (sai como RASCUNHO e passa por conferência de compliance) · `/vencimentos 60`.
 - `/esquecer CLI-012` apaga também as anotações de reunião e os lembretes do cliente.
 
+## Organização (Fase 14)
+- **Tarefas:** escreva ou fale do jeito normal — “amanhã às 10h ligar para o CLI-012” (ou `/tarefa …`). O lembrete
+  chega na hora com os botões **✅ Feito**, **⏰ +1h** e **📅 Amanhã**. `/tarefas` lista; `/feito 3`; `/adiar 3 sexta`.
+- **/hoje:** agenda do Google, tarefas atrasadas e do dia, lembretes, vencimentos de clientes e metas.
+- **/nota** texto #tag · **/notas** busca · **/meta** estudar 5 horas por semana · **/meta 1 +2** · **/metas**.
+- **/revisao:** a revisão da semana (chega sozinha no domingo às 18h).
+- **Google Agenda:** siga `docs/09-GOOGLE-AGENDA.md` (uns 10 minutos, uma vez) e dê dois cliques em
+  **Quiron Google Agenda.bat**. Depois: `/evento quinta às 15h reunião com CLI-012 por 1h30`.
+- No Terminal, o painel **TASK** tem “Tarefa rápida” com a mesma frase.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

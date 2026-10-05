@@ -259,7 +259,7 @@ def test_bot_telegram(monkeypatch):
 
     agora = datetime.now(BRT)
     bot.agente.agendador.criar("ligar para o CLI-012", "lembrete", "uma vez", agora + timedelta(minutes=1), agora=agora)
-    assert asyncio.run(bot.agenda_vencida(agora + timedelta(minutes=2))) == ["⏰ Lembrete: ligar para o CLI-012"]
+    assert [s.texto for s in asyncio.run(bot.agenda_vencida(agora + timedelta(minutes=2)))] == ["⏰ Lembrete: ligar para o CLI-012"]
 
 
 # ---------------------------------------------------------------- velocidade, áudio e rotinas
@@ -304,9 +304,9 @@ def test_bot_responde_audio(monkeypatch):
 
 def test_rotina_padrao_do_briefing_criada_uma_vez():
     bot = BotQuiron(Agente(SemMCP(), Config()), {111})
-    assert bot.garantir_rotinas_padrao() == ["Faça meu briefing."]
+    assert bot.garantir_rotinas_padrao() == ["Faça meu briefing.", "/revisao"]
     assert bot.garantir_rotinas_padrao() == []  # não duplica
-    a = bot.agente.agendador.listar()[0]
+    a = next(x for x in bot.agente.agendador.listar() if x.texto == "Faça meu briefing.")
     assert (a.tipo, a.recorrencia, a.proxima.strftime("%H:%M")) == ("tarefa", "diario 07:30", "07:30")
 
 

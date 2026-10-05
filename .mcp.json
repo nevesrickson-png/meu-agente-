@@ -55,6 +55,14 @@
         "--quiet",
         "quiron-mcp-assessoria"
       ]
+    },
+    "quiron-organizacao": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--quiet",
+        "quiron-mcp-organizacao"
+      ]
     }
   }
 }

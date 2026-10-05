@@ -12,6 +12,7 @@ x-quiron: &quiron
     - ./biblioteca:/app/biblioteca
     - ./config:/app/config
     - ./agente:/app/agente
+    - ./segredos:/app/segredos
   logging:
     driver: json-file
     options: {max-size: "10m", max-file: "3"}

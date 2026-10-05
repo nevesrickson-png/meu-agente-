@@ -28,7 +28,7 @@ Funcionalidades em `docs/01-FUNCIONALIDADES.md`. Persona em `config/persona.yaml
 - **Runtime decidido (04/10/2026): bot próprio em Python**, inspirado no melhor de Hermes, Claude Code e OpenClaw —
   desenho em `docs/08-AGENTE-QUIRON.md`. Sem terminal, arquivos do sistema, navegador autônomo nem loja de skills de terceiros.
 - Por isso, toda a inteligência do Quíron é construída como **servidores MCP em Python**, independentes de runtime:
-  `quiron-sistema` (ping e status — Fase 0), `quiron-biblioteca`, `quiron-academia`, `quiron-mercado`, `quiron-noticias`, `quiron-analise`, `quiron-assessoria`, `quiron-carreira`.
+  `quiron-sistema` (ping e status — Fase 0), `quiron-biblioteca`, `quiron-academia`, `quiron-mercado`, `quiron-noticias`, `quiron-analise`, `quiron-assessoria`, `quiron-organizacao`, `quiron-carreira`.
   Qualquer runtime que fale MCP usa essas ferramentas sem mudança de código.
 - **Durante o desenvolvimento, o próprio Claude Code é a interface de teste:** os MCP são registrados no `.mcp.json`
   do projeto, e o Rickson já usa as ferramentas conversando com o Claude Code, antes de existir Telegram.
@@ -216,9 +216,22 @@ Arquivos com DRM não são processados.
   `runtime/assessoria_bot.py` (direto, sem LLM no laço: `/pos` espera o próximo áudio/texto; treino ativo captura as
   mensagens; botões `as:*`). Skill `agente/skills/assessoria.md`; comandos /reuniao, /objecao, /explicar, /mensagem,
   /vencimentos. `lgpd.py` apaga também reuniões e lembretes. Aceite online em `testes/test_assessoria_online.py`.
+- Organização (Fase 14, `quiron/servicos/organizacao/`): `banco.py` (`dados/organizacao.db`: tarefas, notas + FTS5,
+  metas e registros), `tarefas.py` (frase → `datas.extrair` (texto limpo + data + hora, em Python) → tarefa; com hora =
+  lembrete na hora, só data = 8h, sem data = lista; lembrete é agendamento `[T<id>] …` do `Agendador`; adiar recria o
+  lembrete; `por_lembrete`), `notas.py`, `metas.py` (semanal/mensal/total com prazo; ritmo esperado calculado),
+  `hoje.py` (`montar_hoje`, `montar_revisao` — sem modelo) e `google_agenda.py` (Calendar v3 por httpx, OAuth loopback +
+  PKCE sem bibliotecas extras; `segredos/google_oauth.json` + `google_token.json`, renovação automática; escopo só
+  `calendar.events`; `quiron-google autorizar [--sem-navegador]`; guia `docs/09-GOOGLE-AGENDA.md`; `.bat`). MCP
+  `quiron-organizacao` (criar/listar/concluir/adiar/remover tarefa, hoje, revisão, notas, metas, agenda, evento).
+  Telegram: `runtime/organizacao_bot.py` (direto: /tarefa /tarefas /feito /adiar /hoje /nota /notas /meta /metas
+  /revisao /evento; botões `or:*`); `agenda_vencida` devolve `Saida` (lembrete de tarefa com botões; rotina que começa
+  com "/" roda pelo `tratar`, ex.: `/revisao` domingo 18h em `rotinas_padrao`). `agendar` interno = rotinas; tarefa
+  pontual = `criar_tarefa`. Terminal: TASK com "Tarefa rápida" (`/api/organizacao/tarefa`). LGPD apaga tarefas/notas.
+  `segredos/` entra no volume do Docker e no backup. Aceite online em `testes/test_organizacao_online.py`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
-  backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.
+  backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente, segredos.
 - Análise: `pandas`, `numpy`, `scipy`, `statsmodels`, `riskfolio-lib`/`PyPortfolioOpt`, `numpy-financial`.
 - Relatórios: PDF com `pymupdf` (Story), `matplotlib`, `openpyxl`, `markdown`.
 - Terminal: FastAPI + WebSocket + frontend leve, gráficos lightweight-charts/ECharts. Banco: SQLite.

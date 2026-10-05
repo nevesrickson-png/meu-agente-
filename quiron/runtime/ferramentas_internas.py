@@ -29,7 +29,8 @@ DEFINICOES = [
     _f("esquecer", "Apaga da memória os fatos que contêm um trecho (pede aprovação do Rickson).", {"trecho": {"type": "string"}}, ["trecho"]),
     _f("buscar_conversas", "Procura em todas as conversas anteriores com o Rickson (ex.: 'o que falamos sobre CLI-012').",
        {"termo": {"type": "string"}}, ["termo"]),
-    _f("agendar", "Cria lembrete ou tarefa agendada. tipo='lembrete' manda o texto na hora; tipo='tarefa' faz o pedido na hora "
+    _f("agendar", "ROTINAS e pedidos que o Quíron executa na hora (para uma tarefa/lembrete pontual do Rickson, como 'amanhã às 10h "
+                  "ligar para o CLI-012', use quiron_organizacao__criar_tarefa). tipo='lembrete' manda o texto na hora; tipo='tarefa' faz o pedido na hora "
                   "(ex.: 'Faça meu briefing.') e manda o resultado. recorrencia: 'uma vez' (informe quando_iso, horário de Brasília) | "
                   "'diario HH:MM' | 'dias_uteis HH:MM' | 'semanal <segunda..domingo> HH:MM' | 'mensal <1-28> HH:MM'.",
        {"texto": {"type": "string"}, "tipo": {"type": "string", "enum": ["lembrete", "tarefa"]},

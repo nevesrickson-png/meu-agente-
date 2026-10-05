@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -20,6 +21,8 @@ from quiron.runtime.academia_bot import COMANDOS as COMANDOS_ACADEMIA
 from quiron.runtime.academia_bot import AcademiaBot, Tela
 from quiron.runtime.assessoria_bot import COMANDOS as COMANDOS_ASSESSORIA
 from quiron.runtime.assessoria_bot import AssessoriaBot
+from quiron.runtime.organizacao_bot import COMANDOS as COMANDOS_ORGANIZACAO
+from quiron.runtime.organizacao_bot import OrganizacaoBot, botoes_tarefa
 from quiron.runtime.agendador import BRT
 from quiron.runtime.agente import Agente
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
@@ -71,6 +74,7 @@ class BotQuiron:
         self.comandos = carregar_comandos()
         self.academia = AcademiaBot()
         self.assessoria = AssessoriaBot()
+        self.organizacao = OrganizacaoBot()
 
     def autorizado(self, usuario: int) -> bool:
         if usuario not in self.permitidos:
@@ -85,7 +89,10 @@ class BotQuiron:
                    "/questoes [área] [módulo|tema] · /simulado [área] [mini|40|completo] · /flashcards · /diagnostico · "
                    "/plano [horas]", "",
                    "🤝 Assessoria: /pos CLI-XXX (depois mande o áudio da reunião → resumo e lembretes) · "
-                   "/treino [personagem] [cenário] [dificuldade] · /treino fim (feedback) · /treino opcoes · /treino evolucao", ""]
+                   "/treino [personagem] [cenário] [dificuldade] · /treino fim (feedback) · /treino opcoes · /treino evolucao", "",
+                   "🗂️ Organização: /tarefa amanhã às 10h ligar para o CLI-012 · /tarefas · /feito 3 · /adiar 3 sexta · /hoje · "
+                   "/nota texto #tag · /notas [busca] · /meta estudar 5 horas por semana · /meta 1 +2 · /metas · /revisao · "
+                   "/evento quinta às 15h reunião (Google Agenda)", ""]
         linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
         return "\n".join(linhas)
 
@@ -111,6 +118,9 @@ class BotQuiron:
                 return [self._saida(t) for t in telas]
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
+            if nome.split("@")[0].lower() in COMANDOS_ORGANIZACAO:
+                telas = await self.organizacao.comando(nome.split("@")[0].lower(), args)
+                return [self._saida(t) for t in telas]
             if nome.split("@")[0].lower() in COMANDOS_ASSESSORIA:
                 telas = await self.assessoria.comando(nome.split("@")[0].lower(), args, chat)
                 return [self._saida(t) for t in telas]
@@ -143,6 +153,12 @@ class BotQuiron:
             return []
         c = await self.assessoria.clique(dado)
         return [self._saida(t) for t in c.novas]
+
+    async def clicar_organizacao(self, usuario: int, dado: str) -> tuple[str | None, list[Saida]]:
+        if not self.autorizado(usuario):
+            return None, []
+        c = await self.organizacao.clique(dado)
+        return c.editar, [self._saida(t) for t in c.novas]
 
     async def decidir(self, usuario: int, dado: str) -> str:
         if not self.autorizado(usuario):
@@ -219,18 +235,26 @@ class BotQuiron:
                 criadas.append(chave[0])
         return criadas
 
-    async def agenda_vencida(self, agora: datetime | None = None) -> list[str]:
-        """Lembretes/tarefas na hora. Lembretes pedidos pelo Rickson sempre saem; contam no limite diário."""
-        saidas = []
+    async def agenda_vencida(self, agora: datetime | None = None) -> list[Saida]:
+        """Lembretes/tarefas na hora. Lembretes pedidos pelo Rickson sempre saem; contam no limite diário.
+        Lembrete de tarefa vem com botões (Feito / +1h / Amanhã); rotina que é um comando ("/revisao") roda direto."""
+        from quiron.servicos.organizacao import tarefas
+
+        saidas: list[Saida] = []
         for a in self.agente.agendador.vencidos(agora):
             if a.tipo == "lembrete":
-                texto = f"⏰ Lembrete: {a.texto}"
+                t = tarefas.por_lembrete(a.id)
+                if t and not t.concluida_em:
+                    saidas.append(Saida(f"⏰ Lembrete: {t.texto}" + (f" ({t.hora})" if t.hora else ""), linhas=botoes_tarefa(t)))
+                else:
+                    saidas.append(Saida(f"⏰ Lembrete: {re.sub(r'^\[T\d+\] ', '', a.texto)}"))
+            elif a.texto.startswith("/") and self.permitidos:
+                saidas += await self.tratar(next(iter(self.permitidos)), next(iter(self.permitidos)), a.texto)
             else:
                 reg = await self.agente.responder(a.texto, skills=self.skills_para(a.texto))
-                texto = reg.resposta
+                saidas += [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
             self.agente.agendador.registrar_envio(f"agenda #{a.id}", agora)
             self.agente.workspace.anotar_diario(f"Agenda #{a.id} enviada: {a.texto[:120]}", agora)
-            saidas.append(texto)
         return saidas
 
 
@@ -257,7 +281,10 @@ async def _rodar() -> None:
             linhas = s.teclado()
             teclado = InlineKeyboardMarkup([[InlineKeyboardButton(r, callback_data=d) for r, d in linha] for linha in linhas]) \
                 if linhas else None
-            await app.bot.send_message(chat, s.texto, reply_markup=teclado, disable_web_page_preview=True)
+            partes = dividir(s.texto) or [""]
+            for i, parte in enumerate(partes):  # botões só na última parte
+                await app.bot.send_message(chat, parte, reply_markup=teclado if i == len(partes) - 1 else None,
+                                           disable_web_page_preview=True)
 
         async def digitando(chat: int) -> None:
             while True:  # o "digitando…" do Telegram dura 5 s: renova até a resposta sair
@@ -319,6 +346,18 @@ async def _rodar() -> None:
                 for s in saidas:
                     await enviar(q.message.chat_id, s)
                 return
+            if (q.data or "").startswith("or:"):
+                editar, saidas = await bot.clicar_organizacao(q.from_user.id, q.data)
+                try:
+                    if editar:
+                        await q.edit_message_text(editar[:LIMITE_TELEGRAM], reply_markup=None)
+                    else:
+                        await q.edit_message_reply_markup(None)
+                except Exception:  # noqa: BLE001
+                    pass
+                for s in saidas:
+                    await enviar(q.message.chat_id, s)
+                return
             if (q.data or "").startswith("as:"):
                 saidas = await bot.clicar_assessoria(q.from_user.id, q.data)
                 try:
@@ -337,9 +376,8 @@ async def _rodar() -> None:
         async def laco_agenda() -> None:
             while True:
                 try:
-                    for texto in await bot.agenda_vencida():
-                        for parte in dividir(texto):
-                            await app.bot.send_message(dono, parte)
+                    for s in await bot.agenda_vencida():
+                        await enviar(dono, s)
                 except Exception:  # noqa: BLE001 — o laço nunca morre
                     logging.exception("falha no laço da agenda")
                 await asyncio.sleep(30)

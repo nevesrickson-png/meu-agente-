@@ -251,8 +251,15 @@ Execute a FASE 13 do docs/00-ROTEIRO.md.
 ```
 
 ## FASE 14 — Organização
-- [ ] 14.1 Tarefas por texto/áudio com lembretes · 14.2 Google Agenda · 14.3 Hoje, notas, metas, revisão semanal
+- [x] 14.1 Tarefas por texto/áudio com lembretes (`/tarefa` ou frase livre; data/hora calculadas em Python; lembrete
+  com botões ✅ Feito / ⏰ +1h / 📅 Amanhã; `/tarefas`, `/feito`, `/adiar`) · 14.2 Google Agenda (API oficial, OAuth
+  do próprio Rickson — guia em `docs/09-GOOGLE-AGENDA.md`; `/evento`, eventos no `/hoje` e na revisão) · 14.3 `/hoje`,
+  `/nota`/`/notas` (busca sem acento, #tags), `/meta` (semanal, mensal ou com prazo, ritmo calculado), `/revisao`
+  (automática domingo 18h)
 **Teste de aceite:** "amanhã às 10h ligar para o CLI-012" vira tarefa e o lembrete chega.
+✅ Aceite (05/10/2026): a frase, mandada sem comando ao agente real, virou a tarefa #1 para 06/10 10:00 e o lembrete
+chegou na hora com os botões; o mesmo por áudio ("Amanhã às dez horas, ligar para o contador")
+(`testes/test_organizacao_online.py`). Google Agenda testado com respostas simuladas; a autorização é do Rickson.
 ```
 Execute a FASE 14 do docs/00-ROTEIRO.md. Me guie na autorização do Google Agenda.
 ```

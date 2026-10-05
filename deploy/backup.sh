@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Backup do Quíron: dados, cérebro (workspace), livros, configurações e .env num único arquivo.
+# Backup do Quíron: dados, cérebro (workspace), livros, configurações, segredos (Google Agenda) e .env num único arquivo.
 # Uso: bash deploy/backup.sh   (o instalar.sh agenda às 03:00). Guarda em ~/quiron-backups e mantém os 14 mais novos.
 # Se o rclone tiver um destino chamado "gdrive" configurado (rclone config), também envia para o Google Drive.
 set -euo pipefail
@@ -18,7 +18,7 @@ for db in dados/*.db; do
   python3 -c "import sqlite3,sys; s=sqlite3.connect(sys.argv[1]); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close()" "$db" "$TMP/$db"
 done
 tar -czf "$ARQUIVO" --exclude='dados/*.db' --exclude='dados/modelos' --exclude='dados/hermes' \
-    dados biblioteca config agente/workspace .env -C "$TMP" dados 2>/dev/null || true
+    dados biblioteca config agente/workspace segredos .env -C "$TMP" dados 2>/dev/null || true
 echo "Backup criado: $ARQUIVO ($(du -h "$ARQUIVO" | cut -f1))"
 
 ls -1t "$DESTINO"/quiron-*.tar.gz | tail -n +$((MANTER + 1)) | xargs -r rm -f

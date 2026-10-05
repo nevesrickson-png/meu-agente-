@@ -352,8 +352,13 @@ def tarefas() -> dict:
     """TASK: lembretes e tarefas agendadas (os mesmos do Telegram)."""
     from quiron.runtime.agendador import Agendador
 
+    from quiron.servicos.organizacao import tarefas as org
+
+    hoje = datetime.now().date()
     return {"itens": [{"id": a.id, "texto": a.texto, "tipo": a.tipo, "recorrencia": a.recorrencia,
-                       "proxima": _iso(a.proxima, brasilia=True)} for a in Agendador().listar()]}
+                       "proxima": _iso(a.proxima, brasilia=True)} for a in Agendador().listar() if not a.texto.startswith("[T")],
+            "tarefas": [{"id": t.id, "texto": t.texto, "prazo": t.prazo, "hora": t.hora, "atrasada": t.atrasada(hoje),
+                         "descricao": t.descrever(hoje)} for t in org.listar("pendentes", hoje)]}
 
 
 def alertas_lista() -> dict:
