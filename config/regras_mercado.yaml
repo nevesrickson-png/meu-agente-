@@ -19,6 +19,14 @@ renda_fixa:
     aplica_resgate_antes_de_dias: 30
     observacao: "Tabela regressiva diária do IOF (96% no 1º dia a 0% no 30º), sobre o rendimento"
 
+poupanca:
+  verificado_em:        # ← preencha após conferir
+  fonte: "Lei 8.177/1991 com redação da Lei 12.703/2012"
+  selic_gatilho: 8.5            # % a.a.: acima disso a poupança rende 0,5% a.m. + TR
+  rendimento_mensal_acima: 0.005
+  percentual_selic_abaixo: 0.70 # Selic até o gatilho: 70% da Selic + TR
+  isenta_ir_pf: true
+
 fundos:
   verificado_em:
   fonte: "Lei 14.754/2023; Receita Federal"

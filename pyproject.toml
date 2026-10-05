@@ -51,6 +51,7 @@ quiron-google = "quiron.servicos.organizacao.google_agenda:main"
 quiron-mcp-organizacao = "quiron.mcp.organizacao.servidor:main"
 quiron-mcp-carreira = "quiron.mcp.carreira.servidor:main"
 quiron-offline = "quiron.servicos.offline.cli:main"
+quiron-mcp-conteudo = "quiron.mcp.conteudo.servidor:main"
 
 [dependency-groups]
 dev = [

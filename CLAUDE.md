@@ -28,7 +28,7 @@ Funcionalidades em `docs/01-FUNCIONALIDADES.md`. Persona em `config/persona.yaml
 - **Runtime decidido (04/10/2026): bot próprio em Python**, inspirado no melhor de Hermes, Claude Code e OpenClaw —
   desenho em `docs/08-AGENTE-QUIRON.md`. Sem terminal, arquivos do sistema, navegador autônomo nem loja de skills de terceiros.
 - Por isso, toda a inteligência do Quíron é construída como **servidores MCP em Python**, independentes de runtime:
-  `quiron-sistema` (ping e status — Fase 0), `quiron-biblioteca`, `quiron-academia`, `quiron-mercado`, `quiron-noticias`, `quiron-analise`, `quiron-assessoria`, `quiron-organizacao`, `quiron-carreira`.
+  `quiron-sistema` (ping e status — Fase 0), `quiron-biblioteca`, `quiron-academia`, `quiron-mercado`, `quiron-noticias`, `quiron-analise`, `quiron-assessoria`, `quiron-organizacao`, `quiron-carreira`, `quiron-conteudo`.
   Qualquer runtime que fale MCP usa essas ferramentas sem mudança de código.
 - **Durante o desenvolvimento, o próprio Claude Code é a interface de teste:** os MCP são registrados no `.mcp.json`
   do projeto, e o Rickson já usa as ferramentas conversando com o Claude Code, antes de existir Telegram.
@@ -252,6 +252,15 @@ Arquivos com DRM não são processados.
   offline + 127.0.0.1 + cabeçalho; sessão fecha em 15 min), `/api/offline/pacote` (exige TERMINAL_SENHA); selo OFFLINE
   e layout "Offline". `Quiron Offline.bat` (UV_OFFLINE, sobe o Ollama, verifica, abre). LGPD avisa para remover do
   cofre. Guia `docs/10-OFFLINE.md`; aceite em `testes/test_offline_aceite.py` (precisa do Ollama).
+- Conteúdo (Fase 17, `quiron/servicos/conteudo/`, `config/conteudo.yaml`): `insumos.py` (fatos numerados com crédito:
+  SGS/Focus, regras de `regras_mercado.yaml` com contas em Python — poupança, IR regressivo, FGC, conta Tesouro Selic
+  líquido × poupança —, radar, notícias (link do redirect desembrulhado), agenda, biblioteca; aviso de regra não
+  conferida fica só nas notas internas), `gerador.py` (pautas com fatos validados ou plano B por regras; peça por formato
+  com até 2 tentativas — reescreve se houver alerta grave ou número sem fonte; salva em `dados/conteudo/` e no banco),
+  `revisao.py` (tira marcas [n], quebra slides/posts, compliance, números com %/R$/decimal conferidos com os insumos,
+  créditos do que foi citado, disclaimer + CVM 20 se ticker/empresa + IA, "RASCUNHO") e `ideias.py` (`dados/conteudo.db`
+  com FTS5). MCP `quiron-conteudo`; Telegram `runtime/conteudo_bot.py` (/pauta /roteiro /fio /ideia /ideias /conferir).
+  Skill `agente/skills/conteudo.md`. Aceite online em `testes/test_conteudo_online.py`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente, segredos.

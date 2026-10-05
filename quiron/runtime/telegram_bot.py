@@ -25,6 +25,8 @@ from quiron.runtime.organizacao_bot import COMANDOS as COMANDOS_ORGANIZACAO
 from quiron.runtime.organizacao_bot import OrganizacaoBot, botoes_tarefa
 from quiron.runtime.carreira_bot import COMANDOS as COMANDOS_CARREIRA
 from quiron.runtime.carreira_bot import CarreiraBot
+from quiron.runtime.conteudo_bot import COMANDOS as COMANDOS_CONTEUDO
+from quiron.runtime.conteudo_bot import ConteudoBot
 from quiron.runtime.agendador import BRT
 from quiron.runtime.agente import Agente
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
@@ -79,6 +81,7 @@ class BotQuiron:
         self.assessoria = AssessoriaBot()
         self.organizacao = OrganizacaoBot()
         self.carreira = CarreiraBot()
+        self.conteudo = ConteudoBot()
 
     def autorizado(self, usuario: int) -> bool:
         if usuario not in self.permitidos:
@@ -98,7 +101,9 @@ class BotQuiron:
                    "/nota texto #tag · /notas [busca] · /meta estudar 5 horas por semana · /meta 1 +2 · /metas · /revisao · "
                    "/evento quinta às 15h reunião (Google Agenda)", "",
                    "🧭 Carreira: /carreira (plano) · /diario <tese> · /diario revisar · /portfolio · /entrevista [cargo] · "
-                   "/radar [dias] (normas da CVM, Receita, BC e Câmara)", ""]
+                   "/radar [dias] (normas da CVM, Receita, BC e Câmara)", "",
+                   "✍️ Conteúdo: /pauta [tema] · /roteiro reels|youtube|carrossel|fio|artigo <tema> · /fio <tema> · /ideia · /ideias · "
+                   "/conferir <seu texto> (sai como RASCUNHO, com disclaimer e fontes)", ""]
         linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
         return "\n".join(linhas)
 
@@ -127,6 +132,8 @@ class BotQuiron:
                 return [self._saida(t) for t in telas]
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
+            if nome.split("@")[0].lower() in COMANDOS_CONTEUDO:
+                return [self._saida(t) for t in await self.conteudo.comando(nome.split("@")[0].lower(), args)]
             if nome.split("@")[0].lower() in COMANDOS_CARREIRA:
                 n = nome.split("@")[0].lower()
                 self.carreira.ultimo_pdf = None

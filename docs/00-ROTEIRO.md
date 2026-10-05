@@ -296,7 +296,14 @@ Execute a FASE 16 do docs/00-ROTEIRO.md. Lembre: Windows com 8 GB de RAM.
 ```
 
 ## FASE 17 — Conteúdo
-- [ ] 17.1 Pautas, roteiros, fios, banco de ideias · 17.2 Disclaimer e créditos automáticos
+- [x] 17.1 Pautas, roteiros, fios, banco de ideias (`/pauta`, `/roteiro reels|youtube|carrossel|fio|artigo`, `/fio`,
+  `/ideia`, `/ideias`; insumos numerados com fonte: Banco Central, regras oficiais com contas em Python, radar, notícias,
+  agenda e biblioteca) · 17.2 Disclaimer e créditos automáticos (compliance com reescrita automática, todo número com %
+  ou R$ conferido com as fontes, créditos só do que foi citado, disclaimer + aviso CVM 20 se citar empresa + aviso de IA;
+  sai como RASCUNHO; `/conferir` para textos do Rickson)
+✅ Aceite (05/10/2026): com dados reais, 4 pautas com fontes e um carrossel "Tesouro Selic ou poupança" sem alerta de
+compliance, todos os números conferidos (Selic 13,75% do BC, regra da poupança 6,17% a.a. + TR e a conta de 4,98 p.p. a
+favor do Tesouro Selic líquido), disclaimer e créditos (`testes/test_conteudo_online.py`).
 ```
 Execute a FASE 17 do docs/00-ROTEIRO.md.
 ```

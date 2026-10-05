@@ -224,6 +224,16 @@ Quíron sem internet, com IA local e os **clientes reais** num cofre criptografa
 em **Quiron - Offline**. No Terminal: **CLI** (clientes com nome real — pede a senha do cofre), **BIB duration**
 (biblioteca) e **CHAT** (o Quíron local). O nome real nunca vai para a nuvem e não aparece fora da tela CLI.
 
+## Conteúdo (Fase 17)
+- **/pauta** [tema] — ideias de posts a partir das notícias, números do Banco Central, normas novas, agenda (Copom) e
+  seus livros, cada uma com as fontes. **/ideia salvar 2** guarda no banco de ideias; **/ideias** lista.
+- **/roteiro** reels | youtube | carrossel | fio | artigo <tema> (ou `#3` para uma ideia do banco) e **/fio** <tema>
+  (Threads, LinkedIn, Bluesky — sem X). Sai como **RASCUNHO** já conferido: compliance, números batendo com as fontes,
+  disclaimer e créditos. Abaixo vem "Para você (não publicar)" com o que conferir.
+- **/conferir** [tema] seu texto — confere um post escrito por você.
+- Antes de publicar, siga a política de comunicação do seu intermediário. Ajuste público, tom, assinatura e disclaimer
+  em `config/conteudo.yaml`.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

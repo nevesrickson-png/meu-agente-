@@ -1,0 +1,21 @@
+# Conteúdo (Fase 17) — pautas, roteiros, fios e banco de ideias. Tudo sai como RASCUNHO para o Rickson revisar.
+# Redes: sem X/Twitter (decisão do Rickson). Edite à vontade.
+verificado_em: 2026-10-05
+
+publico: "investidores pessoa física (iniciantes e intermediários), profissionais liberais e empresários"
+tom: "didático, direto e sem sensacionalismo; exemplos do dia a dia; números com fonte e data"
+assinatura: "Rickson Messias, assessor de investimentos"   # confira a política de comunicação do seu intermediário
+
+formatos:
+  reels: {nome: "Reels/Shorts (até 60 s)", estrutura: "gancho de 3 s → 3 pontos curtos → fechamento com 1 ação prática", limite_palavras: 160}
+  youtube: {nome: "Vídeo YouTube (8–10 min)", estrutura: "abertura com o problema → contexto com números → 3 blocos → erros comuns → resumo", limite_palavras: 1400}
+  carrossel: {nome: "Carrossel (8 slides)", estrutura: "slide 1 título-gancho; slides 2–7 uma ideia cada (máx. 25 palavras); slide 8 resumo", limite_palavras: 260}
+  fio: {nome: "Fio para Threads/LinkedIn/Bluesky", estrutura: "6 a 9 posts numerados de até 280 caracteres; o 1º é o gancho; o último resume", limite_palavras: 380}
+  artigo: {nome: "Artigo/newsletter", estrutura: "título, lead de 2 frases, 3 intertítulos, conclusão prática", limite_palavras: 900}
+
+disclaimer:
+  padrao: >-
+    Conteúdo educativo e informativo; não é recomendação de investimento. Rentabilidade passada não é garantia de
+    rentabilidade futura. Antes de investir, avalie seu perfil (suitability) com um profissional.
+  acoes: "Menções a empresas são exemplos didáticos e não constituem relatório de análise (Resolução CVM 20)."
+  ia: "Produzido com apoio de inteligência artificial e revisado pelo autor."
