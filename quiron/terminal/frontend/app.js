@@ -79,7 +79,7 @@ let layoutsSalvos = {};
 const graficos = new Map(); // id → objetos de gráfico para limpar
 
 function salvarLocal() {
-  try { localStorage.setItem("quiron-layout-atual", JSON.stringify(paineis.map(({ id, ...r }) => r))); } catch (e) { /* sem storage */ }
+  try { localStorage.setItem("quiron-layout-atual", JSON.stringify(paineis.map(({ id, _timer, ...r }) => r))); } catch (e) { /* sem storage */ }
 }
 function carregarLocal() {
   try { return JSON.parse(localStorage.getItem("quiron-layout-atual") || "null"); } catch (e) { return null; }
@@ -150,6 +150,7 @@ function posicionar(p) {
 function fecharPainel(id) {
   graficos.get(id)?.remove?.();
   graficos.delete(id);
+  clearTimeout(paineis.find((p) => p.id === id)?._timer);
   document.getElementById(id)?.remove();
   paineis = paineis.filter((p) => p.id !== id);
   assinar();
@@ -381,7 +382,8 @@ function svgCurva(alvo, vs) {
   const X = (a) => m.l + (a / xmax) * (W - m.l - m.r), Y = (v) => m.t + (1 - (v - ymin) / (ymax - ymin)) * (H - m.t - m.b);
   let s = `<svg width="${W}" height="${H}" style="display:block" role="img" aria-label="Curva de juros por prazo">`;
   for (let y = ymin; y <= ymax; y += Math.max(1, Math.round((ymax - ymin) / 5))) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(y)}" y2="${Y(y)}" stroke="#262624"/><text x="${m.l - 4}" y="${Y(y) + 3}" text-anchor="end">${y}%</text>`;
-  for (let a = 0; a <= xmax; a += xmax > 8 ? 2 : 1) s += `<text x="${X(a)}" y="${H - 6}" text-anchor="${a === 0 ? "start" : "middle"}">${a} ${a === 1 ? "ano" : "anos"}</text>`;
+  const passo = Math.max(xmax > 8 ? 2 : 1, Math.ceil(xmax / Math.max(1, Math.floor((W - m.l - m.r) / 55))));
+  for (let a = 0; a <= xmax; a += passo) s += `<text x="${X(a)}" y="${H - 6}" text-anchor="${a === 0 ? "start" : "middle"}">${a} ${a === 1 ? "ano" : "anos"}</text>`;
   for (const [k, cor] of chaves) {
     const pts = vs.filter((v) => v[k] !== null).map((v) => `${X(v.anos).toFixed(1)},${Y(v[k]).toFixed(1)}`);
     if (pts.length) s += `<polyline fill="none" stroke="${cor}" stroke-width="2" points="${pts.join(" ")}"/>`;
@@ -477,15 +479,14 @@ async function renderCalc(corpo, _d, painel) {
 function renderRpt(corpo, _d, painel) {
   corpo.innerHTML = `<form class="calc-form rpt-busca"><input name="q" placeholder="Buscar nos relatórios (ex.: debênture, CDB)" value="${esc(painel.p.q || "")}"></form><div data-lista></div>`;
   const lista = $("[data-lista]", corpo), form = $("form", corpo);
-  let timer;
   const carregar = async () => {
-    clearTimeout(timer);
+    clearTimeout(painel._timer); // um só ciclo de atualização por painel, mesmo se redesenhado
     try {
       const r = await (await fetch(`/api/relatorios?busca=${encodeURIComponent(painel.p.q || "")}`)).json();
-      lista.innerHTML = r.itens.length ? `<table class="t">${r.itens.map((t) => `<tr><td>#${t.id}</td><td>${esc(t.titulo)}<div class="memoria">${esc(t.quando)} · ${esc(t.situacao)}${t.erro ? " · " + esc(t.erro) : ""}</div></td>
+      lista.innerHTML = r.itens.length ? `<table class="t">${r.itens.map((t) => `<tr class="${t.id === painel.p.destaque ? "destaque" : ""}" data-rpt="${t.id}"><td>#${t.id}</td><td>${esc(t.titulo)}<div class="memoria">${esc(t.quando)} · ${esc(t.situacao)}${t.erro ? " · " + esc(t.erro) : ""}</div></td>
         <td class="n">${t.pdf ? `<a href="/relatorios/${t.id}/relatorio.pdf" target="_blank" rel="noopener">PDF</a>` : ""} ${t.planilha ? `<a href="/relatorios/${t.id}/planilha.xlsx">XLSX</a>` : ""}</td></tr>`).join("")}</table>`
-        : `<div class="memoria">Nenhum relatório ainda. Peça uma análise ao Quíron no Telegram (ex.: “compare CDB 110% do CDI com LCI 92% em 2 anos”).</div>`;
-      if (r.itens.some((t) => t.situacao === "na fila" || t.situacao === "rodando")) timer = setTimeout(carregar, 5000);
+        : `<div class="memoria">Nenhum relatório ainda. Digite WEGE3 DCF, FUND &lt;nome&gt; ou peça ao Quíron no CHAT/Telegram (ex.: “compare CDB 110% do CDI com LCI 92% em 2 anos”).</div>`;
+      if (r.itens.some((t) => t.situacao === "na fila" || t.situacao === "rodando")) painel._timer = setTimeout(carregar, 5000);
     } catch (e) { lista.innerHTML = `<div class="erro">Sem conexão com o servidor</div>`; }
   };
   form.addEventListener("submit", (e) => { e.preventDefault(); painel.p.q = new FormData(form).get("q"); salvarLocal(); carregar(); });
@@ -500,10 +501,15 @@ function renderAjuda(corpo) {
     ["ECO", "Agenda econômica"], ["CURV", "Curva de juros pré, real e inflação implícita"], ["MACRO", "Painel macro e Focus"],
     ["JUROS", "Selic, CDI e Tesouro"], ["WEI", "Índices mundiais"], ["FX", "Moedas"], ["CMDTY", "Commodities"], ["W", "Watchlist"],
     ["CALC", "Calculadoras"], ["STATUS", "Saúde do sistema"], ["HELP", "Esta ajuda"],
+    ["WEGE3 FA", "Demonstrações da CVM e múltiplos (uso interno)"], ["WEGE3 DCF", "Dispara o valuation completo; o PDF aparece em RPT"],
+    ["FUND <nome>", "Busca fundos na CVM (12 meses, PL); análise ou comparação"], ["CMPF", "Compara de 2 a 6 fundos"],
+    ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
+    ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
+    ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
   ];
   corpo.innerHTML = `<dl class="ajuda">${cmds.map(([c, d]) => `<dt>${esc(c)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>
-    <div class="dica">Atalhos: <b>/</b> ou <b>Ctrl+K</b> barra de comando · <b>Esc</b> sai da barra · <b>Alt+1/2/3</b> layouts Manhã/Análise/Estudo · arraste o cabeçalho para mover, o canto para redimensionar.<br>
-    Na v2 (Fase 12): FA, DCF, PORT, FUND, CMPF, PLAN, RPT, ACAD, TASK, ALRT e chat.</div>`;
+    <div class="dica">Atalhos: <b>/</b> ou <b>Ctrl+K</b> barra de comando · <b>Esc</b> sai da barra · <b>Alt+1/2/3/4</b> layouts Manhã/Análise/Estudo/Assessoria · arraste o cabeçalho para mover, o canto para redimensionar.<br>
+    Celular: abra pelo endereço do Tailscale e use “Adicionar à tela inicial”.</div>`;
 }
 
 function renderFita(lista) {
@@ -512,10 +518,304 @@ function renderFita(lista) {
 }
 function rodape(painel, html) { $(".painel-rodape", document.getElementById(painel.id)).innerHTML = html; }
 
+// ------------------------------------------------------------------ Terminal v2 (Fase 12): análise, assessoria e chat
+// Toda ação que grava ou dispara algo leva o cabeçalho X-Quiron (o servidor recusa pedidos vindos de outros sites).
+async function acao(url, corpo, metodo = "POST") {
+  const r = await fetch(url, { method: metodo, headers: { "Content-Type": "application/json", "X-Quiron": "terminal" }, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.erro || `erro ${r.status}`);
+  return d;
+}
+const mi = (v) => (v === null || v === undefined ? "—" : fmt(v / 1e6, 0));
+const pct = (v, c = 1) => (v === null || v === undefined ? "—" : fmt(v * 100, c) + "%");
+const vezes = (v) => (v === null || v === undefined ? "—" : fmt(v, 1) + "x");
+const atualizarPainel = (painel) => enviar({ tipo: "atualizar", id: painel.id });
+
+// Pede uma análise ao motor (mesma fila do Telegram) e abre/atualiza o RPT com a tarefa em destaque.
+async function pedirAnalise(tipo, parametros, rotulo, modo = "entregar") {
+  try {
+    const r = await acao("/api/analisar", { tipo, parametros, modo });
+    aviso(`Análise #${r.id} (${rotulo}) na fila${r.na_frente ? ` — ${r.na_frente} na frente` : ""}. Acompanhe em RPT.`, 6000);
+    let rpt = paineis.find((p) => p.tipo === "rpt");
+    if (rpt) { rpt.p.destaque = r.id; rpt.p.q = ""; renderRpt($(".painel-corpo", document.getElementById(rpt.id)), null, rpt); }
+    else rpt = adicionarPainel("rpt", { destaque: r.id });
+    document.getElementById(rpt.id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return r;
+  } catch (e) { aviso("Não consegui pedir a análise: " + e.message, 6000); }
+}
+function botoes(lista) {
+  return `<div class="periodos acoes">${lista.map(([k, t, dica]) => `<button type="button" data-b="${k}" title="${esc(dica || "")}">${esc(t)}</button>`).join("")}</div>`;
+}
+function ligar(corpo, mapa) { corpo.querySelectorAll("[data-b]").forEach((b) => (b.onclick = () => mapa[b.dataset.b]?.(b))); }
+
+// FA — demonstrações (CVM) e múltiplos
+function renderFa(corpo, d, painel) {
+  const t = painel.p.ticker;
+  if (d.carregando) {
+    corpo.innerHTML = `<div class="carregando">Baixando as demonstrações de ${esc(t)} da CVM (na primeira vez leva até 1 minuto)…</div>`;
+    return;
+  }
+  const m = d.multiplos;
+  const kpi = (r, v) => `<div class="kpi"><div class="kpi-r">${r}</div><div class="kpi-v">${v}</div></div>`;
+  const linhas = [["Receita", "receita"], ["EBITDA", "ebitda"], ["EBIT", "ebit"], ["Lucro (controladores)", "lucro_controladores"],
+    ["Geração de caixa (FCO)", "fco"], ["Capex", "capex"], ["Dívida líquida", "divida_liquida"], ["Patrimônio líquido", "pl"]];
+  const per = d.periodos;
+  corpo.innerHTML = `<div><b>${esc(d.empresa)}</b> <span class="dica">${esc(d.setor)} · ${esc(d.segmento || "")}</span></div>
+    <div class="grande" style="font-size:20px">R$ ${fmt(d.preco)} <span class="dica">valor de mercado R$ ${fmt(m.valor_mercado / 1e9, 1)} bi</span></div>
+    <div class="kpis kpis-p">${kpi("P/L", vezes(m.pl))}${kpi("EV/EBITDA", vezes(m.ev_ebitda))}${kpi("P/VP", vezes(m.p_vp))}${kpi("Dividend yield", pct(m.dy))}
+      ${kpi("ROE", pct(m.roe))}${kpi("Margem EBITDA", pct(m.margem_ebitda))}${kpi("Margem líquida", pct(m.margem_liquida))}${kpi("Dív. líq./EBITDA", vezes(m.divida_liquida_ebitda))}</div>
+    ${botoes([["dcf", "DCF completo", "valuation em PDF (fila de análises)"], ["setor", "× setor", "múltiplos contra os pares"], ["tri", "Último trimestre", "ITR contra o ano anterior"], ["gp", "Gráfico"]])}
+    <table class="t"><thead><tr><th>R$ milhões</th>${per.map((p) => `<th class="n">${esc(p.rotulo.replace("12 meses até ", "LTM "))}</th>`).join("")}</tr></thead>
+    <tbody>${linhas.map(([n, k]) => `<tr><td>${n}</td>${per.map((p) => `<td class="n">${mi(p[k])}</td>`).join("")}</tr>`).join("")}</tbody></table>
+    ${d.avisos.map((a) => `<div class="erro">⚠ ${esc(a)}</div>`).join("")}`;
+  ligar(corpo, {
+    dcf: () => pedirAnalise("valuation_dcf", { empresa: t }, `${t} DCF`),
+    setor: () => pedirAnalise("setor_multiplos", { empresa: t }, `${t} × setor`),
+    tri: () => pedirAnalise("resultado_trimestral", { empresa: t }, `${t} trimestre`),
+    gp: () => adicionarPainel("grafico", { ativo: t }),
+  });
+  rodape(painel, "📊 CVM (DFP/ITR) + cotação do dia · Uso interno — não constitui relatório de análise");
+}
+
+// FUND — busca de fundos na CVM
+function renderFundos(corpo, d, painel) {
+  if (!d.itens.length) { corpo.innerHTML = `<div class="dica">Nenhum fundo com “${esc(d.termo)}”. Tente parte do nome ou o CNPJ.</div>`; return; }
+  corpo.innerHTML = `<table class="t"><thead><tr><th></th><th>Fundo</th><th class="n">PL R$ mi</th><th class="n">12 meses</th><th></th></tr></thead><tbody>${d.itens.map((f) => `
+    <tr><td><input type="checkbox" data-cnpj="${esc(f.cnpj)}" aria-label="Selecionar para comparar"></td>
+      <td class="nome" title="${esc(f.nome)} · ${esc(f.gestor)}">${f.master ? '<span class="tag alerta" title="fundo master: não recebe aplicação direta">master</span>' : ""}${esc(f.nome)}<div class="memoria">${esc(f.cnpj)} · ${esc(f.anbima || "sem classificação")}</div></td>
+      <td class="n">${mi(f.pl)}</td><td class="n">${f.ret12 === null ? '<span class="dica" title="série mensal ainda não baixada">—</span>' : variacao(f.ret12)}</td>
+      <td><button type="button" class="mini" data-analise="${esc(f.cnpj)}" title="Análise completa em PDF">análise</button></td></tr>`).join("")}</tbody></table>
+    ${botoes([["cmpf", "Comparar selecionados (CMPF)", "marque de 2 a 6 fundos"]])}`;
+  corpo.querySelectorAll("[data-analise]").forEach((b) => (b.onclick = () => pedirAnalise("fundo_analise", { cnpj: b.dataset.analise }, "fundo " + b.dataset.analise)));
+  ligar(corpo, {
+    cmpf: () => {
+      const cnpjs = [...corpo.querySelectorAll("input[data-cnpj]:checked")].map((c) => c.dataset.cnpj);
+      if (cnpjs.length < 2 || cnpjs.length > 6) return aviso("Marque de 2 a 6 fundos para comparar.");
+      pedirAnalise("fundos_comparativo", { cnpjs }, `comparativo de ${cnpjs.length} fundos`);
+    },
+  });
+  rodape(painel, `${fonte(d.fonte, d.obtido_em)} · 12 meses = últimos 12 meses fechados (cota da CVM)`);
+}
+
+// CMPF — comparar fundos por CNPJ ou nome
+function renderCmpf(corpo, _d, painel) {
+  corpo.innerHTML = `<form class="form-v2"><label>Fundos (um CNPJ ou nome por linha, de 2 a 6)<textarea name="lista" rows="5" placeholder="Ex.:\n07.455.507/0001-89\nSPX Nimitz">${esc((painel.p.cnpjs || []).join("\n"))}</textarea></label>
+    <label>Histórico<select name="anos"><option value="1">1 ano</option><option value="3" selected>3 anos</option><option value="5">5 anos</option></select></label>
+    <button type="submit">Comparar (PDF + planilha)</button></form><div class="dica">Rentabilidade × CDI, risco, posição entre os pares, taxas e conferência das cotas na CVM. Para achar o CNPJ: FUND &lt;nome&gt;.</div>`;
+  $("form", corpo).onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const cnpjs = String(f.get("lista")).split("\n").map((s) => s.trim()).filter(Boolean);
+    if (cnpjs.length < 2 || cnpjs.length > 6) return aviso("Informe de 2 a 6 fundos.");
+    painel.p.cnpjs = cnpjs; salvarLocal();
+    pedirAnalise("fundos_comparativo", { cnpjs, anos: +f.get("anos") }, `comparativo de ${cnpjs.length} fundos`);
+  };
+  rodape(painel, "📊 CVM Dados Abertos (informe diário) · resultado em RPT");
+}
+
+// PORT — carteira colada → composição, enquadramento no perfil e diagnóstico completo
+function renderPort(corpo, _d, painel) {
+  const perfis = ["conservador", "moderado", "arrojado"];
+  corpo.innerHTML = `<form class="form-v2"><label>Carteira (uma posição por linha: nome e valor)<textarea name="texto" rows="5" placeholder="Ex.:\nTesouro IPCA+ 2035 R$ 120.000\nCDB Banco X 110% CDI 80 mil\nBOVA11 R$ 45.000\nPETR4 200 (sem R$ = quantidade)">${esc(painel.p.texto || "")}</textarea></label>
+    <div class="linha-form"><label>Perfil<select name="perfil">${perfis.map((p) => `<option ${p === (painel.p.perfil || "moderado") ? "selected" : ""}>${p}</option>`).join("")}</select></label>
+    <label>Cliente (opcional)<input name="cliente" placeholder="CLI-001" value="${esc(painel.p.cliente || "")}" maxlength="12"></label>
+    <button type="submit">Ler carteira</button></div></form><div data-res></div>`;
+  const res = $("[data-res]", corpo);
+  $("form", corpo).onsubmit = async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    if (f.cliente && !/^CLI-\w+$/i.test(f.cliente.trim())) return aviso("Cliente só como código CLI-XXX (nunca o nome).");
+    Object.assign(painel.p, f); salvarLocal();
+    res.innerHTML = '<div class="carregando">lendo…</div>';
+    try {
+      const r = await acao("/api/carteira/ler", f);
+      res.innerHTML = `<div class="dica">${esc(r.id)} · ${r.posicoes.length} posições · total R$ ${fmt(r.total)}</div>
+        <table class="t"><thead><tr><th>Classe (perfil ${esc(r.perfil)})</th><th class="n">Atual</th><th class="n">Faixa</th><th class="n">Alvo</th><th>Situação</th></tr></thead><tbody>${r.enquadramento.map((l) =>
+          `<tr><td>${esc(l.classe)}</td><td class="n">${fmt(l.atual, 1)}%</td><td class="n">${fmt(l.minimo, 0)}–${fmt(l.maximo, 0)}%</td><td class="n">${fmt(l.alvo, 0)}%</td><td>${l.situacao === "dentro" ? "✓ dentro" : "⚠ " + esc(l.situacao)}</td></tr>`).join("")}</tbody></table>
+        <details><summary class="dica">Posições lidas</summary><table class="t">${r.posicoes.map((p) => `<tr><td class="nome">${esc(p.nome)}</td><td>${esc(p.classe)}</td><td class="n">R$ ${fmt(p.valor)}</td></tr>`).join("")}</table></details>
+        ${r.avisos.map((a) => `<div class="erro">⚠ ${esc(a)}</div>`).join("")}
+        ${botoes([["diag", "Diagnóstico completo", "risco, stress, otimização, rebalanceamento com IR e backtest (PDF)"]])}`;
+      ligar(res, { diag: () => pedirAnalise("carteira_diagnostico", { carteira_id: r.id }, "diagnóstico da carteira " + r.id) });
+    } catch (err) { res.innerHTML = `<div class="erro">${esc(err.message)}</div>`; }
+  };
+  rodape(painel, "leitura no servidor · cliente só como CLI-XXX · a carteira fica em dados/carteiras");
+}
+
+// PLAN — fichas de planejamento (CLI-XXX)
+const TIPOS_PLAN = [["planejamento_completo", "Planejamento completo"], ["aposentadoria", "Aposentadoria"], ["sucessao", "Sucessão"],
+  ["tributario", "Tributário"], ["protecao", "Proteção"], ["empresario", "PF × PJ"]];
+function renderPlan(corpo, d, painel) {
+  if (d.lista) {
+    corpo.innerHTML = d.lista.length
+      ? `<table class="t"><thead><tr><th>Cliente</th><th class="n">Idade</th><th>Ocupação</th><th class="n">Patrimônio</th><th class="n">Ficha</th></tr></thead><tbody>${d.lista.map((f) =>
+        `<tr class="clicavel" data-cli="${esc(f.cliente)}"><td>${esc(f.cliente)}</td><td class="n">${f.idade ?? "—"}</td><td>${esc(f.ocupacao || "")}</td><td class="n">R$ ${fmt(f.patrimonio, 0)}</td><td class="n">${dia(f.atualizado_em)}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="dica">Nenhuma ficha ainda. Monte a ficha conversando com o Quíron (CHAT ou Telegram: /cliente CLI-001 …) — só com o código, nunca o nome.</div>`;
+    corpo.querySelectorAll("[data-cli]").forEach((tr) => (tr.onclick = () => { painel.p.cliente = tr.dataset.cli; reabrir(painel); }));
+    rodape(painel, "fichas em dados/fichas · clique para abrir");
+    return;
+  }
+  corpo.innerHTML = `<button type="button" class="mini" data-volta>← fichas</button>
+    <pre class="texto-pre">${esc(d.resumo)}</pre>
+    ${d.pendencias.length ? `<div class="erro">Pendências: ${d.pendencias.map(esc).join(" · ")}</div>` : ""}
+    ${botoes(TIPOS_PLAN.map(([k, t]) => [k, t, "relatório em PDF (RASCUNHO para revisão)"]))}`;
+  $("[data-volta]", corpo).onclick = () => { painel.p.cliente = ""; reabrir(painel); };
+  ligar(corpo, Object.fromEntries(TIPOS_PLAN.map(([k, t]) => [k, () => pedirAnalise(k, { cliente: d.cliente }, `${t} ${d.cliente}`)])));
+  rodape(painel, `${esc(d.cliente)} · textos para cliente saem como RASCUNHO`);
+}
+
+// ACAD — prontidão por módulo
+function renderAcad(corpo, d, painel) {
+  const barra = (f) => `<span class="barra-p" role="img" aria-label="${fmt(f * 100, 0)}%"><i style="width:${Math.max(0, Math.min(1, f)) * 100}%"></i></span>`;
+  corpo.innerHTML = `<div class="kpis"><div class="kpi"><div class="kpi-r">Domínio estimado — ${esc(d.nome)}</div><div class="kpi-v">${fmt(d.prontidao * 100, 0)}%</div><div class="kpi-d">meta 70%</div></div></div>
+    <table class="t" style="margin-top:6px"><thead><tr><th>Módulo</th><th class="n">Peso</th><th class="n">Respostas</th><th class="n">Acerto</th><th></th></tr></thead><tbody>${d.modulos.map((m) =>
+      `<tr><td class="nome" title="${esc(m.titulo)}">M${m.numero} ${esc(m.titulo)}</td><td class="n">${m.peso}%</td><td class="n">${m.respostas}</td><td class="n">${m.acerto === null ? "—" : fmt(m.acerto * 100, 0) + "%"}</td><td>${m.acerto === null ? "" : barra(m.acerto)}</td></tr>`).join("")}</tbody></table>`;
+  rodape(painel, "Pratique no Telegram: /questao, /simulado, /flashcards · /area troca a área ativa");
+}
+
+// TASK — lembretes e tarefas (os mesmos do Telegram)
+function renderTask(corpo, d, painel) {
+  corpo.innerHTML = `${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="n" style="text-align:left">${hora(a.proxima)}</td><td class="nome" title="${esc(a.texto)}">${a.tipo === "lembrete" ? "⏰" : "⚙️"} ${esc(a.texto)}</td><td class="dica">${esc(a.recorrencia)}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Cancelar">✕</button></td></tr>`).join("")}</tbody></table>`
+    : '<div class="dica">Nenhum agendamento.</div>'}
+    <form class="form-v2 linha-form" style="margin-top:6px"><label style="flex:2 1 180px">Texto<input name="texto" required placeholder="Ligar para CLI-004"></label>
+      <label>Tipo<select name="tipo"><option value="lembrete">lembrete</option><option value="tarefa">tarefa do agente</option></select></label>
+      <label>Quando<input name="quando" type="datetime-local"></label>
+      <label>Repetir<select name="recorrencia"><option>uma vez</option><option value="diario">todo dia</option><option value="dias_uteis">dias úteis</option><option value="semanal">toda semana</option><option value="mensal">todo mês</option></select></label>
+      <button type="submit">Agendar</button></form>`;
+  corpo.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
+    try { await acao(`/api/tarefas/${b.dataset.del}`, undefined, "DELETE"); atualizarPainel(painel); } catch (e) { aviso(e.message); }
+  }));
+  $("form", corpo).onsubmit = async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    if (f.recorrencia !== "uma vez") { // o agendador pede o dia e a hora da repetição: tirados do campo "Quando"
+      if (!f.quando) return aviso("Para repetir, preencha “Quando” com a primeira data e hora.");
+      const dt = new Date(f.quando), hhmm = f.quando.slice(11, 16);
+      const dias = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+      if (f.recorrencia === "semanal") f.recorrencia += " " + dias[dt.getDay()];
+      if (f.recorrencia === "mensal") f.recorrencia += " " + Math.min(28, dt.getDate());
+      f.recorrencia += " " + hhmm;
+      delete f.quando;
+    }
+    try { const r = await acao("/api/tarefas", f); aviso("Agendado: " + r.descricao); atualizarPainel(painel); } catch (err) { aviso(err.message, 6000); }
+  };
+  rodape(painel, "o bot do Telegram avisa na hora · tarefa do agente = o Quíron executa o pedido e manda o resultado");
+}
+
+// ALRT — alertas de preço, variação e notícia
+function renderAlrt(corpo, d, painel) {
+  corpo.innerHTML = `${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="nome" title="${esc(a.descricao)}">${a.ativo_agora ? "🔔" : "·"} ${esc(a.descricao.replace(/^#\d+ /, "").replace(" 🔔 DISPARADO", ""))}</td><td class="dica">${a.disparado_em ? "último: " + hora(a.disparado_em) : ""}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Remover">✕</button></td></tr>`).join("")}</tbody></table>`
+    : '<div class="dica">Nenhum alerta. Crie abaixo (ex.: PETR4 abaixo de 30, IBOV variar 2%, notícia “Copom”).</div>'}
+    <form class="form-v2 linha-form" style="margin-top:6px"><label>Tipo<select name="tipo">${Object.entries(d.tipos).map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join("")}</select></label>
+      <label>Ativo ou palavra<input name="alvo" required placeholder="PETR4"></label><label>Valor<input name="valor" inputmode="decimal" placeholder="30,50"></label>
+      <button type="submit">Criar</button><button type="button" data-avaliar title="Confere todos os alertas agora">avaliar agora</button></form>`;
+  corpo.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
+    try { await acao(`/api/alertas/${b.dataset.del}`, undefined, "DELETE"); atualizarPainel(painel); } catch (e) { aviso(e.message); }
+  }));
+  $("form", corpo).onsubmit = async (e) => {
+    e.preventDefault();
+    try { const r = await acao("/api/alertas", Object.fromEntries(new FormData(e.target))); aviso("Criado: " + r.descricao); atualizarPainel(painel); } catch (err) { aviso(err.message, 6000); }
+  };
+  $("[data-avaliar]", corpo).onclick = async () => {
+    try { const r = await acao("/api/alertas/avaliar"); aviso(r.disparados.length ? "🔔 " + r.disparados.join(" · ") : "Nenhum alerta disparou agora."); atualizarPainel(painel); } catch (err) { aviso(err.message); }
+  };
+  rodape(painel, "o bot do Telegram confere a cada 5 minutos e avisa uma vez por disparo");
+}
+
+// CHAT — o agente do Quíron dentro do Terminal (mesmas ferramentas, persona e regras de compliance do Telegram)
+function textoChat(s) {
+  return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|\s)\*(\S.*?\S)\*(?=\s|$)/g, "$1<b>$2</b>").replace(/\n/g, "<br>");
+}
+async function renderChat(corpo, _d, painel) {
+  corpo.classList.add("coluna");
+  corpo.innerHTML = `<div class="chat-msgs" data-msgs></div>
+    <form class="chat-form"><textarea name="texto" rows="2" placeholder="Pergunte ao Quíron… (Enter envia, Shift+Enter quebra linha, /novo reinicia)" aria-label="Mensagem para o Quíron"></textarea><button type="submit">Enviar</button></form>`;
+  const msgs = $("[data-msgs]", corpo), form = $("form", corpo), caixa = $("textarea", corpo);
+  const balao = (papel, html) => { const el = document.createElement("div"); el.className = "msg " + papel; el.innerHTML = html; msgs.append(el); msgs.scrollTop = msgs.scrollHeight; return el; };
+  const pendencias = (lista) => lista.forEach((p) => {
+    const el = balao("sistema", `🔐 Aprovar? ${esc(p.resumo)} <button type="button" class="mini" data-s>✅ aprovar</button> <button type="button" class="mini" data-n>❌ negar</button>`);
+    const decidir = async (aprovar) => {
+      el.querySelectorAll("button").forEach((b) => (b.disabled = true));
+      try { const r = await acao("/api/chat/decidir", { id: p.id, aprovar }); balao("quiron", textoChat(r.resposta)); } catch (e) { balao("sistema", esc(e.message)); }
+    };
+    $("[data-s]", el).onclick = () => decidir(true);
+    $("[data-n]", el).onclick = () => decidir(false);
+  });
+  try {
+    const h = await (await fetch("/api/chat/historico")).json();
+    h.mensagens.forEach((m) => balao(m.papel === "user" ? "eu" : "quiron", textoChat(m.texto)));
+    if (!h.mensagens.length) balao("sistema", "Converse com o Quíron como no Telegram: análises, estudo, fundos, empresas, clientes (só CLI-XXX).");
+  } catch (e) { balao("sistema", "Sem conexão com o servidor."); }
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const texto = caixa.value.trim();
+    if (!texto) return;
+    caixa.value = "";
+    balao("eu", textoChat(texto));
+    const espera = balao("sistema", '<span class="carregando">Quíron pensando… (pode levar até 1 minuto)</span>');
+    form.querySelector("button").disabled = true;
+    try {
+      const r = await acao("/api/chat", { texto });
+      espera.remove();
+      balao("quiron", textoChat(r.resposta) + (r.ferramentas?.length ? `<div class="memoria">ferramentas: ${esc(r.ferramentas.join(", "))}${r.segundos ? ` · ${fmt(r.segundos, 0)} s` : ""}</div>` : ""));
+      pendencias(r.pendencias || []);
+      if (r.ferramentas?.some((f) => f.includes("analisar"))) paineis.filter((p) => p.tipo === "rpt").forEach((p) => renderRpt($(".painel-corpo", document.getElementById(p.id)), null, p));
+    } catch (err) { espera.innerHTML = `<span class="erro">${esc(err.message)}</span>`; }
+    form.querySelector("button").disabled = false;
+    caixa.focus();
+  };
+  caixa.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+  rodape(painel, "mesmo agente do Telegram (persona, ferramentas e compliance) · conversa própria do Terminal");
+}
+
+Object.assign(TIPOS, {
+  fa: { titulo: (p) => `${p.ticker} FA`, topico: "fa", params: (p) => ({ ticker: p.ticker }), w: 6, h: 12, render: renderFa },
+  fundos: { titulo: (p) => `Fundos: ${p.termo}`, topico: "fundos", params: (p) => ({ termo: p.termo }), w: 6, h: 11, render: renderFundos },
+  cmpf: { titulo: "Comparar fundos — CMPF", topico: null, w: 4, h: 9, render: renderCmpf },
+  port: { titulo: "Carteira — PORT", topico: null, w: 6, h: 12, render: renderPort },
+  plan: { titulo: (p) => (p.cliente ? `Planejamento ${p.cliente}` : "Planejamento — PLAN"), topico: "plano", params: (p) => ({ cliente: p.cliente || "" }), w: 5, h: 11, render: renderPlan },
+  acad: { titulo: "Academia — ACAD", topico: "academia", w: 5, h: 10, render: renderAcad },
+  task: { titulo: "Tarefas e lembretes — TASK", topico: "tarefas", w: 6, h: 9, render: renderTask },
+  alrt: { titulo: "Alertas — ALRT", topico: "alertas", w: 6, h: 9, render: renderAlrt },
+  chat: { titulo: "Chat com o Quíron", topico: null, w: 5, h: 14, render: renderChat },
+});
+PRESETS["Assessoria"] = [
+  { tipo: "chat", x: 1, y: 1, w: 5, h: 14 }, { tipo: "rpt", x: 6, y: 1, w: 4, h: 8 }, { tipo: "alrt", x: 10, y: 1, w: 3, h: 8 },
+  { tipo: "task", x: 6, y: 9, w: 4, h: 6 }, { tipo: "plan", x: 10, y: 9, w: 3, h: 6 }, { tipo: "acad", x: 1, y: 15, w: 5, h: 9 },
+  { tipo: "watchlist", x: 6, y: 15, w: 4, h: 9 }, { tipo: "noticias", x: 10, y: 15, w: 3, h: 9 },
+];
+
+// comandos da v2; devolve true se tratou
+function executarV2(original, a, b, resto) {
+  const unico = { PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat" };
+  if (unico[a] && !b) { adicionarPainel(unico[a]); return true; }
+  if (a === "CHAT" || a === "IA") { // CHAT <pergunta>: abre o chat já com a pergunta
+    const p = adicionarPainel("chat");
+    setTimeout(() => { const c = $(`#${p.id} textarea`); if (c) { c.value = original.trim().split(/\s+/).slice(1).join(" "); $(`#${p.id} form`).requestSubmit(); } }, 400);
+    return true;
+  }
+  if (a === "CMPF") { adicionarPainel("cmpf", { cnpjs: [b, ...resto] }); return true; }
+  if (a === "PLAN") {
+    if (b && !/^CLI-\w+$/.test(b)) { aviso("Use PLAN CLI-XXX (só o código do cliente)."); return true; }
+    adicionarPainel("plan", { cliente: b || "" }); return true;
+  }
+  if (a === "FUND") {
+    if (!b) { aviso("Use FUND <nome ou CNPJ>, ex.: FUND VERDE"); return true; }
+    adicionarPainel("fundos", { termo: original.trim().split(/\s+/).slice(1).join(" ") }); return true;
+  }
+  const [cmd, ticker] = ["FA", "DCF"].includes(a) ? [a, b] : [b, a];
+  if (cmd === "FA" || cmd === "DCF") {
+    if (!ticker || !/^[A-Z]{4}\d{1,2}$/.test(ticker)) { aviso(`Use TICKER ${cmd}, ex.: WEGE3 ${cmd}`); return true; }
+    if (cmd === "FA") adicionarPainel("fa", { ticker });
+    else pedirAnalise("valuation_dcf", { empresa: ticker }, `${ticker} DCF`);
+    return true;
+  }
+  return false;
+}
+
 // ------------------------------------------------------------------ comandos
 function abrirAtivo(ativo) { adicionarPainel("ativo", { ativo }); }
-const V2 = new Set(["FA", "DCF", "PORT", "FUND", "CMPF", "PLAN", "ACAD", "TASK", "ALRT"]);
 function executar(texto) {
+  if (!texto.trim()) return;
   const partes = texto.trim().toUpperCase().split(/\s+/).filter(Boolean);
   if (!partes.length) return;
   const [a, b, ...resto] = partes;
@@ -525,7 +825,7 @@ function executar(texto) {
   if ((a === "NEWS" || a === "N") && b) return adicionarPainel("noticias", { termo: [b, ...resto].join(" ").toLowerCase() });
   if (a === "SOC" && b) return adicionarPainel("redes", { termo: [b, ...resto].join(" ").toLowerCase() });
   if (a === "SOC") return aviso("Use SOC <tema>, ex.: SOC COPOM");
-  if (V2.has(a) || V2.has(b)) return aviso(`${b || a} chega no Terminal v2 (Fase 12).`);
+  if (executarV2(texto, a, b, resto)) return;
   const ativo = { DOLAR: "USDBRL", "DÓLAR": "USDBRL", EURO: "EURBRL", BRENT: "petroleo_brent", OURO: "ouro" }[a] || a;
   if (/^[A-Z0-9^=.\-_]{2,12}$/i.test(ativo)) return adicionarPainel(b === "GP" ? "grafico" : "ativo", { ativo });
   aviso("Comando não reconhecido. Digite HELP.");
@@ -540,7 +840,7 @@ document.addEventListener("keydown", (e) => {
   if ((e.key === "/" && !naBarra && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) || (e.ctrlKey && e.key.toLowerCase() === "k")) {
     e.preventDefault(); $("#comando").focus(); $("#comando").select();
   } else if (e.key === "Escape" && naBarra) { $("#comando").blur(); }
-  else if (e.altKey && ["1", "2", "3"].includes(e.key)) { e.preventDefault(); aplicarLayout(Object.values(PRESETS)[+e.key - 1]); }
+  else if (e.altKey && ["1", "2", "3", "4"].includes(e.key)) { e.preventDefault(); aplicarLayout(Object.values(PRESETS)[+e.key - 1]); }
 });
 $("#barra").addEventListener("submit", (e) => { e.preventDefault(); executar($("#comando").value); $("#comando").value = ""; });
 $("#layout").addEventListener("change", (e) => {
@@ -552,7 +852,7 @@ $("#layout").addEventListener("change", (e) => {
 $("#salvar").addEventListener("click", async () => {
   const nome = prompt("Nome do layout:");
   if (!nome) return;
-  await fetch(`/api/layouts/${encodeURIComponent(nome)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(paineis.map(({ id, ...r }) => r)) });
+  await fetch(`/api/layouts/${encodeURIComponent(nome)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(paineis.map(({ id, _timer, ...r }) => r)) });
   await carregarLayouts();
   aviso(`Layout "${nome}" salvo.`);
 });

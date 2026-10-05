@@ -89,3 +89,42 @@ def test_petr4_e_curv_atualizam_sozinhos(servidor):
         pagina.screenshot(path=str(CAPTURAS / "terminal-aceite-completo.png"), full_page=True)
         assert not erros, erros
         nav.close()
+
+
+def test_aceite_fase12_wege3_dcf_aparece_em_rpt(servidor):
+    """Aceite da Fase 12: `WEGE3 DCF` dispara a análise e o relatório aparece em `RPT` (com PDF)."""
+    from playwright.sync_api import sync_playwright
+
+    CAPTURAS.mkdir(parents=True, exist_ok=True)
+    with sync_playwright() as p:
+        nav = _chromium(p)
+        pagina = nav.new_page(viewport={"width": 1600, "height": 1000})
+        erros = []
+        pagina.on("pageerror", lambda e: erros.append(str(e)))
+        pagina.goto(servidor)
+        pagina.wait_for_selector(".painel", timeout=10_000)
+        pagina.evaluate("localStorage.clear()")
+        pagina.keyboard.press("Control+k")
+        pagina.keyboard.type("WEGE3 DCF")
+        pagina.keyboard.press("Enter")
+
+        rpt = pagina.locator(".painel").filter(has=pagina.locator(".painel-titulo", has_text="RPT")).last
+        linha = rpt.locator("tr.destaque")
+        linha.wait_for(timeout=15_000)
+        assert "WEGE3" in pagina.inner_text("#aviso") or "fila" in linha.inner_text()
+        linha.locator("a", has_text="PDF").wait_for(timeout=360_000)  # o RPT se atualiza sozinho até ficar pronta
+        assert "WEG" in linha.inner_text() and "pronta" in linha.inner_text()
+        href = linha.locator("a", has_text="PDF").get_attribute("href")
+        pdf = pagina.request.get(servidor + href)
+        assert pdf.status == 200 and pdf.body()[:4] == b"%PDF"
+
+        pagina.keyboard.press("Control+k")
+        pagina.keyboard.type("WEGE3 FA")
+        pagina.keyboard.press("Enter")
+        fa = pagina.locator(".painel").filter(has=pagina.locator(".painel-titulo", has_text="WEGE3 FA")).last
+        fa.locator("text=Receita").wait_for(timeout=120_000)
+        assert "Uso interno" in fa.locator(".painel-rodape").inner_text()
+        pagina.evaluate("scrollTo(0, 0)")
+        pagina.screenshot(path=str(CAPTURAS / "terminal-v2-aceite.png"), full_page=True)
+        assert not erros, erros
+        nav.close()

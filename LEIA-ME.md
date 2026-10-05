@@ -172,6 +172,18 @@ comercial e comunicação) e as **certificações** (CFP, CNPI, CFA, CGA, CGE, F
   todo PDF sai com esse rodapé. Premissas editáveis em `config/valuation.yaml`.
 - A primeira análise baixa os balanços da CVM (~150 MB, uma vez; depois atualiza sozinho).
 
+## Terminal v2 — análise, assessoria e chat (Fase 12)
+Digite na barra do Terminal (ou escolha o layout **Assessoria**):
+- **WEGE3 FA** — balanços da CVM e múltiplos; **WEGE3 DCF** — dispara o valuation e o PDF aparece em **RPT** (uso interno).
+- **FUND verde** — busca fundos na CVM (análise com um clique ou marque 2–6 e compare); **CMPF** — compara por CNPJ/nome.
+- **PORT** — cole a carteira (uma linha por posição, com R$) → enquadramento no perfil e diagnóstico completo.
+- **PLAN** / **PLAN CLI-101** — fichas de planejamento e relatórios (RASCUNHO). **ACAD** — seu domínio por módulo.
+- **TASK** — tarefas e lembretes (os mesmos do Telegram). **ALRT** — alertas (ex.: PETR4 abaixo de 30; notícia “Copom”);
+  o bot do Telegram avisa quando disparar. No Telegram: `/alerta PETR4 abaixo de 30`.
+- **CHAT** — converse com o Quíron dentro do Terminal (mesmas ferramentas e regras do Telegram).
+- **Celular:** com o Terminal no servidor, abra o endereço do Tailscale no navegador do celular (app Tailscale ligado) e
+  use “Adicionar à tela inicial”. Use sempre uma `TERMINAL_SENHA`.
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

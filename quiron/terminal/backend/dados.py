@@ -47,6 +47,8 @@ def _em_segundo_plano(nome: str, func: Callable[[], Any], validade: int = 600) -
             tarefa = nova
     if not tarefa.done():
         return None
+    if tarefa.exception() is not None:
+        _fundo.pop(nome, None)  # mostra o erro uma vez e tenta de novo no próximo pedido
     return tarefa.result()
 
 
@@ -277,6 +279,90 @@ def status() -> dict:
     }
 
 
+
+# ---------------------------------------------------------------- Terminal v2 (Fase 12): telas de análise
+def fa(ticker: str) -> dict:
+    """FA: demonstrações e indicadores da CVM (DFP/ITR) + múltiplos com a cotação do dia."""
+    def montar() -> dict:
+        from quiron.servicos.analise.tipos.valuation import coletar
+        from quiron.servicos.valuation import dcf
+
+        col = coletar(ticker, anos=5)
+        mu = dcf.multiplos(col.base, col.preco, col.acoes, col.dividendos_12m)
+        campos = ("receita", "ebitda", "ebit", "lucro_controladores", "fco", "capex", "divida_liquida", "pl")
+        periodos = [{"rotulo": p.rotulo, **{k: p[k] for k in campos}} for p in col.anuais + [col.base]]
+        return {"empresa": col.empresa.nome, "ticker": col.ticker, "tickers": col.empresa.tickers, "setor": col.empresa.setor,
+                "segmento": col.empresa.segmento, "descricao": col.empresa.descricao[:400], "preco": col.preco,
+                "periodos": periodos, "multiplos": {k: getattr(mu, k) for k in mu.__dataclass_fields__},
+                "acoes": col.acoes, "avisos": col.avisos, "fontes": col.fontes}
+
+    r = _em_segundo_plano(f"fa:{ticker.upper()}", montar, validade=3600)
+    if r is None:
+        return {"parcial": True, "carregando": True, "ticker": ticker.upper()}
+    return r
+
+
+def fundos_busca(termo: str) -> dict:
+    """FUND: fundos no cadastro da CVM + rentabilidade de 12 meses pelo índice mensal (se já baixado)."""
+    from quiron.servicos.fundos import cvm
+
+    itens = []
+    for c in cvm.buscar(termo, 12):
+        ret12 = None
+        try:
+            linhas, _ = cvm.serie_mensal(c.cnpj)
+            fechadas = [x for x in linhas if x["mes"] < date.today().strftime("%Y-%m")]
+            if len(fechadas) >= 13:
+                ret12 = (fechadas[-1]["cota"] / fechadas[-13]["cota"] - 1) * 100
+        except Exception:  # noqa: BLE001 — índice ainda não baixado
+            pass
+        itens.append({"cnpj": c.cnpj_formatado, "nome": c.nome, "anbima": c.anbima or c.classificacao, "gestor": c.gestor,
+                      "pl": c.pl, "ret12": ret12, "master": "MASTER" in c.nome.upper()})
+    return {"termo": termo, "itens": itens, "fonte": "CVM Dados Abertos", "obtido_em": _iso(datetime.now())}
+
+
+def plano(cliente: str = "") -> dict:
+    """PLAN: ficha de planejamento do cliente (CLI-XXX) ou a lista de fichas."""
+    from quiron.servicos.planejamento import ficha as fichas
+
+    if not cliente:
+        return {"lista": [{"cliente": f.cliente, "idade": f.idade, "ocupacao": f.ocupacao, "patrimonio": f.patrimonio_total,
+                           "atualizado_em": f.atualizado_em[:10]} for f in fichas.listar()]}
+    f = fichas.carregar(cliente)
+    return {"cliente": f.cliente, "resumo": fichas.descrever(f), "pendencias": f.validar(), "patrimonio": f.patrimonio_total,
+            "financeiro": f.investimentos, "renda": f.renda_mensal_bruta, "despesas": f.despesas_mensais,
+            "objetivos": [{"nome": o.nome, "valor": o.valor, "prazo": o.prazo_anos} for o in f.objetivos]}
+
+
+def academia() -> dict:
+    """ACAD: painel geral da Academia + diagnóstico por módulo da área ativa."""
+    from quiron.servicos.academia import diagnostico, estudo
+    from quiron.servicos.academia.banco import Banco
+
+    banco = Banco()
+    ativa = estudo.area_ativa(banco)
+    mods = diagnostico.diagnosticar(banco, ativa)
+    return {"area": ativa, "nome": diagnostico.nome_area(ativa), "prontidao": diagnostico.prontidao(mods),
+            "modulos": [{"numero": m.numero, "titulo": m.titulo, "peso": m.peso, "respostas": m.respostas,
+                         "acerto": m.acerto_bruto} for m in mods],
+            "texto": diagnostico.painel_geral(banco, ativa)}
+
+
+def tarefas() -> dict:
+    """TASK: lembretes e tarefas agendadas (os mesmos do Telegram)."""
+    from quiron.runtime.agendador import Agendador
+
+    return {"itens": [{"id": a.id, "texto": a.texto, "tipo": a.tipo, "recorrencia": a.recorrencia,
+                       "proxima": _iso(a.proxima, brasilia=True)} for a in Agendador().listar()]}
+
+
+def alertas_lista() -> dict:
+    """ALRT: alertas ativos (avaliados pelo bot a cada 5 minutos ou pelo botão "avaliar agora")."""
+    from quiron.servicos import alertas
+
+    return {"itens": [{**a.__dict__, "descricao": a.descrever()} for a in alertas.listar()], "tipos": alertas.TIPOS}
+
+
 # Tópicos que a tela pode assinar pelo WebSocket: função + intervalo de atualização (segundos)
 TOPICOS: dict[str, tuple[Callable[..., Any], int]] = {
     "watchlist": (watchlist, 60),
@@ -292,4 +378,10 @@ TOPICOS: dict[str, tuple[Callable[..., Any], int]] = {
     "redes": (redes_sociais, 900),
     "agenda": (agenda, 3600),
     "status": (status, 15),
+    "fa": (fa, 3600),
+    "fundos": (fundos_busca, 3600),
+    "plano": (plano, 120),
+    "academia": (academia, 300),
+    "tarefas": (tarefas, 60),
+    "alertas": (alertas_lista, 60),
 }

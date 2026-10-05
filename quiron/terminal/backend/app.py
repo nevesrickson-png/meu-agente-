@@ -52,7 +52,7 @@ def _autorizado(cookies: dict[str, str]) -> bool:
 
 @app.middleware("http")
 async def exigir_senha(request: Request, call_next):
-    livre = request.url.path in {"/login", "/app.css"} or request.url.path.startswith("/vendor/")
+    livre = request.url.path in {"/login", "/app.css", "/manifest.webmanifest", "/icone.svg"} or request.url.path.startswith("/vendor/")
     if not livre and not _autorizado(request.cookies):
         if request.url.path.startswith("/api/"):
             return JSONResponse({"erro": "senha necessária"}, status_code=401)
@@ -335,6 +335,196 @@ async def api_acervo_remover(request: Request, ident: int) -> dict:
     return {"ok": True}
 
 
+# ---------------------------------------------------------------- Terminal v2 (Fase 12): ações
+def _proteger(request: Request) -> None:
+    """Toda ação que grava ou dispara algo exige o cabeçalho da própria tela (bloqueia outros sites)."""
+    if request.headers.get("x-quiron") not in {"terminal", "acervo"}:
+        raise HTTPException(403, "pedido fora da tela do Terminal")
+    host = (request.headers.get("host") or "").rsplit(":", 1)[0]
+    if not _senha() and host not in HOSTS_LOCAIS | {"testserver"} and not host.endswith(".ts.net"):
+        raise HTTPException(403, "endereço não permitido sem TERMINAL_SENHA")
+
+
+def _iniciar_fila() -> None:
+    """O Terminal também processa a fila de análises (vários processadores convivem: a reserva é atômica)."""
+    try:
+        from quiron.servicos.analise.fila import fila
+
+        fila().iniciar_processador()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+@app.post("/api/analisar")
+def api_analisar(request: Request, corpo: dict = Body(...)) -> dict:
+    from quiron.servicos.analise.fila import carregar_tipos, fila
+
+    _proteger(request)
+    tipo_nome = str(corpo.get("tipo", ""))
+    if tipo_nome not in carregar_tipos():
+        raise HTTPException(400, f"tipo de análise desconhecido: {tipo_nome}")
+    f = fila()
+    t = f.pedir(tipo_nome, corpo.get("parametros") or {}, str(corpo.get("modo") or "entregar"), origem="terminal")
+    f.iniciar_processador()
+    return {"id": t.id, "situacao": t.situacao, "na_frente": f.posicao(t.id)}
+
+
+@app.post("/api/carteira/ler")
+def api_carteira_ler(request: Request, corpo: dict = Body(...)) -> dict:
+    """PORT: lê a carteira colada (texto), guarda (CART-…) e devolve composição e enquadramento no perfil."""
+    from quiron.servicos.analise.tipos.carteira import _enquadramento
+    from quiron.servicos.carteira import arquivo, leitura
+    from quiron.servicos.carteira.modelo import CLASSES, perfis
+
+    _proteger(request)
+    texto = str(corpo.get("texto", "")).strip()
+    if len(texto) < 3:
+        raise HTTPException(400, "cole a carteira (uma posição por linha)")
+    c = leitura.avaliar(leitura.ler_texto(texto))
+    if corpo.get("perfil"):
+        c.perfil = str(corpo["perfil"]).lower()
+    if corpo.get("cliente"):
+        c.cliente = str(corpo["cliente"]).upper() if str(corpo["cliente"]).upper().startswith("CLI-") else ""
+    if not c.posicoes:
+        raise HTTPException(400, "não achei posições com valor")
+    ident = arquivo.salvar(c)
+    perfil = c.perfil if c.perfil in perfis() else "moderado"
+    pesos = c.pesos_por_classe()
+    return {"id": ident, "total": c.total, "perfil": perfil, "avisos": c.avisos,
+            "posicoes": [{"nome": p.nome, "classe": CLASSES[p.classe]["nome"], "valor": p.valor} for p in c.posicoes],
+            "enquadramento": [dict(zip(["classe", "atual", "minimo", "alvo", "maximo", "situacao"], linha))
+                              for linha in _enquadramento(pesos, perfis()[perfil]["classes"])]}
+
+
+@app.post("/api/alertas")
+def api_alerta_criar(request: Request, corpo: dict = Body(...)) -> dict:
+    from quiron.servicos import alertas
+
+    _proteger(request)
+    try:
+        valor = corpo.get("valor")
+        a = alertas.criar(str(corpo.get("tipo", "")), str(corpo.get("alvo", "")),
+                          float(str(valor).replace(",", ".")) if valor not in (None, "") else None)
+    except (ValueError, TypeError) as e:
+        raise HTTPException(400, str(e)) from e
+    return {"id": a.id, "descricao": a.descrever()}
+
+
+@app.post("/api/alertas/avaliar")
+def api_alertas_avaliar(request: Request) -> dict:
+    from quiron.servicos import alertas
+
+    _proteger(request)
+    return {"disparados": [a.descrever() for a in alertas.avaliar()]}
+
+
+@app.delete("/api/alertas/{ident}")
+def api_alerta_remover(request: Request, ident: int) -> dict:
+    from quiron.servicos import alertas
+
+    _proteger(request)
+    return {"ok": alertas.remover(ident)}
+
+
+@app.post("/api/tarefas")
+def api_tarefa_criar(request: Request, corpo: dict = Body(...)) -> dict:
+    from quiron.runtime.agendador import BRT, Agendador, RecorrenciaInvalida
+
+    _proteger(request)
+    quando = None
+    if corpo.get("quando"):
+        try:
+            quando = datetime.fromisoformat(str(corpo["quando"])).replace(tzinfo=BRT)
+        except ValueError as e:
+            raise HTTPException(400, "data/hora inválida") from e
+    try:
+        a = Agendador().criar(str(corpo.get("texto", "")).strip() or "(sem texto)", str(corpo.get("tipo") or "lembrete"),
+                              str(corpo.get("recorrencia") or "uma vez"), quando)
+    except (RecorrenciaInvalida, ValueError) as e:
+        raise HTTPException(400, str(e)) from e
+    return {"id": a.id, "descricao": a.descrever()}
+
+
+@app.delete("/api/tarefas/{ident}")
+def api_tarefa_remover(request: Request, ident: int) -> dict:
+    from quiron.runtime.agendador import Agendador
+
+    _proteger(request)
+    return {"ok": Agendador().cancelar(ident)}
+
+
+# ---------------------------------------------------------------- chat com o agente (Fase 12.3)
+CHAT_TERMINAL = -12  # conversa do Terminal na memória do agente (o Telegram usa o id do chat)
+
+
+class _Chat:
+    """Agente do Quíron dentro do Terminal: sobe os servidores MCP na primeira mensagem e os mantém ligados."""
+
+    def __init__(self) -> None:
+        self.agente = None
+        self._pilha = None
+        self._trava = asyncio.Lock()
+
+    async def obter(self):
+        async with self._trava:
+            if self.agente is None:
+                from contextlib import AsyncExitStack
+
+                from quiron.runtime.agente import Agente
+                from quiron.runtime.ferramentas_mcp import ConexaoMCP
+
+                os.environ.setdefault("QUIRON_ORIGEM", "terminal")
+                self._pilha = AsyncExitStack()
+                conexao = await self._pilha.enter_async_context(ConexaoMCP())
+                self.agente = Agente(conexao)
+            return self.agente
+
+
+_chat = _Chat()
+
+
+def _pendencias(reg) -> list[dict]:
+    return [{"id": p.id, "resumo": p.resumo} for p in reg.pendencias]
+
+
+@app.post("/api/chat")
+async def api_chat(request: Request, corpo: dict = Body(...)) -> dict:
+    _proteger(request)
+    texto = str(corpo.get("texto", "")).strip()
+    if not texto:
+        raise HTTPException(400, "mensagem vazia")
+    try:
+        agente = await _chat.obter()
+        if texto == "/novo":
+            agente.memoria.reiniciar(CHAT_TERMINAL)
+            return {"resposta": "Conversa reiniciada.", "pendencias": [], "ferramentas": []}
+        reg = await agente.responder(texto, chat=CHAT_TERMINAL)
+    except Exception as e:  # noqa: BLE001
+        return {"resposta": f"⚠️ O agente não respondeu ({type(e).__name__}: {str(e)[:200]}).", "pendencias": [], "ferramentas": []}
+    return {"resposta": reg.resposta or "(sem resposta)", "pendencias": _pendencias(reg), "ferramentas": reg.ferramentas,
+            "segundos": round(reg.segundos, 1)}
+
+
+@app.get("/api/chat/historico")
+async def api_chat_historico() -> dict:
+    from quiron.runtime.memoria import Memoria
+
+    return {"mensagens": [{"papel": m["role"], "texto": m["content"]} for m in Memoria().historico(CHAT_TERMINAL)
+                          if m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)][-30:]}
+
+
+@app.post("/api/chat/decidir")
+async def api_chat_decidir(request: Request, corpo: dict = Body(...)) -> dict:
+    _proteger(request)
+    agente = await _chat.obter()
+    p = agente.aprovacoes.decidir(int(corpo.get("id", 0)), bool(corpo.get("aprovar")))
+    if not p:
+        return {"resposta": "Esse pedido já foi decidido ou não existe."}
+    if not corpo.get("aprovar"):
+        return {"resposta": f"❌ Negado: {p.resumo}"}
+    return {"resposta": f"✅ Aprovado e feito: {p.resumo}\n{(await agente.executar_aprovada(p))[:3000]}"}
+
+
 # ---------------------------------------------------------------- páginas
 
 @app.get("/")
@@ -366,6 +556,7 @@ def main() -> None:
     print(f"Quíron Terminal em {url}  (feche esta janela para desligar)")
     if not a.sem_navegador:
         threading.Timer(1.5, lambda: webbrowser.open(url + a.abrir)).start()
+    _iniciar_fila()
     uvicorn.run(app, host=a.host, port=a.porta, log_level="warning")
 
 

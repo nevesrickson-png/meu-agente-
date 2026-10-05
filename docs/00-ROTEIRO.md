@@ -220,11 +220,16 @@ Execute a FASE 11 do docs/00-ROTEIRO.md.
 ```
 
 ## FASE 12 — Quíron Terminal v2
-- [ ] 12.1 Telas `FA`, `DCF`, `PORT`, `FUND`, `CMPF`, `PLAN`
-- [ ] 12.2 `RPT`, `ACAD`, `TASK`, `ALRT`
-- [ ] 12.3 Chat com o agente dentro do Terminal
-- [ ] 12.4 Acesso pelo celular via Tailscale
+- [x] 12.1 Telas `FA` (demonstrações da CVM + múltiplos), `DCF` (dispara `valuation_dcf` na fila), `PORT` (carteira colada →
+  enquadramento + diagnóstico), `FUND` (busca na CVM → análise), `CMPF` (2–6 fundos), `PLAN` (fichas CLI-XXX → relatórios)
+- [x] 12.2 `RPT` (destaca a análise pedida e se atualiza até ficar pronta), `ACAD` (domínio por módulo), `TASK` (tarefas e
+  lembretes do Telegram), `ALRT` (alertas de preço, variação e notícia — o bot avisa a cada 5 min)
+- [x] 12.3 Chat com o agente dentro do Terminal (`CHAT`: mesma persona, ferramentas, aprovações e compliance; conversa própria)
+- [x] 12.4 Acesso pelo celular via Tailscale (layout de uma coluna, toque confortável, "adicionar à tela inicial"; ações
+  exigem o cabeçalho da tela e, sem senha, só o PC ou o endereço `.ts.net`)
 **Teste de aceite:** `WEGE3 DCF` dispara a análise e o relatório aparece em `RPT`.
+✅ Aceite (05/10/2026): no navegador, `WEGE3 DCF` pôs a análise na fila, o RPT destacou a tarefa e mostrou o PDF do
+valuation da WEG pronto em ~1 minuto (`testes/test_terminal_navegador.py -m online`).
 ```
 Execute a FASE 12 do docs/00-ROTEIRO.md seguindo o docs/06-TERMINAL.md.
 ```

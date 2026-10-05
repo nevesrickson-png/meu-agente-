@@ -317,6 +317,19 @@ async def _rodar() -> None:
                     logging.exception("falha no laço da agenda")
                 await asyncio.sleep(30)
 
+        async def laco_alertas() -> None:
+            """A cada 5 minutos avalia os alertas (preço, variação, notícia) e avisa os que dispararam."""
+            from quiron.servicos import alertas
+
+            while True:
+                try:
+                    if alertas.listar():
+                        for a in await asyncio.to_thread(alertas.avaliar):
+                            await app.bot.send_message(dono, alertas.mensagem(a))
+                except Exception:  # noqa: BLE001 — o laço nunca morre
+                    logging.exception("falha no laço de alertas")
+                await asyncio.sleep(300)
+
         async def laco_preaquecer() -> None:
             """Às 7h10 busca os dados do briefing para o das 7h30 sair rápido (cache das fontes)."""
             from quiron.servicos.mercado import painel
@@ -390,7 +403,8 @@ async def _rodar() -> None:
             await app.start()
             await app.updater.start_polling(drop_pending_updates=True)
             tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer()),
-                       asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises())]
+                       asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises()),
+                       asyncio.create_task(laco_alertas())]
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

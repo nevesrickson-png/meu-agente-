@@ -142,3 +142,46 @@ svg text { fill: var(--texto-3); font: 10.5px var(--mono); }
 .link-acervo { font: 600 12px var(--mono); letter-spacing: .5px; color: var(--ambar); border: 1px solid var(--borda);
                border-radius: 4px; padding: 3px 8px; text-decoration: none; }
 .link-acervo:hover { border-color: var(--ambar); text-decoration: none; }
+
+/* ---------- Terminal v2 (Fase 12): formulários, ações, chat */
+.acoes { margin: 6px 0; }
+.acoes button { color: var(--ambar); border-color: #5a3d10; }
+button.mini { background: var(--painel-2); border: 1px solid var(--borda); border-radius: 3px; padding: 0 6px; font-size: 11px; cursor: pointer; color: var(--texto-2); }
+button.mini:hover { border-color: var(--ambar); color: var(--ambar); }
+.kpis-p { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); margin: 6px 0; }
+.kpis-p .kpi-v { font-size: 15px; }
+.form-v2 { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.form-v2 label { font-size: 11px; color: var(--texto-3); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.form-v2 textarea, .form-v2 input, .form-v2 select, .chat-form textarea { background: #0b0b0a; border: 1px solid var(--borda); border-radius: 3px; padding: 4px 6px; font: 12.5px var(--mono); color: var(--texto); resize: vertical; }
+.form-v2 textarea:focus, .form-v2 input:focus, .chat-form textarea:focus { outline: 0; border-color: var(--ambar); }
+.form-v2 button, .chat-form button { background: var(--painel-2); border: 1px solid var(--ambar); color: var(--ambar); border-radius: 3px; padding: 3px 10px; cursor: pointer; align-self: flex-end; }
+.form-v2 button:disabled, .chat-form button:disabled { opacity: .5; cursor: wait; }
+.linha-form { flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+.linha-form label { flex: 1 1 110px; }
+.t tr.destaque td { background: #2a2210; }
+.texto-pre { white-space: pre-wrap; font: 12px/1.45 var(--mono); color: var(--texto-2); margin: 6px 0; }
+.barra-p { display: inline-block; width: 60px; height: 6px; background: #2e2e2b; border-radius: 3px; overflow: hidden; vertical-align: middle; }
+.barra-p i { display: block; height: 100%; background: var(--serie-1); border-radius: 3px; }
+details summary { cursor: pointer; margin: 4px 0; }
+.chat-msgs { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px; min-height: 0; }
+.msg { padding: 6px 8px; border-radius: 6px; max-width: 92%; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.msg.eu { align-self: flex-end; background: #23303f; }
+.msg.quiron { align-self: flex-start; background: var(--painel-2); border: 1px solid var(--borda); }
+.msg.sistema { align-self: center; color: var(--texto-3); font-size: 12px; background: none; }
+.chat-form { display: flex; gap: 6px; flex: none; }
+.chat-form textarea { flex: 1; resize: none; }
+
+/* ---------- celular (acesso pelo Tailscale): toque confortável e chat em tela cheia */
+@media (max-width: 760px) {
+  .controles { flex-wrap: wrap; }
+  .link-acervo { display: none; }
+  .painel { min-height: 300px; max-height: 80vh; }
+  .painel-cab { height: 34px; }
+  .painel-cab button { font-size: 17px; padding: 0 6px; }
+  .painel-corpo { -webkit-overflow-scrolling: touch; }
+  .t td, .t th { padding: 5px 4px; }
+  .periodos button, button.mini { padding: 4px 9px; font-size: 13px; }
+  #comando, .form-v2 input, .form-v2 select, .form-v2 textarea, .chat-form textarea { font-size: 16px; } /* evita o zoom automático do iPhone */
+  .painel:has(.chat-msgs) { min-height: 75vh; }
+  .fita { height: 24px; }
+}

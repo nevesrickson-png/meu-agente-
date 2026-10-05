@@ -62,3 +62,7 @@ Telas de análise (`FA`, `DCF`, `PORT`, `FUND`, `CMPF`, `PLAN`), Relatórios, Ac
 - Frontend leve e rápido; gráficos com lightweight-charts ou ECharts.
 - Responsivo (funciona no celular), atalhos de teclado, layouts salvos por usuário.
 - No host: acesso apenas pela Tailscale + senha.
+
+## Como ficou a v2 (Fase 12)
+`TICKER FA`, `TICKER DCF` (vai para a fila e aparece em `RPT`), `FUND <termo>`, `CMPF`, `PORT`, `PLAN [CLI-XXX]`, `ACAD`,
+`TASK`, `ALRT` e `CHAT [pergunta]`; layout "Assessoria" (Alt+4). No celular, uma coluna e "adicionar à tela inicial".

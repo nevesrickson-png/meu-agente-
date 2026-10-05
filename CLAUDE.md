@@ -107,6 +107,13 @@ Arquivos com DRM não são processados.
   (JS puro + lightweight-charts 4.2 local em `vendor/`). Calculadoras em `quiron/servicos/calculadoras.py` (Python, com
   memória de cálculo). Cores: séries azul/laranja/aqua da paleta validada; alta/queda sempre com ▲/▼. Datas sem fuso:
   hora do sistema (consultas) ou de Brasília (agenda) — ver `_iso`. Aceite no navegador: `testes/test_terminal_navegador.py`.
+  Terminal v2 (Fase 12): tópicos `fa`/`fundos`/`plano`/`academia`/`tarefas`/`alertas`; ações em `app.py` (`/api/analisar`
+  → mesma fila do Telegram com origem `terminal`, que o Terminal também processa; `/api/carteira/ler`, `/api/alertas`,
+  `/api/tarefas`, `/api/chat` com o mesmo `Agente` + MCP abertos uma vez, conversa `CHAT_TERMINAL = -12`). Toda escrita
+  passa por `_proteger` (cabeçalho `X-Quiron: terminal` e, sem senha, host local ou `.ts.net`). Frontend: `executarV2`
+  (`TICKER FA|DCF`, `FUND`, `CMPF`, `PORT`, `PLAN`, `ACAD`, `TASK`, `ALRT`, `CHAT`), layout "Assessoria", manifest para o
+  celular. Alertas em `quiron/servicos/alertas.py` (`dados/alertas.json`; avisa uma vez por disparo; o bot avalia a cada
+  5 min em `laco_alertas`; MCP `criar_alerta`/`listar_alertas`/`remover_alerta`; comando `/alerta`).
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

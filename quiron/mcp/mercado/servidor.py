@@ -178,6 +178,34 @@ def buscar_empresa(termo: str) -> str:
 
 
 @mcp.tool()
+def criar_alerta(tipo: str, alvo: str, valor: float | None = None) -> str:
+    """Cria um alerta (avisado no Telegram quando disparar). tipo: preco_acima | preco_abaixo (valor = preço),
+    variacao (valor = % do dia, para cima ou para baixo) | noticia (alvo = palavra-chave, ex.: "fato relevante Vale")."""
+    from quiron.servicos import alertas
+
+    try:
+        return "Criado: " + alertas.criar(tipo, alvo, valor).descrever()
+    except (ValueError, TypeError) as e:
+        return f"Não criei: {e}"
+
+
+@mcp.tool()
+def listar_alertas() -> str:
+    """Alertas ativos e se estão disparados agora."""
+    from quiron.servicos import alertas
+
+    return "\n".join(a.descrever() for a in alertas.listar()) or "Nenhum alerta."
+
+
+@mcp.tool()
+def remover_alerta(numero: int) -> str:
+    """Remove o alerta pelo número."""
+    from quiron.servicos import alertas
+
+    return "Removido." if alertas.remover(numero) else f"Alerta #{numero} não existe."
+
+
+@mcp.tool()
 def damodaran(dataset: str, termo: str) -> str:
     """Procura um termo nos datasets do Damodaran. dataset: premio_pais, erp_historico, betas_eua,
     betas_emergentes, multiplos_eua, ev_ebitda_emergentes. Ex.: damodaran("premio_pais", "Brazil")."""

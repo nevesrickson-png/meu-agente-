@@ -1,0 +1,10 @@
+{
+  "name": "Quíron Terminal",
+  "short_name": "Quíron",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0e",
+  "theme_color": "#141413",
+  "lang": "pt-BR",
+  "icons": [{ "src": "/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
