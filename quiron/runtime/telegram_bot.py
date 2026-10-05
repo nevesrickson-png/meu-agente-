@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import difflib
 import logging
 import os
@@ -35,6 +36,10 @@ from quiron.runtime.ferramentas_mcp import ConexaoMCP
 from quiron.runtime.roteamento import descrever_ferramenta, rotear
 from quiron.runtime.workspace import carregar_comandos
 
+# Estado de CADA mensagem (o laço da agenda pode rodar um /revisao enquanto outra mensagem espera a IA: atributos do
+# objeto se misturariam; ContextVar é separado por tarefa assíncrona).
+_ESTADO: contextvars.ContextVar[dict] = contextvars.ContextVar("estado_mensagem")
+TEMPO_MAXIMO_RESPOSTA_S = 420  # uma resposta travada não pode prender o bot (as mensagens são atendidas em fila)
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
 INATIVIDADE_MODO_S = 3 * 3600  # treino/entrevista/pós-reunião parados há mais que isso se encerram sozinhos
 SAIR = {"/sair", "sair", "/cancelar"}
@@ -150,7 +155,6 @@ class BotQuiron:
         self._ultima_captura = 0.0  # última mensagem capturada por treino/entrevista (para encerrar por inatividade)
         self._pos_desde: dict[int, float] = {}
         self.sugestoes: dict[str, str] = {}  # id do botão "ms:<id>" → texto da sugestão
-        self._direto = False  # a última mensagem foi atendida por uma função direta (entra no contexto da conversa)
         self._ultima_tarefa: dict[int, tuple[int, float]] = {}  # chat → (nº da tarefa recém-criada/mexida, quando)
 
     # ------------------------------------------------------------ modos que capturam mensagens (treino, entrevista, /pos)
@@ -236,16 +240,18 @@ class BotQuiron:
     async def tratar(self, usuario: int, chat: int, texto: str, progresso=None) -> list[Saida]:
         """Responde e grava tudo no registro completo da memória (o agente grava o próprio caminho dele).
         `progresso(nome)` recebe as ferramentas que a IA vai usar (para o "⏳ consultando…")."""
-        self._via_agente = False
-        self._direto = False
-        self._progresso = progresso
-        saidas = await self._tratar(usuario, chat, texto)
-        if saidas and not self._via_agente and usuario in self.permitidos:
+        estado = {"via_agente": False, "direto": False, "progresso": progresso}
+        marca = _ESTADO.set(estado)
+        try:
+            saidas = await self._tratar(usuario, chat, texto)
+        finally:
+            _ESTADO.reset(marca)
+        if saidas and not estado["via_agente"] and usuario in self.permitidos:
             longa = self.agente.longa
             longa.registrar("telegram", chat, "comando" if (texto or "").strip().startswith("/") else "entrada", (texto or "").strip())
             for s in saidas:
                 longa.registrar("telegram", chat, "resposta_comando", s.texto, {"arquivo": s.arquivo} if s.arquivo else None)
-            if self._direto:  # continuidade: "e passa para sexta" depois de um /tarefa precisa saber do que se fala
+            if estado["direto"]:  # continuidade: "e passa para sexta" depois de um /tarefa precisa saber do que se fala
                 try:
                     resposta = "\n\n".join(s.texto for s in saidas)[:1500]
                     self.agente.memoria.guardar(chat, "user", (texto or "").strip())
@@ -253,6 +259,12 @@ class BotQuiron:
                 except Exception:  # noqa: BLE001
                     logging.exception("não guardei a troca direta no contexto")
         return saidas
+
+    @staticmethod
+    def _marcar(chave: str) -> None:
+        estado = _ESTADO.get(None)
+        if estado is not None:
+            estado[chave] = True
 
     def com_sugestoes(self, saidas: list[Saida]) -> list[Saida]:
         """Sugestões "» …" no fim da resposta da IA viram botões (ms:<id>) na última mensagem."""
@@ -266,7 +278,8 @@ class BotQuiron:
             self._contador_sugestoes = getattr(self, "_contador_sugestoes", int(time.time()) % 100000) + 1
             chave = f"{self._contador_sugestoes:x}"
             self.sugestoes[chave] = item
-            botoes.append([(f"» {item[:40]}", f"ms:{chave}")])
+            rotulo = item if len(item) <= 55 else item[:55].rsplit(" ", 1)[0] + "…"  # corta em palavra inteira
+            botoes.append([(f"» {rotulo}", f"ms:{chave}")])
         while len(self.sugestoes) > 300:  # guarda só as recentes
             self.sugestoes.pop(next(iter(self.sugestoes)))
         saidas[-1].texto = texto or saidas[-1].texto
@@ -302,7 +315,7 @@ class BotQuiron:
             itens = self.agente.agendador.listar()
             return [Saida("\n".join(a.descrever() for a in itens) if itens else "Nada agendado. Ex.: “todo dia útil às 7h30 me manda o briefing”.")]
         if texto.split(" ", 1)[0].split("@")[0].lower() in {"/simular", "/simulador", "/patrimonio"}:
-            self._direto = True
+            self._marcar("direto")
             return await asyncio.to_thread(self.comando_simular, texto.partition(" ")[2])
         if texto.split(" ", 1)[0].split("@")[0] in {"/memoria", "/memória", "/lembrar"}:
             if texto.split(" ", 1)[-1].strip().lower() in {"exportar", "baixar"}:
@@ -354,15 +367,15 @@ class BotQuiron:
                 elif n == "feito":
                     self._ultima_tarefa.pop(chat, None)
                 self._registrar_evento(n, args, direto)
-                self._direto = True
+                self._marcar("direto")
                 return direto
             cmd = self.comandos.get(nome.split("@")[0].lower())
             if not cmd:
                 return [Saida(self.desconhecido(nome.split("@")[0].lower()))]
             texto = cmd.montar(args)
             skills = [cmd.skill] if cmd.skill else []
-        self._via_agente = True
-        reg = await self.agente.responder(texto, chat=chat, skills=skills, progresso=getattr(self, "_progresso", None))
+        self._marcar("via_agente")
+        reg = await self.agente.responder(texto, chat=chat, skills=skills, progresso=_ESTADO.get({}).get("progresso"))
         saidas = self.com_sugestoes([Saida(p) for p in dividir(aviso + (reg.resposta or "(sem resposta)"))])
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
@@ -604,7 +617,7 @@ class BotQuiron:
         texto = (f"O Rickson enviou uma carteira, já lida e guardada como {ident} (use carteira_id='{ident}' na "
                  f"análise carteira_diagnostico; não retranscreva as posições):\n{resumo}\n\nPedido: {pedido}")
         reg = await self.agente.responder(texto, chat=chat, skills=["analise"])
-        saidas += [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
+        saidas += self.com_sugestoes([Saida(p) for p in dividir(reg.resposta or "(sem resposta)")])
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
         return saidas
@@ -736,8 +749,9 @@ async def _rodar() -> None:
                 if msg.voice or msg.audio:
                     arquivo = await (msg.voice or msg.audio).get_file()
                     conteudo = bytes(await arquivo.download_as_bytearray())
-                    saidas = await bot.tratar_audio(update.effective_user.id, msg.chat_id, conteudo,
-                                                    "voz.ogg" if msg.voice else (msg.audio.file_name or "audio.mp3"), andamento)
+                    saidas = await asyncio.wait_for(bot.tratar_audio(update.effective_user.id, msg.chat_id, conteudo,
+                                                    "voz.ogg" if msg.voice else (msg.audio.file_name or "audio.mp3"), andamento),
+                                                    TEMPO_MAXIMO_RESPOSTA_S)
                 elif msg.photo or msg.document:
                     origem = msg.photo[-1] if msg.photo else msg.document
                     if getattr(origem, "file_size", 0) and origem.file_size > 20_000_000:
@@ -750,7 +764,12 @@ async def _rodar() -> None:
                         saidas = await bot.tratar_arquivo(update.effective_user.id, msg.chat_id, conteudo, nome,
                                                           msg.caption or "", imagem)
                 else:
-                    saidas = await bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "", andamento)
+                    saidas = await asyncio.wait_for(bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "", andamento),
+                                                    TEMPO_MAXIMO_RESPOSTA_S)
+            except TimeoutError:
+                logging.error("resposta passou de %s s e foi interrompida", TEMPO_MAXIMO_RESPOSTA_S)
+                saidas = [Saida("⌛ Isso demorou demais e eu interrompi para não travar o bot. Tente de novo, de forma mais "
+                                "específica, ou peça como análise (ex.: /analise …), que roda em segundo plano.")]
             except Exception as e:  # noqa: BLE001 — nunca deixar o Rickson sem resposta
                 logging.exception("erro ao tratar a mensagem")
                 saidas = [Saida(f"⚠️ Deu um erro aqui ({type(e).__name__}). Já ficou registrado; tente de novo ou reformule. "
@@ -763,6 +782,8 @@ async def _rodar() -> None:
 
         async def ao_clicar(update: Update, contexto: ContextTypes.DEFAULT_TYPE) -> None:
             q = update.callback_query
+            if not q or not q.from_user or q.from_user.id not in permitidos:
+                return  # botão tocado por outra pessoa (ex.: bot num grupo): nada acontece
             try:
                 await q.answer()
             except Exception:  # noqa: BLE001 — botão antigo (o Telegram expira após alguns minutos): segue mesmo assim
@@ -793,9 +814,13 @@ async def _rodar() -> None:
                             await app.bot.send_message(q.message.chat_id, f"➡️ {bot.sugestoes.get(q.data[3:], '')}"[:LIMITE_TELEGRAM])
                         except Exception:  # noqa: BLE001
                             pass
-                        saidas = await bot.clicar_sugestao(q.from_user.id, q.message.chat_id, q.data, andamento)
+                        saidas = await asyncio.wait_for(bot.clicar_sugestao(q.from_user.id, q.message.chat_id, q.data, andamento),
+                                                        TEMPO_MAXIMO_RESPOSTA_S)
                     else:
-                        saidas = await bot.tratar(q.from_user.id, q.message.chat_id, q.data[3:], andamento)
+                        saidas = await asyncio.wait_for(bot.tratar(q.from_user.id, q.message.chat_id, q.data[3:], andamento),
+                                                        TEMPO_MAXIMO_RESPOSTA_S)
+                except TimeoutError:
+                    saidas = [Saida("⌛ Isso demorou demais e eu interrompi para não travar o bot. Tente de novo.")]
                 except Exception as e:  # noqa: BLE001
                     logging.exception("erro no atalho")
                     saidas = [Saida(f"⚠️ Deu um erro aqui ({type(e).__name__}). Tente de novo.")]

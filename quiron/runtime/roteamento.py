@@ -49,7 +49,7 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
         if m := re.match(r"^(?:na verdade,?\s*|melhor,?\s*|ah,?\s*|entao,?\s*)?(?:adia|adiar|passa|muda|joga|empurra|troca|remarca)"
                          r"(?:\s+(?:ela|isso|essa|esse|a tarefa|o lembrete))?\s+(?:para|pra|pro)\s+(.+)$", t):
             return "adiar", f"{ultima_tarefa} {m.group(1)}"
-        if re.match(r"^(?:pronto,?\s*)?(?:feito|fiz|pronto|conclui|terminei|ja fiz)(?:\s+(?:essa|isso|ela))?$", t):
+        if re.match(r"^(?:pronto,?\s*)?(?:feito|fiz|conclui|terminei|ja fiz)(?:\s+(?:essa|isso|ela|a tarefa))?$", t):  # "pronto" sozinho não
             return "feito", str(ultima_tarefa)
 
     # tarefas e lembretes
@@ -58,7 +58,7 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
             return "tarefa", _do_original(original, m.group(1))
     if m := re.match(r"^(?:cria(?:r)?|adiciona(?:r)?|nova|anota(?:r)?)\s+(?:uma\s+)?tarefa:?\s+(.+)$", t):
         return "tarefa", _do_original(original, m.group(1))
-    if m := re.match(r"^(?:feito|fiz|conclui|terminei|pronto|ok|marca(?:r)? como feita)\s+(?:a\s+)?(?:tarefa\s+)?(?:n[ºo°.]?\s*)?#?(\d+)$", t):
+    if m := re.match(r"^(?:feito|fiz|conclui|terminei|marca(?:r)? como feita)\s+(?:a\s+)?(?:tarefa\s+)?(?:n[ºo°.]?\s*)?#?(\d+)$", t):
         return "feito", m.group(1)
     if m := re.match(r"^(?:adia|adiar|empurra|passa|joga|muda)\s+(?:a\s+)?(?:tarefa\s+)?#?(\d+)\s+(?:para|pra|pro)?\s*(.+)$", t):
         return "adiar", f"{m.group(1)} {m.group(2)}"

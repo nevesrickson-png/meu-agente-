@@ -50,6 +50,8 @@ Pelo terminal: `uv run quiron` (`--offline` para abrir na versão offline).
 ![Configurações](docs/img/configuracoes.png)
 
 ## Fale normalmente com o bot
+📘 **Manual completo** (todas as funções, proteções, limites e o que vem a seguir): `docs/12-MANUAL-DO-BOT.md`.
+
 Não precisa decorar comandos: escreva (ou mande áudio) como falaria com um assistente.
 - **Frases do dia a dia viram a função na hora, sem IA**: “me lembra amanhã às 10h de ligar pro CLI-012”, “terminei a 3”,
   “adia a 3 para sexta”, “o que tenho hoje?”, “minhas tarefas”, “anota: estudar duration”, “me dá uma questão de renda

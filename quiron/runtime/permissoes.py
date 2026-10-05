@@ -86,5 +86,8 @@ def aplicar_compliance(pedido: str, resposta: str) -> str:
         saida = f"{MARCA_RASCUNHO}\n\n{saida}"
     if cfg.get("rodape_uso_interno", True) and _TICKER.search(pedido + " " + saida) and _RECOMENDA_ACAO.search(pedido + " " + saida) \
             and "uso interno" not in saida.lower():
-        saida = f"{saida}\n\n{RODAPE}"
+        # o rodapé entra ANTES das sugestões "» …" do fim (que viram botões e precisam continuar sendo as últimas linhas)
+        m = re.search(r"(?:\n[ \t]*»[^\n]*)+\s*$", saida)
+        corpo, sugestoes = (saida[:m.start()].rstrip(), saida[m.start():].rstrip()) if m else (saida, "")
+        saida = f"{corpo}\n\n{RODAPE}" + (f"\n{sugestoes}" if sugestoes else "")
     return saida

@@ -367,6 +367,18 @@ final; 0,5 ms por gravação, busca em 3 mil registros em 4 ms. 246 testes.
 ✅ Aceite (05/10/2026) com a IA real: "qual a selic e o dólar hoje?" → 2 ferramentas com aviso de progresso, resposta com
 3 botões de sugestão; "e o IPCA dos últimos 12 meses?" entendeu o contexto; lembrete criado por frase, sem IA. 283 testes.
 
+## Revisão crítica do bot + manual (05/10/2026)
+- [x] Dado pessoal (CPF, telefone, e-mail) nunca vai para a IA: a mensagem é barrada com explicação (CNPJ pode)
+- [x] Ferramenta travada é cortada em 3 min; resposta inteira em 7 min (o bot atende em fila e não pode travar)
+- [x] Estado de cada mensagem separado (a rotina da agenda rodando no meio de uma conversa não mistura mais nada)
+- [x] Apagar tarefa/alerta, cancelar rotina, criar evento no Google e fechar tese pela IA pedem ✅
+- [x] Texto de notícias/páginas é dado, nunca instrução; `procurar_ferramentas` quando o recorte por assunto não basta
+- [x] "ok 5" e "pronto" soltos não concluem tarefa; rodapé de uso interno não engole os botões de sugestão;
+  botão tocado por quem não está na lista não faz nada
+- [x] Manual do bot em `docs/12-MANUAL-DO-BOT.md` (funções, proteções, limites e o que complementaria)
+✅ Aceite (05/10/2026) com a IA real: CPF barrado; "pronto" não concluiu a tarefa; "apaga a tarefa 1" pediu aprovação;
+HGLG11 e PETR4 responderam com dados e botões. 295 testes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

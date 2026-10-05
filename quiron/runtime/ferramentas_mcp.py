@@ -6,6 +6,7 @@ Nome de cada ferramenta para o modelo: `<servidor>__<ferramenta>` (ex.: `quiron-
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import shutil
@@ -85,9 +86,13 @@ class ConexaoMCP:
         raise KeyError(f"servidor desconhecido: {servidor}")
 
     async def chamar(self, nome_funcao: str, argumentos: dict[str, Any]) -> str:
+        limite = float(os.environ.get("QUIRON_TIMEOUT_FERRAMENTA", "180"))
         try:
             sessao, ferramenta = self._localizar(nome_funcao)
-            r = await sessao.call_tool(ferramenta, argumentos)
+            r = await asyncio.wait_for(sessao.call_tool(ferramenta, argumentos), limite)
+        except TimeoutError:  # fonte lenta/travada não pode prender a conversa (e o bot inteiro, que atende em fila)
+            return (f"ERRO: {nome_funcao} não respondeu em {limite:.0f} s (fonte lenta ou fora do ar). Diga isso ao Rickson "
+                    "e ofereça tentar mais tarde ou pedir como análise em segundo plano.")
         except Exception as e:  # noqa: BLE001 — o modelo recebe o erro e decide o que fazer
             return f"ERRO ao chamar {nome_funcao}: {type(e).__name__}: {str(e)[:300]}"
         texto = "\n".join(getattr(c, "text", "") for c in r.content)

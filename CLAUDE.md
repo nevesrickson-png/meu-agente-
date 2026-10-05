@@ -171,6 +171,13 @@ Arquivos com DRM não são processados.
   `responder(..., progresso=)` → `Andamento` no `_rodar` ("⏳ Consultando …", `descrever_ferramenta`, apagada no fim).
   Sugestões: linhas finais "» …" (prompt) → `separar_sugestoes` → botões `ms:<id>` (`clicar_sugestao`); no Terminal,
   `separarSugestoes` + `.chat-sugestoes`. Testes `testes/test_fluidez.py`.
+- Revisão crítica (05/10/2026, `testes/test_critico.py`): `agente.dados_identificaveis` barra CPF/telefone/e-mail antes
+  da IA na nuvem (CNPJ liberado; offline não barra; não registra o texto); `ConexaoMCP.chamar` com
+  `QUIRON_TIMEOUT_FERRAMENTA` (180 s) e o bot com `TEMPO_MAXIMO_RESPOSTA_S` (420 s); estado por mensagem em
+  `ContextVar` (`_ESTADO`, `_marcar`); `procurar_ferramentas` (PROCURAR) libera ferramentas fora do recorte;
+  `aplicar_compliance` põe o rodapé antes das linhas "» "; `ao_clicar` ignora quem não está em `permitidos`;
+  confirmar em `config/agente.yaml` para remover_tarefa, criar_evento, remover_alerta, fechar_tese, cancelar_agendamento.
+  Manual do usuário: `docs/12-MANUAL-DO-BOT.md` (atualizar quando surgir função nova).
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.

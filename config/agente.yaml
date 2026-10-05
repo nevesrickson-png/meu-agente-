@@ -11,6 +11,13 @@ permissoes:
     quiron_assessoria__esquecer_cliente: confirmar   # LGPD: apaga tudo de um cliente
     quiron_assessoria__aplicar_reuniao_na_ficha: confirmar   # muda a ficha com o que saiu da reunião
     propor_skill: confirmar                     # o agente criar uma skill nova
+    # Ações que apagam algo ou mexem fora do Quíron: pela IA pedem ✅ (os comandos diretos, como /feito, continuam na hora).
+    # Protege também contra texto malicioso vindo de notícias/páginas tentando "mandar" o agente fazer algo.
+    quiron_organizacao__remover_tarefa: confirmar
+    quiron_organizacao__criar_evento: confirmar     # escreve na sua Google Agenda
+    quiron_mercado__remover_alerta: confirmar
+    quiron_carreira__fechar_tese: confirmar         # fecha a tese e conta no track record
+    cancelar_agendamento: confirmar                 # cancela lembrete/rotina
 
 # Regras de compliance aplicadas na resposta (hooks).
 compliance:

@@ -38,7 +38,7 @@ FERRAMENTAS = [
 @pytest.mark.parametrize("frase, esperado", [
     ("Me lembra amanhã às 10h de ligar pro CLI-012.", ("tarefa", "amanhã às 10h de ligar pro CLI-012")),
     ("terminei a 3", ("feito", "3")),
-    ("ok 5", ("feito", "5")),
+    ("terminei a tarefa 5", ("feito", "5")),
     ("adia a 3 para sexta", ("adiar", "3 sexta")),
     ("o que tenho hoje?", ("hoje", "")),
     ("Bom dia, o que tenho pra hoje", ("hoje", "")),
@@ -58,7 +58,7 @@ def test_fala_normal_vira_funcao_direta(frase, esperado):
 
 
 @pytest.mark.parametrize("frase", [
-    "qual a selic hoje?", "me lembra de comprar pão", "quando posso parar de trabalhar?", "/hoje", "",
+    "qual a selic hoje?", "me lembra de comprar pão", "ok 5", "pronto", "quando posso parar de trabalhar?", "/hoje", "",
     "questões de ética são sempre difíceis de entender, por que?", "linha 1\nlinha 2", "x" * 500,
 ])
 def test_o_resto_vai_para_a_ia(frase):
