@@ -40,7 +40,8 @@ Dois cliques no atalho **Quiron** (ou em `Abrir Quiron.bat`): atualiza, liga o T
 - **ACERVO** — envie livros e materiais por área.
 - **CONFIGURAÇÕES** — chaves (com **Testar** e **Descobrir meu ID**), Telegram (ligado/desligado, reiniciar, registro),
   Google Agenda (envia a credencial e conecta com um botão), versão offline (verifica e troca de modo com um clique),
-  início automático com o Windows e versão instalada. Na primeira vez ela abre sozinha.
+  início automático com o Windows e versão instalada. Na primeira vez ela abre sozinha. O botão **✔ Verificar tudo**
+  testa chaves, Telegram, IA, ferramentas, disco e memória e diz o que fazer em cada item que falhar.
 
 O selo no canto (● Telegram ligado / ! Faltam chaves / ⊘ OFFLINE) mostra o estado de qualquer aba. Fechar a janela preta
 desliga tudo. Na Área de Trabalho ficam só **Quiron** e **Quiron - Offline** (para abrir já sem internet).
@@ -116,7 +117,9 @@ Testes:
    O bot só roda em um lugar por vez — ao passar para o mini PC, desligue o do PC.
 6. O "cérebro" editável fica em `dados\workspace\`: `USUARIO.md` (quem é você), `MEMORIA.md` (o que ele aprendeu),
    `ROTINAS.md` (o que vigiar sozinho) e `diario\`. Comandos novos: crie `agente\comandos\<nome>.md`.
-7. No Telegram: `/ajuda`, `/briefing`, `/noticia <tema>`, `/estudar <tema>`, `/agenda`, `/memoria`, `/novo`; peça
+7. Treino, entrevista e pós-reunião "capturam" as mensagens seguintes; `/sair` volta à conversa normal (e eles se
+   encerram sozinhos após 3 h parados). Toque em "/" ao lado do campo de mensagem para ver o menu de comandos.
+8. No Telegram: `/ajuda`, `/briefing`, `/noticia <tema>`, `/estudar <tema>`, `/agenda`, `/memoria`, `/novo`; peça
    "todo dia útil às 7h30 me manda o briefing" ou "me lembre amanhã às 10h de…". Ações sensíveis chegam com botões ✅/❌.
 8. **Áudio:** mande uma mensagem de voz — ele transcreve (Whisper grátis do Groq, usa a mesma `GROQ_API_KEY`) e responde.
 9. O briefing diário das 7h30 já vem criado (veja `/agenda`; cancele ou mude pedindo no chat).

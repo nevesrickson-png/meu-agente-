@@ -328,6 +328,13 @@ Execute a FASE 18 do docs/00-ROTEIRO.md. Antes, leia o CRM e o SDR e me proponha
 normal → offline → normal pela tela em ~8 s, sem rolagem lateral no celular; 215 testes (`testes/test_central.py`).
 Falta: você abrir pelo atalho no seu PC e salvar as chaves por lá uma vez para ver o Telegram ligar.
 
+## Depuração geral (05/10/2026) — pedido do Rickson: "debugar o sistema todo e implementar melhorias"
+- [x] Análise estática, 224 testes, teste de fumaça de todos os comandos do Telegram e painéis do Terminal, agente real
+  (IA + ferramentas) respondendo com fonte
+- [x] Bot: nunca fica mudo em erro, não perde mensagens no reinício, menu "/", `/sair`, modos que não sequestram conversas
+- [x] Configurações: "Verificar tudo"; motivo claro quando o Telegram cai (ex.: token recusado); lançador explica porta ocupada
+- [x] Cálculos e datas: IOF < 30 dias; "próxima sexta", "meio-dia", "daqui a 2 horas"
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

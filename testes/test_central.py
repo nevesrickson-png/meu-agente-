@@ -239,3 +239,20 @@ def test_lancador_porta_ocupada_e_quedas_seguidas():
     chamadas = []
     assert iniciar.rodar("normal", 8765, False, chamar=lambda cmd, env: chamadas.append(1) or 1, dormir=lambda s: None) == 1
     assert len(chamadas) == 3  # três quedas logo ao abrir: para e explica, em vez de religar para sempre
+
+
+def test_verificar_tudo_lista_o_que_falta(monkeypatch):
+    itens = central.verificar_tudo(testar_rede=False, ferramentas=lambda: (42, {}))
+    por = {i["item"]: i for i in itens}
+    assert por["Chaves obrigatórias"]["ok"] is False and "Salvar" in por["Chaves obrigatórias"]["como"]
+    assert por["Ferramentas do Quíron (servidores MCP)"]["ok"] and "42" in por["Ferramentas do Quíron (servidores MCP)"]["detalhe"]
+    assert por["Pasta de dados"]["ok"] and por["Google Agenda"]["ok"] is None
+    configurador.atualizar_env(CHAVES)
+    monkeypatch.setattr(configurador, "testar", lambda k, v: {"ok": k != "GEMINI_API_KEY", "mensagem": "resposta simulada"})
+    itens = central.verificar_tudo(ferramentas=lambda: (40, {"quiron-mercado": "erro"}))
+    por = {i["item"]: i for i in itens}
+    assert por["Chaves obrigatórias"]["ok"] and por["Telegram (token do bot)"]["ok"]
+    assert por["IA principal (Gemini)"]["ok"] is False and por["Cotações (brapi)"]["ok"] is None
+    assert por["Ferramentas do Quíron (servidores MCP)"]["ok"] is False
+    c = TestClient(terminal.app)
+    assert c.post("/api/sistema/verificar").status_code == 403  # só pela própria tela

@@ -143,6 +143,16 @@ Arquivos com DRM não são processados.
   TERMINAL · ACERVO · CONFIGURAÇÕES + selo do Telegram) em `index.html`, `acervo.html` e `config.html`. Sem `--central`
   (Docker) o bot aparece como "gerenciado pelo servidor". `.bat` restantes: `Abrir Quiron.bat`, `Quiron Offline.bat`
   (`quiron --offline`) e `Quiron Telegram.bat` (só compatibilidade com o Abrir antigo). Testes: `testes/test_central.py`.
+  `verificar_tudo` (POST `/api/sistema/verificar`, botão "Verificar tudo"): chaves, testes de rede, bot, servidores MCP,
+  disco, memória, pasta de dados, regras sem conferência, Google. Supervisor: 3 quedas em < 60 s = situação "erro" com
+  `motivo_da_queda` (token recusado, conflito, sem rede…) e espera de 5 min; lançador para após 3 quedas rápidas e
+  avisa porta ocupada.
+- Bot (depuração 05/10/2026): erro inesperado vira resposta amigável; `drop_pending_updates=False` + ignora mensagens
+  com mais de 6 h; menu "/" via `set_my_commands` (`menu_telegram`); `/start` curto; comando errado sugere o parecido;
+  sub-bots não cortam texto (o envio divide). Modos que capturam mensagens (treino, entrevista, `/pos`): um fecha o
+  outro (`_preparar_modo`), `/sair` fecha todos, 3 h parados encerram sozinhos (`_expirar_modos`), falha da IA ao
+  começar não deixa sessão aberta (`abandonar`). Datas: "próxima sexta", "meio-dia", `datas.relativo` ("daqui a 2
+  horas"). Calculadora CDB × LCI aplica `aliquota_iof` (< 30 dias). Google Agenda bloqueado no offline.
 - Áreas (`quiron/servicos/areas.py`): 20 campos em `config/areas_conhecimento.yaml` + certificações da trilha (+ CEA) +
   personalizadas em `dados/areas_personalizadas.yaml` (fora do git). Cada área = pasta do acervo (id minúsculo) + trilha da
   Academia (programa em `config/editais/<ID>.yaml`; campos têm `tipo: campo`; sem arquivo → programa provisório de 1 tópico).

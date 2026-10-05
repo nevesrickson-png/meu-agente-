@@ -394,6 +394,87 @@ def versao() -> dict[str, str]:
     return {"codigo": codigo, "data": data, "pasta": str(RAIZ)}
 
 
+# ---------------------------------------------------------------- verificar tudo
+def _item(nome: str, ok: bool | None, detalhe: str, como: str = "") -> dict[str, Any]:
+    """ok: True = ✔, False = ✖ (precisa agir), None = ℹ️ (informativo / opcional)."""
+    return {"item": nome, "ok": ok, "detalhe": detalhe, "como": como}
+
+
+def _verificar_ferramentas() -> tuple[int, dict[str, str]]:
+    import asyncio
+
+    from quiron.runtime.ferramentas_mcp import ConexaoMCP
+
+    async def rodar() -> tuple[int, dict[str, str]]:
+        async with ConexaoMCP() as c:
+            return len(c.ferramentas), dict(c.falhas)
+
+    return asyncio.run(rodar())
+
+
+def verificar_tudo(testar_rede: bool = True, ferramentas: Callable[[], tuple[int, dict[str, str]]] | None = None) -> list[dict[str, Any]]:
+    """Checklist completo para o dia a dia e para o primeiro teste: chaves, Telegram, IA, ferramentas, disco, memória, regras."""
+    import shutil
+
+    from quiron.nucleo import offline, regras
+
+    itens: list[dict[str, Any]] = []
+    valores = configurador.ler_valores()
+    falta = configurador.faltando(valores)
+    itens.append(_item("Chaves obrigatórias", not falta,
+                       "todas preenchidas" if not falta else "falta: " + ", ".join(configurador.POR_CHAVE[k]["rotulo"] for k in falta),
+                       "" if not falta else "Preencha em Chaves e contas e clique em Salvar."))
+    if testar_rede and not offline.ativo():
+        for chave, nome in [("TELEGRAM_BOT_TOKEN", "Telegram (token do bot)"), ("GEMINI_API_KEY", "IA principal (Gemini)"),
+                            ("GROQ_API_KEY", "IA reserva e áudio (Groq)"), ("BRAPI_TOKEN", "Cotações (brapi)")]:
+            if not valores.get(chave):
+                if not configurador.POR_CHAVE[chave]["obrigatorio"]:
+                    itens.append(_item(nome, None, "não configurado (opcional)"))
+                continue
+            r = configurador.testar(chave, valores[chave])
+            itens.append(_item(nome, r["ok"], r["mensagem"], "" if r["ok"] else "Copie a chave de novo e clique em Testar."))
+    tg = SUPERVISOR.estado()
+    if tg["situacao"] in {"ligado", "religando", "erro"}:
+        itens.append(_item("Quíron no Telegram", tg["situacao"] == "ligado",
+                           {"ligado": f"ligado desde {tg['desde']}", "religando": "religando…"}.get(tg["situacao"], tg["ultimo_erro"]),
+                           "" if tg["situacao"] == "ligado" else "Veja o Registro do Telegram abaixo."))
+    try:
+        n, falhas = (ferramentas or _verificar_ferramentas)()
+        itens.append(_item("Ferramentas do Quíron (servidores MCP)", not falhas,
+                           f"{n} ferramentas prontas" + (f" · com problema: {', '.join(falhas)}" if falhas else ""),
+                           "" if not falhas else "Feche e abra o Quíron; se continuar, mande o Registro para o suporte."))
+    except Exception as e:  # noqa: BLE001
+        itens.append(_item("Ferramentas do Quíron (servidores MCP)", False, f"não subiram ({type(e).__name__}: {e})"[:200]))
+    try:
+        livre = shutil.disk_usage(pasta_dados().parent if pasta_dados().exists() else RAIZ).free / 1e9
+        itens.append(_item("Espaço em disco", livre >= 2, f"{livre:.1f} GB livres", "" if livre >= 2 else "Libere espaço no disco."))
+    except OSError:
+        pass
+    try:
+        import psutil
+
+        mem = psutil.virtual_memory()
+        itens.append(_item("Memória do PC", mem.available / 1e9 >= 1, f"{mem.available / 1e9:.1f} GB livres de {mem.total / 1e9:.0f} GB",
+                           "" if mem.available / 1e9 >= 1 else "Feche programas pesados (navegador com muitas abas, jogos)."))
+    except ImportError:
+        pass
+    try:
+        teste = pasta_dados() / ".teste-escrita"
+        teste.parent.mkdir(parents=True, exist_ok=True)
+        teste.write_text("ok")
+        teste.unlink()
+        itens.append(_item("Pasta de dados", True, str(pasta_dados())))
+    except OSError as e:
+        itens.append(_item("Pasta de dados", False, f"sem permissão de escrita ({e})", "Mova a pasta do Quíron para Documentos."))
+    pendentes = regras.avisos()
+    itens.append(_item("Regras de mercado (IR, FGC, poupança…)", None if pendentes else True,
+                       f"{len(pendentes)} bloco(s) sem a sua conferência" if pendentes else "todas conferidas",
+                       "Confira config/regras_mercado.yaml e preencha verificado_em (o Quíron avisa nas respostas)." if pendentes else ""))
+    g = GOOGLE.estado()
+    itens.append(_item("Google Agenda", True if g["autorizado"] else None, "conectado" if g["autorizado"] else "não conectado (opcional)"))
+    return itens
+
+
 # ---------------------------------------------------------------- rotas
 def _resumo() -> dict[str, Any]:
     from quiron.nucleo import offline
@@ -522,6 +603,13 @@ def api_google_desconectar(request: Request) -> dict[str, Any]:
     _proteger_sistema(request)
     GOOGLE.desconectar()
     return GOOGLE.estado()
+
+
+@router.post("/verificar")
+def api_verificar(request: Request) -> dict[str, Any]:
+    _proteger_sistema(request)
+    itens = verificar_tudo()
+    return {"itens": itens, "problemas": sum(i["ok"] is False for i in itens), "quando": _agora()}
 
 
 @router.get("/offline/verificar")

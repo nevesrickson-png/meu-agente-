@@ -188,6 +188,10 @@ def _token(cliente_http: httpx.Client | None = None) -> str:
 
 
 def _http(cliente_http: httpx.Client | None = None) -> httpx.Client:
+    from quiron.nucleo import offline
+
+    if cliente_http is None and offline.ativo():  # versão offline: nunca sai para a internet
+        raise AgendaIndisponivel("Google Agenda indisponível na versão offline (sem internet).")
     return cliente_http or httpx.Client(timeout=30)
 
 
