@@ -2,17 +2,25 @@
 
 **Quando usar:** perguntas sobre o que a imprensa, os órgãos oficiais e as redes estão dizendo sobre um tema ou ativo.
 
+As ferramentas já entregam **histórias** (a mesma notícia de vários veículos vira uma linha, com "+N veículos") ordenadas
+por **relevância** (tema de mercado, credibilidade da fonte, quantos veículos cobriram, hora). Fontes: imprensa de
+referência (Valor, Brazil Journal, Bloomberg Línea, NeoFeed, FT, Economist), portais de finanças e órgãos oficiais
+(Banco Central, CVM, IBGE, Fed, BCE).
+
 ## Passos
 1. Tema ou ativo → `noticias` (termo = tema, ticker ou palavra). Visão geral do momento → `principais`.
-   Quer saber "o que as pessoas estão dizendo" → `redes_sociais`. Pedido de clima/sentimento → `sentimento`.
-   Se o Rickson acompanha uma empresa, rode também `alertas`.
-2. Responda em até ~12 linhas:
-   - **Em uma frase:** o que está acontecendo.
-   - **Principais fatos** (3–5 bullets), cada um com `📊 Fonte, dd/mm hh:mm` e o link.
-   - **Oficial × imprensa:** se houver comunicado do BC/CVM/IBGE, ele vem primeiro e prevalece sobre a interpretação dos jornais.
-   - **Clima:** o tom calculado (manchetes e redes) — diga que é medida por palavras, não leitura fina.
-   - **Para os clientes:** 1–2 linhas do que isso muda para conservadores/aposentados, empresários, renda fixa × bolsa.
-3. Use SOMENTE o que as ferramentas devolveram. Se a busca precisou ampliar o período, diga.
+   "O que as pessoas estão dizendo" → `redes_sociais`. Clima/sentimento → `sentimento`. Empresa acompanhada → `alertas`.
+2. Responda em até ~12 linhas, neste formato:
+   **Em uma frase:** o que está acontecendo.
+   • 3 a 5 fatos, do mais relevante para o menos, cada um com o link na manchete e o veículo
+     (diga "confirmado por N veículos" quando a história tiver +N — é sinal de que é fato, não boato).
+   • Comunicado oficial (BC, CVM, IBGE, Fed) vem primeiro e prevalece sobre a interpretação dos jornais.
+   **Para os clientes:** 1–2 linhas do que muda para conservadores/aposentados, empresários, renda fixa × bolsa.
+   _Clima das manchetes: <tom calculado> (medido por palavras, não leitura fina)._
+3. Se citar taxa ou cotação, diga a data do dado (o Tesouro publica com 1 dia útil de atraso: "taxas de 02/10").
+   Notícia de hoje mais nova que o dado? Diga isso em vez de misturar ("a imprensa fala em NTN-B abaixo de 7% hoje;
+   a última taxa oficial do Tesouro, de 02/10, era 7,55%").
+4. Use SOMENTE o que as ferramentas devolveram. Se a busca precisou ampliar o período, diga.
    Post de rede social é opinião de terceiros: nunca trate como fato.
-4. Jornais com paywall: trabalhe só com manchete e resumo do feed; não tente abrir a matéria completa.
-5. Rede sem chave configurada: mostre o passo a passo que a ferramenta devolveu, uma vez, sem insistir.
+5. Jornais com paywall: trabalhe só com manchete e resumo do feed; não tente abrir a matéria completa.
+6. Rede sem chave configurada: mostre o passo a passo que a ferramenta devolveu, uma vez, sem insistir.

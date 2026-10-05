@@ -241,8 +241,14 @@ def painel(banco: Banco | None = None, cert: str = "CFP", hoje: date | None = No
     linhas.append("")
     for m in mods:
         linhas.append(f"M{m.numero} {barra(m.acerto_estimado if m.respostas else 0, 8)} "
-                      f"{(f'{m.acerto_estimado:.0%}' if m.respostas else '—'):>4} {m.titulo[:34]}")
+                      f"{(f'{m.acerto_estimado:.0%}' if m.respostas else '—'):>4} {_curto(m.titulo, 40)}")
     return "\n".join(linhas)
+
+
+def _curto(texto: str, limite: int) -> str:
+    """Corta em palavra inteira, com reticências (nunca "Gestão d")."""
+    texto = (texto or "").strip()
+    return texto if len(texto) <= limite else texto[:limite].rsplit(" ", 1)[0].rstrip(",;:-–") + "…"
 
 
 def painel_geral(banco: Banco | None = None, ativa: str = "CFP", hoje: date | None = None) -> str:
@@ -266,9 +272,8 @@ def painel_geral(banco: Banco | None = None, ativa: str = "CFP", hoje: date | No
         linhas += ["", "Outras áreas praticadas:", *praticadas]
     campos = [a.nome for a in todas if a.tipo == "campo"]
     certs = [a.id.replace("_", " ") for a in todas if a.tipo == "certificacao"]
-    linhas += ["", f"Campos ({len(campos)}): " + ", ".join(campos), "Certificações: " + ", ".join(certs),
-               "", "Trocar de área: /area <nome> · /questoes [área] [módulo|tema] · /simulado [área] · /flashcards · "
-               "/diagnostico · /plano · /aula <tema> · /caso"]
+    linhas += ["", f"📚 {len(campos)} campos de finanças e {len(certs)} certificações — /area mostra a lista e troca a área",
+               "", "Estudar: /questoes [tema] · /simulado · /flashcards · /diagnostico · /plano · /aula <tema> · /caso"]
     return "\n".join(linhas)
 
 

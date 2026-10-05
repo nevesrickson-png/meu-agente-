@@ -178,6 +178,18 @@ Arquivos com DRM não são processados.
   `aplicar_compliance` põe o rodapé antes das linhas "» "; `ao_clicar` ignora quem não está em `permitidos`;
   confirmar em `config/agente.yaml` para remover_tarefa, criar_evento, remover_alerta, fechar_tese, cancelar_agendamento.
   Manual do usuário: `docs/12-MANUAL-DO-BOT.md` (atualizar quando surgir função nova).
+- Informação (05/10/2026, `testes/test_informacao.py`): `noticias/relevancia.py` — `agrupar` (histórias: manchetes com
+  ≥ 3 radicais em comum e ≥ 50%, ou ≥ 4 e ≥ 35%, em 36 h; principal = fonte de maior peso), `nota` (pesos de tema de
+  `temas_noticias.yaml:pesos`, tema no título × 0,35 só no resumo; sem tema no título nem ativo/alerta/oficial = 0;
+  `ruido` descarta; × peso da fonte (`fontes_noticias.yaml:peso`); × (1 + 0,6·log2 cobertura); meia-vida 12 h),
+  `diversificar` (máx. por tema principal). `consultas.historias`/`linha_historia`; `top`, `noticias`, Terminal e
+  conteúdo usam histórias. 24 fontes (redirecionador `*http` desembrulhado na coleta). Briefing em Python:
+  `mercado/briefing.py` (`montar` → blocos fixos com ▲/▼, bps do Tesouro contra o pregão anterior, Focus em p.p., IBGE
+  só `IBGE_IMPORTANTES`, notícias 18 h; `comentario` = 2–3 bullets da IA, linha com número fora do briefing é
+  descartada; `completo`). /briefing sem argumentos e a rotina das 7h30 ("Faça meu briefing." via `rotear` em
+  `agenda_vencida`) vão direto; o MCP `briefing` devolve o texto pronto. `skills_provaveis` pré-carrega a skill de
+  notícias/briefing. Direto do bot com títulos em negrito (/hoje com próximos 3 dias e agenda econômica, /revisao,
+  /radar com link curto, /academia sem a lista de campos).
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.

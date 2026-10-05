@@ -379,6 +379,19 @@ final; 0,5 ms por gravação, busca em 3 mil registros em 4 ms. 246 testes.
 ✅ Aceite (05/10/2026) com a IA real: CPF barrado; "pronto" não concluiu a tarefa; "apaga a tarefa 1" pediu aprovação;
 HGLG11 e PETR4 responderam com dados e botões. 295 testes.
 
+## Notícias, fontes e briefing (05/10/2026) — pedido do Rickson (qualidade e formatação)
+- [x] 24 fontes (10 novas: Brazil Journal, NeoFeed, Money Times, Seu Dinheiro, g1, Agência Brasil, MarketWatch, BBC,
+  Federal Reserve, BCE), com peso de credibilidade; links de redirecionador desembrulhados
+- [x] Histórias (a mesma notícia de vários veículos vira uma, com "+N veículos") e nota de relevância explicável
+  (tema, fonte, cobertura, hora; ruído fora; um assunto não ocupa tudo); tema "política" (eleição etc.)
+- [x] Briefing montado em Python: o que mexe com o mercado, juros com bps do dia, Focus em p.p., mercados, agenda da
+  semana só com o que importa; IA só em "Para os clientes", com conferência de números
+- [x] /briefing e a rotina das 7h30 direto; skill de notícias carregada sozinha; respostas sem "Modo:" em consulta
+- [x] Formatação do /hoje (próximos 3 dias + agenda econômica), /revisao, /radar e /academia
+✅ Aceite (05/10/2026) com dados e IA reais: briefing do dia da eleição com Ibovespa +7,7% explicado nas histórias
+(4 veículos), NTN-B, bps do Tesouro e comentário para os clientes; "o que está saindo sobre juros?" no formato novo
+com "confirmado por 3 veículos". 306 testes + 24 de fontes online.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

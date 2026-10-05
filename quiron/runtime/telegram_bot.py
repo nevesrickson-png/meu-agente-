@@ -314,6 +314,11 @@ class BotQuiron:
         if texto == "/agenda":
             itens = self.agente.agendador.listar()
             return [Saida("\n".join(a.descrever() for a in itens) if itens else "Nada agendado. Ex.: “todo dia útil às 7h30 me manda o briefing”.")]
+        if texto.split(" ", 1)[0].split("@")[0].lower() == "/briefing" and not texto.partition(" ")[2].strip():
+            from quiron.servicos.mercado import briefing
+
+            self._marcar("direto")  # montado em Python (formato fixo); a IA só escreve "Para os clientes"
+            return [Saida(await asyncio.to_thread(briefing.completo, None, True, self.agente.config))]
         if texto.split(" ", 1)[0].split("@")[0].lower() in {"/simular", "/simulador", "/patrimonio"}:
             self._marcar("direto")
             return await asyncio.to_thread(self.comando_simular, texto.partition(" ")[2])
@@ -648,7 +653,7 @@ class BotQuiron:
                     saidas.append(Saida(f"⏰ Lembrete: {t.texto}" + (f" ({t.hora})" if t.hora else ""), linhas=botoes_tarefa(t)))
                 else:
                     saidas.append(Saida(f"⏰ Lembrete: {re.sub(r'^\[T\d+\] ', '', a.texto)}"))
-            elif a.texto.startswith("/") and self.permitidos:
+            elif (a.texto.startswith("/") or rotear(a.texto)) and self.permitidos:  # "/revisao", "Faça meu briefing."…
                 saidas += await self.tratar(next(iter(self.permitidos)), next(iter(self.permitidos)), a.texto)
             else:
                 reg = await self.agente.responder(a.texto, skills=self.skills_para(a.texto))

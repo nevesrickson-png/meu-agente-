@@ -106,7 +106,7 @@ def test_hoje_e_revisao_semanal(dados):
     t3 = tarefas.criar("amanhã enviar relatório", agora)
     metas.criar("estudar 5 horas por semana", agora.date())
     texto = hoje.montar_hoje(agora)
-    assert texto.startswith("☀️ Hoje — segunda, 05/10/2026")
+    assert texto.startswith("☀️ **Hoje — segunda, 05/10/2026")
     assert "Ligar para o CLI-012 — hoje 11:00" in texto and "1 sem data" in texto and "🎯" in texto
     assert "Google Agenda" not in texto  # sem credencial: não polui o dia
 
@@ -240,7 +240,7 @@ def test_rotina_de_comando_roda_direto(monkeypatch):
     bot = BotQuiron(Agente(SemMCP(), Config()), {111})
     bot.agente.agendador.criar("/revisao", "tarefa", "semanal domingo 18:00", None, agora=SEGUNDA)
     saidas = asyncio.run(bot.agenda_vencida(datetime(2026, 10, 11, 18, 0, 30, tzinfo=BRT)))
-    assert saidas[0].texto.startswith("🗓️ Revisão da semana")
+    assert saidas[0].texto.startswith("🗓️ **Revisão da semana")
 
 
 def test_esquecer_apaga_tarefas_e_notas_do_cliente():

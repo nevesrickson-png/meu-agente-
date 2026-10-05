@@ -39,7 +39,7 @@ perguntar da Selic é entendido. `/novo` começa outro assunto (o anterior fica 
 
 | Quando | O quê |
 |---|---|
-| Todo dia, 7h30 | Briefing de mercado (taxas, câmbio, bolsa, agenda do dia, notícias que importam) |
+| Todo dia, 7h30 | Briefing de mercado (veja abaixo) |
 | Segunda, 8h20 | Radar regulatório: normas novas da CVM, Receita, Banco Central e projetos na Câmara |
 | Domingo, 18h | Revisão da semana (tarefas, metas, teses a revisar) |
 | Na hora marcada | Lembretes das tarefas, com botões Feito / +1h / Amanhã |
@@ -54,6 +54,18 @@ Ele manda no máximo 3 mensagens automáticas por dia além dos lembretes que vo
 
 ## 3. Funções por área
 
+### ☀️ Briefing (`/briefing`, “faz meu briefing” ou sozinho às 7h30)
+Montado direto dos dados, sempre no mesmo formato, para ler no celular:
+1. **O que está mexendo com o mercado** — as 5 histórias mais relevantes das últimas 18 h, com link e quantos veículos
+   cobriram (sem deixar um assunto só ocupar tudo).
+2. **Juros** — Selic e CDI; Tesouro prefixado e IPCA+ (curto, médio e longo) com a variação do dia em bps (▲/▼).
+3. **Inflação e expectativas** — IPCA 12 meses e Focus (IPCA do ano e do próximo, Selic) com a mudança na semana.
+4. **Mercados** — dólar, Ibovespa, S&P 500 e Brent com a variação.
+5. **Agenda** — hoje e os próximos dias (Copom, IPCA, PIB, varejo, serviços, desemprego).
+6. **Para os clientes** — 2 ou 3 linhas da IA do que isso muda para aposentados, empresários e liberais. Se ela citar
+   um número que não está no briefing, a linha é descartada. Sem IA (cota esgotada), o briefing sai igual, sem essa parte.
+7. Fontes e horários numa linha no fim; fonte fora do ar aparece como aviso, nunca com número inventado.
+
 ### 📊 Mercado e notícias
 | Pedido | Comando | Exemplo |
 |---|---|---|
@@ -63,8 +75,16 @@ Ele manda no máximo 3 mensagens automáticas por dia além dos lembretes que vo
 | Clima nas redes (Bluesky, Reddit, YouTube) | — | “qual o sentimento sobre PETR4?” |
 | Alertas | `/alerta` | `/alerta PETR4 abaixo de 30` · `/alerta "fato relevante" Vale` |
 
-Fontes oficiais (Banco Central, Tesouro, ANBIMA, CVM, IBGE, B3/Yahoo), sempre com fonte e horário. Fonte fora do ar →
-último valor marcado DESATUALIZADO.
+Dados de fontes oficiais (Banco Central, Tesouro, ANBIMA, CVM, IBGE, B3/Yahoo), sempre com fonte e horário. Fonte fora
+do ar → último valor marcado DESATUALIZADO.
+
+**Notícias — 24 fontes, organizadas por relevância.** Imprensa de referência (Valor, Brazil Journal, Bloomberg Línea,
+NeoFeed, Financial Times, The Economist), portais de finanças (InfoMoney, Folha Mercado, Estadão E-Investidor, Exame,
+Money Times, Seu Dinheiro, g1, Agência Brasil, CNBC, MarketWatch, BBC) e órgãos oficiais (Banco Central, CVM, IBGE,
+Federal Reserve, BCE). A mesma notícia em vários veículos vira **uma história** (“+3 veículos” = confirmada). A ordem
+leva em conta o tema (juros, inflação, fiscal e Copom pesam mais), a credibilidade da fonte, quantos veículos cobriram e
+a hora; esporte, celebridade e afins ficam de fora. Pesos e fontes ajustáveis em `config/temas_noticias.yaml` e
+`config/fontes_noticias.yaml`.
 
 ### 🎓 Estudo e certificações
 | Pedido | Comando | Exemplo |

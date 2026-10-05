@@ -265,5 +265,5 @@ def test_bot_em_outra_area(banco):
     assert "Economia — 12 questões" in telas[0].texto
     assert "Diagnóstico · Economia" in asyncio.run(bot.comando("diagnostico", ""))[0].texto
     assert "Plano de estudo · Economia" in asyncio.run(bot.comando("plano", "4"))[0].texto
-    assert "Campos (20)" in asyncio.run(bot.comando("academia", ""))[0].texto
+    assert "20 campos de finanças" in asyncio.run(bot.comando("academia", ""))[0].texto
     assert "Não achei a área" in asyncio.run(bot.comando("area", "astrologia"))[0].texto

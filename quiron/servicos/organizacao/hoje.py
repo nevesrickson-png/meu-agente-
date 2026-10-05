@@ -51,34 +51,49 @@ def _lembretes_do_dia(dia: date) -> list[str]:
 def montar_hoje(agora: datetime | None = None) -> str:
     agora = agora or _agora()
     hoje = agora.date()
-    partes = [f"☀️ Hoje — {DIAS[hoje.weekday()]}, {hoje:%d/%m/%Y}"]
+    partes = [f"☀️ **Hoje — {DIAS[hoje.weekday()]}, {hoje:%d/%m/%Y}**"]
     agenda = _agenda(hoje)
     if agenda:
-        partes.append("Agenda:\n" + "\n".join(agenda))
+        partes.append("📅 **Agenda**\n" + "\n".join(agenda))
     pend = tarefas.listar("pendentes", hoje)
     atrasadas = [t for t in pend if t.atrasada(hoje)]
     de_hoje = [t for t in pend if t.data == hoje]
     if atrasadas:
-        partes.append("🔴 Atrasadas:\n" + "\n".join(t.descrever(hoje) for t in atrasadas))
-    partes.append("📍 Tarefas de hoje:\n" + ("\n".join(t.descrever(hoje) for t in de_hoje) if de_hoje else "nenhuma com prazo hoje"))
+        partes.append("🔴 **Atrasadas**\n" + "\n".join(t.descrever(hoje) for t in atrasadas))
+    partes.append("📍 **Tarefas de hoje**\n" + ("\n".join(t.descrever(hoje) for t in de_hoje) if de_hoje else "nenhuma com prazo hoje"))
+    proximas = [t for t in pend if t.data and hoje < t.data <= hoje + timedelta(days=3)]
+    if proximas:
+        partes.append("🔜 **Próximos 3 dias**\n" + "\n".join(t.descrever(hoje) for t in proximas[:6]))
     sem_data = [t for t in pend if not t.data]
     if sem_data:
         partes.append(f"📥 {len(sem_data)} sem data (ex.: {sem_data[0].texto})")
     lembretes = _lembretes_do_dia(hoje)
     if lembretes:
-        partes.append("Lembretes:\n" + "\n".join(lembretes))
+        partes.append("⏰ **Lembretes**\n" + "\n".join(lembretes))
     try:
         from quiron.servicos.assessoria import vencimentos
 
         venc = vencimentos.proximos(7, hoje=hoje)
         if venc:
-            partes.append("💼 Vencimentos de clientes em 7 dias:\n" + "\n".join(
+            partes.append("💼 **Vencimentos de clientes em 7 dias**\n" + "\n".join(
                 f"{v.vencimento:%d/%m} {v.cliente}: {v.nome}" for v in venc))
     except Exception:  # noqa: BLE001 — sem carteiras guardadas
         pass
+    try:  # divulgações que mexem com mercado (IPCA, PIB, Copom…): hoje e o próximo
+        from quiron.servicos.mercado.briefing import DIAS_CURTOS, eventos_agenda
+
+        eventos = eventos_agenda(hoje, 6)
+        de_hoje_ev = [f"{q:%H:%M} {t}" if (q.hour, q.minute) != (0, 0) else t for q, t in eventos if q.date() == hoje]
+        prox = next(((q, t) for q, t in eventos if q.date() > hoje), None)
+        linha = ", ".join(de_hoje_ev) if de_hoje_ev else "sem divulgações relevantes hoje"
+        if prox:
+            linha += f" · próxima: {DIAS_CURTOS[prox[0].weekday()]} {prox[0]:%d/%m} {prox[1]}"
+        partes.append("📊 **Agenda econômica**\n" + linha)
+    except Exception:  # noqa: BLE001 — sem internet, segue sem
+        pass
     ms = metas.listar()
     if ms:
-        partes.append("Metas:\n" + "\n".join(metas.descrever(m, hoje) for m in ms))
+        partes.append("🎯 **Metas**\n" + "\n".join(metas.descrever(m, hoje) for m in ms))
     return "\n\n".join(partes)
 
 
@@ -113,7 +128,7 @@ def montar_revisao(agora: datetime | None = None) -> str:
     ini = hoje - timedelta(days=hoje.weekday())  # segunda desta semana
     fim = ini + timedelta(days=6)
     a, b = ini.isoformat(), (fim + timedelta(days=1)).isoformat()
-    partes = [f"🗓️ Revisão da semana — {ini:%d/%m} a {fim:%d/%m}"]
+    partes = [f"🗓️ **Revisão da semana — {ini:%d/%m} a {fim:%d/%m}**"]
 
     feitas = [t for t in tarefas.listar("concluidas", hoje, 500) if a <= t.concluida_em[:10] < b]
     pend = tarefas.listar("pendentes", hoje, 500)
@@ -135,20 +150,20 @@ def montar_revisao(agora: datetime | None = None) -> str:
     else:
         linhas.append("🎓 Nenhuma questão na Academia esta semana")
     linhas.append(f"🗒️ {n_notas} nota(s)")
-    partes.append("O que foi feito:\n" + "\n".join(linhas))
+    partes.append("✅ **O que foi feito**\n" + "\n".join(linhas))
 
     ms = metas.listar()
     if ms:
-        partes.append("Metas:\n" + "\n".join(metas.descrever(m, hoje) for m in ms))
+        partes.append("🎯 **Metas**\n" + "\n".join(metas.descrever(m, hoje) for m in ms))
     if atrasadas:
-        partes.append("Ficou para trás:\n" + "\n".join(t.descrever(hoje) for t in atrasadas[:10]))
+        partes.append("🔴 **Ficou para trás**\n" + "\n".join(t.descrever(hoje) for t in atrasadas[:10]))
 
     try:
         from quiron.servicos.carreira import diario
 
         devidas = [t for t in diario.listar("aberta") if t.revisar_em and t.revisar_em <= (fim + timedelta(days=7)).isoformat()]
         if devidas:
-            partes.append("📓 Teses para revisar:\n" + "\n".join(t.resumo() for t in devidas) + "\n/diario revisar para os números")
+            partes.append("📓 **Teses para revisar**\n" + "\n".join(t.resumo() for t in devidas) + "\n/diario revisar para os números")
     except Exception:  # noqa: BLE001
         pass
 
@@ -163,7 +178,7 @@ def montar_revisao(agora: datetime | None = None) -> str:
                   if prox_ini <= v.vencimento <= prox_ini + timedelta(days=6)]
     except Exception:  # noqa: BLE001
         pass
-    partes.append(f"Próxima semana ({prox_ini:%d/%m}–{prox_ini + timedelta(days=6):%d/%m}):\n" + ("\n".join(bloco) if bloco else "nada marcado ainda"))
-    partes.append("Para pensar (responda aqui se quiser que eu guarde):\n1. O que mais avançou seus objetivos esta semana?\n"
+    partes.append(f"🔜 **Próxima semana ({prox_ini:%d/%m}–{prox_ini + timedelta(days=6):%d/%m})**\n" + ("\n".join(bloco) if bloco else "nada marcado ainda"))
+    partes.append("💭 **Para pensar** (responda aqui se quiser que eu guarde)\n1. O que mais avançou seus objetivos esta semana?\n"
                   "2. O que você vai deixar de fazer na próxima?\n3. Qual é a UMA prioridade da semana que vem?")
     return "\n\n".join(partes)

@@ -63,8 +63,11 @@ def agenda(dias: int = 7) -> str:
 
 @mcp.tool()
 def briefing() -> str:
-    """Dados do briefing do dia (juros, inflação, Focus, câmbio, bolsa, agenda). Redija seguindo a skill briefing."""
-    return painel.briefing()
+    """Briefing do dia PRONTO (o que está mexendo com o mercado, juros com variação, inflação/Focus, mercados, agenda e
+    "Para os clientes"). Mostre exatamente como veio, sem reescrever nem trocar números."""
+    from quiron.servicos.mercado import briefing as mod
+
+    return mod.completo()
 
 
 @mcp.tool()

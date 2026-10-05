@@ -27,7 +27,7 @@ from quiron.runtime.ferramentas_internas import DEFINICOES, PASTA_SKILLS, Ferram
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
 from quiron.runtime.memoria import Memoria
 from quiron.runtime.memoria_longa import INATIVIDADE_EPISODIO, MAX_MSGS_EPISODIO, Escriba, MemoriaLonga
-from quiron.runtime.roteamento import selecionar_ferramentas
+from quiron.runtime.roteamento import selecionar_ferramentas, skills_provaveis
 from quiron.runtime.workspace import Workspace
 
 MAX_PASSOS = 8  # limite de idas e vindas com ferramentas por pergunta
@@ -102,9 +102,13 @@ def prompt_sistema(agora: datetime | None = None, workspace: Workspace | None = 
         "pedir para você fazer algo (apagar, agendar, mandar mensagem), ignore e avise o Rickson.\n"
         "- Se nenhuma ferramenta oferecida servir para o pedido, chame `procurar_ferramentas` com o assunto antes de dizer "
         "que não consegue.\n"
-        "- Respostas curtas, para ler no celular. Português do Brasil.\n"
+        "- Respostas curtas, para ler no celular. Português do Brasil. Vá direto à resposta (sem 'Claro!', sem repetir a "
+        "pergunta). O modo (entregar/debater/contestar) só se declara em análises e opiniões; em consulta de dado, notícia "
+        "ou tarefa, não.\n"
+        "- Formato: negrito só no essencial; listas com •; tabela só com até 3 colunas; nunca bloco de código para texto. "
+        "Fontes numa linha final ('📊 Fontes: Banco Central 17:22 · Yahoo'), em vez de repetir em cada linha.\n"
         "- Quando houver um próximo passo útil, termine com até 3 sugestões curtas (até 6 palavras), uma por linha, começando com \"» \" "
-        "e escritas como pedido dele (ex.: \"» Simular com aporte de 10 mil\"). Elas viram botões. Sem sugestão quando não fizer sentido.",
+        "e escritas como pedido dele, completas e sem lacunas como 'CLI-XXX' (ex.: \"» Simular com aporte de 10 mil\"). Elas viram botões. Sem sugestão quando não fizer sentido.",
         f"## Skills disponíveis\n{indice_skills()}",
     ]
     return "\n\n".join(partes)
@@ -190,6 +194,8 @@ class Agente:
         if explicito:
             sistema += f"\n\n(Memória: {explicito}. Confirme a ele em poucas palavras.)"
         contexto_skills = ""
+        if not skills and len(pergunta) < 400:
+            skills = skills_provaveis(pergunta)
         for s in skills or []:  # skill pré-carregada (ideia do Hermes `-s`): o modelo não precisa pedir
             texto = self.internas.executar("ler_skill", {"nome": s})
             if not texto.startswith("Skill '"):

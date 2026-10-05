@@ -2,24 +2,15 @@
 
 **Quando usar:** "faça meu briefing", `/briefing`, rotina diária da manhã.
 
+O briefing é montado em Python (`quiron/servicos/mercado/briefing.py`): formato fixo para o celular, números das
+fontes oficiais com variação (▲/▼), as histórias que mais importam (já agrupadas e ordenadas por relevância), a agenda
+da semana e as linhas "Para os clientes" (que já passaram por conferência: nenhum número fora dos dados).
+
 ## Passos
-1. Chame `briefing` do servidor `quiron-mercado`. Use SOMENTE os números devolvidos.
-2. Escreva no **formato fixo** abaixo, curto (cabe numa tela de celular, até ~20 linhas):
-
-```
-☀️ Briefing — <dia da semana>, dd/mm
-Juros: Selic X% · CDI X% · Pré 2029 X% · IPCA+ 2035 X%
-Inflação: IPCA 12m X% · Focus IPCA <ano> X% (mudança na semana)
-Câmbio e bolsa: Dólar R$ X (±%) · Ibovespa X pts (±%) · S&P 500 (±%) · Brent (±%)
-Agenda de hoje: <eventos ou "sem divulgações relevantes">
-
-O que importa para os clientes:
-• <2 a 3 bullets: o que muda para conservadores/aposentados, empresários, renda fixa × bolsa>
-
-📊 Fontes: <fontes com horário, numa linha>
-```
-
-3. "O que importa para os clientes" é opinião sua de colega sênior: conecte os números ao dia a dia
-   (ex.: "IPCA+ acima de 7% segue atraente para aposentados que querem travar juro real").
-4. Dado indisponível ou ⚠️ DESATUALIZADO: escreva "indisponível" ou repita o aviso. **Nunca complete de memória.**
-5. Sem recomendação de ação específica (uso interno); nada de texto pronto para cliente sem a marca RASCUNHO.
+1. Chame `briefing` do servidor `quiron-mercado`.
+2. **Entregue o texto exatamente como veio.** Não reescreva, não resuma, não troque a ordem, não coloque em bloco de
+   código e não acrescente números.
+3. Se ele pedir algo além (ex.: "e o que isso muda para o CLI-012?"), responda DEPOIS do briefing, em poucas linhas,
+   usando as ferramentas para qualquer número novo.
+4. Bloco "⚠️ … indisponível/desatualizado": mantenha o aviso; nunca complete de memória.
+5. Sem recomendação de ativo específico (uso interno); texto para cliente só com a marca RASCUNHO.

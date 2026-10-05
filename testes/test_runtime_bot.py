@@ -269,7 +269,7 @@ def test_comando_pre_carrega_a_skill(monkeypatch):
     monkeypatch.setattr(cerebro, "conversar", conversar)
     bot = BotQuiron(Agente(SemMCP(), Config()), {111})
     assert carregar_comandos()["briefing"].skill == "briefing"
-    asyncio.run(bot.tratar(111, 1, "/briefing"))
+    asyncio.run(bot.tratar(111, 1, "/briefing com foco em renda fixa"))  # com pedido extra vai à IA com a skill
     assert "Skill já carregada para este pedido: briefing" in recebidos[0]["mensagens"][0]["content"]
     assert bot.skills_para("Faça meu briefing.") == ["briefing"] and bot.skills_para("outra coisa") == []
 

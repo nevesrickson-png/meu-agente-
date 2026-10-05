@@ -67,8 +67,10 @@ def noticias(tema: str = "", horas: int = 48, limite: int = 8) -> list[tuple[str
     if tema:
         palavras = [p for p in re.findall(r"\w{4,}", _norm(tema))]
         itens = [n for n in itens if any(p in _norm(f"{n.titulo} {n.resumo}") for p in palavras)] or []
-    else:  # sem tema: as mais relevantes (alertas e mais fontes primeiro)
-        itens = sorted(itens, key=lambda n: (-len(n.alertas), -len(n.outras_fontes), n.publicado_em), reverse=False)
+    else:  # sem tema: uma por história, as mais relevantes (tema, fonte, cobertura, hora)
+        from quiron.servicos.noticias import relevancia
+
+        itens = [max(h.itens, key=relevancia.peso_fonte) for h in relevancia.agrupar(itens)]
     return [(f"Manchete: {n.titulo}" + (f" — {n.resumo[:160]}" if n.resumo else ""),
              f"{n.fonte}, {n.publicado_em.astimezone(timezone(timedelta(hours=-3))):%d/%m/%Y}",
              n.link.split("*", 1)[1] if "*http" in n.link else n.link) for n in itens[:limite]]

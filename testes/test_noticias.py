@@ -63,7 +63,7 @@ def test_coleta_deduplica_e_isola_fonte_quebrada():
 
 def test_consultas_noticias_top_alertas():
     texto = consultas.noticias("PETR4", horas=48)
-    assert "Ibovespa dispara" in texto and "também em: Outro" in texto and "📊 Portal, 03/10 12:00" in texto
+    assert "Ibovespa dispara" in texto and "+1 veículo (Outro)" in texto and "📊 Portal, 03/10 12:00" in texto
     copom = consultas.noticias("copom", horas=24)  # nada em 24h: amplia para 30 dias
     assert "mostrando os últimos 30 dias" in copom and "Copom reduz a taxa Selic" in copom
     top = consultas.top(24)

@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from quiron.servicos.biblioteca.trechos import chave
-from quiron.servicos.noticias import classificacao, coleta, redes, sentimento
+from quiron.servicos.noticias import classificacao, coleta, redes, relevancia, sentimento
 from quiron.servicos.mercado.http import FonteIndisponivel
 
 BRT = ZoneInfo("America/Sao_Paulo")
@@ -46,6 +46,25 @@ def _linha(n: coleta.Noticia) -> str:
     return f"- [{n.titulo}]({n.link}) — 📊 {n.fonte}, {_hora(n.publicado_em)}{sufixo}"
 
 
+def linha_historia(h: relevancia.Historia, com_link: bool = True) -> str:
+    """Uma linha por história: manchete (link), fonte e hora, quem mais cobriu e os ativos citados."""
+    extras = []
+    if h.cobertura > 1:
+        outros = h.fontes[1:]
+        extras.append(f"+{len(outros)} veículo{'s' if len(outros) > 1 else ''} ({', '.join(outros[:3])}{'…' if len(outros) > 3 else ''})")
+    if h.ativos:
+        extras.append(" ".join(h.ativos[:4]))
+    if h.alertas:
+        extras.append("⚠️ " + ", ".join(h.alertas))
+    titulo = f"[{h.titulo}]({h.link})" if com_link else h.titulo
+    return f"- {titulo} — 📊 {h.fonte}, {_hora(h.publicado_em)}" + (f" · {' · '.join(extras)}" if extras else "")
+
+
+def historias(horas: int = 12, termo: str | None = None) -> list[relevancia.Historia]:
+    _garantir_coleta()
+    return relevancia.agrupar(_filtrar(coleta.listar(horas), termo))
+
+
 def _filtrar(noticias: list[coleta.Noticia], termo: str | None) -> list[coleta.Noticia]:
     if not termo:
         return noticias
@@ -74,24 +93,29 @@ def noticias(termo: str | None = None, horas: int = 24, limite: int = 15, grupo:
         return f"{titulo}\nNada encontrado. Temas disponíveis: {', '.join(classificacao.regras().temas)}."
     tom = sentimento.tom_medio([n.titulo for n in lista])
     temas = Counter(t for n in lista for t in n.temas).most_common(5)
+    agrupadas = relevancia.agrupar(lista) or []
+    # com termo: relevância e recência pesam juntas (a mais nova importa); sem termo: relevância
+    if termo:
+        agrupadas.sort(key=lambda h: -(h.nota + 3 * 0.5 ** ((datetime.now(timezone.utc) - h.publicado_em).total_seconds() / 21600)))
     cab = [
         titulo,
         *([ampliado] if ampliado else []),
-        f"{len(lista)} notícias · tom das manchetes: **{tom.rotulo}** ({tom.nota:+.2f}; {tom.positivas} sinais positivos, {tom.negativas} negativos)",
+        f"{len(lista)} notícias em {len(agrupadas)} histórias · tom das manchetes: **{tom.rotulo}** ({tom.nota:+.2f})",
     ]
     if temas and not termo:
         cab.append("Temas mais citados: " + ", ".join(f"{t} ({q})" for t, q in temas))
-    return "\n".join(cab + [_linha(n) for n in lista[:limite]])
+    if not agrupadas:  # só ruído no período: mostra as manchetes cruas mesmo assim
+        return "\n".join(cab + [_linha(n) for n in lista[:limite]])
+    return "\n".join(cab + [linha_historia(h) for h in agrupadas[:limite]])
 
 
 def top(horas: int = 6, limite: int = 12) -> str:
     """Principais notícias: as mais repetidas entre portais, depois alertas, depois as mais recentes."""
-    _garantir_coleta()
-    lista = [n for n in coleta.listar(horas) if n.temas or n.ativos]  # só o que tem a ver com mercado
+    lista = relevancia.diversificar(historias(horas), limite, max_por_tema=3)
     if not lista:
         return f"## Principais notícias — últimas {horas}h\nNenhuma notícia de mercado coletada."
-    lista.sort(key=lambda n: (len(n.outras_fontes), len(n.alertas), n.publicado_em), reverse=True)
-    return "\n".join([f"## Principais notícias — últimas {horas}h"] + [_linha(n) for n in lista[:limite]])
+    return "\n".join([f"## Principais notícias — últimas {horas}h (por relevância: tema, fonte, quantos veículos cobriram e hora)"]
+                     + [linha_historia(h) for h in lista])
 
 
 def alertas(horas: int = 24) -> str:

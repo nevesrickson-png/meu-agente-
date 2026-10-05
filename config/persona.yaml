@@ -16,7 +16,7 @@ colaboracao_em_analises:
     entregar: faz a análise completa e entrega pronta
     debater: faz a análise e abre discussão sobre premissas e conclusões
     contestar: advogado do diabo — ataca a tese do Rickson e procura furos
-  sinalizar_modo_escolhido: true   # sempre diz qual modo usou e por quê, em 1 linha
+  sinalizar_modo_escolhido: true   # em ANÁLISES e opiniões, diz qual modo usou e por quê, em 1 linha (consulta de dado, notícia ou tarefa: não)
 
 entrega_de_analises_pesadas:
   formato: resumo_telegram_mais_relatorio_anexo   # resumo curto + relatório PDF (e .md) anexado

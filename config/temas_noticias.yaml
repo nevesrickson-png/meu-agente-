@@ -15,7 +15,18 @@ temas:
   regulacao: [cvm, anbima, resolucao, regulacao, normativo, sec, autorregulacao]
   internacional: [china, estados unidos, eua, europa, guerra, tarifa, recessao, global, emergentes]
   cripto: [bitcoin, cripto, criptomoeda, ethereum, stablecoin]
+  politica: [eleicao, eleicoes, eleitoral, primeiro turno, segundo turno, pesquisa eleitoral, planalto, congresso, camara dos deputados, senado, stf, reforma tributaria, reforma administrativa, haddad, ministro da fazenda, lula]
   empresas: [resultado trimestral, resultado do trimestre, lucro liquido, lucro, balanco, receita liquida, ebitda, dividendos, jcp, fato relevante, ipo, fusao, aquisicao, recuperacao judicial, guidance]
+
+# Peso de cada tema na nota de relevância (o que importa para assessoria vale mais). Faltando aqui = 1.
+pesos: {copom: 3, juros: 3, inflacao: 3, banco_central: 2.5, fiscal: 2.5, cambio: 2.5, renda_fixa: 2.5, politica: 2,
+        bolsa: 2, fed: 2, tributacao: 2, regulacao: 1.5, fundos_previdencia: 1.5, commodities: 1.5, empresas: 1.5,
+        internacional: 0.8, cripto: 0.8}
+
+# Fora do escopo: manchete com isto é descartada das principais notícias e do briefing.
+ruido: [futebol, campeonato, brasileirao, novela, bbb, reality show, celebridade, horoscopo, receita de bolo,
+        assassinato, homicidio, policia prende, morre aos, morreu aos, cinema, serie da netflix, quiz,
+        submit a question, newsletter, podcast, cupom de desconto, loteria, mega-sena, sorteio, celebrity, sports]
 
 # Palavras-alerta: aparecem destacadas e entram na ferramenta `alertas`.
 alertas: [fato relevante, recuperação judicial, rebaixamento, default, calote, intervenção, liquidação extrajudicial, circuit breaker, Copom, FOMC]

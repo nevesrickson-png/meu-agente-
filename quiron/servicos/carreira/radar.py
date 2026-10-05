@@ -33,9 +33,14 @@ class Item:
 
     def descrever(self) -> str:
         estrelas = "🔴" if self.relevancia >= 3 else "🟡" if self.relevancia == 2 else "⚪"
-        temas = f" [{', '.join(self.temas)}]" if self.temas else ""
-        extra = f" — {self.resumo[:180]}" if self.resumo and self.resumo[:40] not in self.titulo else ""
-        return f"{estrelas} {self.publicado_em:%d/%m} {self.fonte}: {self.titulo}{extra}{temas}\n   {self.link}"
+        def curto(t: str, n: int) -> str:
+            t = (t or "").strip()
+            return t if len(t) <= n else t[:n].rsplit(" ", 1)[0].rstrip(",;:-–") + "…"
+
+        temas = f"\n   _{', '.join(self.temas)}_" if self.temas else ""
+        extra = f" — {curto(self.resumo, 160)}" if self.resumo and self.resumo[:40] not in self.titulo else ""
+        return (f"{estrelas} **{self.publicado_em:%d/%m} · {self.fonte}**\n   {curto(self.titulo, 220)}{extra} "
+                f"[abrir]({self.link}){temas}")
 
 
 def config() -> dict[str, Any]:
@@ -182,11 +187,11 @@ def relatorio(dias: int = 14, so_novos: bool = False, atualizar_antes: bool = Tr
     if atualizar_antes:
         erros = atualizar()["erros"]
     itens = listar(dias, minimo, so_novos)
-    cab = f"📡 Radar regulatório — {'novidades' if so_novos else f'últimos {dias} dias'} (fontes oficiais)"
+    cab = f"📡 **Radar regulatório — {'novidades' if so_novos else f'últimos {dias} dias'}** (fontes oficiais)"
     if not itens:
         corpo = "Nada relevante no período." if not so_novos else "Nenhuma novidade relevante desde a última vez."
     else:
-        corpo = "\n".join(i.descrever() for i in itens)
+        corpo = "\n\n".join(i.descrever() for i in itens)
         marcar_vistos(itens)
     partes = [cab, corpo, "🔴 mexe no seu dia a dia · 🟡 vale acompanhar · ⚪ contexto. Peça “explique o item X” para o impacto."]
     pend = regras_para_conferir()

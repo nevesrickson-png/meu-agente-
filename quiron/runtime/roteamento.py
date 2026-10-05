@@ -52,6 +52,10 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
         if re.match(r"^(?:pronto,?\s*)?(?:feito|fiz|conclui|terminei|ja fiz)(?:\s+(?:essa|isso|ela|a tarefa))?$", t):  # "pronto" sozinho não
             return "feito", str(ultima_tarefa)
 
+    # briefing (frase curta; "briefing do CLI-012" e afins vão para a IA)
+    if re.match(r"^(?:(?:me )?(?:faz|faca|manda|mande|envia|quero|cade)(?: o| um)?(?: meu)? ?)?briefing(?: (?:de hoje|do dia|do mercado|agora))?$", t):
+        return "briefing", ""
+
     # tarefas e lembretes
     if m := re.match(r"^(?:por favor,?\s*)?(?:me\s+)?lembr(?:a|e|ar)(?:-me)?\s+(?:de\s+|que\s+)?(.+)$", t):
         if _DATA_HORA.search(m.group(1)):
@@ -114,6 +118,21 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
     if re.match(r"^(?:me )?(?:da|de|sugere|manda) (?:umas |algumas )?(?:ideias|pautas) (?:de|para|pra) (?:post|posts|conteudo|video|reels)$", t):
         return "pauta", ""
     return None
+
+
+# ---------------------------------------------------------------- 1b. instrução certa já carregada
+SKILL_POR_ASSUNTO = (
+    ("noticias", r"\bnoticia|manchete|o que (?:esta|ta|anda) saindo|o que (?:aconteceu|houve|rolou)|imprensa|"
+                 r"o que (?:estao|tao) (?:falando|dizendo)|repercuss|sentimento (?:do mercado|sobre)|clima do mercado"),
+    ("briefing", r"\bbriefing\b"),
+)
+
+
+def skills_provaveis(texto: str) -> list[str]:
+    """Skill que a pergunta claramente pede ("o que está saindo sobre juros?" → notícias). Pré-carregada pelo agente,
+    para a resposta seguir o formato combinado mesmo quando o modelo esqueceria de chamar `ler_skill`."""
+    t = _sem_acento(texto)
+    return [nome for nome, rx in SKILL_POR_ASSUNTO if re.search(rx, t)][:1]
 
 
 # ---------------------------------------------------------------- 2. só as ferramentas que importam

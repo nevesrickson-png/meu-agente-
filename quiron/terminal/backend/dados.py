@@ -211,10 +211,17 @@ def noticias(termo: str | None = None, horas: int = 24, limite: int = 30) -> dic
 
 
 def top(horas: int = 12, limite: int = 25) -> dict:
-    noticias_consultas._garantir_coleta()
-    lista = [n for n in coleta.listar(horas) if n.temas or n.ativos]
-    lista.sort(key=lambda n: (len(n.outras_fontes), len(n.alertas), n.publicado_em), reverse=True)
-    return {"termo": None, "total": len(lista), "itens": [_noticia(n) for n in lista[:limite]]}
+    from quiron.servicos.noticias import relevancia
+
+    hist = relevancia.diversificar(noticias_consultas.historias(horas), limite, max_por_tema=4)
+    itens = []
+    for h in hist:  # uma linha por história; "outras_fontes" = quem mais cobriu
+        principal = next(n for n in h.itens if n.fonte == h.fonte)
+        item = _noticia(principal)
+        item["outras_fontes"] = h.fontes[1:]
+        item["relevancia"] = round(h.nota, 1)
+        itens.append(item)
+    return {"termo": None, "total": len(itens), "itens": itens}
 
 
 def redes_sociais(termo: str) -> dict:

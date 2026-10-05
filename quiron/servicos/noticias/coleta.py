@@ -123,6 +123,8 @@ def _itens_rss(fonte: dict) -> list[Noticia]:
     for e in feed.entries:
         titulo = texto_limpo(e.get("title", ""), 300)
         link = e.get("link", "")
+        if "*http" in link:  # redirecionador do portal (ex.: redir.folha.com.br/…*https://…): fica o endereço real
+            link = link.split("*", 1)[1]
         if not titulo or not link:
             continue
         resumo = texto_limpo(e.get("summary", "") or e.get("description", ""))
