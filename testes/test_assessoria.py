@@ -246,7 +246,7 @@ def test_telegram_pos_por_audio_e_treino(monkeypatch):
     falas = iter(["Oi, em que posso ajudar?", "Na poupança eu nunca perdi nada."])
     monkeypatch.setattr(cerebro, "conversar", lambda msgs, **k: SimpleNamespace(texto=next(falas)))
     assert "Treino #" in asyncio.run(bot.tratar(111, 1, "/treino aposentada_conservadora"))[0].texto
-    assert asyncio.run(bot.tratar(111, 1, "Bom dia! Como a senhora está?"))[0].texto == "🗣️ Dona Célia: Na poupança eu nunca perdi nada."
+    assert asyncio.run(bot.tratar(111, 1, "Bom dia! Como a senhora está?"))[0].texto.startswith("🗣️ Dona Célia: Na poupança eu nunca perdi nada.")
     monkeypatch.setattr(cerebro, "perguntar", _sem_cerebro)
     assert "Feedback do treino" in asyncio.run(bot.tratar(111, 1, "/treino fim"))[0].texto
     assert "Personagens" in asyncio.run(bot.tratar(111, 1, "/treino opcoes"))[0].texto

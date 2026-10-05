@@ -318,3 +318,59 @@ def test_ids_permitidos_ignora_usuario_com_arroba(monkeypatch, caplog):
     with caplog.at_level("WARNING"):
         assert telegram_bot.ids_permitidos() == {7592218870}
     assert "@ricksonrkn" in caplog.text and "userinfobot" in caplog.text
+
+
+# ---------------------------------------------------------------- depuração (05/10/2026): modos que capturam mensagens
+def test_start_curto_comando_errado_sugere_e_menu_valido():
+    bot = BotQuiron(Agente(SemMCP(), Config()), {111})
+    inicio = asyncio.run(bot.tratar(111, 111, "/start"))[0].texto
+    assert len(inicio) < 600 and "/ajuda" in inicio
+    r = asyncio.run(bot.tratar(111, 111, "/tarefass"))[0].texto
+    assert "/tarefas" in r and len(r) < 300
+    menu = bot.menu_telegram()
+    assert 30 <= len(menu) <= 100 and all(1 <= len(d) <= 256 for _, d in menu)
+    assert {"sair", "tarefa", "academia", "briefing"} <= {n for n, _ in menu}
+
+
+def test_texto_longo_de_sub_bot_nao_e_cortado():
+    from quiron.runtime.academia_bot import Tela
+
+    assert len(BotQuiron._saida(Tela("x" * 9000)).texto) == 9000  # o envio divide em partes
+
+
+def test_sair_e_inatividade_liberam_a_conversa(monkeypatch):
+    from quiron.runtime import telegram_bot
+    from quiron.servicos.assessoria import treino
+    from quiron.servicos.carreira import entrevista
+
+    monkeypatch.setattr(treino, "_falar", lambda s, **k: "Bom dia, o que você tem para mim?")
+    monkeypatch.setattr(entrevista, "_falar", lambda s, **k: "Fale de você.")
+    monkeypatch.setattr(treino, "responder", lambda t, **k: "Hum, e o risco?")
+    bot = BotQuiron(Agente(SemMCP(), Config()), {111})
+    asyncio.run(bot.tratar(111, 111, "/treino"))
+    r = asyncio.run(bot.tratar(111, 111, "Recomendo Tesouro IPCA"))[0].texto
+    assert "e o risco" in r and "/sair" in r  # resposta do treino lembra como sair
+    asyncio.run(bot.tratar(111, 111, "/entrevista"))  # começar entrevista fecha o treino
+    assert treino.ativa() is None and entrevista.ativa() is not None
+    r = asyncio.run(bot.tratar(111, 111, "/sair"))[0].texto
+    assert "entrevista" in r and entrevista.ativa() is None
+    assert "Nada aberto" in asyncio.run(bot.tratar(111, 111, "sair"))[0].texto
+
+    asyncio.run(bot.tratar(111, 111, "/treino"))  # treino esquecido: 3 h depois a conversa volta ao normal
+    monkeypatch.setattr(telegram_bot.time, "time", lambda: datetime.now().timestamp() + telegram_bot.INATIVIDADE_MODO_S + 60)
+    cerebro_ok, _ = cerebro_roteirizado(["Resposta normal do Quíron"])
+    monkeypatch.setattr(cerebro, "conversar", cerebro_ok)
+    r = asyncio.run(bot.tratar(111, 111, "qual a Selic?"))[0].texto
+    assert "Encerrei por inatividade: treino" in r and "Resposta normal" in r and treino.ativa() is None
+
+
+def test_sem_ia_ao_comecar_treino_nao_deixa_sessao_aberta(monkeypatch):
+    from quiron.servicos.assessoria import treino
+
+    def sem_ia(s, **k):
+        raise cerebro.CerebroIndisponivel("cota")
+
+    monkeypatch.setattr(treino, "_falar", sem_ia)
+    bot = BotQuiron(Agente(SemMCP(), Config()), {111})
+    assert "Sem IA" in asyncio.run(bot.tratar(111, 111, "/treino"))[0].texto
+    assert treino.ativa() is None

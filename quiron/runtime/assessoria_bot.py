@@ -54,7 +54,7 @@ class AssessoriaBot:
             botoes.append(("📇 Aplicar na ficha", f"as:ficha:{r.cliente}:{r.id}"))
         if any(t.agendamento for t in r.tarefas):
             botoes.append(("↩️ Desfazer lembretes", f"as:desf:{r.cliente}:{r.id}"))
-        return [Tela(r.markdown()[:4000], [botoes] if botoes else [])]
+        return [Tela(r.markdown(), [botoes] if botoes else [])]
 
     async def _treino(self, args: str) -> list[Tela]:
         a = args.lower()
@@ -65,7 +65,7 @@ class AssessoriaBot:
                 return [Tela(treino.evolucao())]
             if a in {"fim", "encerrar", "feedback", "terminar"}:
                 _, texto = await asyncio.to_thread(treino.encerrar)
-                return [Tela(texto[:4000])]
+                return [Tela(texto)]
             if a in {"cancelar", "sair"}:
                 s = treino.ativa()
                 if not s:

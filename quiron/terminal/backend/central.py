@@ -60,6 +60,7 @@ class Supervisor:
         self._acordar = threading.Event()
         self._fio: threading.Thread | None = None
         self._manual = False
+        self._quedas_rapidas = 0
 
     def log(self) -> Path:
         return self._log or pasta_dados() / "logs" / "telegram.log"
@@ -146,17 +147,22 @@ class Supervisor:
                     self.ultimo_erro, self.situacao, self.querer = f"não consegui iniciar: {e}", "erro", False
                     return
                 self.situacao, self.desde = "ligado", _agora()
+                inicio = time.time()
                 codigo = self.proc.wait()
                 saida.write(f"===== {_agora()} parou (código {codigo}) =====\n")
             if not self.querer:
                 break
             if self._manual:  # reinício pedido na tela: volta na hora, não conta como queda
                 self._manual = False
+                self._quedas_rapidas = 0
                 continue
             self.reinicios += 1
-            self.ultimo_erro = f"parou às {_agora()} (código {codigo})"
-            self.situacao = "religando"
-            self._acordar.wait(self.espera)  # "Ligar"/"Reiniciar" na tela acorda antes
+            self._quedas_rapidas = self._quedas_rapidas + 1 if time.time() - inicio < 60 else 0
+            motivo = motivo_da_queda(self.registro(80))
+            self.ultimo_erro = f"parou às {_agora()} (código {codigo})" + (f": {motivo}" if motivo else "")
+            # caiu logo ao ligar 3 vezes seguidas = problema de configuração (ex.: token errado): espera mais e avisa
+            self.situacao = "erro" if self._quedas_rapidas >= 3 else "religando"
+            self._acordar.wait(self.espera if self._quedas_rapidas < 3 else max(self.espera, 300))
         self.situacao = "desligado"
 
     def registro(self, linhas: int = 200) -> str:
@@ -179,6 +185,27 @@ class Supervisor:
             situacao = self.situacao
         return {"situacao": situacao, "desde": self.desde if situacao == "ligado" else "", "reinicios": self.reinicios,
                 "ultimo_erro": self.ultimo_erro, "pid": self.proc.pid if self.proc and self.proc.poll() is None else None}
+
+
+def motivo_da_queda(registro: str) -> str:
+    """Traduz o fim do registro do bot num motivo que o Rickson entende."""
+    texto = registro[-6000:]
+    conhecidos = [
+        (r"InvalidToken|Unauthorized", "o Telegram recusou o token do bot — confira em Chaves e contas (botão Testar)"),
+        (r"Conflict|terminated by other getUpdates", "o mesmo bot está ligado em outro lugar (outro PC ou janela antiga)"),
+        (r"Configure TELEGRAM_BOT_TOKEN", "faltam o token do bot ou o seu ID em Chaves e contas"),
+        (r"NetworkError|ConnectError|ConnectTimeout|getaddrinfo|Name or service not known|TimedOut",
+         "sem conexão com a internet/Telegram — religa sozinho quando a conexão voltar"),
+        (r"MemoryError", "faltou memória no PC — feche programas pesados"),
+    ]
+    import re
+
+    for padrao, motivo in conhecidos:
+        if re.search(padrao, texto):
+            return motivo
+    linhas = [x.strip() for x in texto.splitlines() if x.strip() and not x.startswith("=====")]
+    erro = next((x for x in reversed(linhas) if re.search(r"Error|Exception|Erro", x)), "")
+    return erro[:200]
 
 
 SUPERVISOR = Supervisor()
@@ -443,10 +470,11 @@ def api_config_descobrir(request: Request, corpo: dict = Body(...)) -> dict[str,
 @router.post("/telegram/{acao}")
 def api_telegram(request: Request, acao: str) -> dict[str, Any]:
     _proteger_sistema(request)
-    try:
-        {"ligar": SUPERVISOR.ligar, "desligar": SUPERVISOR.desligar, "reiniciar": SUPERVISOR.reiniciar}[acao]()
-    except KeyError:
+    funcao = {"ligar": SUPERVISOR.ligar, "desligar": SUPERVISOR.desligar, "reiniciar": SUPERVISOR.reiniciar}.get(acao)
+    if funcao is None:
         raise HTTPException(404, "ação: ligar, desligar ou reiniciar")
+    try:
+        funcao()
     except ValueError as e:
         raise HTTPException(409, str(e)) from e
     time.sleep(0.3)

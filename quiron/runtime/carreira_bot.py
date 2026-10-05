@@ -57,11 +57,11 @@ class CarreiraBot:
             if al in {"opcoes", "opções", "ajuda"}:
                 return [Tela(entrevista.opcoes())]
             if al in {"fim", "encerrar", "feedback"}:
-                return [Tela(entrevista.encerrar()[1][:4000])]
+                return [Tela(entrevista.encerrar()[1])]
             return [Tela(entrevista.iniciar(a)[1])]
         if nome == "radar":
             dias = int(m[0]) if (m := re.search(r"\d+", a)) else 14
-            return [Tela(radar.relatorio(dias, so_novos=a.lower().startswith("novidade"))[:4000])]
+            return [Tela(radar.relatorio(dias, so_novos=a.lower().startswith("novidade")))]
         return [Tela("Comando desconhecido.")]
 
     def _diario(self, a: str) -> str:

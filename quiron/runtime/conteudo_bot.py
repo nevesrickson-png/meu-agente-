@@ -30,7 +30,7 @@ class ConteudoBot:
         formatos = list(revisao.config()["formatos"])
         if nome == "pauta":
             self.ultimas_pautas, origem = gerador.gerar_pautas(a)
-            return [Tela(gerador.texto_pautas(self.ultimas_pautas, origem)[:4000])]
+            return [Tela(gerador.texto_pautas(self.ultimas_pautas, origem))]
         if nome in {"roteiro", "fio"}:
             if nome == "fio":
                 formato, tema = "fio", a
@@ -41,7 +41,7 @@ class ConteudoBot:
                                  "· /roteiro carrossel #3 (ideia do banco)")]
                 formato, tema = partes[0].lower(), (partes[1] if len(partes) > 1 else "")
             peca = gerador.gerar_peca(tema, formato)
-            return [Tela(peca.entrega()[:4000])]
+            return [Tela(peca.entrega())]
         if nome == "ideia":
             if m := re.fullmatch(r"salvar\s+(\d+)", a, re.I):
                 n = int(m[1])
@@ -64,5 +64,5 @@ class ConteudoBot:
             tema = ""
             if m := re.match(r"\[([^\]]{3,60})\]\s*", a):
                 tema, a = m[1], a[m.end():]
-            return [Tela(gerador.conferir_texto(a, tema)[:4000])]
+            return [Tela(gerador.conferir_texto(a, tema))]
         return [Tela("Comando desconhecido.")]

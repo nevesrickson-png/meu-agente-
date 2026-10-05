@@ -242,6 +242,6 @@ def test_telegram_carreira(monkeypatch):
     falas = iter(["Fale sobre você.", "Por que research?"])
     monkeypatch.setattr(cerebro, "conversar", lambda msgs, **k: SimpleNamespace(texto=next(falas)))
     assert "Entrevista #1" in t("/entrevista estrategista")
-    assert t("Sou assessor há 5 anos e estudo para o CFP.") == "🎤 Por que research?"  # a entrevista captura a mensagem
+    assert t("Sou assessor há 5 anos e estudo para o CFP.").startswith("🎤 Por que research?")  # a entrevista captura a mensagem
     monkeypatch.setattr(cerebro, "perguntar", _sem_cerebro)
     assert "Feedback da entrevista" in t("/entrevista fim")

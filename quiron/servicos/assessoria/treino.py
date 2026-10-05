@@ -151,7 +151,12 @@ def iniciar(pedido: str = "", **extras: Any) -> tuple[Sessao, str]:
         cur = con.execute("INSERT INTO sessoes(personagem, cenario, dificuldade, iniciada_em) VALUES (?,?,?,?)",
                           (personagem, cenario, dificuldade, datetime.now().isoformat(timespec="seconds")))
     s = obter(cur.lastrowid)
-    abertura = _falar(s, **extras)
+    try:
+        abertura = _falar(s, **extras)
+    except Exception:  # sem IA agora: não deixa uma sessão aberta capturando as próximas mensagens
+        s.encerrada_em = datetime.now().isoformat(timespec="seconds")
+        _gravar(s)
+        raise
     s.mensagens.append({"papel": "cliente", "texto": abertura})
     _gravar(s)
     p = s.ficha
@@ -229,6 +234,15 @@ Responda SÓ com JSON:
  "pontos_fortes": ["..."], "melhorar": ["até 3, os mais importantes primeiro"],
  "reescritas": [{{"disse": "frase do assessor", "melhor": "como diria um assessor sênior"}}],
  "resumo": "2 frases"}}"""
+
+
+def abandonar() -> Sessao | None:
+    """Fecha a sessão aberta sem feedback (inatividade, /sair ou outro modo começou). Devolve a sessão fechada."""
+    s = ativa()
+    if s is not None:
+        s.encerrada_em = datetime.now().isoformat(timespec="seconds")
+        _gravar(s)
+    return s
 
 
 def encerrar(**extras: Any) -> tuple[Sessao, str]:

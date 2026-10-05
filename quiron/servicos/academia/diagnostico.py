@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from quiron.servicos import areas
@@ -214,7 +214,7 @@ def texto_plano(mods: list[Modulo], blocos: list[Bloco], horas: float, cartoes: 
                    "simulado": f"/simulado {comando_area(cert)}"}[b.atividade]
             linhas.append(f"  • {b.minutos} min — {b.atividade} M{b.modulo} ({m.titulo[:30]}): {tops} → {cmd}")
     linhas.append("")
-    linhas.append(f"🔁 Todo dia: 10 min de /flashcards" + (f" ({cartoes} para revisar hoje)" if cartoes else "") + " e as questões erradas que voltarem.")
+    linhas.append("🔁 Todo dia: 10 min de /flashcards" + (f" ({cartoes} para revisar hoje)" if cartoes else "") + " e as questões erradas que voltarem.")
     foco = sorted(mods, key=lambda m: -m.prioridade)[:3]
     linhas.append("Por quê: mais tempo em " + ", ".join(f"M{m.numero} ({m.situacao}, peso {m.peso}%)" for m in foco) + ".")
     return "\n".join(linhas)
@@ -266,7 +266,7 @@ def painel_geral(banco: Banco | None = None, ativa: str = "CFP", hoje: date | No
         linhas += ["", "Outras áreas praticadas:", *praticadas]
     campos = [a.nome for a in todas if a.tipo == "campo"]
     certs = [a.id.replace("_", " ") for a in todas if a.tipo == "certificacao"]
-    linhas += ["", f"Campos ({len(campos)}): " + ", ".join(campos), f"Certificações: " + ", ".join(certs),
+    linhas += ["", f"Campos ({len(campos)}): " + ", ".join(campos), "Certificações: " + ", ".join(certs),
                "", "Trocar de área: /area <nome> · /questoes [área] [módulo|tema] · /simulado [área] · /flashcards · "
                "/diagnostico · /plano · /aula <tema> · /caso"]
     return "\n".join(linhas)

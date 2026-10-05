@@ -9,9 +9,11 @@
 from __future__ import annotations
 
 import asyncio
+import difflib
 import logging
 import os
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -33,6 +35,12 @@ from quiron.runtime.ferramentas_mcp import ConexaoMCP
 from quiron.runtime.workspace import carregar_comandos
 
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
+INATIVIDADE_MODO_S = 3 * 3600  # treino/entrevista/pós-reunião parados há mais que isso se encerram sozinhos
+SAIR = {"/sair", "sair", "/cancelar"}
+IDADE_MAXIMA_S = 6 * 3600  # mensagens recebidas com o bot desligado: responde as de até 6 h; mais antigas são ignoradas
+INICIO = ("Olá! Sou o Quíron. Pode perguntar livremente, mandar áudio, foto ou planilha.\n\n"
+          "Para começar: /briefing (mercado agora) · /hoje (seu dia) · /academia (estudo) · /tarefa amanhã às 10h …\n"
+          "Todos os comandos: /ajuda · Toque em “/” ao lado do campo de mensagem para ver o menu.")
 
 
 def ids_permitidos() -> set[int]:
@@ -82,6 +90,58 @@ class BotQuiron:
         self.organizacao = OrganizacaoBot()
         self.carreira = CarreiraBot()
         self.conteudo = ConteudoBot()
+        self._ultima_captura = 0.0  # última mensagem capturada por treino/entrevista (para encerrar por inatividade)
+        self._pos_desde: dict[int, float] = {}
+
+    # ------------------------------------------------------------ modos que capturam mensagens (treino, entrevista, /pos)
+    def _modos_abertos(self, chat: int) -> list[str]:
+        from quiron.servicos.assessoria import treino
+        from quiron.servicos.carreira import entrevista
+
+        abertos = []
+        if chat in self.assessoria.esperando_pos:
+            abertos.append(f"pós-reunião de {self.assessoria.esperando_pos[chat]}")
+        if treino.ativa() is not None:
+            abertos.append("treino com cliente simulado")
+        if entrevista.ativa() is not None:
+            abertos.append("simulação de entrevista")
+        return abertos
+
+    def _fechar_modos(self, chat: int) -> list[str]:
+        from quiron.servicos.assessoria import treino
+        from quiron.servicos.carreira import entrevista
+
+        fechados = []
+        if self.assessoria.esperando_pos.pop(chat, None):
+            fechados.append("pós-reunião")
+        if treino.abandonar():
+            fechados.append("treino")
+        if entrevista.abandonar():
+            fechados.append("entrevista")
+        self._pos_desde.pop(chat, None)
+        return fechados
+
+    def _expirar_modos(self, chat: int) -> str:
+        """Modo esquecido aberto não pode sequestrar as conversas: depois de 3 h parado, encerra e avisa."""
+        from quiron.servicos.assessoria import treino
+        from quiron.servicos.carreira import entrevista
+
+        agora = time.time()
+        fechados = []
+        if chat in self.assessoria.esperando_pos and agora - self._pos_desde.get(chat, 0) > INATIVIDADE_MODO_S:
+            fechados.append(f"pós-reunião de {self.assessoria.esperando_pos.pop(chat)}")
+        for nome, mod in (("treino", treino), ("entrevista", entrevista)):
+            s = mod.ativa()
+            if s is None:
+                continue
+            try:
+                inicio = datetime.fromisoformat(s.iniciada_em).timestamp()
+            except ValueError:
+                inicio = 0.0
+            if agora - max(inicio, self._ultima_captura) > INATIVIDADE_MODO_S:
+                mod.abandonar()
+                fechados.append(nome)
+        return f"ℹ️ Encerrei por inatividade: {', '.join(fechados)} (sem feedback). Voltamos à conversa normal.\n\n" if fechados else ""
 
     def autorizado(self, usuario: int) -> bool:
         if usuario not in self.permitidos:
@@ -111,8 +171,14 @@ class BotQuiron:
         if not self.autorizado(usuario):
             return []  # silêncio: não revela que o bot existe
         texto = (texto or "").strip()
-        if texto in {"/start", "/ajuda", "/help"}:
+        if texto == "/start":
+            return [Saida(INICIO)]
+        if texto in {"/ajuda", "/help"}:
             return [Saida(self.ajuda())]
+        if texto.lower() in SAIR:
+            fechados = self._fechar_modos(chat)
+            return [Saida(f"✅ Encerrado: {', '.join(fechados)}. Voltamos à conversa normal." if fechados
+                          else "Nada aberto: já estamos na conversa normal.")]
         if texto == "/novo":
             self.agente.memoria.reiniciar(chat)
             return [Saida("Conversa reiniciada (o histórico continua pesquisável).")]
@@ -123,15 +189,22 @@ class BotQuiron:
             fatos = self.agente.workspace.fatos()
             return [Saida("O que eu sei sobre você:\n" + "\n".join(f"• {f}" for f in fatos) if fatos else "Ainda não guardei nada. Diga “lembre que…”.")]
         skills: list[str] = []
+        aviso = self._expirar_modos(chat)
         if not texto.startswith("/"):
             telas = await self.assessoria.texto_livre(chat, texto)  # pós-reunião aguardando ou treino ativo
+            if telas is None:
+                telas = await self.carreira.texto_livre(texto)  # entrevista ativa
             if telas is not None:
-                return [self._saida(t) for t in telas]
-            telas = await self.carreira.texto_livre(texto)  # entrevista ativa
-            if telas is not None:
-                return [self._saida(t) for t in telas]
+                self._ultima_captura = time.time()
+                if chat not in self.assessoria.esperando_pos:
+                    self._pos_desde.pop(chat, None)
+                saidas = [self._saida(t) for t in telas]
+                if (abertos := self._modos_abertos(chat)) and saidas:
+                    saidas[-1].texto += f"\n\n— {abertos[0]} em andamento · /sair volta ao Quíron"
+                return saidas
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
+            self._preparar_modo(chat, nome.split("@")[0].lower(), args.strip().lower())
             if nome.split("@")[0].lower() in COMANDOS_CONTEUDO:
                 return [self._saida(t) for t in await self.conteudo.comando(nome.split("@")[0].lower(), args)]
             if nome.split("@")[0].lower() in COMANDOS_CARREIRA:
@@ -152,18 +225,68 @@ class BotQuiron:
                 return [self._saida(t) for t in telas]
             cmd = self.comandos.get(nome.split("@")[0].lower())
             if not cmd:
-                return [Saida(f"Comando desconhecido. {self.ajuda()}")]
+                return [Saida(self.desconhecido(nome.split("@")[0].lower()))]
             texto = cmd.montar(args)
             skills = [cmd.skill] if cmd.skill else []
         reg = await self.agente.responder(texto, chat=chat, skills=skills)
-        saidas = [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
+        saidas = [Saida(p) for p in dividir(aviso + (reg.resposta or "(sem resposta)"))]
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
         return saidas
 
+    def _preparar_modo(self, chat: int, nome: str, args: str) -> None:
+        """Começar um modo de conversa fecha o outro (senão as respostas iriam para o modo errado)."""
+        from quiron.servicos.assessoria import treino
+        from quiron.servicos.carreira import entrevista
+
+        controle = {"fim", "encerrar", "feedback", "terminar", "opcoes", "opções", "ajuda", "evolucao", "evolução",
+                    "historico", "histórico", "cancelar", "sair"}
+        if nome == "treino" and args not in controle:
+            entrevista.abandonar()
+            self.assessoria.esperando_pos.pop(chat, None)
+        elif nome == "entrevista" and args not in controle:
+            treino.abandonar()
+            self.assessoria.esperando_pos.pop(chat, None)
+        elif nome == "pos" and args and args not in {"cancelar", "cancela"}:
+            treino.abandonar()
+            entrevista.abandonar()
+            self._pos_desde[chat] = time.time()
+
+    def nomes_comandos(self) -> list[str]:
+        fixos = ["start", "ajuda", "novo", "agenda", "memoria", "sair"]
+        return fixos + sorted(set(self.comandos) | COMANDOS_ACADEMIA | COMANDOS_ASSESSORIA | COMANDOS_ORGANIZACAO
+                              | COMANDOS_CARREIRA | COMANDOS_CONTEUDO)
+
+    def desconhecido(self, nome: str) -> str:
+        parecidos = difflib.get_close_matches(nome, self.nomes_comandos(), n=3, cutoff=0.6)
+        dica = f" Você quis dizer {' ou '.join('/' + p for p in parecidos)}?" if parecidos else ""
+        return f"Não conheço o comando /{nome}.{dica} Veja todos em /ajuda (ou escreva sem a barra que eu entendo)."
+
+    def menu_telegram(self) -> list[tuple[str, str]]:
+        """Itens do menu “/” do Telegram (até 100; descrição até 256 caracteres)."""
+        descricoes = {"start": "Começar", "ajuda": "Todos os comandos", "novo": "Começar a conversa do zero",
+                      "agenda": "Lembretes e rotinas", "memoria": "O que eu sei sobre você",
+                      "sair": "Sair do treino/entrevista/pós-reunião", "academia": "Painel de estudo",
+                      "area": "Trocar a área de estudo", "questoes": "Questões de prova", "simulado": "Simulado",
+                      "flashcards": "Revisar flashcards", "diagnostico": "Diagnóstico da prova", "plano": "Plano de estudo",
+                      "pos": "Pós-reunião: /pos CLI-XXX e mande o áudio", "treino": "Treino com cliente simulado",
+                      "tarefa": "Nova tarefa (ex.: amanhã às 10h …)", "tarefas": "Minhas tarefas", "feito": "Concluir tarefa",
+                      "adiar": "Adiar tarefa", "hoje": "Meu dia", "nota": "Anotar", "notas": "Minhas notas", "meta": "Nova meta",
+                      "metas": "Minhas metas", "revisao": "Revisão da semana", "evento": "Evento no Google Agenda",
+                      "carreira": "Plano de carreira", "diario": "Diário de teses", "portfolio": "Portfólio de análises",
+                      "entrevista": "Simular entrevista", "radar": "Normas novas (CVM, Receita, BC)", "pauta": "Ideias de conteúdo",
+                      "roteiro": "Roteiro/carrossel/artigo", "fio": "Fio para redes", "ideia": "Guardar ideia",
+                      "ideias": "Banco de ideias", "conferir": "Conferir um texto seu (compliance)"}
+        itens = []
+        for n in self.nomes_comandos():
+            d = descricoes.get(n) or (self.comandos[n].descricao if n in self.comandos else n)
+            if re.fullmatch(r"[a-z0-9_]{1,32}", n):
+                itens.append((n, d[:256]))
+        return itens[:100]
+
     @staticmethod
     def _saida(t: Tela) -> Saida:
-        return Saida(t.texto[:LIMITE_TELEGRAM], linhas=t.linhas)
+        return Saida(t.texto, linhas=t.linhas)  # o envio divide textos longos (nada é cortado)
 
     async def clicar_academia(self, usuario: int, dado: str) -> tuple[str | None, list[Saida]]:
         if not self.autorizado(usuario):
@@ -233,7 +356,7 @@ class BotQuiron:
             return [Saida("Não achei posições com valor nesse arquivo. Tente uma planilha com colunas Ativo e Valor.")]
         ident = arquivo.salvar(c)
         resumo = arquivo.descrever(c, ident)
-        saidas = [Saida(f"📥 Li a carteira ({'print' if imagem else nome}):\n{resumo}"[:LIMITE_TELEGRAM])]
+        saidas = [Saida(f"📥 Li a carteira ({'print' if imagem else nome}):\n{resumo}")]
         if imagem:
             saidas.append(Saida("🔒 Dica: recorte o nome do cliente antes de mandar print (use só CLI-XXX)."))
         pedido = legenda.strip() or "Confira a leitura comigo e, se estiver certa, faça o diagnóstico completo."
@@ -330,6 +453,9 @@ async def _rodar() -> None:
                 logging.warning("ignorei mensagem do ID %s (@%s): não está em TELEGRAM_ALLOWED_USER_IDS",
                                 update.effective_user.id, update.effective_user.username or "-")
                 return
+            if msg.date and (datetime.now(msg.date.tzinfo) - msg.date).total_seconds() > IDADE_MAXIMA_S:
+                logging.info("ignorei mensagem antiga (%s) recebida depois de o bot ficar desligado", msg.date)
+                return
             sinal = asyncio.create_task(digitando(msg.chat_id))
             try:
                 if msg.voice or msg.audio:
@@ -350,6 +476,10 @@ async def _rodar() -> None:
                                                           msg.caption or "", imagem)
                 else:
                     saidas = await bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "")
+            except Exception as e:  # noqa: BLE001 — nunca deixar o Rickson sem resposta
+                logging.exception("erro ao tratar a mensagem")
+                saidas = [Saida(f"⚠️ Deu um erro aqui ({type(e).__name__}). Já ficou registrado; tente de novo ou reformule. "
+                                "Se repetir, veja Configurações → Registro do Telegram.")]
             finally:
                 sinal.cancel()
             for s in saidas:
@@ -357,7 +487,10 @@ async def _rodar() -> None:
 
         async def ao_clicar(update: Update, contexto: ContextTypes.DEFAULT_TYPE) -> None:
             q = update.callback_query
-            await q.answer()
+            try:
+                await q.answer()
+            except Exception:  # noqa: BLE001 — botão antigo (o Telegram expira após alguns minutos): segue mesmo assim
+                pass
             if (q.data or "").startswith("ac:"):
                 sinal = asyncio.create_task(digitando(q.message.chat_id))
                 try:
@@ -463,7 +596,7 @@ async def _rodar() -> None:
                         else:
                             rel = f.relatorio(t.id)
                             texto = rel.resumo_curto() if rel else f"📑 {t.titulo}\n{t.resumo}"
-                            await app.bot.send_message(dono, f"✅ Análise #{t.id} pronta\n{texto}"[:LIMITE_TELEGRAM])
+                            await enviar(dono, Saida(f"✅ Análise #{t.id} pronta\n{texto}"))
                             for tipo_arq, caminho in t.arquivos().items():
                                 if tipo_arq in {"pdf", "planilha"}:
                                     with caminho.open("rb") as arq:
@@ -492,9 +625,21 @@ async def _rodar() -> None:
         app.add_handler(MessageHandler(filters.TEXT | filters.VOICE | filters.AUDIO | filters.PHOTO | filters.Document.ALL,
                                        ao_receber))
         app.add_handler(CallbackQueryHandler(ao_clicar))
+
+        async def ao_errar(update: object, contexto: ContextTypes.DEFAULT_TYPE) -> None:
+            logging.error("erro no Telegram: %s", contexto.error, exc_info=contexto.error)
+
+        app.add_error_handler(ao_errar)
         async with app:
             await app.start()
-            await app.updater.start_polling(drop_pending_updates=True)
+            try:  # menu “/” do Telegram com os comandos
+                from telegram import BotCommand
+
+                await app.bot.set_my_commands([BotCommand(n, d) for n, d in bot.menu_telegram()])
+            except Exception:  # noqa: BLE001
+                logging.exception("não consegui atualizar o menu de comandos")
+            # mensagens mandadas enquanto o bot reiniciava não se perdem (as muito antigas são ignoradas em ao_receber)
+            await app.updater.start_polling(drop_pending_updates=False)
             tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer()),
                        asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises()),
                        asyncio.create_task(laco_alertas())]

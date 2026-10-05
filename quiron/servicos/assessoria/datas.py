@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from calendar import monthrange
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 DIAS = {"segunda": 0, "terca": 1, "quarta": 2, "quinta": 3, "sexta": 4, "sabado": 5, "domingo": 6}
 NUMEROS = {"um": 1, "uma": 1, "dois": 2, "duas": 2, "tres": 3, "quatro": 4, "cinco": 5, "seis": 6, "sete": 7, "oito": 8,
@@ -119,9 +119,27 @@ def hora(expressao: str | None) -> tuple[int, int] | None:
     return extrair(str(expressao), date(2000, 1, 1))[2]
 
 
+# ---------------------------------------------------------------- tempo relativo ("daqui a 2 horas")
+RE_RELATIVO = re.compile(r"\b(?:daqui a|daqui|em|dentro de)\s+(?P<n>\d+|uma|um|duas|dois|tr[eê]s|meia)\s*"
+                         r"(?P<u>horas?|h|minutos?|min)\b", re.I)
+
+
+def relativo(texto: str, agora: datetime) -> tuple[str, datetime | None]:
+    """'daqui a 2 horas ligar' → ('ligar', agora + 2 h). Só horas/minutos; dias ficam com `interpretar`."""
+    m = RE_RELATIVO.search(texto or "")
+    if not m:
+        return texto, None
+    n = {"uma": 1, "um": 1, "duas": 2, "dois": 2, "tres": 3, "três": 3, "meia": 0.5}.get(m["n"].lower()) or int(m["n"])
+    delta = timedelta(hours=n) if m["u"].lower().startswith("h") else timedelta(minutes=n)
+    if m["n"].lower() == "meia" and not m["u"].lower().startswith("h"):
+        return texto, None  # "meia minuto" não existe
+    quando = (agora + delta).replace(second=0, microsecond=0)
+    return (texto[:m.start()] + " " + texto[m.end():]).strip(), quando
+
+
 # ---------------------------------------------------------------- extrair data e hora de uma frase (tarefas)
 RE_DATA = re.compile(
-    r"\b(depois de amanh[ãa]|amanh[ãa]|hoje|(?:na |nesta |n[ao] próxim[ao] |n[ao] proxim[ao] )?(?:segunda|terça|terca|quarta|quinta|"
+    r"\b(depois de amanh[ãa]|amanh[ãa]|hoje|(?:na |nesta |nessa |esta |essa |(?:n[ao] )?próxim[ao] |(?:n[ao] )?proxim[ao] )?(?:segunda|terça|terca|quarta|quinta|"
     r"sexta|sábado|sabado|domingo)(?:-feira)?(?: que vem| da semana que vem| da próxima semana| passada)?|semana que vem|próxima semana|"
     r"proxima semana|(?:no )?(?:fim|final) do mês|m[êe]s que vem(?: dia \d{1,2})?|(?:no )?dia \d{1,2}(?:/\d{1,2}(?:/\d{2,4})?)?|"
     r"\d{1,2}/\d{1,2}(?:/\d{2,4})?|(?:daqui a|em|dentro de) \w+ (?:dias? úteis|dias? uteis|dias?|semanas?|m[eê]s(?:es)?))\b", re.I)
@@ -134,7 +152,9 @@ _PREFIXOS = re.compile(r"^(?:me\s+lembr[ae]\s+(?:de\s+)?|lembr(?:ar|e-me|e)\s+(?
 
 def extrair(texto: str, hoje: date) -> tuple[str, date | None, tuple[int, int] | None]:
     """'amanhã às 10h ligar para o CLI-012' → ('Ligar para o CLI-012', amanhã, (10, 0)). A data é calculada em Python."""
-    resto = texto.strip()
+    resto = re.sub(r"\b(?:ao |às |as )?meio[- ]dia(?: e meia)?\b",
+                   lambda m: " às 12h30 " if "meia" in m.group(0) else " às 12h ", texto.strip(), flags=re.I)
+    resto = re.sub(r"\b(?:à |a )?meia[- ]noite\b", " às 23h59 ", resto, flags=re.I)
     d = None
     if m := RE_DATA.search(resto):
         d = interpretar(m.group(0), hoje)

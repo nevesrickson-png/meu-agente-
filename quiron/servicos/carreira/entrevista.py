@@ -87,7 +87,12 @@ def iniciar(pedido: str = "", **extras: Any) -> tuple[Sessao, str]:
         cur = con.execute("INSERT INTO entrevistas(cargo, iniciada_em) VALUES (?,?)", (cargo, datetime.now().isoformat(timespec="seconds")))
         r = con.execute("SELECT * FROM entrevistas WHERE id = ?", (cur.lastrowid,)).fetchone()
     s = _de(r)
-    abertura = _falar(s, **extras)
+    try:
+        abertura = _falar(s, **extras)
+    except Exception:  # sem IA agora: não deixa uma sessão aberta capturando as próximas mensagens
+        s.encerrada_em = datetime.now().isoformat(timespec="seconds")
+        _gravar(s)
+        raise
     s.mensagens.append({"papel": "entrevistador", "texto": abertura})
     _gravar(s)
     return s, (f"💼 Entrevista #{s.id} — {cargos[cargo]['nome']}\nResponda como na entrevista (texto ou áudio). "
@@ -127,6 +132,15 @@ Conversa:
 Responda SÓ com JSON: {{"criterios": {{"<id>": {{"nota": 0-10, "evidencia": "...", "melhoria": "..."}}}},
  "pontos_fortes": ["..."], "melhorar": ["até 3"], "resposta_modelo": {{"pergunta": "a pergunta mais importante", "resposta": "como um candidato excelente responderia, em 5-8 linhas"}},
  "veredito": "avançaria para a próxima fase? sim/talvez/não + 1 frase"}}"""
+
+
+def abandonar() -> Sessao | None:
+    """Fecha a sessão aberta sem feedback (inatividade, /sair ou outro modo começou). Devolve a sessão fechada."""
+    s = ativa()
+    if s is not None:
+        s.encerrada_em = datetime.now().isoformat(timespec="seconds")
+        _gravar(s)
+    return s
 
 
 def encerrar(**extras: Any) -> tuple[Sessao, str]:

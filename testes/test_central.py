@@ -212,3 +212,30 @@ def test_inicio_automatico_fora_do_windows():
 def test_versao_mostra_o_commit():
     v = central.versao()
     assert v["pasta"] and (v["codigo"] == "" or len(v["codigo"]) >= 7)
+
+
+def test_bot_que_cai_ao_ligar_vira_erro_com_motivo_claro():
+    sup = central.SUPERVISOR
+    sup.gerenciado = True
+    configurador.atualizar_env(CHAVES)
+    sup.comando = [sys.executable, "-c", "print('telegram.error.InvalidToken: The token was rejected by the server.'); "
+                   "import sys; sys.exit(1)"]
+    sup.espera = 0.05
+    sup.ligar()
+    assert _esperar(lambda: sup.estado()["situacao"] == "erro")
+    assert "recusou o token" in sup.estado()["ultimo_erro"]
+    sup.desligar()
+    assert central.motivo_da_queda("httpx.ConnectError: getaddrinfo failed").startswith("sem conexão")
+    assert central.motivo_da_queda("Traceback...\nValueError: algo estranho\n") == "ValueError: algo estranho"
+
+
+def test_lancador_porta_ocupada_e_quedas_seguidas():
+    import socket
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        s.listen()
+        assert not iniciar.porta_livre(s.getsockname()[1])
+    chamadas = []
+    assert iniciar.rodar("normal", 8765, False, chamar=lambda cmd, env: chamadas.append(1) or 1, dormir=lambda s: None) == 1
+    assert len(chamadas) == 3  # três quedas logo ao abrir: para e explica, em vez de religar para sempre

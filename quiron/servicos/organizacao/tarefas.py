@@ -90,7 +90,10 @@ def _agendar(t: Tarefa, agora: datetime) -> int | None:
 
 def criar(texto: str, agora: datetime | None = None, origem: str = "") -> Tarefa:
     agora = agora or _agora()
-    limpo, d, h = datas.extrair(texto or "", agora.date())
+    texto, quando = datas.relativo(texto or "", agora)  # "daqui a 2 horas …"
+    limpo, d, h = datas.extrair(texto, agora.date())
+    if quando:
+        d, h = quando.date(), (quando.hour, quando.minute)
     if len(limpo) < 2:
         raise TarefaInvalida("diga o que é a tarefa (ex.: “amanhã às 10h ligar para o CLI-012”)")
     if h and not d:  # só a hora: hoje se ainda não passou, senão amanhã
@@ -161,9 +164,12 @@ def adiar(ident: int, para: str, agora: datetime | None = None) -> Tarefa:
     if t.concluida_em:
         raise TarefaInvalida(f"a tarefa #{ident} já foi concluída")
     m = re.fullmatch(r"\s*(\d+)\s*(h|min)\s*", para or "")
+    _, rel = datas.relativo(para or "", agora)
     if m:
         novo = (agora + timedelta(hours=int(m[1])) if m[2] == "h" else agora + timedelta(minutes=int(m[1]))).replace(second=0, microsecond=0)
         d, h = novo.date(), (novo.hour, novo.minute)
+    elif rel:
+        d, h = rel.date(), (rel.hour, rel.minute)
     else:
         _, d, h = datas.extrair(para or "", agora.date())
         if not d and not h:

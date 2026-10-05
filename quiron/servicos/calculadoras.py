@@ -50,7 +50,7 @@ def juros_compostos(valor_inicial: float, aporte_mensal: float, taxa_aa: float, 
         [("Valor final", _brl(total)), ("Total investido", _brl(investido)), ("Juros ganhos", _brl(total - investido))],
         [f"Taxa mensal equivalente: {_pct(i * 100, 4)} a.m. = (1 + {_pct(taxa_aa)})^(1/12) − 1",
          f"{meses} meses; aportes no fim de cada mês",
-         f"VF = VP·(1+i)^n + PMT·((1+i)^n − 1)/i"],
+         "VF = VP·(1+i)^n + PMT·((1+i)^n − 1)/i"],
     )
 
 
@@ -77,17 +77,29 @@ def aliquota_ir(dias: int) -> tuple[float, list[str]]:
     return float(tabela[-1]["aliquota"]), avisos
 
 
+def aliquota_iof(dias: int) -> float:
+    """IOF regressivo sobre o rendimento de resgates antes de 30 dias (Decreto 6.306/2007, anexo):
+    96% no 1º dia, 93% no 2º … 3% no 29º, zero a partir do 30º — fração = ⌊100 × (30 − dias) ÷ 30⌋ %."""
+    limite = int(regras.carregar_regras()["renda_fixa"].get("iof", {}).get("aplica_resgate_antes_de_dias", 30))
+    if dias >= limite or dias < 1:
+        return 0.0
+    return (100 * (limite - dias) // limite) / 100
+
+
 def cdb_x_isento(taxa_isenta_aa: float, taxa_cdb_aa: float, dias: int) -> Resultado:
     """Compara uma aplicação isenta (LCI/LCA) com um CDB tributado no mesmo prazo."""
     aliq, avisos = aliquota_ir(dias)
-    cdb_liquido = taxa_cdb_aa * (1 - aliq)  # aproximação usual sobre a taxa anual
-    cdb_equivalente = taxa_isenta_aa / (1 - aliq)
+    iof = aliquota_iof(dias)
+    fator = (1 - iof) * (1 - aliq)  # IOF sai primeiro do rendimento; o IR incide sobre o que sobra
+    cdb_liquido = taxa_cdb_aa * fator  # aproximação usual sobre a taxa anual
+    cdb_equivalente = taxa_isenta_aa / fator
     melhor = "Isento (LCI/LCA)" if taxa_isenta_aa > cdb_liquido else "CDB" if cdb_liquido > taxa_isenta_aa else "Empate"
     return Resultado(
         "CDB × LCI/LCA",
         [("Alíquota de IR no prazo", _pct(aliq * 100, 1)), ("CDB líquido", _pct(cdb_liquido) + " a.a."),
          ("CDB precisa render (bruto) para empatar", _pct(cdb_equivalente) + " a.a."), ("Melhor no prazo", melhor)],
-        [f"{dias} dias → alíquota {_pct(aliq * 100, 1)} (tabela regressiva)",
+        [f"{dias} dias → alíquota {_pct(aliq * 100, 1)} (tabela regressiva)"]
+        + ([f"Resgate antes de 30 dias: IOF de {_pct(iof * 100, 0)} do rendimento (sai antes do IR)"] if iof else []) + [
          "CDB líquido ≈ taxa bruta × (1 − alíquota); equivalente = taxa isenta ÷ (1 − alíquota)",
          "Aproximação sobre a taxa anual; não considera FGC, liquidez nem risco do emissor"],
         avisos,
