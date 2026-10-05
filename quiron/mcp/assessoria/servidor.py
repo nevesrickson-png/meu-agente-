@@ -29,6 +29,28 @@ mcp = MCPServer(
 
 
 @mcp.tool()
+def simular_patrimonio(patrimonio: float = 0, aporte_mensal: float = 0, idade: int = 40, perfil: str = "moderado",
+                       meta: float = 0, renda_desejada: float = 0, idade_meta: int | None = None,
+                       crescimento_aporte_aa: float = 0, imovel_valor: float = 0, horizonte_imovel_anos: int = 20,
+                       cliente: str = "") -> str:
+    """Simulador de patrimônio (R$ de hoje, 3 cenários + Monte Carlo): quanto investir por mês para a meta, quando dá
+    para parar de trabalhar (renda_desejada mensal), em quanto tempo chega a R$ X (meta) e imóvel × aplicações
+    (imovel_valor). `cliente`=CLI-XXX usa a ficha de planejamento e os outros campos ajustam. Use para essas perguntas
+    em vez de fazer contas; mostre as premissas e o aviso de que é simulação."""
+    from quiron.servicos.planejamento import simulador
+
+    dados = {"patrimonio": patrimonio, "aporte_mensal": aporte_mensal, "idade": idade, "perfil": perfil, "meta": meta,
+             "renda_desejada": renda_desejada, "idade_meta": idade_meta, "crescimento_aporte_aa": crescimento_aporte_aa,
+             "imovel_valor": imovel_valor, "horizonte_imovel_anos": horizonte_imovel_anos}
+    try:
+        e = simulador.de_ficha(cliente, **{k: v for k, v in dados.items() if k not in {"idade", "perfil", "horizonte_imovel_anos"}}) \
+            if cliente else simulador.Entrada.de_dict(dados)
+        return simulador.texto(simulador.simular(e))
+    except (ValueError, TypeError) as e:
+        return f"Não simulei: {e}"
+
+
+@mcp.tool()
 def campos_da_ficha() -> str:
     """Campos da ficha de planejamento e os valores aceitos."""
     return fichas.campos()

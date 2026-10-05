@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -394,6 +395,27 @@ def api_carteira_ler(request: Request, corpo: dict = Body(...)) -> dict:
             "posicoes": [{"nome": p.nome, "classe": CLASSES[p.classe]["nome"], "valor": p.valor} for p in c.posicoes],
             "enquadramento": [dict(zip(["classe", "atual", "minimo", "alvo", "maximo", "situacao"], linha))
                               for linha in _enquadramento(pesos, perfis()[perfil]["classes"])]}
+
+
+@app.post("/api/simulador")
+def api_simulador(request: Request, corpo: dict = Body(...)) -> dict:
+    """SIM — simulador de patrimônio (só calcula, nada é gravado). `cliente` (CLI-XXX) usa a ficha de planejamento."""
+    from quiron.servicos.planejamento import simulador
+
+    _proteger(request)
+    dados = {k: v for k, v in (corpo or {}).items() if k != "cliente"}
+    cliente = str((corpo or {}).get("cliente") or "").strip().upper()
+    try:
+        if cliente:
+            if not re.fullmatch(r"CLI-\w+", cliente):
+                raise ValueError("cliente só como código CLI-XXX")
+            e = simulador.de_ficha(cliente, **{k: v for k, v in dados.items() if k not in {"idade", "perfil"}})
+        else:
+            e = simulador.Entrada.de_dict(dados)
+        sim = simulador.simular(e)
+    except (ValueError, TypeError) as erro:
+        raise HTTPException(400, str(erro)) from erro
+    return {**sim.como_dict(), "texto": simulador.texto(sim)}
 
 
 @app.post("/api/alertas")

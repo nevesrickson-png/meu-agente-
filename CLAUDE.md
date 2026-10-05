@@ -152,6 +152,17 @@ Arquivos com DRM não são processados.
   `laco_memoria` + `central.copia_diaria_da_memoria` no modo central; "Verificar tudo" mostra a saúde da memória.
   CLI `quiron-memoria`. Bot: `/memoria hoje|DD/MM|estado|copia|exportar`. Postgres: não usado de propósito (um usuário,
   PC de 8 GB; SQLite é o mesmo modelo relacional sem servidor) — o esquema é simples de levar para Postgres no servidor.
+- Simulador de patrimônio (`quiron/servicos/planejamento/simulador.py`, 05/10/2026; inspirado num reel de simulador de
+  patrimônio): `Entrada` (R$ de hoje) → `simular` = 3 cenários (`simulador.cenarios_pp`) + Monte Carlo lognormal
+  (`volatilidade_aa`, semente fixa) + respostas: aporte necessário (`pmt_para`), independência (1ª idade em que o
+  patrimônio ≥ `capital_para_renda` = VP da renda até `expectativa_vida_plano` a `retorno_real_usufruto`, com chance),
+  tempo até a meta (`meses_ate`), imóvel × financeiro (`imovel_x_financeiro`: aluguel líquido reinvestido, custos de
+  compra/venda, valorização de empate por bissecção). `ler_frase` (regras, sem modelo), `de_ficha(CLI-XXX)`, `texto`,
+  `grafico_png`. MCP `quiron-assessoria.simular_patrimonio`; Terminal `POST /api/simulador` + painel `SIM` (SVG próprio
+  com dica, tabela, premissas); Telegram `/simular` (texto + PNG via `send_photo`). Testes `testes/test_simulador.py`.
+- Interface do agente (05/10/2026): `para_html` (Markdown do modelo → HTML do Telegram, tudo escapado; tabelas em
+  `<pre>` alinhado; envio com `parse_mode="HTML"` e plano B em texto simples), `/start` com `ATALHOS` (`qa:/…`), chat do
+  Terminal com `textoChat` (títulos, listas, código, links seguros, tabelas).
 - Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
   comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
   avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.

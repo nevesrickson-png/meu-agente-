@@ -37,6 +37,8 @@ from quiron.runtime.workspace import carregar_comandos
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
 INATIVIDADE_MODO_S = 3 * 3600  # treino/entrevista/pós-reunião parados há mais que isso se encerram sozinhos
 SAIR = {"/sair", "sair", "/cancelar"}
+ATALHOS = [[("📊 Briefing", "qa:/briefing"), ("☀️ Meu dia", "qa:/hoje"), ("📈 Simular", "qa:/simular")],
+           [("🎓 Estudar", "qa:/academia"), ("🧠 Memória", "qa:/memoria"), ("❓ Ajuda", "qa:/ajuda")]]
 IDADE_MAXIMA_S = 6 * 3600  # mensagens recebidas com o bot desligado: responde as de até 6 h; mais antigas são ignoradas
 INICIO = ("Olá! Sou o Quíron. Pode perguntar livremente, mandar áudio, foto ou planilha.\n\n"
           "Para começar: /briefing (mercado agora) · /hoje (seu dia) · /academia (estudo) · /tarefa amanhã às 10h …\n"
@@ -64,6 +66,49 @@ def dividir(texto: str, limite: int = LIMITE_TELEGRAM) -> list[str]:
         partes.append(texto[:corte].rstrip())
         texto = texto[corte:].lstrip()
     return partes + ([texto] if texto else [])
+
+
+def para_html(texto: str) -> str:
+    """Markdown que os modelos escrevem → HTML que o Telegram entende (negrito, itálico, código, links, títulos,
+    listas e tabelas alinhadas). Tudo escapado antes: texto do modelo nunca vira HTML de verdade."""
+    import html as _html
+
+    blocos: list[str] = []
+
+    def guardar(conteudo: str) -> str:
+        blocos.append(conteudo)
+        return f"\x00{len(blocos) - 1}\x00"
+
+    t = texto or ""
+    t = re.sub(r"```[a-zA-Z0-9_-]*\n?(.*?)```", lambda m: guardar(f"<pre>{_html.escape(m.group(1).strip())}</pre>"), t, flags=re.S)
+    linhas, saida, tabela = t.split("\n"), [], []
+
+    def fechar_tabela() -> None:
+        if tabela:
+            celulas = [[c.strip() for c in l.strip().strip("|").split("|")] for l in tabela
+                       if not re.fullmatch(r"\s*\|?[\s:|-]+\|?\s*", l)]
+            larg = [max(len(re.sub(r"\*\*|__", "", r[i])) if i < len(r) else 0 for r in celulas) for i in range(max(map(len, celulas)))]
+            corpo = "\n".join("  ".join(re.sub(r"\*\*|__", "", c).ljust(larg[i]) for i, c in enumerate(r)).rstrip() for r in celulas)
+            saida.append(guardar(f"<pre>{_html.escape(corpo)}</pre>"))
+            tabela.clear()
+
+    for linha in linhas:
+        if re.match(r"\s*\|.*\|\s*$", linha):
+            tabela.append(linha)
+            continue
+        fechar_tabela()
+        saida.append(linha)
+    fechar_tabela()
+    t = _html.escape("\n".join(saida), quote=False)
+    t = re.sub(r"`([^`\n]+)`", lambda m: guardar(f"<code>{m.group(1)}</code>"), t)
+    t = re.sub(r"\[([^\]\n]+)\]\((https?://[^\s)]+)\)", lambda m: guardar(f'<a href="{m.group(2).replace(chr(34), "%22")}">{m.group(1)}</a>'), t)
+    t = re.sub(r"^\s{0,3}#{1,6}\s+(.+?)\s*#*$", r"<b>\1</b>", t, flags=re.M)
+    t = re.sub(r"\*\*(?=\S)(.+?)(?<=\S)\*\*", r"<b>\1</b>", t)
+    t = re.sub(r"__(?=\S)(.+?)(?<=\S)__", r"<b>\1</b>", t)
+    t = re.sub(r"(?<![\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])", r"<i>\1</i>", t)
+    t = re.sub(r"^(\s*)[-*•]\s+", r"\1• ", t, flags=re.M)
+    t = re.sub(r"^\s*(?:---+|\*\*\*+)\s*$", "──────────", t, flags=re.M)
+    return re.sub(r"\x00(\d+)\x00", lambda m: blocos[int(m.group(1))], t)
 
 
 @dataclass
@@ -163,7 +208,9 @@ class BotQuiron:
                    "🧭 Carreira: /carreira (plano) · /diario <tese> · /diario revisar · /portfolio · /entrevista [cargo] · "
                    "/radar [dias] (normas da CVM, Receita, BC e Câmara)", "",
                    "✍️ Conteúdo: /pauta [tema] · /roteiro reels|youtube|carrossel|fio|artigo <tema> · /fio <tema> · /ideia · /ideias · "
-                   "/conferir <seu texto> (sai como RASCUNHO, com disclaimer e fontes)", ""]
+                   "/conferir <seu texto> (sai como RASCUNHO, com disclaimer e fontes)", "",
+                   "📈 Patrimônio: /simular <sua situação em palavras> ou /simular CLI-012 — quanto investir por mês, quando dá para "
+                   "parar de trabalhar, em quanto tempo chega à meta, imóvel × aplicações (3 cenários + gráfico)", ""]
         linhas += ["🧠 Memória: eu aprendo sozinho com as conversas · /memoria (ver) · /memoria conversas · /memoria buscar <tema> · "
                    "/memoria esquecer <nº> · /memoria mudar <nº> <texto> · /memoria hoje (tudo o que aconteceu no dia) · "
                    "/memoria exportar · /lembrar <fato>", "",
@@ -190,7 +237,7 @@ class BotQuiron:
             return []  # silêncio: não revela que o bot existe
         texto = (texto or "").strip()
         if texto == "/start":
-            return [Saida(INICIO)]
+            return [Saida(INICIO, linhas=ATALHOS)]
         if texto in {"/ajuda", "/help"}:
             return [Saida(self.ajuda())]
         if texto.lower() in SAIR:
@@ -203,6 +250,8 @@ class BotQuiron:
         if texto == "/agenda":
             itens = self.agente.agendador.listar()
             return [Saida("\n".join(a.descrever() for a in itens) if itens else "Nada agendado. Ex.: “todo dia útil às 7h30 me manda o briefing”.")]
+        if texto.split(" ", 1)[0].split("@")[0].lower() in {"/simular", "/simulador", "/patrimonio"}:
+            return await asyncio.to_thread(self.comando_simular, texto.partition(" ")[2])
         if texto.split(" ", 1)[0].split("@")[0] in {"/memoria", "/memória", "/lembrar"}:
             if texto.split(" ", 1)[-1].strip().lower() in {"exportar", "baixar"}:
                 arq = await asyncio.to_thread(self.agente.longa.exportar)
@@ -255,6 +304,35 @@ class BotQuiron:
         for p in reg.pendencias:
             saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
         return saidas
+
+    # ------------------------------------------------------------ simulador de patrimônio
+    def comando_simular(self, args: str) -> list[Saida]:
+        from quiron.nucleo.config import pasta_dados
+        from quiron.servicos.planejamento import simulador
+
+        ajuda = ("📈 Simulador de patrimônio — escreva do seu jeito, por exemplo:\n"
+                 "/simular tenho 40 anos, 500 mil investidos, invisto 5 mil por mês, quero chegar a 5 milhões e viver com 20 mil, moderado\n"
+                 "/simular CLI-012 (usa a ficha do cliente) · /simular imóvel de 800 mil em 20 anos\n"
+                 "Respondo: quanto investir por mês, quando dá para parar de trabalhar, em quanto tempo chega à meta e imóvel × "
+                 "aplicações — com 3 cenários, a chance de chegar lá e o gráfico.")
+        args = (args or "").strip()
+        cliente = (re.search(r"\bCLI-\d+\b", args, re.I) or [None])[0]
+        dados = simulador.ler_frase(args)
+        if not args or (not cliente and not any(dados.get(k) for k in ("patrimonio", "aporte_mensal", "meta", "renda_desejada", "imovel_valor"))):
+            return [Saida(ajuda)]
+        try:
+            e = simulador.de_ficha(cliente.upper(), **dados) if cliente else simulador.Entrada.de_dict(dados)
+            sim = simulador.simular(e)
+        except (ValueError, TypeError) as erro:
+            return [Saida(f"⚠️ Não simulei: {erro}\n\n{ajuda}")]
+        png = pasta_dados() / "simulacoes" / f"simulacao-{datetime.now():%Y%m%d-%H%M%S}.png"
+        png.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            simulador.grafico_png(sim, png)
+        except Exception:  # noqa: BLE001 — sem gráfico, o texto basta
+            logging.exception("gráfico da simulação")
+            return [Saida(simulador.texto(sim))]
+        return [Saida(simulador.texto(sim), arquivo=str(png))]
 
     # ------------------------------------------------------------ memória persistente
     def comando_memoria(self, texto: str) -> str:
@@ -347,7 +425,7 @@ class BotQuiron:
             self._pos_desde[chat] = time.time()
 
     def nomes_comandos(self) -> list[str]:
-        fixos = ["start", "ajuda", "novo", "agenda", "memoria", "lembrar", "sair"]
+        fixos = ["start", "ajuda", "simular", "novo", "agenda", "memoria", "lembrar", "sair"]
         return fixos + sorted(set(self.comandos) | COMANDOS_ACADEMIA | COMANDOS_ASSESSORIA | COMANDOS_ORGANIZACAO
                               | COMANDOS_CARREIRA | COMANDOS_CONTEUDO)
 
@@ -361,6 +439,7 @@ class BotQuiron:
         descricoes = {"start": "Começar", "ajuda": "Todos os comandos", "novo": "Começar a conversa do zero",
                       "agenda": "Lembretes e rotinas", "memoria": "O que eu sei sobre você (ver, buscar, corrigir)",
                       "lembrar": "Guardar algo na memória",
+                      "simular": "Simular patrimônio: quanto investir, quando parar, meta, imóvel",
                       "sair": "Sair do treino/entrevista/pós-reunião", "academia": "Painel de estudo",
                       "area": "Trocar a área de estudo", "questoes": "Questões de prova", "simulado": "Simulado",
                       "flashcards": "Revisar flashcards", "diagnostico": "Diagnóstico da prova", "plano": "Plano de estudo",
@@ -530,11 +609,20 @@ async def _rodar() -> None:
                 from pathlib import Path
 
                 with Path(s.arquivo).open("rb") as f:
-                    await app.bot.send_document(chat, f, filename=Path(s.arquivo).name)
+                    if s.arquivo.lower().endswith((".png", ".jpg", ".jpeg")):
+                        await app.bot.send_photo(chat, f)
+                    else:
+                        await app.bot.send_document(chat, f, filename=Path(s.arquivo).name)
             partes = dividir(s.texto) or [""]
             for i, parte in enumerate(partes):  # botões só na última parte
-                await app.bot.send_message(chat, parte, reply_markup=teclado if i == len(partes) - 1 else None,
-                                           disable_web_page_preview=True)
+                botoes = teclado if i == len(partes) - 1 else None
+                try:  # formatado (negrito, listas, tabelas); se o Telegram recusar o HTML, vai em texto simples
+                    await app.bot.send_message(chat, para_html(parte), parse_mode="HTML", reply_markup=botoes,
+                                               disable_web_page_preview=True)
+                except Exception as e:  # noqa: BLE001
+                    if "parse" not in str(e).lower() and "entit" not in str(e).lower() and "tag" not in str(e).lower():
+                        raise
+                    await app.bot.send_message(chat, parte, reply_markup=botoes, disable_web_page_preview=True)
 
         async def digitando(chat: int) -> None:
             while True:  # o "digitando…" do Telegram dura 5 s: renova até a resposta sair
@@ -603,6 +691,18 @@ async def _rodar() -> None:
                         await q.edit_message_reply_markup(None)
                 except Exception:  # noqa: BLE001 — mensagem antiga ou igual: segue o fluxo
                     pass
+                for s in saidas:
+                    await enviar(q.message.chat_id, s)
+                return
+            if (q.data or "").startswith("qa:"):  # botões rápidos do /start
+                sinal = asyncio.create_task(digitando(q.message.chat_id))
+                try:
+                    saidas = await bot.tratar(q.from_user.id, q.message.chat_id, q.data[3:])
+                except Exception as e:  # noqa: BLE001
+                    logging.exception("erro no atalho")
+                    saidas = [Saida(f"⚠️ Deu um erro aqui ({type(e).__name__}). Tente de novo.")]
+                finally:
+                    sinal.cancel()
                 for s in saidas:
                     await enviar(q.message.chat_id, s)
                 return

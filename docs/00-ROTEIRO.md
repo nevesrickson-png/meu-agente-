@@ -350,6 +350,13 @@ Falta: você abrir pelo atalho no seu PC e salvar as chaves por lá uma vez para
 ✅ Aceite (05/10/2026) com a IA real: `/memoria hoje` mostrou comando, resposta, pergunta, ferramenta usada e resposta
 final; 0,5 ms por gravação, busca em 3 mil registros em 4 ms. 246 testes.
 
+## Simulador de patrimônio + interface do agente (05/10/2026) — pedido do Rickson (link de um reel de simulador)
+- [x] Simulador: quanto investir por mês, quando parar de trabalhar, em quanto tempo chega à meta, imóvel × aplicações —
+  3 cenários, Monte Carlo, gráfico; Terminal `SIM`, Telegram `/simular`, ferramenta do agente, ficha do cliente
+- [x] Telegram com respostas formatadas e botões rápidos no `/start`; chat do Terminal com tabelas, listas e links
+✅ Aceite (05/10/2026): navegador (desktop e celular, sem erros), agente real escolheu o simulador sozinho e respondeu
+"aos 67 anos (64–70), capital ≈ R$ 5,72 mi" com premissas e aviso. 253 testes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

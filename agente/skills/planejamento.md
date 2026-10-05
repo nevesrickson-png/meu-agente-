@@ -1,7 +1,7 @@
 # Skill: planejamento financeiro (padrão CFP)
 
 **Quando usar:** "monte o planejamento do CLI-XXX", aposentadoria, sucessão/herança/ITCMD, imposto de renda/PGBL,
-seguros/proteção, "vale abrir PJ?", `/cliente`, `/planejamento`, `/aposentadoria`, `/sucessao`, `/tributario`,
+seguros/proteção, "vale abrir PJ?", "quando posso parar de trabalhar?", "quanto investir por mês", "imóvel ou aplicação?", `/simular`, `/cliente`, `/planejamento`, `/aposentadoria`, `/sucessao`, `/tributario`,
 `/protecao`, `/empresario`.
 
 ## 1. Ficha do cliente → `quiron_assessoria__*`
@@ -17,6 +17,13 @@ seguros/proteção, "vale abrir PJ?", `/cliente`, `/planejamento`, `/aposentador
 - Completo: `analisar("planejamento_completo", {"cliente": "CLI-XXX"})`. Módulos: `aposentadoria`, `sucessao`,
   `tributario`, `protecao`, `empresario` (mesmo parâmetro). Modo entregar/debater/contestar como nas outras análises.
 - Responda curto com o número do pedido; os números vêm do relatório (não antecipe).
+
+## 2b. Perguntas rápidas de patrimônio → `quiron_assessoria__simular_patrimonio`
+- "Quanto preciso investir por mês para chegar a X?", "quando posso parar de trabalhar?", "em quanto tempo chego a
+  R$ 5 milhões?", "imóvel ou aplicação?": chame `simular_patrimonio` (patrimônio, aporte, idade, perfil, meta,
+  renda_desejada, idade_meta, imovel_valor; ou `cliente`=CLI-XXX para usar a ficha). Nunca faça essas contas de cabeça.
+- Responda com o número do cenário base, a faixa (otimista–pessimista) e a chance do Monte Carlo; cite as premissas
+  (retorno real do perfil) e diga que é simulação em R$ de hoje, não promessa. No Terminal: `SIM`; no Telegram: `/simular`.
 
 ## 3. Discutindo o plano (como planejador CFP)
 - Ordem de prioridade: orçamento no azul → dívidas caras → reserva → proteção (vida/invalidez/saúde) → objetivos

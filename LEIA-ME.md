@@ -49,6 +49,18 @@ Pelo terminal: `uv run quiron` (`--offline` para abrir na versão offline).
 
 ![Configurações](docs/img/configuracoes.png)
 
+## Simulador de patrimônio
+Responde as quatro perguntas que todo cliente faz, em R$ de hoje (sem inflação), com 3 cenários de retorno e a chance
+de chegar lá (2.000 simulações de Monte Carlo):
+**quanto investir por mês** para a meta · **quando dá para parar de trabalhar** vivendo de renda · **em quanto tempo
+chega a R$ X** · **imóvel para alugar × aplicações** (aluguel líquido, vacância, custos, IR, valorização e quanto o imóvel
+precisaria valorizar para empatar).
+- Terminal: `SIM` (ou `SIM CLI-012` para usar a ficha do cliente) — formulário, gráfico interativo e tabela ano a ano.
+- Telegram: `/simular tenho 40 anos, 500 mil investidos, invisto 5 mil por mês, quero chegar a 5 milhões e viver com
+  20 mil` (responde com o texto e o gráfico) · `/simular CLI-012`. Ou pergunte em palavras: o agente usa o simulador.
+- Premissas (retorno real por perfil, volatilidade, dados do imóvel) em `config\premissas_planejamento.yaml`.
+  É simulação, nunca promessa de rentabilidade.
+
 ## Memória do Quíron
 O Quíron **lembra de você entre conversas, no Telegram e no Terminal**, sem você precisar pedir:
 - Ao fim de cada conversa (30 min sem mensagens, `/novo` ou conversa longa), ele guarda um **resumo** (o que foi tratado,
@@ -139,7 +151,8 @@ Testes:
    O bot só roda em um lugar por vez — ao passar para o mini PC, desligue o do PC.
 6. O "cérebro" editável fica em `dados\workspace\`: `USUARIO.md` (quem é você), `MEMORIA.md` (o que ele aprendeu),
    `ROTINAS.md` (o que vigiar sozinho) e `diario\`. Comandos novos: crie `agente\comandos\<nome>.md`.
-7. Treino, entrevista e pós-reunião "capturam" as mensagens seguintes; `/sair` volta à conversa normal (e eles se
+7. As respostas chegam formatadas (negrito, listas, tabelas alinhadas) e o `/start` tem botões rápidos (Briefing,
+   Meu dia, Simular, Estudar, Memória, Ajuda). Treino, entrevista e pós-reunião "capturam" as mensagens seguintes; `/sair` volta à conversa normal (e eles se
    encerram sozinhos após 3 h parados). Toque em "/" ao lado do campo de mensagem para ver o menu de comandos.
 8. No Telegram: `/ajuda`, `/briefing`, `/noticia <tema>`, `/estudar <tema>`, `/agenda`, `/memoria`, `/novo`; peça
    "todo dia útil às 7h30 me manda o briefing" ou "me lembre amanhã às 10h de…". Ações sensíveis chegam com botões ✅/❌.

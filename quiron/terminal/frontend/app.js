@@ -503,7 +503,7 @@ function renderAjuda(corpo) {
     ["CALC", "Calculadoras"], ["STATUS", "Saúde do sistema"], ["CONFIG", "Configurações: chaves, Telegram, Google Agenda, offline"], ["ACERVO", "Enviar livros e materiais"], ["HELP", "Esta ajuda"],
     ["WEGE3 FA", "Demonstrações da CVM e múltiplos (uso interno)"], ["WEGE3 DCF", "Dispara o valuation completo; o PDF aparece em RPT"],
     ["FUND <nome>", "Busca fundos na CVM (12 meses, PL); análise ou comparação"], ["CMPF", "Compara de 2 a 6 fundos"],
-    ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
+    ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["SIM [CLI-XXX]", "Simulador de patrimônio: quanto investir, quando parar, meta, imóvel × aplicações"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
     ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
     ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
     ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
@@ -736,8 +736,31 @@ function renderAlrt(corpo, d, painel) {
 }
 
 // CHAT — o agente do Quíron dentro do Terminal (mesmas ferramentas, persona e regras de compliance do Telegram)
-function textoChat(s) {
-  return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|\s)\*(\S.*?\S)\*(?=\s|$)/g, "$1<b>$2</b>").replace(/\n/g, "<br>");
+function textoChat(s) { // Markdown simples do modelo → HTML seguro (tudo escapado antes)
+  const blocos = [];
+  const guardar = (h) => { blocos.push(h); return `\u0000${blocos.length - 1}\u0000`; };
+  let t = String(s ?? "").replace(/```[\w-]*\n?([\s\S]*?)```/g, (_, c) => guardar(`<pre class="chat-pre">${esc(c.trim())}</pre>`));
+  const linhas = t.split("\n"), saida = [];
+  let tabela = [];
+  const fechar = () => {
+    if (!tabela.length) return;
+    const rows = tabela.filter((l) => !/^\s*\|?[\s:|-]+\|?\s*$/.test(l)).map((l) => l.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim()));
+    const [cab, ...corpo] = rows;
+    const cel = (c) => esc(c).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    saida.push(guardar(`<table class="t chat-tabela"><thead><tr>${cab.map((c) => `<th>${cel(c)}</th>`).join("")}</tr></thead><tbody>${corpo.map((r) => `<tr>${r.map((c) => `<td>${cel(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`));
+    tabela = [];
+  };
+  for (const l of linhas) { if (/^\s*\|.*\|\s*$/.test(l)) { tabela.push(l); continue; } fechar(); saida.push(l); }
+  fechar();
+  t = esc(saida.join("\n"))
+    .replace(/`([^`\n]+)`/g, (_, c) => guardar(`<code>${c}</code>`))
+    .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, txt, url) => guardar(`<a href="${linkSeguro(url.replace(/&amp;/g, "&"))}" target="_blank" rel="noopener noreferrer">${txt}</a>`))
+    .replace(/^\s{0,3}#{1,6}\s+(.+?)\s*#*$/gm, "<b>$1</b>")
+    .replace(/\*\*(?=\S)(.+?)(?<=\S)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[^\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])/g, "$1<i>$2</i>")
+    .replace(/^(\s*)[-*•]\s+/gm, "$1• ")
+    .replace(/\n/g, "<br>");
+  return t.replace(/\u0000(\d+)\u0000/g, (_, i) => blocos[Number(i)]);
 }
 async function renderChat(corpo, _d, painel) {
   corpo.classList.add("coluna");
@@ -860,12 +883,92 @@ Object.assign(TIPOS, {
   task: { titulo: "Tarefas e lembretes — TASK", topico: "tarefas", w: 6, h: 9, render: renderTask },
   alrt: { titulo: "Alertas — ALRT", topico: "alertas", w: 6, h: 9, render: renderAlrt },
   chat: { titulo: "Chat com o Quíron", topico: null, w: 5, h: 14, render: renderChat },
+  sim: { titulo: (p) => (p.cliente ? `Simulador ${p.cliente}` : "Simulador de patrimônio — SIM"), topico: null, w: 7, h: 16, render: renderSim },
 });
 PRESETS["Assessoria"] = [
   { tipo: "chat", x: 1, y: 1, w: 5, h: 14 }, { tipo: "rpt", x: 6, y: 1, w: 4, h: 8 }, { tipo: "alrt", x: 10, y: 1, w: 3, h: 8 },
   { tipo: "task", x: 6, y: 9, w: 4, h: 6 }, { tipo: "plan", x: 10, y: 9, w: 3, h: 6 }, { tipo: "acad", x: 1, y: 15, w: 5, h: 9 },
   { tipo: "watchlist", x: 6, y: 15, w: 4, h: 9 }, { tipo: "noticias", x: 10, y: 15, w: 3, h: 9 },
 ];
+
+// SIM — simulador de patrimônio: quanto investir, quando parar, em quanto tempo chega à meta, imóvel × aplicações
+const brl = (v) => (v === null || v === undefined ? "—" : Math.abs(v) >= 1e6 ? `R$ ${fmt(v / 1e6, 2)} mi` : `R$ ${fmt(v, 0)}`);
+function renderSim(corpo, _d, painel) {
+  const p = Object.assign({ patrimonio: 500000, aporte_mensal: 5000, idade: 40, perfil: "moderado", meta: 5000000, renda_desejada: 20000 }, painel.p);
+  const campo = (nome, rotulo, extra = "") => `<label>${rotulo}<input name="${nome}" inputmode="decimal" value="${esc(p[nome] ?? "")}" ${extra}></label>`;
+  corpo.innerHTML = `<form class="form-v2 sim-form">
+    <div class="linha-form">${campo("patrimonio", "Patrimônio investido (R$)")}${campo("aporte_mensal", "Aporte por mês (R$)")}${campo("idade", "Idade", 'maxlength="3"')}
+      <label>Perfil<select name="perfil">${["conservador", "moderado", "arrojado"].map((x) => `<option ${x === p.perfil ? "selected" : ""}>${x}</option>`).join("")}</select></label></div>
+    <div class="linha-form">${campo("meta", "Meta (R$ de hoje)")}${campo("renda_desejada", "Renda para viver (R$/mês)")}${campo("idade_meta", "Parar / meta aos (idade)", 'placeholder="opcional"')}
+      ${campo("crescimento_aporte_aa", "Aumento real do aporte (% a.a.)", 'placeholder="0"')}</div>
+    <div class="linha-form">${campo("imovel_valor", "Imóvel para comparar (R$)", 'placeholder="opcional"')}${campo("horizonte_imovel_anos", "em quantos anos", 'placeholder="20"')}
+      <label>Cliente (opcional)<input name="cliente" placeholder="CLI-001" value="${esc(p.cliente || "")}" maxlength="12"></label>
+      <button type="submit">Simular</button></div></form><div data-res class="sim-res"></div>`;
+  const res = $("[data-res]", corpo);
+  const num = (v) => { // aceita 500.000 · 500000 · 4,5 · 4.5
+    if (v === "" || v === undefined) return undefined;
+    let t = String(v).trim().replace(/^R\$\s*/i, "");
+    if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
+    return Number(t);
+  };
+  const simular = async (f) => {
+    if (f.cliente && !/^CLI-\w+$/i.test(f.cliente.trim())) return aviso("Cliente só como código CLI-XXX (nunca o nome).");
+    const corpoReq = { perfil: f.perfil, cliente: (f.cliente || "").trim() };
+    for (const k of ["patrimonio", "aporte_mensal", "idade", "meta", "renda_desejada", "idade_meta", "crescimento_aporte_aa", "imovel_valor", "horizonte_imovel_anos"]) {
+      const v = num(f[k]); if (v !== undefined && !Number.isNaN(v)) corpoReq[k] = v;
+    }
+    res.innerHTML = '<div class="carregando">simulando 2.000 cenários…</div>';
+    try {
+      const r = await acao("/api/simulador", corpoReq);
+      res.innerHTML = `<div class="sim-grafico" data-g></div>
+        <div class="sim-legenda"><span><i style="background:${COR.s3}"></i>otimista ${esc(brl(r.series.otimista.at(-1)))}</span>
+          <span><i style="background:${COR.s1}"></i>base ${esc(brl(r.series.base.at(-1)))}</span>
+          <span><i style="background:${COR.s2}"></i>pessimista ${esc(brl(r.series.pessimista.at(-1)))}</span>
+          <span><i style="background:${COR.s1};opacity:.25"></i>faixa provável 10–90%</span></div>
+        <div class="sim-cards">${r.respostas.map((x) => `<div class="kpi sim-card"><div class="kpi-r">${esc(x.pergunta)}</div><div class="sim-txt">${esc(x.texto)}</div></div>`).join("")}</div>
+        <details><summary class="dica">Premissas e tabela ano a ano</summary><ul class="dica">${r.premissas.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+          <table class="t"><thead><tr><th>Idade</th><th class="n">Pessimista</th><th class="n">Base</th><th class="n">Otimista</th><th class="n">10%</th><th class="n">90%</th></tr></thead><tbody>${
+            r.anos.map((a, i) => `<tr><td>${a}</td><td class="n">${brl(r.series.pessimista[i])}</td><td class="n">${brl(r.series.base[i])}</td><td class="n">${brl(r.series.otimista[i])}</td><td class="n">${brl(r.faixa.p10[i])}</td><td class="n">${brl(r.faixa.p90[i])}</td></tr>`).join("")}</tbody></table></details>
+        <div class="dica">⚠️ ${esc(r.aviso)}</div>`;
+      graficoPatrimonio($("[data-g]", res), r);
+    } catch (err) { res.innerHTML = `<div class="erro">${esc(err.message)}</div>`; }
+  };
+  $("form", corpo).onsubmit = (e) => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); Object.assign(painel.p, f); salvarLocal(); simular(f); };
+  simular(Object.fromEntries(new FormData($("form", corpo))));
+  rodape(painel, "R$ de hoje (sem inflação) · 3 cenários + Monte Carlo · simulação, não promessa · premissas em config/premissas_planejamento.yaml");
+}
+
+function graficoPatrimonio(alvo, r) {
+  const W = 640, H = 230, m = { e: 70, d: 12, t: 10, b: 24 };
+  const xs = r.anos, maxY = Math.max(...r.faixa.p90, ...r.series.otimista, r.entrada.meta || 0) * 1.05 || 1;
+  const X = (i) => m.e + (i / Math.max(1, xs.length - 1)) * (W - m.e - m.d);
+  const Y = (v) => H - m.b - (v / maxY) * (H - m.t - m.b);
+  const caminho = (arr) => arr.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join("");
+  const faixa = caminho(r.faixa.p90) + r.faixa.p10.map((v, i) => `L${X(r.faixa.p10.length - 1 - i).toFixed(1)},${Y(r.faixa.p10[r.faixa.p10.length - 1 - i]).toFixed(1)}`).join("") + "Z";
+  const ticksY = [0, 0.25, 0.5, 0.75, 1].map((f) => f * maxY);
+  const passo = Math.max(1, Math.round(xs.length / 8));
+  const meta = r.entrada.meta ? `<line x1="${m.e}" x2="${W - m.d}" y1="${Y(r.entrada.meta)}" y2="${Y(r.entrada.meta)}" stroke="${COR.texto3}" stroke-dasharray="3 3"/><text x="${m.e + 4}" y="${Y(r.entrada.meta) - 4}" class="sim-eixo">meta ${esc(brl(r.entrada.meta))}</text>` : "";
+  alvo.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução do patrimônio por cenário" preserveAspectRatio="none">
+    ${ticksY.map((v) => `<line x1="${m.e}" x2="${W - m.d}" y1="${Y(v)}" y2="${Y(v)}" stroke="#262624"/><text x="${m.e - 6}" y="${Y(v) + 3}" text-anchor="end" class="sim-eixo">${esc(brl(v))}</text>`).join("")}
+    ${xs.map((a, i) => (i % passo === 0 || i === xs.length - 1) ? `<text x="${X(i)}" y="${H - 6}" text-anchor="middle" class="sim-eixo">${a}</text>` : "").join("")}
+    <path d="${faixa}" fill="${COR.s1}" opacity=".16"/>${meta}
+    <path d="${caminho(r.series.pessimista)}" fill="none" stroke="${COR.s2}" stroke-width="2" stroke-dasharray="5 3"/>
+    <path d="${caminho(r.series.otimista)}" fill="none" stroke="${COR.s3}" stroke-width="2" stroke-dasharray="5 3"/>
+    <path d="${caminho(r.series.base)}" fill="none" stroke="${COR.s1}" stroke-width="2.5"/>
+    <line data-cursor x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="${COR.texto3}" visibility="hidden"/>
+    <rect x="${m.e}" y="${m.t}" width="${W - m.e - m.d}" height="${H - m.t - m.b}" fill="transparent" data-alvo/></svg><div class="sim-dica" data-dica hidden></div>`;
+  const svg = $("svg", alvo), cursor = $("[data-cursor]", alvo), dica = $("[data-dica]", alvo);
+  $("[data-alvo]", alvo).addEventListener("mousemove", (ev) => {
+    const caixa = svg.getBoundingClientRect(), x = ((ev.clientX - caixa.left) / caixa.width) * W;
+    const i = Math.max(0, Math.min(xs.length - 1, Math.round(((x - m.e) / (W - m.e - m.d)) * (xs.length - 1))));
+    cursor.setAttribute("x1", X(i)); cursor.setAttribute("x2", X(i)); cursor.setAttribute("visibility", "visible");
+    dica.hidden = false;
+    dica.innerHTML = `<b>${xs[i]} anos</b><br>otimista ${esc(brl(r.series.otimista[i]))}<br>base ${esc(brl(r.series.base[i]))}<br>pessimista ${esc(brl(r.series.pessimista[i]))}<br><span class="dica">10–90%: ${esc(brl(r.faixa.p10[i]))} a ${esc(brl(r.faixa.p90[i]))}</span>`;
+    dica.style.left = Math.min(caixa.width - 170, Math.max(0, ev.clientX - caixa.left + 12)) + "px";
+  });
+  $("[data-alvo]", alvo).addEventListener("mouseleave", () => { cursor.setAttribute("visibility", "hidden"); dica.hidden = true; });
+}
 
 // comandos da v2; devolve true se tratou
 function executarV2(original, a, b, resto) {
@@ -878,6 +981,10 @@ function executarV2(original, a, b, resto) {
     return true;
   }
   if (a === "CMPF") { adicionarPainel("cmpf", { cnpjs: [b, ...resto] }); return true; }
+  if (a === "SIM" || a === "SIMULAR" || a === "PATRIMONIO") {
+    if (b && !/^CLI-\w+$/.test(b)) { aviso("Use SIM ou SIM CLI-XXX (só o código do cliente)."); return true; }
+    adicionarPainel("sim", b ? { cliente: b } : {}); return true;
+  }
   if (a === "PLAN") {
     if (b && !/^CLI-\w+$/.test(b)) { aviso("Use PLAN CLI-XXX (só o código do cliente)."); return true; }
     adicionarPainel("plan", { cliente: b || "" }); return true;

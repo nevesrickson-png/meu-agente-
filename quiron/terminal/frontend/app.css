@@ -182,3 +182,21 @@ details summary { cursor: pointer; margin: 4px 0; }
 
 /* ---------- versão offline (Fase 16) */
 .selo-offline { margin-left: 8px; font: 700 10px var(--mono); letter-spacing: .1em; color: #111; background: var(--ambar); border-radius: 3px; padding: 1px 5px; vertical-align: middle; }
+
+/* ---------- SIM — simulador de patrimônio */
+.sim-form .linha-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; align-items: end; }
+.sim-form .linha-form label { margin: 0; font-size: 11px; }
+.sim-form .linha-form input, .sim-form .linha-form select { width: 100%; }
+.sim-form .linha-form button { height: 30px; }
+.sim-grafico { position: relative; width: 100%; height: 230px; margin-top: 6px; }
+.sim-grafico svg { width: 100%; height: 100%; display: block; }
+.sim-eixo { font: 10px var(--mono); fill: var(--texto-3); }
+.sim-dica { position: absolute; top: 8px; background: #0b0b0a; border: 1px solid var(--borda); border-radius: 4px; padding: 6px 8px; font-size: 12px; pointer-events: none; min-width: 150px; }
+.sim-legenda { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; margin: 4px 0 8px; }
+.sim-legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.sim-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+.sim-card { padding: 8px; }
+.sim-txt { font-size: 12.5px; line-height: 1.45; color: var(--texto); margin-top: 3px; }
+.chat-pre { white-space: pre-wrap; background: #0b0b0a; border: 1px solid var(--borda); border-radius: 4px; padding: 6px; font: 12px var(--mono); margin: 4px 0; }
+.chat-tabela { margin: 4px 0; font-size: 12px; }
+.msg code { font: 12px var(--mono); background: #0b0b0a; padding: 0 3px; border-radius: 3px; }

@@ -38,3 +38,17 @@ sucessao:
 empresario:
   pro_labore_minimo: 1518.00        # um salário mínimo (atualize)
   contabilidade_pj_anual: 6000.00   # custo de contador/abertura que a PJ tem e a PF não
+
+# Simulador de patrimônio (perguntas do dia a dia: quanto investir, quando parar, quando chego a X, imóvel × aplicação).
+# Tudo em termos REAIS (R$ de hoje). São premissas: ajuste à sua prática.
+simulador:
+  cenarios_pp: {pessimista: -1.5, base: 0.0, otimista: 1.5}   # pontos percentuais sobre o retorno real do perfil
+  horizonte_max_anos: 60
+  imovel:
+    aluguel_bruto_aa: 5.0        # % do valor do imóvel por ano (aluguel residencial típico: 4–6%)
+    vacancia: 0.08               # fração do ano sem inquilino
+    custos_aa: 1.0               # % do valor por ano pagos pelo dono (IPTU, manutenção, seguro, administração)
+    ir_aluguel: 0.20             # alíquota EFETIVA média do carnê-leão sobre o aluguel líquido (depende da renda)
+    valorizacao_real_aa: 1.0     # % a.a. acima da inflação
+    custo_compra: 0.04           # ITBI + escritura + registro
+    custo_venda: 0.06            # corretagem (e IR sobre ganho de capital não considerado)
