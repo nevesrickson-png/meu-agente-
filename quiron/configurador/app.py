@@ -43,6 +43,9 @@ CAMPOS: list[dict[str, Any]] = [
      "segredo": True, "ajuda": "Grátis em brapi.dev. Sem ele, as cotações vêm do Yahoo.", "teste": True},
     {"chave": "TERMINAL_SENHA", "rotulo": "Senha do Terminal", "grupo": "Opcionais", "obrigatorio": False,
      "segredo": True, "ajuda": "Só necessária no servidor (mini PC/VPS). No seu PC pode ficar vazia.", "teste": False},
+    {"chave": "GOOGLE_AGENDA_ID", "rotulo": "Agenda do Google a usar", "grupo": "Opcionais", "obrigatorio": False,
+     "segredo": False, "ajuda": "Vazio = sua agenda principal. Outra agenda: Configurações da agenda → “ID da agenda”.",
+     "teste": False},
     {"chave": "YOUTUBE_API_KEY", "rotulo": "Chave do YouTube", "grupo": "Opcionais", "obrigatorio": False,
      "segredo": True, "ajuda": "console.cloud.google.com → YouTube Data API v3.", "teste": False},
     {"chave": "BLUESKY_HANDLE", "rotulo": "Usuário do Bluesky", "grupo": "Opcionais", "obrigatorio": False,
@@ -130,6 +133,20 @@ def estado(caminho: Path | None = None) -> dict[str, Any]:
         campos.append({**c, "preenchido": bool(v), "invalido": c["chave"] in falta and bool(v),
                        "mascara": mascara(v) if c["segredo"] else "", "valor": "" if c["segredo"] else v})
     return {"campos": campos, "faltando": falta, "completo": not falta, "arquivo": str(caminho or caminho_env())}
+
+
+def salvar_valores(valores: dict[str, Any]) -> dict[str, str]:
+    """Valida e grava o que veio da tela; segredo em branco = manter o atual. Devolve o que foi gravado."""
+    novos = {k: str(v).strip() for k, v in (valores or {}).items() if k in POR_CHAVE}
+    novos = {k: v for k, v in novos.items() if v or not POR_CHAVE[k]["segredo"]}
+    ids = novos.get("TELEGRAM_ALLOWED_USER_IDS")
+    if ids:
+        ids = ",".join(x.strip() for x in ids.replace(";", ",").split(",") if x.strip())
+        if not ids_validos(ids):
+            raise ValueError("O ID precisa ser só números (ex.: 7592218870), não o @usuário.")
+        novos["TELEGRAM_ALLOWED_USER_IDS"] = ids
+    atualizar_env(novos)
+    return novos
 
 
 # ---------------------------------------------------------------- testes de conexão
@@ -221,16 +238,8 @@ def criar_app(codigo: str, porta: int, ao_concluir=None) -> FastAPI:
     @app.post("/api/salvar")
     async def api_salvar(request: Request) -> dict[str, Any]:
         corpo = await request.json()
-        novos = {k: str(v).strip() for k, v in (corpo.get("valores") or {}).items() if k in POR_CHAVE}
-        novos = {k: v for k, v in novos.items() if v or not POR_CHAVE[k]["segredo"]}  # segredo vazio = manter
-        ids = novos.get("TELEGRAM_ALLOWED_USER_IDS")
-        if ids:
-            ids = ",".join(x.strip() for x in ids.replace(";", ",").split(",") if x.strip())
-            if not ids_validos(ids):
-                raise HTTPException(400, "O ID precisa ser só números (ex.: 7592218870), não o @usuário.")
-            novos["TELEGRAM_ALLOWED_USER_IDS"] = ids
         try:
-            atualizar_env(novos)
+            salvar_valores(corpo.get("valores") or {})
         except ValueError as e:
             raise HTTPException(400, str(e)) from e
         return estado()

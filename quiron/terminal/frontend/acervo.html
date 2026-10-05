@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quíron — Acervo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111110'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23f0a020' font-family='monospace'%3EQ%3C/text%3E%3C/svg%3E">
 <style>
   :root {
     color-scheme: dark;
@@ -99,12 +100,13 @@
     .tabela td:last-child { margin-left: auto; }
   }
 </style>
+<link rel="stylesheet" href="/nav.css">
 </head>
 <body>
 <header>
   <div class="marca">QUÍRON<span>ACERVO</span></div>
   <span class="sub" style="color:var(--texto-3);font-size:13px">livros e materiais por campo de conhecimento</span>
-  <a class="voltar" href="/">← Terminal</a>
+  <nav id="abas" style="margin-left:auto"></nav>
 </header>
 
 <main>
@@ -332,5 +334,6 @@ $("#na-criar").addEventListener("click", async (ev) => {
 
 carregar();
 </script>
+<script src="/nav.js"></script>
 </body>
 </html>

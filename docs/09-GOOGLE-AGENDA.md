@@ -18,16 +18,16 @@ quiser em <https://myaccount.google.com/permissions>.
 5. Menu ☰ → **APIs e serviços** → **Credenciais** (ou **Clientes**) → **Criar credenciais** → **ID do cliente OAuth**:
    - Tipo de aplicativo: **App para computador** · Nome: `Quiron PC` → **Criar**.
    - Na janela que abrir, clique em **Baixar JSON**.
-6. Renomeie o arquivo baixado para **`google_oauth.json`** e coloque na pasta **`segredos`** do Quíron
-   (ex.: `C:\Users\PC\meu-agente-\segredos\google_oauth.json`). Esse arquivo **não** vai para o GitHub.
+6. No Quíron, abra **CONFIGURAÇÕES → Google Agenda → “Escolher o arquivo baixado (.json)”** e escolha o arquivo.
+   Ele é guardado em `segredos\google_oauth.json` (não precisa renomear) e **não** vai para o GitHub.
 
 ## Parte 2 — Autorizar
-1. Dê dois cliques em **`Quiron Google Agenda.bat`** (na pasta do Quíron).
+1. Em **CONFIGURAÇÕES → Google Agenda**, clique em **Conectar minha agenda**.
 2. O navegador abre na tela do Google: escolha a sua conta.
 3. Vai aparecer **"O Google não verificou este app"**: clique em **Avançado** → **Acessar Quiron (não seguro)**.
    (É o seu próprio app; o aviso aparece porque ele não passou pela verificação pública do Google.)
 4. Marque a permissão de **ver e editar eventos** e clique em **Continuar**.
-5. A página mostra "Pronto!". Na janela preta aparece **"Conexão OK. Hoje há N evento(s)"**. Feito.
+5. A página mostra "Pronto!" e a tela de Configurações passa a mostrar **✔ Conectado**. Feito.
 
 O token fica em `segredos\google_token.json` e se renova sozinho.
 
@@ -41,10 +41,10 @@ O token fica em `segredos\google_token.json` e se renova sozinho.
 - `/hoje` mostra seus compromissos do dia junto com as tarefas.
 - `/evento quinta às 15h reunião com CLI-012 por 1h30` cria o evento na sua agenda.
 - `/revisao` (e a revisão automática de domingo às 18h) mostra a próxima semana.
-- Agenda diferente da principal: no `.env`, `GOOGLE_AGENDA_ID=<id da agenda>` (em Configurações da agenda → "ID da agenda").
+- Agenda diferente da principal: CONFIGURAÇÕES → Chaves e contas → Opcionais → **Agenda do Google a usar** (em Configurações da agenda no Google → "ID da agenda").
 
 ## Deu erro?
 - "falta a credencial": o arquivo não está em `segredos\google_oauth.json` (confira o nome, sem `.json.json`).
 - "a autorização expirou ou foi revogada": o app ficou em modo Teste (Parte 1, passo 4) ou você revogou o acesso.
-  Publique o app e rode o `Quiron Google Agenda.bat` de novo.
+  Publique o app e clique em **Conectar de novo** em CONFIGURAÇÕES → Google Agenda.
 - "access_denied": na tela do Google você não marcou a permissão da agenda. Rode de novo e marque.

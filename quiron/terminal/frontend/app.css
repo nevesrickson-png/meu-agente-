@@ -138,11 +138,6 @@ svg text { fill: var(--texto-3); font: 10.5px var(--mono); }
   .alca { display: none; }
 }
 
-/* ---------- link para o Acervo (upload por área) */
-.link-acervo { font: 600 12px var(--mono); letter-spacing: .5px; color: var(--ambar); border: 1px solid var(--borda);
-               border-radius: 4px; padding: 3px 8px; text-decoration: none; }
-.link-acervo:hover { border-color: var(--ambar); text-decoration: none; }
-
 /* ---------- Terminal v2 (Fase 12): formulários, ações, chat */
 .acoes { margin: 6px 0; }
 .acoes button { color: var(--ambar); border-color: #5a3d10; }
@@ -174,8 +169,7 @@ details summary { cursor: pointer; margin: 4px 0; }
 /* ---------- celular (acesso pelo Tailscale): toque confortável e chat em tela cheia */
 @media (max-width: 760px) {
   .controles { flex-wrap: wrap; }
-  .link-acervo { display: none; }
-  .painel { min-height: 300px; max-height: 80vh; }
+    .painel { min-height: 300px; max-height: 80vh; }
   .painel-cab { height: 34px; }
   .painel-cab button { font-size: 17px; padding: 0 6px; }
   .painel-corpo { -webkit-overflow-scrolling: touch; }

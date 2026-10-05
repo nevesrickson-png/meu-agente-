@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quíron — Configurações</title>
+<meta name="theme-color" content="#141413">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111110'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23f0a020' font-family='monospace'%3EQ%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: dark;
+    --fundo: #0f0f0e; --painel: #1a1a19; --painel-2: #222220; --borda: #2e2e2b;
+    --texto: #f2f1ec; --texto-2: #c3c2b7; --texto-3: #8d8c84;
+    --ambar: #f0a020; --ok: #0ca30c; --erro: #e05252; --azul: #3987e5;
+    --mono: "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
+  a { color: var(--texto-2); }
+  a:hover { color: var(--ambar); }
+  code { font: 12px var(--mono); background: var(--painel-2); padding: 1px 5px; border-radius: 4px; }
+  .fixo { position: sticky; top: 0; z-index: 5; }
+  header { display: flex; align-items: center; gap: 14px; padding: 8px 18px;
+           background: #141413; border-bottom: 1px solid var(--borda); flex-wrap: wrap; }
+  .marca { font: 700 14px var(--mono); letter-spacing: .12em; color: var(--ambar); }
+  header nav { margin-left: auto; }
+  .indice { display: flex; gap: 4px; padding: 6px 18px; overflow-x: auto;
+            background: #121211ee; border-bottom: 1px solid var(--borda); }
+  .indice a { font-size: 13px; color: var(--texto-3); text-decoration: none; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+  .indice a:hover { color: var(--texto); background: var(--painel-2); }
+  main { max-width: 900px; margin: 0 auto; padding: 18px 16px 80px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; }
+  .sub { color: var(--texto-2); margin: 0 0 14px; }
+  section { background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; margin: 16px 0; min-width: 0; }
+  section > h2 { margin: 0; padding: 11px 16px; font-size: 12px; letter-spacing: .8px; text-transform: uppercase; color: var(--texto-3);
+                 border-bottom: 1px solid var(--borda); display: flex; align-items: center; gap: 8px; }
+  section > h2 .acoes { margin-left: auto; text-transform: none; letter-spacing: 0; display: flex; gap: 6px; }
+  .corpo { padding: 14px 16px; }
+  .banner { border-radius: 8px; padding: 12px 14px; margin: 12px 0; border: 1px solid var(--borda); background: var(--painel); }
+  .banner.aviso { border-color: #f0a02066; background: #f0a02014; }
+  .banner.ok { border-color: #0ca30c66; background: #0ca30c14; }
+  .banner.erro { border-color: #e0525266; background: #e0525214; }
+  .oculto { display: none !important; }
+
+  /* visão geral */
+  .cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; padding: 12px; }
+  .cartao { background: var(--painel-2); border: 1px solid var(--borda); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .cartao h3 { margin: 0; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: var(--texto-3); }
+  .cartao .estado { font-size: 15px; font-weight: 600; }
+  .cartao .detalhe { color: var(--texto-3); font-size: 12.5px; overflow-wrap: anywhere; }
+  .cartao .botoes { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+  .ok { color: var(--ok); } .aviso { color: var(--ambar); } .erro { color: var(--erro); } .neutro { color: var(--texto-2); }
+
+  /* campos */
+  .grupo-titulo { padding: 10px 16px 0; font-size: 12px; font-weight: 700; color: var(--texto-3); letter-spacing: .6px; text-transform: uppercase; }
+  details.opcionais > summary { cursor: pointer; list-style: none; padding: 12px 16px; font-size: 12px; font-weight: 700;
+                                color: var(--texto-3); letter-spacing: .6px; text-transform: uppercase; border-top: 1px solid var(--borda); }
+  details.opcionais > summary::before { content: "▸ "; }
+  details.opcionais[open] > summary::before { content: "▾ "; }
+  .campo { padding: 12px 16px; border-bottom: 1px solid var(--borda); }
+  .topo-campo { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  label { font-weight: 600; }
+  .obrig { color: var(--ambar); font-size: 12px; }
+  .chip { margin-left: auto; font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--borda); color: var(--texto-2); white-space: nowrap; }
+  .chip.ok { border-color: #0ca30c55; } .chip.aviso { border-color: #f0a02055; } .chip.erro { border-color: #e0525255; }
+  .ajuda { color: var(--texto-3); font-size: 13px; margin: 2px 0 8px; }
+  .linha { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=text], input[type=password] { flex: 1 1 260px; min-width: 0; background: var(--fundo); border: 1px solid var(--borda); color: var(--texto);
+          border-radius: 6px; padding: 9px 10px; font: 13px var(--mono); }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+  button { background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: 6px;
+           padding: 7px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+  .cartao button, .campo button { background: var(--painel); }
+  button:hover { border-color: var(--texto-3); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primario { background: var(--ambar); color: #1a1205; border-color: var(--ambar); font-weight: 700; }
+  button.perigo { color: var(--erro); }
+  button.link { background: none; border: 0; color: var(--texto-3); padding: 4px 0; text-decoration: underline; }
+  .resultado { font-size: 13px; margin-top: 6px; }
+  .pessoas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .passos { margin: 6px 0 8px 18px; padding: 0; color: var(--texto-2); font-size: 13px; }
+  .rodape-sec { display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding: 12px 16px; flex-wrap: wrap;
+                position: sticky; bottom: 0; background: #1a1a19f2; border-top: 1px solid var(--borda); border-radius: 0 0 8px 8px; }
+  .rodape-sec .aviso-salvo { color: var(--texto-3); font-size: 13px; margin-right: auto; }
+
+  /* passos (Google / offline) */
+  .passo { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--borda); }
+  .passo:last-child { border-bottom: 0; }
+  .num { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--mono);
+         border: 1px solid var(--borda); color: var(--texto-2); }
+  .num.feito { border-color: #0ca30c88; color: var(--ok); }
+  .passo h3 { margin: 0 0 4px; font-size: 14px; }
+  .passo p { margin: 0 0 8px; color: var(--texto-2); font-size: 13px; }
+  .lista-verif { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+  .lista-verif li { display: grid; grid-template-columns: 22px minmax(150px, 220px) 1fr; gap: 6px; }
+  .lista-verif .d { color: var(--texto-3); overflow-wrap: anywhere; }
+  pre.log { margin: 0; padding: 12px 16px; max-height: 360px; overflow: auto; font: 12px/1.5 var(--mono); color: var(--texto-2);
+            white-space: pre-wrap; overflow-wrap: anywhere; background: #0b0b0a; border-radius: 0 0 8px 8px; }
+  .cortina { position: fixed; inset: 0; z-index: 20; background: #0f0f0ee8; display: grid; place-items: center; text-align: center; padding: 20px; }
+  .cortina h2 { color: var(--ambar); }
+  @media (max-width: 600px) {
+    header { padding: 8px 10px; } .indice { padding: 6px 10px; }
+    .lista-verif li { grid-template-columns: 22px 1fr; } .lista-verif .d { grid-column: 2; }
+  }
+</style>
+<link rel="stylesheet" href="/nav.css">
+</head>
+<body>
+<div class="fixo">
+<header>
+  <div class="marca">QUÍRON</div>
+  <nav id="abas"></nav>
+</header>
+<div class="indice" role="navigation" aria-label="Seções">
+  <a href="#visao">Visão geral</a><a href="#chaves">Chaves e contas</a><a href="#google">Google Agenda</a>
+  <a href="#offline">Versão offline</a><a href="#registro">Registro do Telegram</a>
+</div>
+</div>
+
+<main>
+  <h1>Configurações</h1>
+  <p class="sub">Tudo do Quíron num lugar só: chaves, Telegram, Google Agenda, versão offline e início automático.
+    As chaves ficam só neste computador (arquivo <code>.env</code>) e nunca vão para o GitHub.</p>
+  <div id="boas-vindas" class="banner aviso oculto">
+    <b>Primeiro uso:</b> preencha os itens marcados como <b>obrigatório</b> em “Chaves e contas” e clique em <b>Salvar</b>.
+    O Quíron liga sozinho no Telegram assim que estiver tudo certo.
+  </div>
+  <div id="mensagem" class="banner oculto" role="status"></div>
+
+  <section id="visao" aria-labelledby="t-visao">
+    <h2 id="t-visao">Visão geral <span class="acoes"><button type="button" id="atualizar-visao" title="Atualizar">↻ Atualizar</button></span></h2>
+    <div class="cartoes" id="cartoes"><div class="corpo">carregando…</div></div>
+  </section>
+
+  <section id="chaves" aria-labelledby="t-chaves">
+    <h2 id="t-chaves">Chaves e contas</h2>
+    <div id="grupos"></div>
+    <div class="rodape-sec">
+      <span class="aviso-salvo" id="aviso-salvo">Campos de chave em branco mantêm o valor atual.</span>
+      <button type="button" id="salvar" class="primario">Salvar</button>
+    </div>
+  </section>
+
+  <section id="google" aria-labelledby="t-google">
+    <h2 id="t-google">Google Agenda</h2>
+    <div class="corpo" id="google-corpo">carregando…</div>
+  </section>
+
+  <section id="offline" aria-labelledby="t-offline">
+    <h2 id="t-offline">Versão offline</h2>
+    <div class="corpo" id="offline-corpo">carregando…</div>
+  </section>
+
+  <section id="registro" aria-labelledby="t-registro">
+    <h2 id="t-registro">Registro do Telegram <span class="acoes"><button type="button" id="atualizar-log">↻ Atualizar</button></span></h2>
+    <pre class="log" id="log">—</pre>
+  </section>
+</main>
+
+<div id="cortina" class="cortina oculto" role="alert"><div><h2>Reiniciando o Quíron…</h2><p id="cortina-texto">A tela volta sozinha em alguns segundos.</p></div></div>
+
+<script src="/nav.js"></script>
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const GUIA_GOOGLE = "https://github.com/nevesrickson-png/meu-agente-/blob/claude/determined-davinci-y9dr5i/docs/09-GOOGLE-AGENDA.md";
+let E = null; // estado completo
+
+async function api(caminho, opcoes = {}) {
+  const corpo = opcoes.corpo;
+  const r = await fetch(caminho, {
+    method: opcoes.metodo || (corpo === undefined ? "GET" : "POST"),
+    headers: { "X-Quiron": "terminal", ...(opcoes.bruto ? {} : { "Content-Type": "application/json" }) },
+    body: opcoes.bruto !== undefined ? opcoes.bruto : (corpo === undefined ? undefined : JSON.stringify(corpo)),
+    cache: "no-store",
+  });
+  const dados = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(dados.detail || dados.erro || `erro ${r.status}`);
+  return dados;
+}
+
+function el(tag, attrs = {}, ...filhos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const f of filhos.flat()) if (f != null && f !== false) e.append(f);
+  return e;
+}
+
+function mensagem(texto, tipo = "ok") {
+  const m = $("#mensagem");
+  m.className = "banner " + tipo + (texto ? "" : " oculto");
+  m.textContent = texto || "";
+}
+
+async function acao(botao, fn) {
+  botao.disabled = true;
+  try { return await fn(); }
+  catch (e) { mensagem(e.message, "erro"); }
+  finally { botao.disabled = false; }
+}
+
+// ------------------------------------------------------------------ visão geral
+const TELEGRAM = {
+  ligado: ["ok", "● Ligado"], religando: ["aviso", "◐ Religando…"], desligado: ["neutro", "○ Desligado"],
+  sem_config: ["aviso", "! Faltam chaves"], offline: ["neutro", "⊘ Desligado (versão offline)"],
+  externo: ["neutro", "● Gerenciado pelo servidor"], erro: ["erro", "✖ Erro ao ligar"],
+};
+
+function cartao(titulo, [classe, estado], detalhe, ...botoes) {
+  return el("div", { class: "cartao" }, el("h3", {}, titulo), el("div", { class: "estado " + classe }, estado),
+    detalhe ? el("div", { class: "detalhe" }, detalhe) : null, botoes.length ? el("div", { class: "botoes" }, ...botoes) : null);
+}
+
+function botao(texto, fn, extra = {}) {
+  return el("button", { type: "button", ...extra, onclick: (ev) => acao(ev.currentTarget, fn) }, texto);
+}
+
+async function telegram(acaoNome) {
+  await api(`/api/sistema/telegram/${acaoNome}`, { corpo: {} });
+  await carregar();
+  setTimeout(carregar, 2500);
+  window.quironAtualizarSelo && window.quironAtualizarSelo();
+}
+
+function desenharVisao() {
+  const t = E.telegram;
+  const [classe, texto] = TELEGRAM[t.situacao] || ["neutro", t.situacao];
+  const det = t.situacao === "ligado" ? `desde ${t.desde}` + (t.reinicios ? ` · religou ${t.reinicios}× (${t.ultimo_erro})` : "")
+    : t.situacao === "sem_config" ? "Preencha as chaves obrigatórias abaixo."
+    : t.situacao === "externo" ? "No servidor o bot é um serviço próprio (Docker)." : (t.ultimo_erro || "");
+  const botoesTg = [];
+  if (E.central && !E.offline && t.situacao !== "sem_config") {
+    if (t.situacao === "ligado" || t.situacao === "religando") {
+      botoesTg.push(botao("Reiniciar", () => telegram("reiniciar")), botao("Desligar", () => telegram("desligar"), { class: "perigo" }));
+    } else botoesTg.push(botao("Ligar", () => telegram("ligar"), { class: "primario" }));
+  }
+  botoesTg.push(el("a", { href: "#registro", class: "detalhe" }, "ver registro"));
+
+  const campos = Object.fromEntries(E.config.campos.map(c => [c.chave, c]));
+  const ia = E.offline ? ["ok", "Modelo local"] : (campos.GEMINI_API_KEY.preenchido ? ["ok", "✔ Gemini" + (campos.GROQ_API_KEY.preenchido ? " + Groq" : "")] : ["aviso", "! Falta a chave do Gemini"]);
+  const iaDet = E.offline ? E.modelo_offline : (E.modelos || []).slice(0, 3).join(" → ") + (campos.GROQ_API_KEY.preenchido ? "" : " · sem Groq não há áudio");
+
+  const g = E.google;
+  const gEstado = g.autorizado ? ["ok", "✔ Conectado"] : g.credencial ? ["aviso", "! Falta autorizar"] : ["neutro", "○ Não configurado"];
+
+  const modo = E.offline ? ["aviso", "⊘ Offline (sem internet)"] : ["ok", "● Normal (com internet)"];
+  const inicio = E.inicio.disponivel ? (E.inicio.ligado ? ["ok", "✔ Liga com o Windows"] : ["neutro", "○ Desligado"]) : ["neutro", "Só no Windows"];
+  const botoesInicio = E.inicio.disponivel && E.local ? [botao(E.inicio.ligado ? "Desligar" : "Ligar com o Windows", async () => {
+    await api("/api/sistema/inicio_automatico", { corpo: { ligar: !E.inicio.ligado } });
+    mensagem(E.inicio.ligado ? "Início automático desligado." : "Pronto: o Quíron liga sozinho quando você entrar no Windows, e o PC não dorme na tomada.");
+    await carregar();
+  })] : [];
+
+  $("#cartoes").replaceChildren(
+    cartao("Telegram", [classe, texto], det, ...botoesTg),
+    cartao("Cérebro (IA)", ia, iaDet, el("a", { href: "#chaves", class: "detalhe" }, "chaves")),
+    cartao("Google Agenda", gEstado, g.autorizado ? `agenda: ${g.agenda}` : "Tarefas e /hoje com os seus compromissos.",
+      el("a", { href: "#google", class: "detalhe" }, g.autorizado ? "gerenciar" : "configurar")),
+    cartao("Modo", modo, E.offline ? "Clientes reais no cofre (Terminal → CLI)." : "Dados de mercado ao vivo e IA na nuvem.",
+      el("a", { href: "#offline", class: "detalhe" }, E.offline ? "voltar ao normal" : "versão offline")),
+    cartao("Início automático", inicio, E.inicio.disponivel ? "Para o briefing das 7h30 chegar, o PC precisa estar ligado." : "", ...botoesInicio),
+    cartao("Versão", ["neutro", E.versao.codigo || "—"], (E.versao.data ? `de ${E.versao.data} · ` : "") + "atualiza sozinho ao abrir pelo atalho Quiron"),
+  );
+}
+
+// ------------------------------------------------------------------ chaves
+function chipDe(c) {
+  if (c.invalido) return el("span", { class: "chip erro" }, "✖ inválido");
+  if (c.preenchido) return el("span", { class: "chip ok" }, "✔ " + (c.segredo ? c.mascara : "preenchido"));
+  return el("span", { class: "chip " + (c.obrigatorio ? "aviso" : "") }, c.obrigatorio ? "! falta preencher" : "vazio");
+}
+
+function resultado(caixa, r) {
+  caixa.className = "resultado " + (r.ok ? "ok" : "erro");
+  caixa.textContent = (r.ok ? "✔ " : "✖ ") + r.mensagem;
+}
+
+function campo(c) {
+  const input = el("input", { id: "in-" + c.chave, name: c.chave, autocomplete: "off", spellcheck: "false",
+    type: c.segredo ? "password" : "text", placeholder: c.segredo ? (c.preenchido ? "deixe em branco para manter" : "cole aqui") : "" });
+  if (!c.segredo) input.value = c.valor || "";
+  const caixa = el("div", { class: "resultado", "aria-live": "polite" });
+  const botoes = [];
+  if (c.segredo) botoes.push(el("button", { type: "button", title: "mostrar/ocultar", "aria-label": "mostrar ou ocultar",
+    onclick: () => { input.type = input.type === "password" ? "text" : "password"; } }, "👁"));
+  if (c.teste) botoes.push(el("button", { type: "button", onclick: async (ev) => {
+    ev.target.disabled = true; caixa.className = "resultado"; caixa.textContent = "testando…";
+    try { resultado(caixa, await api("/api/sistema/config/testar", { corpo: { chave: c.chave, valor: input.value } })); }
+    catch (e) { resultado(caixa, { ok: false, mensagem: e.message }); }
+    ev.target.disabled = false;
+  } }, "Testar"));
+  if (c.chave === "TELEGRAM_ALLOWED_USER_IDS") botoes.push(el("button", { type: "button", onclick: descobrir }, "Descobrir meu ID"));
+  if (c.preenchido && !c.obrigatorio) botoes.push(el("button", { type: "button", class: "link", onclick: async () => {
+    if (!confirm(`Apagar “${c.rotulo}”?`)) return;
+    try { E.config = (await api("/api/sistema/config/apagar", { corpo: { chave: c.chave } })).config; desenharChaves(); }
+    catch (e) { mensagem(e.message, "erro"); }
+  } }, "apagar"));
+  const extra = c.chave === "TELEGRAM_ALLOWED_USER_IDS" ? [el("ol", { class: "passos" },
+      el("li", {}, "Preencha o token do bot acima."), el("li", {}, "No Telegram, abra o seu bot e mande /start."),
+      el("li", {}, "Clique em “Descobrir meu ID” e escolha o seu nome.")), el("div", { class: "pessoas", id: "pessoas" })] : [];
+  return el("div", { class: "campo" },
+    el("div", { class: "topo-campo" }, el("label", { for: input.id }, c.rotulo),
+      c.obrigatorio ? el("span", { class: "obrig" }, "obrigatório") : null, chipDe(c)),
+    el("div", { class: "ajuda" }, c.ajuda), ...extra, el("div", { class: "linha" }, input, ...botoes), caixa);
+}
+
+async function descobrir(ev) {
+  const caixa = ev.target.closest(".campo").querySelector(".resultado");
+  const lista = $("#pessoas");
+  ev.target.disabled = true; lista.replaceChildren(); caixa.className = "resultado"; caixa.textContent = "procurando…";
+  try {
+    const r = await api("/api/sistema/config/descobrir_id", { corpo: { token: $("#in-TELEGRAM_BOT_TOKEN").value } });
+    if (!r.ok) { resultado(caixa, r); return; }
+    caixa.textContent = "Quem é você? Clique para usar:";
+    for (const p of r.pessoas) lista.append(el("button", { type: "button", onclick: () => {
+      $("#in-TELEGRAM_ALLOWED_USER_IDS").value = String(p.id);
+      resultado(caixa, { ok: true, mensagem: `ID ${p.id} escolhido. Clique em Salvar.` });
+      lista.replaceChildren();
+    } }, `${p.nome || "sem nome"}${p.usuario ? " (@" + p.usuario + ")" : ""} · ${p.id}`));
+  } catch (e) { resultado(caixa, { ok: false, mensagem: e.message }); }
+  finally { ev.target.disabled = false; }
+}
+
+function desenharChaves() {
+  const grupos = {};
+  for (const c of E.config.campos) (grupos[c.grupo] ||= []).push(c);
+  const blocos = Object.entries(grupos).map(([nome, campos]) => nome === "Opcionais"
+    ? el("details", { class: "opcionais" }, el("summary", {}, "Opcionais — pode deixar para depois"), ...campos.map(campo))
+    : el("div", {}, el("div", { class: "grupo-titulo" }, nome), ...campos.map(campo)));
+  $("#grupos").replaceChildren(...blocos);
+  $("#boas-vindas").classList.toggle("oculto", E.config.completo);
+}
+
+function valores() {
+  const v = {};
+  for (const c of E.config.campos) {
+    const i = $("#in-" + c.chave);
+    if (i && (i.value.trim() || !c.segredo)) v[c.chave] = i.value.trim();
+  }
+  return v;
+}
+
+$("#salvar").addEventListener("click", (ev) => acao(ev.currentTarget, async () => {
+  const r = await api("/api/sistema/config/salvar", { corpo: { valores: valores() } });
+  E.config = r.config;
+  $("#aviso-salvo").textContent = "Salvo às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  if (!r.config.completo) {
+    const nomes = r.config.campos.filter(c => r.config.faltando.includes(c.chave)).map(c => c.rotulo);
+    mensagem("Salvo. Ainda falta: " + nomes.join(", ") + ".", "aviso");
+  } else mensagem(r.mensagem || "Salvo.", "ok");
+  await carregar();
+  setTimeout(carregar, 3000);
+  window.quironAtualizarSelo && window.quironAtualizarSelo();
+}));
+
+// ------------------------------------------------------------------ Google Agenda
+let pollGoogle = null;
+function desenharGoogle() {
+  const g = E.google;
+  const passo = (n, feito, titulo, ...conteudo) => el("div", { class: "passo" },
+    el("div", { class: "num" + (feito ? " feito" : "") }, feito ? "✔" : String(n)), el("div", {}, el("h3", {}, titulo), ...conteudo));
+  const arquivo = el("input", { type: "file", accept: ".json,application/json", id: "arq-google", class: "oculto" });
+  arquivo.addEventListener("change", async () => {
+    const f = arquivo.files[0]; if (!f) return;
+    try { E.google = await api("/api/sistema/google/credencial", { bruto: await f.arrayBuffer() }); mensagem("Credencial do Google guardada neste PC (pasta segredos).", "ok"); desenharGoogle(); desenharVisao(); }
+    catch (e) { mensagem(e.message, "erro"); }
+  });
+  const p1 = passo(1, g.credencial, "Criar a credencial no Google (uma vez só, ~10 min)",
+    el("p", {}, g.credencial ? "Credencial guardada neste PC." : "Siga a Parte 1 do guia e baixe o arquivo JSON do Google."),
+    g.erro_credencial ? el("p", { class: "erro" }, g.erro_credencial) : null,
+    el("div", { class: "linha" }, el("a", { href: GUIA_GOOGLE, target: "_blank", rel: "noopener" }, "Abrir o guia passo a passo ↗"),
+      arquivo, el("button", { type: "button", onclick: () => arquivo.click() }, g.credencial ? "Trocar arquivo" : "Escolher o arquivo baixado (.json)")));
+  const conteudo2 = [];
+  if (g.andamento) {
+    conteudo2.push(el("p", { class: "aviso" }, "Aguardando você permitir o acesso na página do Google que abriu no navegador…"));
+    if (g.link) conteudo2.push(el("p", {}, el("a", { href: g.link, target: "_blank", rel: "noopener" }, "Não abriu? Clique aqui para abrir a página do Google ↗")));
+    conteudo2.push(el("p", {}, "Se aparecer “O Google não verificou este app”: Avançado → Acessar Quiron (é o seu próprio app)."));
+  } else if (g.autorizado) {
+    conteudo2.push(el("p", { class: "ok" }, `✔ Conectado à agenda “${g.agenda === "primary" ? "principal" : g.agenda}”. O token se renova sozinho.`),
+      el("div", { class: "linha" }, botao("Conectar de novo", conectarGoogle),
+        botao("Desconectar", async () => { if (!confirm("Desconectar o Google Agenda deste PC?")) return; E.google = await api("/api/sistema/google/desconectar", { corpo: {} }); desenharGoogle(); desenharVisao(); }, { class: "perigo" })));
+  } else {
+    conteudo2.push(el("p", {}, "Abre o navegador na sua conta Google para você permitir que o Quíron veja e crie eventos."),
+      el("div", { class: "linha" }, botao("Conectar minha agenda", conectarGoogle, { class: "primario", disabled: !g.credencial || !E.local })));
+    if (!E.local) conteudo2.push(el("p", { class: "aviso" }, "Faça este passo no próprio PC do Quíron."));
+  }
+  if (g.resultado && !g.andamento) conteudo2.push(el("p", { class: g.ok ? "ok" : "erro" }, (g.ok ? "" : "✖ ") + g.resultado));
+  const p2 = passo(2, g.autorizado, "Autorizar o acesso à sua agenda", ...conteudo2);
+  $("#google-corpo").replaceChildren(p1, p2);
+  clearTimeout(pollGoogle);
+  if (g.andamento) pollGoogle = setTimeout(async () => { try { E.google = await api("/api/sistema/google"); desenharGoogle(); desenharVisao(); } catch (e) {} }, 2000);
+}
+
+async function conectarGoogle() {
+  E.google = await api("/api/sistema/google/conectar", { corpo: {} });
+  desenharGoogle();
+}
+
+// ------------------------------------------------------------------ offline
+let verificacao = null;
+function desenharOffline() {
+  const partes = [];
+  if (E.offline) {
+    partes.push(el("p", {}, "O Quíron está na ", el("b", {}, "versão offline"), `: sem internet, com o modelo local (${E.modelo_offline}), a biblioteca do PC e o cofre de clientes reais (Terminal → CLI). O Telegram fica desligado.`),
+      el("div", { class: "linha" }, botao("Voltar ao modo normal (com internet)", () => trocarModo("normal"), { class: "primario", disabled: !E.central })));
+  } else {
+    partes.push(el("p", {}, "Para trabalhar sem internet ou com nomes reais de clientes: modelo local (Ollama), dados do último cache e o cofre criptografado. ",
+      el("a", { href: "https://github.com/nevesrickson-png/meu-agente-/blob/claude/determined-davinci-y9dr5i/docs/10-OFFLINE.md", target: "_blank", rel: "noopener" }, "Guia ↗")));
+    partes.push(el("div", { class: "linha" }, botao("Verificar se está pronta", async () => { verificacao = await api("/api/sistema/offline/verificar"); desenharOffline(); }),
+      botao("Reiniciar em modo offline", () => trocarModo("offline"), { disabled: !E.central || !(verificacao && verificacao.pronto),
+        title: verificacao && verificacao.pronto ? "" : "Verifique primeiro" })));
+  }
+  if (verificacao && !E.offline) {
+    partes.push(el("ul", { class: "lista-verif" }, ...verificacao.itens.map(i => el("li", {},
+      el("span", { class: i.ok ? "ok" : "erro", "aria-label": i.ok ? "ok" : "falta" }, i.ok ? "✔" : "✖"), el("span", {}, i.item), el("span", { class: "d" }, i.detalhe)))));
+    partes.push(el("p", { class: verificacao.pronto ? "ok" : "aviso" }, verificacao.pronto ? "✔ Tudo pronto para o modo offline." : "Corrija os itens com ✖ (o guia explica cada um) e verifique de novo."));
+  }
+  if (!E.central) partes.push(el("p", { class: "aviso" }, "Para trocar de modo por aqui, abra o Quíron pelo atalho Quiron."));
+  $("#offline-corpo").replaceChildren(...partes);
+}
+
+async function trocarModo(modo) {
+  const texto = modo === "offline" ? "Reiniciar o Quíron na versão OFFLINE? O Telegram será desligado." : "Voltar ao modo normal (com internet)? O Telegram liga de novo.";
+  if (!confirm(texto)) return;
+  await api("/api/sistema/modo", { corpo: { modo } });
+  $("#cortina").classList.remove("oculto");
+  const alvo = modo === "offline";
+  await new Promise(r => setTimeout(r, 3000));
+  for (let i = 0; i < 80; i++) {
+    try {
+      const r = await fetch("/api/sistema/resumo", { cache: "no-store" });
+      if (r.ok && (await r.json()).offline === alvo) { location.reload(); return; }
+    } catch (e) {}
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  $("#cortina-texto").textContent = "Está demorando. Confira a janela preta do Quíron ou abra de novo pelo atalho.";
+}
+
+// ------------------------------------------------------------------ registro
+async function carregarLog() {
+  try {
+    const r = await api("/api/sistema/telegram/registro?linhas=300");
+    const log = $("#log");
+    log.textContent = r.texto || "(vazio — o registro aparece quando o Telegram liga por esta tela)";
+    log.scrollTop = log.scrollHeight;
+  } catch (e) { $("#log").textContent = e.message; }
+}
+$("#atualizar-log").addEventListener("click", carregarLog);
+
+// ------------------------------------------------------------------ carga
+async function carregar() {
+  try {
+    E = await api("/api/sistema/estado");
+  } catch (e) {
+    $("#cartoes").replaceChildren(el("div", { class: "corpo erro" }, e.message));
+    for (const id of ["#grupos", "#google-corpo", "#offline-corpo"]) $(id).replaceChildren();
+    return;
+  }
+  desenharVisao();
+  if (!document.activeElement || !document.activeElement.closest("#chaves")) desenharChaves(); // não apaga o que está sendo digitado
+  desenharGoogle();
+  desenharOffline();
+}
+$("#atualizar-visao").addEventListener("click", () => { carregar(); carregarLog(); });
+carregar().then(() => { if (location.hash.length > 1) { const alvo = document.querySelector(location.hash); alvo && alvo.scrollIntoView(); } });
+carregarLog();
+document.addEventListener("quiron:resumo", (ev) => {
+  if (E && ev.detail.telegram.situacao !== E.telegram.situacao) carregar();
+});
+</script>
+</body>
+</html>

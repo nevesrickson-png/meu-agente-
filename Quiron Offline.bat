@@ -13,6 +13,7 @@ echo Conferindo a versao offline...
 uv run --offline --quiet quiron-offline verificar
 if errorlevel 1 (echo. & echo Corrija o item marcado com X acima e abra de novo. & pause & exit /b 1)
 echo.
-echo Abrindo o Terminal offline no navegador (CLI = clientes, BIB = biblioteca, CHAT = Quiron local)...
-uv run --offline --quiet quiron-terminal
+echo Abrindo o Quiron offline no navegador (CLI = clientes, BIB = biblioteca, CHAT = Quiron local)...
+echo Para voltar ao normal: CONFIGURACOES - Versao offline - Voltar ao modo normal.
+uv run --offline --quiet quiron --offline
 if errorlevel 1 pause

@@ -500,7 +500,7 @@ function renderAjuda(corpo) {
     ["TOP", "Principais notícias agora"], ["RPT", "Relatórios do motor de análise (PDF e planilha)"], ["NEWS <tema>", "Notícias de um tema ou ticker (ex.: NEWS COPOM)"], ["SOC <tema>", "O que as redes dizem"],
     ["ECO", "Agenda econômica"], ["CURV", "Curva de juros pré, real e inflação implícita"], ["MACRO", "Painel macro e Focus"],
     ["JUROS", "Selic, CDI e Tesouro"], ["WEI", "Índices mundiais"], ["FX", "Moedas"], ["CMDTY", "Commodities"], ["W", "Watchlist"],
-    ["CALC", "Calculadoras"], ["STATUS", "Saúde do sistema"], ["HELP", "Esta ajuda"],
+    ["CALC", "Calculadoras"], ["STATUS", "Saúde do sistema"], ["CONFIG", "Configurações: chaves, Telegram, Google Agenda, offline"], ["ACERVO", "Enviar livros e materiais"], ["HELP", "Esta ajuda"],
     ["WEGE3 FA", "Demonstrações da CVM e múltiplos (uso interno)"], ["WEGE3 DCF", "Dispara o valuation completo; o PDF aparece em RPT"],
     ["FUND <nome>", "Busca fundos na CVM (12 meses, PL); análise ou comparação"], ["CMPF", "Compara de 2 a 6 fundos"],
     ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
@@ -906,6 +906,8 @@ function executar(texto) {
   const simples = { TOP: ["noticias", {}], ECO: ["agenda", {}], CURV: ["curva", {}], MACRO: ["macro", {}], JUROS: ["juros", {}], WEI: ["mundo", {}],
     FX: ["moedas", {}], CMDTY: ["commodities", {}], W: ["watchlist", {}], CALC: ["calc", {}], RPT: ["rpt", {}], STATUS: ["status", {}], HELP: ["ajuda", {}], "?": ["ajuda", {}] };
   if (simples[a] && !b) return adicionarPainel(...simples[a]);
+  const telas = { CONFIG: "/config", CONF: "/config", CONFIGURACOES: "/config", "CONFIGURAÇÕES": "/config", SIS: "/config", ACERVO: "/acervo" };
+  if (telas[a] && !b) { location.href = telas[a]; return; }
   if ((a === "NEWS" || a === "N") && b) return adicionarPainel("noticias", { termo: [b, ...resto].join(" ").toLowerCase() });
   if (a === "SOC" && b) return adicionarPainel("redes", { termo: [b, ...resto].join(" ").toLowerCase() });
   if (a === "SOC") return aviso("Use SOC <tema>, ex.: SOC COPOM");

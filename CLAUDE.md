@@ -130,10 +130,19 @@ Arquivos com DRM não são processados.
   Comandos com `skill:` no frontmatter pré-carregam a skill (`responder(..., skills=[...])`); `audio.py` transcreve voz pelo
   Whisper do Groq (`whisper-large-v3-turbo`, pt, vocabulário de mercado); `rotinas_padrao` de `config/agente.yaml` são
   criadas uma vez (briefing 7h30) e o bot pré-aquece as fontes às 7h10.
-- Configurações (`quiron/configurador/`): tela local (FastAPI em 127.0.0.1:8766, código aleatório no `#` da URL +
-  checagem de Host) que lê/grava o `.env` preservando comentários, testa chaves (Telegram getMe, Gemini, Groq, brapi) e
-  descobre o ID pelo getUpdates; segredos nunca voltam inteiros à página. `quiron-configurar --verificar` (0 = completo)
-  é usado pelos `.bat` do Windows (`Abrir Quiron.bat` instala/atualiza/abre; `Quiron Configuracoes.bat`).
+- Configurações (`quiron/configurador/`): regras do `.env` (`CAMPOS`, `salvar_valores`, `atualizar_env` preservando
+  comentários, testes de chave, descobrir ID pelo getUpdates; segredos nunca voltam inteiros). `quiron-configurar` (tela
+  avulsa em 127.0.0.1:8766) e `--verificar` (0 = completo) continuam existindo, mas o PC usa a interface única abaixo.
+- Interface única (`uv run quiron` = atalho Quiron): `quiron/iniciar.py` (lançador: sobe o Terminal com `--central`,
+  religa em 30 s se cair, código 3 = troca de modo lida de `dados/modo_proximo`, `QUIRON_CENTRAL=1`; se já aberto só abre
+  o navegador) + `terminal/backend/central.py` (rotas `/api/sistema/*`: `Supervisor` do bot como processo filho
+  `python -m quiron.runtime.telegram_bot` com registro em `dados/logs/telegram.log`, recusa segundo bot e encerra órfãos;
+  chaves (salvar aplica no `os.environ` e reinicia o bot); Google Agenda (credencial por upload, `autorizar(abrir=…)`);
+  verificação offline e troca de modo (sair força `os._exit` após 5 s); início automático do Windows; versão).
+  Rotas de sistema: `_proteger` + cliente local (ou com TERMINAL_SENHA). Frontend: `nav.js`/`nav.css` (abas
+  TERMINAL · ACERVO · CONFIGURAÇÕES + selo do Telegram) em `index.html`, `acervo.html` e `config.html`. Sem `--central`
+  (Docker) o bot aparece como "gerenciado pelo servidor". `.bat` restantes: `Abrir Quiron.bat`, `Quiron Offline.bat`
+  (`quiron --offline`) e `Quiron Telegram.bat` (só compatibilidade com o Abrir antigo). Testes: `testes/test_central.py`.
 - Áreas (`quiron/servicos/areas.py`): 20 campos em `config/areas_conhecimento.yaml` + certificações da trilha (+ CEA) +
   personalizadas em `dados/areas_personalizadas.yaml` (fora do git). Cada área = pasta do acervo (id minúsculo) + trilha da
   Academia (programa em `config/editais/<ID>.yaml`; campos têm `tipo: campo`; sem arquivo → programa provisório de 1 tópico).

@@ -317,6 +317,19 @@ Execute a FASE 18 do docs/00-ROTEIRO.md. Antes, leia o CRM e o SDR e me proponha
 
 ---
 
+## Interface única (05/10/2026) — pedido do Rickson: "um sistema só com configurações e tudo junto"
+- [x] Um atalho (**Quiron**) abre tudo: Terminal + Acervo + Configurações em abas, com o Telegram ligado e supervisionado
+  (religa sozinho, registro na tela, nunca dois bots ao mesmo tempo)
+- [x] Aba CONFIGURAÇÕES: visão geral, chaves (testar, descobrir ID; salvar reinicia o bot), Google Agenda (credencial +
+  conectar), versão offline (verificar + trocar de modo com um clique), início automático com o Windows, versão
+- [x] Atalhos soltos aposentados (Terminal, Acervo, Configurações, Google Agenda, Início automático); ficam **Quiron** e
+  **Quiron - Offline**
+✅ Aceite (05/10/2026): navegador real — abas e selo em todas as telas, primeiro uso abre CONFIGURAÇÕES, troca
+normal → offline → normal pela tela em ~8 s, sem rolagem lateral no celular; 215 testes (`testes/test_central.py`).
+Falta: você abrir pelo atalho no seu PC e salvar as chaves por lá uma vez para ver o Telegram ligar.
+
+---
+
 ## Depois do roteiro — pendências do seu lado (05/10/2026)
 Todas as fases foram construídas e aprovadas no ambiente de desenvolvimento, menos a 18 (adiada). O que falta é colocar no ar:
 - [ ] 5.3/5.4 Rodar no host definitivo (mini PC): `deploy/preparar_host.sh` + `deploy/instalar.sh` (`docs/03-HOSPEDAGEM.md`)

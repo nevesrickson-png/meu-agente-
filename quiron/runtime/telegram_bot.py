@@ -514,3 +514,7 @@ def main() -> None:
         asyncio.run(_rodar())
     except KeyboardInterrupt:
         pass
+
+
+if __name__ == "__main__":
+    main()

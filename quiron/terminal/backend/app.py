@@ -699,6 +699,12 @@ async def api_chat_decidir(request: Request, corpo: dict = Body(...)) -> dict:
     return {"resposta": f"✅ Aprovado e feito: {p.resumo}\n{(await agente.executar_aprovada(p))[:3000]}"}
 
 
+# ---------------------------------------------------------------- central (aba CONFIGURAÇÕES)
+from quiron.terminal.backend import central  # noqa: E402
+
+app.include_router(central.router)
+
+
 # ---------------------------------------------------------------- páginas
 
 @app.get("/")
@@ -706,33 +712,78 @@ def inicio() -> FileResponse:
     return FileResponse(FRONTEND / "index.html")
 
 
+@app.get("/config")
+def pagina_config() -> FileResponse:
+    return FileResponse(FRONTEND / "config.html")
+
+
 app.mount("/", StaticFiles(directory=FRONTEND), name="frontend")
 
 
-def main() -> None:
-    """`uv run quiron-terminal` — abre o Terminal no navegador."""
+def main(argv: list[str] | None = None) -> int:
+    """`uv run quiron-terminal` — abre o Terminal no navegador.
+
+    Com `--central` (o lançador `quiron` usa) o Terminal também cuida do bot do Telegram e da troca de modo."""
     import argparse
+    import sys
     import threading
     import webbrowser
 
     import uvicorn
+
+    from quiron.configurador import app as configurador
 
     p = argparse.ArgumentParser(description="Quíron Terminal")
     p.add_argument("--porta", type=int, default=int(os.environ.get("TERMINAL_PORTA", "8765").split(" #")[0] or 8765))
     p.add_argument("--host", default="127.0.0.1", help="127.0.0.1 = só este PC (padrão)")
     p.add_argument("--sem-navegador", action="store_true")
     p.add_argument("--abrir", default="", help="página a abrir no navegador (ex.: /acervo)")
-    a = p.parse_args()
+    p.add_argument("--central", action="store_true", help="também liga e supervisiona o bot do Telegram")
+    a = p.parse_args(argv)
     url = f"http://{'localhost' if a.host in {'127.0.0.1', '0.0.0.0'} else a.host}:{a.porta}"
     from quiron.servicos.acervo import acervo
 
+    carregar_config()
     acervo().iniciar_processador()  # processa a fila do acervo em segundo plano
-    print(f"Quíron Terminal em {url}  (feche esta janela para desligar)")
-    if not a.sem_navegador:
-        threading.Timer(1.5, lambda: webbrowser.open(url + a.abrir)).start()
-    _iniciar_fila()
-    uvicorn.run(app, host=a.host, port=a.porta, log_level="warning")
+    completo = not configurador.faltando(configurador.ler_valores())
+    abrir = a.abrir or ("" if completo else "/config")  # primeira vez: direto para as chaves
+    servidor = uvicorn.Server(uvicorn.Config(app, host=a.host, port=a.porta, log_level="warning"))
+    codigo = {"saida": 0}
+    if a.central:
+        from quiron.nucleo import offline
 
+        central.SUPERVISOR.gerenciado = True
+
+        def sair(c: int) -> None:
+            codigo["saida"] = c
+            servidor.should_exit = True
+
+            def forcar() -> None:  # consultas lentas em andamento (rede) não seguram a troca de modo
+                central.SUPERVISOR.desligar()
+                os._exit(c)
+
+            relogio = threading.Timer(5, forcar)
+            relogio.daemon = True
+            relogio.start()
+
+        central.SAIR = sair
+        if completo and not offline.ativo():
+            try:
+                central.SUPERVISOR.ligar()
+                print("Telegram: ligado (registro em dados/logs/telegram.log).")
+            except ValueError as e:
+                print(f"Telegram: não liguei — {e}")
+    print(f"Quíron em {url}  (feche esta janela para desligar tudo)")
+    if not a.sem_navegador:
+        threading.Timer(1.5, lambda: webbrowser.open(url + abrir)).start()
+    _iniciar_fila()
+    try:
+        servidor.run()
+    finally:
+        central.SUPERVISOR.desligar()
+    if codigo["saida"]:
+        sys.exit(codigo["saida"])
+    return 0
 
 if __name__ == "__main__":
     main()

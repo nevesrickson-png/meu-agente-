@@ -1,7 +1,7 @@
 # Hospedagem — decidida na Fase 5 (o kit é portátil)
 
 > **Decisão do Rickson (04/10/2026): custo mínimo, em três etapas.**
-> 1. **Agora: no seu PC Windows** — `Quiron Telegram.bat` (+ `Quiron Inicio Automatico.bat`). Custo zero; funciona
+> 1. **Agora: no seu PC Windows** — atalho **Quiron** (+ CONFIGURAÇÕES → Início automático). Custo zero; funciona
 >    enquanto o PC estiver ligado (briefing das 7h30 só chega com o PC ligado).
 > 2. **Depois: mini PC em casa** (Linux, 24h) — mesmos scripts de `deploy/`, passo a passo abaixo.
 > 3. **Futuro, se valer a pena: VPS** — `deploy/migrar.sh` leva tudo do mini PC para a VPS em menos de 1 hora.
@@ -10,12 +10,12 @@
 > Ao mudar de etapa, desligue a anterior.
 
 ## Etapa 1 — no seu PC (Windows)
-1. As chaves ficam na tela de **Configurações** (abre sozinha na 1ª vez; depois, atalho *Quiron - Configuracoes*): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USER_IDS=7592218870` (o número,
+1. As chaves ficam na tela de **Configurações** (aba CONFIGURAÇÕES do Quíron; abre sozinha na 1ª vez): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USER_IDS=7592218870` (o número,
    não o @usuário), `GEMINI_API_KEY` e `GROQ_API_KEY`.
-2. Dois cliques em **`Abrir Quiron.bat`** (ou no atalho **Quiron** da Área de Trabalho): atualiza e abre o bot. Quando aparecer "Quíron no Telegram", mande uma mensagem ao bot.
+2. Dois cliques em **`Abrir Quiron.bat`** (ou no atalho **Quiron** da Área de Trabalho): atualiza e abre o Quíron (Terminal, Acervo, Configurações e o Telegram). Quando o selo mostrar "● Telegram ligado", mande uma mensagem ao bot.
    Se cair, ele religa sozinho em 30 s. Fechar a janela desliga.
-3. Opcional: dois cliques em **`Quiron Inicio Automatico.bat`** → liga sozinho ao entrar no Windows e impede o PC de
-   dormir na tomada. Rodar de novo permite remover.
+3. Opcional: CONFIGURAÇÕES → Início automático → **Ligar com o Windows** → liga sozinho ao entrar no Windows e impede
+   o PC de dormir na tomada. O mesmo botão desliga.
 4. Consumo: ~300–500 MB de RAM com os servidores de ferramentas; cabe nos 8 GB.
 
 ## Etapa 2 — mini PC em casa (passo a passo)

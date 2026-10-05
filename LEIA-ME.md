@@ -34,6 +34,20 @@ e o servidor são escolhidos só na Fase 5, depois de você testar tudo. Nada é
 ## Custo
 R$ 0. Nenhuma API paga. (X/Twitter fora do projeto.)
 
+## Tudo numa tela só (atalho **Quiron**)
+Dois cliques no atalho **Quiron** (ou em `Abrir Quiron.bat`): atualiza, liga o Telegram e abre o navegador com três abas:
+- **TERMINAL** — painéis de mercado, análises, carteira, chat (barra de comando; `CONFIG` e `ACERVO` também funcionam).
+- **ACERVO** — envie livros e materiais por área.
+- **CONFIGURAÇÕES** — chaves (com **Testar** e **Descobrir meu ID**), Telegram (ligado/desligado, reiniciar, registro),
+  Google Agenda (envia a credencial e conecta com um botão), versão offline (verifica e troca de modo com um clique),
+  início automático com o Windows e versão instalada. Na primeira vez ela abre sozinha.
+
+O selo no canto (● Telegram ligado / ! Faltam chaves / ⊘ OFFLINE) mostra o estado de qualquer aba. Fechar a janela preta
+desliga tudo. Na Área de Trabalho ficam só **Quiron** e **Quiron - Offline** (para abrir já sem internet).
+Pelo terminal: `uv run quiron` (`--offline` para abrir na versão offline).
+
+![Configurações](docs/img/configuracoes.png)
+
 ## Rodar no seu PC (Windows)
 Uma vez só:
 1. Instale o `uv` (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
@@ -76,8 +90,7 @@ Testes:
 - Ajuste temas, palavras-alerta e empresas em `config\temas_noticias.yaml`; subreddits em `config\redes.yaml`.
 
 ## Quíron Terminal (Fase 4)
-- **Dois cliques em `Quiron Terminal.bat`** (na pasta do projeto): abre o Terminal no navegador. Feche a janela preta para desligar.
-  Pelo terminal: `uv run quiron-terminal`.
+- Abre pelo atalho **Quiron** (aba TERMINAL). Só o Terminal, sem Telegram: `uv run quiron-terminal`.
 - Barra de comando (atalho `/` ou `Ctrl+K`): `PETR4` (visão do ativo), `PETR4 GP` (gráfico), `CURV`, `TOP`, `NEWS COPOM`,
   `SOC COPOM`, `ECO`, `MACRO`, `JUROS`, `WEI`, `FX`, `CMDTY`, `CALC`, `STATUS`, `HELP`.
 - Layouts prontos: Manhã, Análise, Estudo (`Alt+1/2/3`). Arraste o cabeçalho para mover, o canto para redimensionar;
@@ -88,17 +101,18 @@ Testes:
 
 ## Agente no Telegram (Fase 5)
 > **Um clique:** `Abrir Quiron.bat` instala na 1ª vez (Git, uv, programa), baixa a versão mais nova a cada clique
-> (todas as versões ficam guardadas na pasta) e abre o bot. Cria o atalho **Quiron** na Área de Trabalho.
+> (todas as versões ficam guardadas na pasta) e abre o Quíron. Cria o atalho **Quiron** na Área de Trabalho.
 > Seus dados (`.env`, `dados\`, `biblioteca\`) nunca são apagados nem enviados.
-> **Configurações:** chaves e seu ID do Telegram numa tela no navegador (atalho **Quiron - Configuracoes**, ou
-> `uv run quiron-configurar`), com botão **Testar** em cada chave e **Descobrir meu ID**. Abre sozinha se faltar algo.
+> **Configurações:** aba **CONFIGURAÇÕES** do Quíron — chaves com **Testar** e **Descobrir meu ID**. Abre sozinha se faltar algo;
+> ao salvar, o Telegram liga (ou reinicia) sozinho.
 
 1. **Crie o bot:** no Telegram, fale com **@BotFather** → `/newbot` → escolha nome e usuário → copie o token.
 2. **Descubra seu ID:** fale com **@userinfobot** → ele responde com seu número.
 3. No `.env`: `TELEGRAM_BOT_TOKEN=...` e `TELEGRAM_ALLOWED_USER_IDS=seu-numero` (só você fala com o Quíron).
 4. Comparativo dos runtimes (precisa de `GEMINI_API_KEY`): `uv run quiron-comparativo` → relatório em `dados\comparativo\`.
-5. Testar o agente: `uv run quiron-agente -q "faça meu briefing"` (sem Telegram). **Ligar no Telegram pelo PC:** dois cliques
-   em `Quiron Telegram.bat` (religa sozinho se cair); para ligar junto com o Windows, `Quiron Inicio Automatico.bat`.
+5. Testar o agente: `uv run quiron-agente -q "faça meu briefing"` (sem Telegram). **Ligar no Telegram pelo PC:** atalho **Quiron**
+   (religa sozinho se cair; registro em CONFIGURAÇÕES → Registro do Telegram); para ligar junto com o Windows,
+   CONFIGURAÇÕES → Início automático → **Ligar com o Windows**.
    O bot só roda em um lugar por vez — ao passar para o mini PC, desligue o do PC.
 6. O "cérebro" editável fica em `dados\workspace\`: `USUARIO.md` (quem é você), `MEMORIA.md` (o que ele aprendeu),
    `ROTINAS.md` (o que vigiar sozinho) e `diario\`. Comandos novos: crie `agente\comandos\<nome>.md`.
@@ -202,8 +216,8 @@ Digite na barra do Terminal (ou escolha o layout **Assessoria**):
 - **/hoje:** agenda do Google, tarefas atrasadas e do dia, lembretes, vencimentos de clientes e metas.
 - **/nota** texto #tag · **/notas** busca · **/meta** estudar 5 horas por semana · **/meta 1 +2** · **/metas**.
 - **/revisao:** a revisão da semana (chega sozinha no domingo às 18h).
-- **Google Agenda:** siga `docs/09-GOOGLE-AGENDA.md` (uns 10 minutos, uma vez) e dê dois cliques em
-  **Quiron Google Agenda.bat**. Depois: `/evento quinta às 15h reunião com CLI-012 por 1h30`.
+- **Google Agenda:** siga `docs/09-GOOGLE-AGENDA.md` (uns 10 minutos, uma vez) e conecte em
+  **CONFIGURAÇÕES → Google Agenda**. Depois: `/evento quinta às 15h reunião com CLI-012 por 1h30`.
 - No Terminal, o painel **TASK** tem “Tarefa rápida” com a mesma frase.
 
 ## Carreira, diário e radar (Fase 15)
@@ -221,7 +235,7 @@ Digite na barra do Terminal (ou escolha o layout **Assessoria**):
 ## Versão offline no PC (Fase 16)
 Quíron sem internet, com IA local e os **clientes reais** num cofre criptografado. Passo a passo em
 `docs/10-OFFLINE.md`. Resumo: instale o Ollama (ollama.com/download), rode `ollama pull qwen2.5:3b` e dê dois cliques
-em **Quiron - Offline**. No Terminal: **CLI** (clientes com nome real — pede a senha do cofre), **BIB duration**
+em **Quiron - Offline** (ou, com o Quíron aberto: CONFIGURAÇÕES → Versão offline → Verificar → Reiniciar em modo offline). No Terminal: **CLI** (clientes com nome real — pede a senha do cofre), **BIB duration**
 (biblioteca) e **CHAT** (o Quíron local). O nome real nunca vai para a nuvem e não aparece fora da tela CLI.
 
 ## Conteúdo (Fase 17)
@@ -235,7 +249,7 @@ em **Quiron - Offline**. No Terminal: **CLI** (clientes com nome real — pede a
   em `config/conteudo.yaml`.
 
 ## Acervo — seus livros por área
-Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
+Aba **ACERVO** do Quíron: escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca
 marcado com a área. Dá para mudar a área ou remover depois. Aulas e questões passam a citar o seu material da área.
 No mini PC, a mesma tela abre pelo Tailscale (inclusive no celular).

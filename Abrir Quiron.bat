@@ -66,19 +66,13 @@ if "%ANTES%"=="%DEPOIS%" (echo  Ja esta na versao mais nova: %DEPOIS%) else (ech
 :baixado
 cd /d "%PASTA%"
 
-rem ---------- 4. Chaves (.env) e atalho na Area de Trabalho ----------
-echo  Preparando (na 1a vez instala tudo e demora alguns minutos)...
-uv run --quiet quiron-configurar --verificar >nul 2>nul
-if not errorlevel 1 goto tem_env
-echo.
-echo  Abrindo a tela de CONFIGURACOES no navegador.
-echo  Preencha as chaves e clique em "Salvar e concluir". O Quiron liga em seguida.
-uv run --quiet quiron-configurar
-uv run --quiet quiron-configurar --verificar >nul 2>nul
-if errorlevel 1 (echo  As configuracoes ainda estao incompletas. Abra de novo pelo atalho Quiron. & pause & exit /b 1)
-:tem_env
+rem ---------- 4. Atalhos e abrir ----------
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PASTA%\windows\criar_atalhos.ps1" -Pasta "%PASTA%"
 
 echo  [4/4] Abrindo o Quiron (a 1a vez demora alguns minutos instalando)...
+echo  Tudo fica numa tela so no navegador: TERMINAL, ACERVO e CONFIGURACOES.
+echo  Se faltar alguma chave, a tela de Configuracoes abre sozinha.
+echo  Feche esta janela para desligar o Quiron (Terminal e Telegram).
 echo  ----------------------------------------------------------------
-call "%PASTA%\Quiron Telegram.bat"
+uv run quiron
+if errorlevel 1 pause

@@ -50,7 +50,7 @@ def cliente(tmp_path, monkeypatch):
 
 
 def test_pagina_e_arquivos(cliente):
-    assert "Quíron Terminal" in cliente.get("/").text
+    assert "<title>Quíron</title>" in cliente.get("/").text
     assert cliente.get("/app.js").status_code == 200
     assert cliente.get("/vendor/lightweight-charts.standalone.production.js").status_code == 200
 

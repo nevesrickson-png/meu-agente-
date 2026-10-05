@@ -65,7 +65,7 @@ def como_configurar() -> str:
     if not arquivo_cliente().exists():
         return ("Google Agenda ainda não configurado: falta a credencial segredos/google_oauth.json. "
                 "Siga o passo a passo em docs/09-GOOGLE-AGENDA.md (uns 10 minutos, uma vez só).")
-    return "Google Agenda: falta autorizar. No PC, dê dois cliques em “Quiron Google Agenda.bat” (ou rode `uv run quiron-google autorizar`)."
+    return "Google Agenda: falta autorizar. No Quíron, abra Configurações → Google Agenda → “Conectar” (ou rode `uv run quiron-google autorizar`)."
 
 
 def _cliente_oauth() -> dict[str, str]:
@@ -119,8 +119,8 @@ def _gravar_token(token: dict[str, Any]) -> None:
         pass
 
 
-def autorizar(abrir_navegador: bool = True, entrada=input, saida=print) -> str:
-    """Fluxo completo de autorização (interativo)."""
+def autorizar(abrir_navegador: bool = True, entrada=input, saida=print, abrir=None, espera: int = 300) -> str:
+    """Fluxo completo de autorização (interativo). `abrir` recebe o link (padrão: abre o navegador do PC)."""
     _cliente_oauth()
     verificador, desafio = _pkce()
     estado = secrets.token_urlsafe(16)
@@ -149,8 +149,8 @@ def autorizar(abrir_navegador: bool = True, entrada=input, saida=print) -> str:
         fio.start()
         saida("Abrindo o navegador para você entrar na sua conta Google e permitir o acesso à agenda…")
         saida(f"(se não abrir, copie este link no navegador)\n{link}")
-        webbrowser.open(link)
-        fio.join(timeout=300)
+        (abrir or webbrowser.open)(link)
+        fio.join(timeout=espera)
     else:
         saida(f"1) Abra este link no navegador (pode ser no celular ou em outro computador):\n{link}\n")
         saida("2) Entre na conta, permita o acesso. A página final NÃO vai abrir (normal).")
@@ -179,7 +179,7 @@ def _token(cliente_http: httpx.Client | None = None) -> str:
     r = http.post(URL_TOKEN, data={"client_id": c["client_id"], "client_secret": c["client_secret"],
                                    "refresh_token": tok["refresh_token"], "grant_type": "refresh_token"})
     if r.status_code != 200:
-        raise AgendaIndisponivel("A autorização do Google expirou ou foi revogada. Autorize de novo (Quiron Google Agenda.bat). "
+        raise AgendaIndisponivel("A autorização do Google expirou ou foi revogada. Autorize de novo (Configurações → Google Agenda → Conectar). "
                                  f"Detalhe: {r.text[:150]}")
     novo = r.json()
     tok.update(access_token=novo["access_token"], expira_em=time.time() + int(novo.get("expires_in", 3600)) - 60)
