@@ -49,6 +49,7 @@ quiron-gerar-persona = "quiron.nucleo.persona:main"
 quiron-configurar = "quiron.configurador.app:main"
 quiron-google = "quiron.servicos.organizacao.google_agenda:main"
 quiron-mcp-organizacao = "quiron.mcp.organizacao.servidor:main"
+quiron-mcp-carreira = "quiron.mcp.carreira.servidor:main"
 
 [dependency-groups]
 dev = [

@@ -304,7 +304,7 @@ def test_bot_responde_audio(monkeypatch):
 
 def test_rotina_padrao_do_briefing_criada_uma_vez():
     bot = BotQuiron(Agente(SemMCP(), Config()), {111})
-    assert bot.garantir_rotinas_padrao() == ["Faça meu briefing.", "/revisao"]
+    assert bot.garantir_rotinas_padrao() == ["Faça meu briefing.", "/revisao", "/radar novidades"]
     assert bot.garantir_rotinas_padrao() == []  # não duplica
     a = next(x for x in bot.agente.agendador.listar() if x.texto == "Faça meu briefing.")
     assert (a.tipo, a.recorrencia, a.proxima.strftime("%H:%M")) == ("tarefa", "diario 07:30", "07:30")

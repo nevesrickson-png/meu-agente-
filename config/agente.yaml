@@ -30,3 +30,4 @@ batimento:                          # "heartbeat": o Quíron confere ROTINAS.md 
 rotinas_padrao:
   - {texto: "Faça meu briefing.", tipo: tarefa, recorrencia: "diario 07:30"}   # persona: fins de semana normais
   - {texto: "/revisao", tipo: tarefa, recorrencia: "semanal domingo 18:00"}   # revisão semanal (Fase 14), direto, sem IA
+  - {texto: "/radar novidades", tipo: tarefa, recorrencia: "semanal segunda 08:20"}   # radar regulatório (Fase 15)

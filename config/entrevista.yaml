@@ -1,0 +1,31 @@
+# Simulação de entrevista (Fase 15) — cargos-alvo da trilha "analista/estrategista". Edite à vontade.
+verificado_em:
+cargos:
+  analista_research:
+    nome: "Analista de research (sell-side, ações)"
+    entrevistador: "head de research de uma corretora; técnico, cobra números e rigor"
+    temas: ["valuation (DCF, múltiplos, WACC)", "contabilidade (três demonstrações, capital de giro)", "pitch de uma ação",
+            "setor da sua escolha", "ética e Resolução CVM 20"]
+  estrategista:
+    nome: "Estrategista / economista de investimentos"
+    entrevistador: "economista-chefe; quer visão macro estruturada e comunicação clara"
+    temas: ["cenário macro Brasil e global", "juros, inflação e câmbio", "alocação tática", "comunicação para clientes", "erros de previsão e calibração"]
+  analista_buyside:
+    nome: "Analista de gestora (buy-side)"
+    entrevistador: "gestor de fundo multimercado; pergunta sobre processo, risco e tese"
+    temas: ["processo de investimento", "pitch long/short", "gestão de risco e posição", "renda fixa e crédito", "caso prático"]
+  consultor_cvm:
+    nome: "Consultor de valores mobiliários / wealth planner"
+    entrevistador: "sócio de uma consultoria; foco em planejamento e relacionamento"
+    temas: ["planejamento financeiro (CFP)", "alocação por perfil", "tributação de investimentos", "sucessão", "relacionamento e conflito de interesse"]
+  private_banker:
+    nome: "Private banker"
+    entrevistador: "diretor de private banking; foco em clientes de alta renda"
+    temas: ["captação e relacionamento", "produtos e estruturas (offshore, previdência, holding)", "suitability", "caso de cliente difícil", "metas"]
+
+rubrica:
+  tecnico:     {nome: "Domínio técnico", peso: 30, descricao: "conceitos corretos, números, rigor"}
+  estrutura:   {nome: "Estrutura do raciocínio", peso: 20, descricao: "responde organizado (ex.: conclusão → argumentos → riscos)"}
+  comunicacao: {nome: "Comunicação", peso: 20, descricao: "clareza, objetividade, sem enrolação"}
+  julgamento:  {nome: "Julgamento e riscos", peso: 15, descricao: "reconhece incerteza, riscos e premissas"}
+  fit:         {nome: "Fit e motivação", peso: 15, descricao: "por que o cargo, trajetória, ética"}

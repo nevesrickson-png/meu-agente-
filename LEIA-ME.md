@@ -206,6 +206,18 @@ Digite na barra do Terminal (ou escolha o layout **Assessoria**):
   **Quiron Google Agenda.bat**. Depois: `/evento quinta às 15h reunião com CLI-012 por 1h30`.
 - No Terminal, o painel **TASK** tem “Tarefa rápida” com a mesma frase.
 
+## Carreira, diário e radar (Fase 15)
+- **/carreira** — seu plano: certificações (com o domínio estimado na Academia), track record, portfólio, competências e
+  os próximos 90 dias. `/carreira prova CFP 2027-03-20` · `/carreira avaliar valuation 6` · `/carreira aprovado CFP`.
+- **/diario** <tese> — ex.: “WEGE3 vai superar o Ibovespa em 6 meses porque… confiança 70%; se a margem cair abaixo de
+  20%, a tese morre”. O Quíron guarda o preço do dia e te lembra na data. `/diario revisar` mostra retorno × Ibovespa e
+  as premissas; feche com `/diario 1 acertou|parcial|errou <aprendizado>`; `/diario placar` mostra acerto e calibração.
+- **/portfolio** — escolha análises (só as sem cliente) e gere o PDF com `/portfolio pdf`.
+- **/entrevista** [analista_research | estrategista | analista_buyside | consultor_cvm | private_banker] — simulação com
+  feedback no fim (`/entrevista fim`).
+- **/radar** [dias] — normas novas da CVM, Receita, Banco Central e projetos na Câmara, por relevância (chega sozinho
+  às segundas 8h20).
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

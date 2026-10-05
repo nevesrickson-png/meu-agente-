@@ -1,0 +1,33 @@
+# Radar regulatório (Fase 15) — só fontes oficiais com feed ou API pública (conferidas em 05/10/2026).
+# Sem feed/API: ANBIMA, B3, Diário Oficial (INLABS exige login) — não raspamos páginas.
+verificado_em: 2026-10-05
+
+fontes:
+  - {id: cvm, nome: "CVM — notícias", tipo: rss, url: "https://www.gov.br/cvm/pt-br/assuntos/noticias/RSS",
+     filtro: ["resolução", "resolucao", "norma", "audiência pública", "audiencia publica", "ofício circular", "oficio circular",
+              "parecer de orientação", "deliberação", "regulament", "regra", "consulta pública", "sandbox", "edita", "altera"]}
+  - {id: receita, nome: "Receita Federal — notícias", tipo: rss, url: "https://www.gov.br/receitafederal/pt-br/assuntos/noticias/RSS",
+     filtro: ["instrução normativa", "instrucao normativa", "imposto de renda", "irpf", "irpj", "tributa", "aplicaç", "investiment",
+              "declaração", "isenç", "alíquota", "aliquota", "come-cotas", "jcp", "dividendo", "cripto", "offshore"]}
+  - {id: bcb, nome: "Banco Central — normativos", tipo: bcb_normativos,
+     url: "https://www.bcb.gov.br/api/search/app/normativos/buscanormativos",
+     tipos: ["Resolução CMN", "Resolução BCB", "Circular", "Instrução Normativa BCB", "Carta Circular", "Resolução Conjunta"]}
+  - {id: camara, nome: "Câmara dos Deputados — projetos de lei", tipo: camara,
+     url: "https://dadosabertos.camara.leg.br/api/v2/proposicoes",
+     palavras: ["imposto de renda", "fundos de investimento", "mercado de capitais", "previdência complementar",
+                "letra de crédito", "criptoativos", "tributação de aplicações", "juros sobre capital próprio", "dividendos"]}
+
+# Temas que importam para o Rickson (assessor CEA, clientes PF e empresários): peso 3 = mexe no dia a dia dele.
+temas:
+  tributacao_investimentos: {nome: "Tributação de investimentos", peso: 3,
+    palavras: ["imposto de renda", "irpf", "tributa", "alíquota", "aliquota", "come-cotas", "isenç", "jcp", "dividendo", "offshore", "lci", "lca", "cri", "cra", "debênture incentivada"]}
+  fundos: {nome: "Fundos (CVM 175)", peso: 3, palavras: ["fundo", "cvm 175", "resolução cvm 175", "fii", "fiagro", "fidc", "previdência"]}
+  assessores: {nome: "Assessores e distribuição", peso: 3,
+    palavras: ["assessor", "resolução cvm 178", "cvm 178", "distribuição", "intermediário", "suitability", "adequação", "cvm 30", "conflito de interesse", "remuneração"]}
+  ofertas: {nome: "Ofertas e emissões", peso: 2, palavras: ["oferta pública", "cvm 160", "emissão", "securitiz", "crowdfunding"]}
+  bancario: {nome: "Bancos, FGC e crédito", peso: 2, palavras: ["fgc", "garantidor", "depósito", "letra financeira", "cdb", "crédito", "open finance", "pix"]}
+  politica_monetaria: {nome: "Política monetária e câmbio", peso: 2, palavras: ["copom", "selic", "compulsório", "câmbio", "cambial", "swap"]}
+  cripto: {nome: "Criptoativos", peso: 2, palavras: ["cripto", "ativo virtual", "ativos virtuais", "stablecoin"]}
+  sucessao: {nome: "Sucessão e ITCMD", peso: 2, palavras: ["itcmd", "herança", "sucess", "doação", "inventário"]}
+  pld: {nome: "PLD e controles", peso: 2, palavras: ["lavagem", "pld", "financiamento do terrorismo", "controles internos", "coaf"]}
+  conduta: {nome: "Conduta e sanções", peso: 1, palavras: ["julgamento", "multa", "inabilita", "processo administrativo", "termo de compromisso", "alerta"]}

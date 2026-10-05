@@ -23,6 +23,8 @@ from quiron.runtime.assessoria_bot import COMANDOS as COMANDOS_ASSESSORIA
 from quiron.runtime.assessoria_bot import AssessoriaBot
 from quiron.runtime.organizacao_bot import COMANDOS as COMANDOS_ORGANIZACAO
 from quiron.runtime.organizacao_bot import OrganizacaoBot, botoes_tarefa
+from quiron.runtime.carreira_bot import COMANDOS as COMANDOS_CARREIRA
+from quiron.runtime.carreira_bot import CarreiraBot
 from quiron.runtime.agendador import BRT
 from quiron.runtime.agente import Agente
 from quiron.runtime.ferramentas_mcp import ConexaoMCP
@@ -61,6 +63,7 @@ class Saida:
     texto: str
     botoes: list[tuple[str, str]] = field(default_factory=list)
     linhas: list[list[tuple[str, str]]] = field(default_factory=list)  # várias linhas de botões (Academia)
+    arquivo: str = ""  # caminho de um arquivo para mandar junto (ex.: PDF do portfólio)
 
     def teclado(self) -> list[list[tuple[str, str]]]:
         return self.linhas or ([self.botoes] if self.botoes else [])
@@ -75,6 +78,7 @@ class BotQuiron:
         self.academia = AcademiaBot()
         self.assessoria = AssessoriaBot()
         self.organizacao = OrganizacaoBot()
+        self.carreira = CarreiraBot()
 
     def autorizado(self, usuario: int) -> bool:
         if usuario not in self.permitidos:
@@ -92,7 +96,9 @@ class BotQuiron:
                    "/treino [personagem] [cenário] [dificuldade] · /treino fim (feedback) · /treino opcoes · /treino evolucao", "",
                    "🗂️ Organização: /tarefa amanhã às 10h ligar para o CLI-012 · /tarefas · /feito 3 · /adiar 3 sexta · /hoje · "
                    "/nota texto #tag · /notas [busca] · /meta estudar 5 horas por semana · /meta 1 +2 · /metas · /revisao · "
-                   "/evento quinta às 15h reunião (Google Agenda)", ""]
+                   "/evento quinta às 15h reunião (Google Agenda)", "",
+                   "🧭 Carreira: /carreira (plano) · /diario <tese> · /diario revisar · /portfolio · /entrevista [cargo] · "
+                   "/radar [dias] (normas da CVM, Receita, BC e Câmara)", ""]
         linhas += ["/agenda — lembretes e rotinas", "/memoria — o que eu sei sobre você", "/novo — começar a conversa do zero"]
         return "\n".join(linhas)
 
@@ -116,8 +122,18 @@ class BotQuiron:
             telas = await self.assessoria.texto_livre(chat, texto)  # pós-reunião aguardando ou treino ativo
             if telas is not None:
                 return [self._saida(t) for t in telas]
+            telas = await self.carreira.texto_livre(texto)  # entrevista ativa
+            if telas is not None:
+                return [self._saida(t) for t in telas]
         if texto.startswith("/"):
             nome, _, args = texto[1:].partition(" ")
+            if nome.split("@")[0].lower() in COMANDOS_CARREIRA:
+                n = nome.split("@")[0].lower()
+                self.carreira.ultimo_pdf = None
+                saidas = [self._saida(t) for t in await self.carreira.comando(n, args)]
+                if n == "portfolio" and self.carreira.ultimo_pdf:
+                    saidas[-1].arquivo = str(self.carreira.ultimo_pdf)
+                return saidas
             if nome.split("@")[0].lower() in COMANDOS_ORGANIZACAO:
                 telas = await self.organizacao.comando(nome.split("@")[0].lower(), args)
                 return [self._saida(t) for t in telas]
@@ -281,6 +297,11 @@ async def _rodar() -> None:
             linhas = s.teclado()
             teclado = InlineKeyboardMarkup([[InlineKeyboardButton(r, callback_data=d) for r, d in linha] for linha in linhas]) \
                 if linhas else None
+            if s.arquivo:
+                from pathlib import Path
+
+                with Path(s.arquivo).open("rb") as f:
+                    await app.bot.send_document(chat, f, filename=Path(s.arquivo).name)
             partes = dividir(s.texto) or [""]
             for i, parte in enumerate(partes):  # botões só na última parte
                 await app.bot.send_message(chat, parte, reply_markup=teclado if i == len(partes) - 1 else None,

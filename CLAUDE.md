@@ -229,6 +229,17 @@ Arquivos com DRM não são processados.
   com "/" roda pelo `tratar`, ex.: `/revisao` domingo 18h em `rotinas_padrao`). `agendar` interno = rotinas; tarefa
   pontual = `criar_tarefa`. Terminal: TASK com "Tarefa rápida" (`/api/organizacao/tarefa`). LGPD apaga tarefas/notas.
   `segredos/` entra no volume do Docker e no backup. Aceite online em `testes/test_organizacao_online.py`.
+- Carreira (Fase 15, `quiron/servicos/carreira/`, `dados/carreira.db`): `radar.py` (`config/radar_regulatorio.yaml`:
+  RSS do gov.br (CVM, Receita) filtrados por palavras de norma, API pública da busca de normativos do BCB (só tipos de
+  norma), API da Câmara (PL/PLP/PEC/MPV recentes); relevância = peso do tema (palavra no início de palavra; ≤ 4 letras =
+  palavra inteira); sem repetir link; `novidades` marca vistos; avisa regras_mercado sem conferência), `diario.py` (modelo
+  só estrutura; plano B por regras; horizonte em data em Python; preço do dia e do Ibovespa; lembrete `[D<id>]`; `medir`
+  retorno/excesso/a favor; Brier e faixas de confiança), `plano.py` (`config/carreira.yaml`; data de prova também na
+  Academia), `portfolio.py` (exclui tipos de cliente e CLI-XXX; PDF via Relatorio), `entrevista.py`
+  (`config/entrevista.yaml`; mesma mecânica do treino). MCP `quiron-carreira`; Telegram `runtime/carreira_bot.py`
+  (/carreira /diario /portfolio /entrevista /radar; entrevista ativa captura mensagens; `Saida.arquivo` manda o PDF);
+  rotina `/radar novidades` segunda 8h20; teses a revisar entram no `/revisao`. Skill `agente/skills/carreira.md`.
+  Aceite online em `testes/test_carreira_online.py`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente, segredos.

@@ -143,6 +143,15 @@ def montar_revisao(agora: datetime | None = None) -> str:
     if atrasadas:
         partes.append("Ficou para trás:\n" + "\n".join(t.descrever(hoje) for t in atrasadas[:10]))
 
+    try:
+        from quiron.servicos.carreira import diario
+
+        devidas = [t for t in diario.listar("aberta") if t.revisar_em and t.revisar_em <= (fim + timedelta(days=7)).isoformat()]
+        if devidas:
+            partes.append("📓 Teses para revisar:\n" + "\n".join(t.resumo() for t in devidas) + "\n/diario revisar para os números")
+    except Exception:  # noqa: BLE001
+        pass
+
     prox_ini = fim + timedelta(days=1)
     prox = [t for t in pend if t.data and prox_ini <= t.data <= prox_ini + timedelta(days=6)]
     bloco = _agenda(prox_ini, 7)

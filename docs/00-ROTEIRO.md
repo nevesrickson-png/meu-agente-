@@ -265,8 +265,16 @@ Execute a FASE 14 do docs/00-ROTEIRO.md. Me guie na autorização do Google Agen
 ```
 
 ## FASE 15 — Carreira, diário e radar
-- [ ] 15.1 Plano de carreira · 15.2 Diário de teses · 15.3 Portfólio de análises · 15.4 Simulação de entrevista · 15.5 Radar regulatório
+- [x] 15.1 Plano de carreira (`/carreira`: trilha com prontidão da Academia, datas de prova e semanas necessárias,
+  track record, portfólio, competências, próximos 90 dias) · 15.2 Diário de teses (`/diario`: premissas, invalidação,
+  horizonte e confiança; preço do dia; lembrete de revisão; retorno × Ibovespa e calibração Brier calculados) ·
+  15.3 Portfólio de análises (`/portfolio`: só relatórios sem cliente; PDF com resumos + track record) · 15.4 Simulação
+  de entrevista (`/entrevista`: 5 cargos, feedback com métricas + rubrica) · 15.5 Radar regulatório (`/radar`: CVM,
+  Receita, Banco Central e Câmara, por relevância; automático às segundas 8h20)
 **Teste de aceite:** radar aponta norma recente; diário gera revisão de teses.
+✅ Aceite (05/10/2026): o radar trouxe, de fontes oficiais, a Resolução CMN 5.343 (FIDC, 24/09) e o PLP 255/2026
+(previdência complementar) como 🔴; uma tese sobre WEGE3 registrada "há 6 meses" (fechamentos reais do Yahoo) foi
+revisada com retorno, Ibovespa, excesso e premissas (`testes/test_carreira_online.py`).
 ```
 Execute a FASE 15 do docs/00-ROTEIRO.md.
 ```

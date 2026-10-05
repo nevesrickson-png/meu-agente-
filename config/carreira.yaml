@@ -1,0 +1,36 @@
+# Plano de carreira do Rickson (Fase 15) — edite à vontade. Objetivo e pilares definidos por ele (CLAUDE.md).
+verificado_em:
+objetivo: "Analista/estrategista de referência em 5 a 10 anos"
+inicio: 2026-10-01
+horas_semana: 5          # meio do intervalo de 3 a 7 h/semana
+
+# Estimativa de horas de estudo por certificação (referência para planejar — ajuste com a sua experiência).
+horas_estudo:
+  CFP: 250
+  CNPI: 300
+  CFA_I: 300
+  CGA: 150
+  CFA_II: 300
+  FRM_I: 250
+  CFA_III: 300
+  CGE: 150
+  FRM_II: 250
+  CAIA: 200
+
+# Pilares e marcos (o Quíron mede o que dá para medir com os dados que já tem).
+pilares:
+  certificacoes: {nome: "Certificações", descricao: "trilha em config/trilha_certificacoes.yaml"}
+  track_record: {nome: "Track record (diário de teses)", meta_teses_ano: 24, descricao: "teses registradas e revisadas com calibração"}
+  portfolio: {nome: "Portfólio de análises", meta_analises: 12, descricao: "análises próprias sem dados de cliente, prontas para mostrar"}
+  conteudo: {nome: "Conteúdo e marca", descricao: "publicações com disclaimer (Fase 17)"}
+  rede: {nome: "Rede", descricao: "contatos com analistas, gestores e estrategistas"}
+
+competencias:
+  - valuation
+  - macroeconomia
+  - renda fixa
+  - alocação de ativos
+  - risco
+  - comunicação escrita
+  - apresentação/pitch
+  - programação e dados
