@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import io
 import logging
+import os
 import re
 import sqlite3
 import tempfile
@@ -115,7 +116,9 @@ def _marcar(con: sqlite3.Connection, chave: str, valor: str = "") -> None:
 
 def baixar(url: str) -> Path | None:
     """Baixa para um arquivo temporário (em partes: nada de 50 MB na memória). None se a CVM ainda não publicou."""
-    arq = Path(tempfile.mkstemp(suffix=Path(url).suffix)[1])
+    fd, nome = tempfile.mkstemp(suffix=Path(url).suffix)
+    os.close(fd)  # no Windows um arquivo aberto não pode ser reaberto nem apagado (WinError 32)
+    arq = Path(nome)
     try:
         with http.cliente().stream("GET", url, timeout=300) as r:
             if r.status_code == 404:

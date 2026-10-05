@@ -110,8 +110,19 @@ def buscar_fundo(termo: str, limite: int = 8) -> str:
     if not achados:
         return f"Nenhum fundo em funcionamento com “{termo}” no nome. Tente menos palavras ou o CNPJ."
     br = lambda v: f"R$ {v:,.0f}".replace(",", ".") if v else "—"  # noqa: E731
+    def marca(c) -> str:
+        n = c.nome.upper()
+        if "MASTER" in n:
+            return " ⚠️ master (veículo interno; o cliente acessa por um fundo de cotas)"
+        if "ESPELHO" in n:
+            return " (espelho de distribuidor)"
+        if "PREVID" in n or "PREV " in n:
+            return " (previdência)"
+        return ""
+
+    achados.sort(key=lambda c: "MASTER" in c.nome.upper())  # masters por último
     linhas = [f"- **{c.nome}** — CNPJ {c.cnpj_formatado} · {c.anbima or c.classificacao or c.tipo} · gestora "
-              f"{c.gestor or '?'} · PL {br(c.pl)}" for c in achados]
+              f"{c.gestor or '?'} · PL {br(c.pl)}{marca(c)}" for c in achados]
     return "\n".join(linhas + [cvm.fonte()])
 
 

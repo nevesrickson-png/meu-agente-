@@ -232,3 +232,17 @@ def test_comparativo_gestora_previdencia_e_fii(tmp_path):
     assert fii["dy_12m_sobre_vp_pct"] == pytest.approx(9.6) and fii["cotistas"] == 50000  # ISIN repetido: o de mais cotistas
     sem = t.fii_comparativo({"fiis": ["TEST11"]}, precos={"TEST11": 80.0}, proventos={}, redigir=False)
     assert sem.fatos["fiis"][0]["dy_12m_sobre_preco_pct"] == pytest.approx(12 * 0.8 / 80 * 100)  # declarado à CVM
+
+
+def test_download_nao_deixa_arquivo_aberto():
+    """No Windows, arquivo temporário aberto não pode ser apagado (WinError 32 visto no Telegram em 04/10/2026)."""
+    import os
+
+    antes = len(os.listdir("/proc/self/fd")) if os.path.isdir("/proc/self/fd") else None
+    for _ in range(5):
+        arq = cvm.baixar("https://dados.cvm.gov.br/dados/FI/DOC/EXTRATO/DADOS/extrato_fi_%d.csv" % HOJE.year)
+        assert arq is not None and arq.read_bytes().startswith(b"TP_FUNDO_CLASSE")
+        arq.unlink()  # precisa conseguir apagar logo depois
+    assert cvm.baixar("https://dados.cvm.gov.br/dados/FI/DOC/EXTRATO/DADOS/extrato_fi_1999.csv") is None
+    if antes is not None:
+        assert len(os.listdir("/proc/self/fd")) <= antes
