@@ -4,3 +4,4 @@ from quiron.servicos.analise.tipos import renda_fixa  # noqa: F401
 from quiron.servicos.analise.tipos import carteira  # noqa: F401,E402
 from quiron.servicos.analise.tipos import planejamento  # noqa: F401,E402
 from quiron.servicos.analise.tipos import fundos  # noqa: F401,E402
+from quiron.servicos.analise.tipos import valuation  # noqa: F401,E402

@@ -161,6 +161,23 @@ def fii_dados(ticker: str) -> str:
 
 
 @mcp.tool()
+def buscar_empresa(termo: str) -> str:
+    """Companhias abertas no cadastro da CVM (FCA) por ticker (WEGE3), CNPJ ou nome: setor, tickers e segmento — use o
+    ticker nas análises de valuation (quiron_analise: valuation_dcf, setor_multiplos, resultado_trimestral)."""
+    from quiron.servicos.valuation import cvm_cias
+
+    try:
+        achadas = cvm_cias.buscar(termo)
+    except Exception as e:  # noqa: BLE001
+        return f"Cadastro da CVM indisponível agora ({type(e).__name__})."
+    if not achadas:
+        return f"Nenhuma companhia aberta com “{termo}”."
+    linhas = [f"- **{e.nome}** — {', '.join(e.tickers) or 'sem ação em bolsa'} · CNPJ {e.cnpj_formatado} · {e.setor} · "
+              f"{e.segmento or '—'}" for e in achadas]
+    return "\n".join(linhas + [f"📊 {cvm_cias.FONTE}"])
+
+
+@mcp.tool()
 def damodaran(dataset: str, termo: str) -> str:
     """Procura um termo nos datasets do Damodaran. dataset: premio_pais, erp_historico, betas_eua,
     betas_emergentes, multiplos_eua, ev_ebitda_emergentes. Ex.: damodaran("premio_pais", "Brazil")."""

@@ -206,9 +206,15 @@ Execute a FASE 10 do docs/00-ROTEIRO.md.
 ```
 
 ## FASE 11 — Valuation de empresas (uso interno)
-- [ ] 11.1 Raio-X · 11.2 DCF, múltiplos e sensibilidade · 11.3 Debate de teses · 11.4 Setor e resultados
-- [ ] 11.5 Rodapé obrigatório de uso interno
+- [x] 11.1 Raio-X — DFP/ITR/FCA da CVM (contas padronizadas, LTM, ações, tickers, setor): histórico de 5 anos, margens e múltiplos
+- [x] 11.2 DCF, múltiplos e sensibilidade — WACC (Treasury ^TNX + Damodaran ERP/risco-país/β de setor + Focus), DCF de 10 anos com perpetuidade g ÷ ROIC, cenários, β de regressão, sensibilidade WACC × g
+- [x] 11.3 Debate de teses — DCF reverso (crescimento e WACC implícitos no preço), pontos a favor/contra calculados, modos debater/contestar, comando /tese
+- [x] 11.4 Setor e resultados — `setor_multiplos` (pares, medianas, preço implícito) e `resultado_trimestral` (trimestre × ano anterior, acumulado, alavancagem)
+- [x] 11.5 Rodapé obrigatório de uso interno — "Uso interno — não constitui relatório de análise (Resolução CVM 20)" em todo relatório de empresa
 **Teste de aceite:** DCF de empresa real com premissas rastreáveis.
+✅ Aceite (05/10/2026): DCF da WEG (WEGE3) — receita conferida no arquivo bruto da DFP; cada componente do WACC com
+fonte; premissas de projeção com a conta que as gerou; DCF reverso mostra que o preço embute WACC de ~7,7% ou crescimento
+de ~59% (`testes/test_valuation_online.py`).
 ```
 Execute a FASE 11 do docs/00-ROTEIRO.md.
 ```

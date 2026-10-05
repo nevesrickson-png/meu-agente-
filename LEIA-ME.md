@@ -163,6 +163,15 @@ comercial e comunicação) e as **certificações** (CFP, CNPI, CFA, CGA, CGE, F
 - A **primeira** análise baixa uns 3 anos de cotas da CVM (~400 MB, alguns minutos, uma vez só); depois é 1 arquivo
   por mês. Se houver vários fundos com nome parecido (feeder, espelho, previdência), o Quíron pergunta qual é.
 
+## Empresas e valuation — USO INTERNO (Fase 11)
+- **/empresa WEGE3** ou **/valuation WEGE3** — raio-X + DCF completo; **/tese WEGE3 merece múltiplo premium** — debate
+  (ou advogado do diabo) da tese; **/setor WEGE3 RAPT4 TUPY3** — contra os pares; **/resultado WEGE3** — último trimestre.
+- Dados oficiais da **CVM** (balanços e resultados), cotação do dia e custo de capital com Treasury, Damodaran e Focus.
+  Cada premissa aparece com a fonte ou a conta que a gerou; o **DCF reverso** mostra o que o preço de hoje exige.
+- **Só para seu estudo e decisão interna**: relatório de análise para clientes é exclusivo de CNPI (Resolução CVM 20) —
+  todo PDF sai com esse rodapé. Premissas editáveis em `config/valuation.yaml`.
+- A primeira análise baixa os balanços da CVM (~150 MB, uma vez; depois atualiza sozinho).
+
 ## Acervo — seus livros por área
 Atalho **Quiron - Acervo** (ou botão **ACERVO** no Terminal): escolha a área (ou crie uma em **+ Nova área**), arraste os
 PDF/EPUB e pronto — o arquivo vai para `biblioteca\acervo\<área>\`, é lido (com OCR se for escaneado) e entra na biblioteca

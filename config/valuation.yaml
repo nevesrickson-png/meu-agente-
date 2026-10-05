@@ -1,0 +1,63 @@
+# Premissas do VALUATION (Fase 11) — uso interno e de estudo. São escolhas do analista, não dados: todo relatório
+# mostra cada premissa com a fonte. Edite à vontade e preencha `verificado_em` quando revisar.
+verificado_em:
+
+projecao:
+  anos: 10                       # horizonte explícito; o crescimento converge para o da perpetuidade até o último ano
+  crescimento_inicial_max: 0.20  # teto para o crescimento inicial (CAGR histórico de receita)
+  crescimento_inicial_min: 0.00
+  anos_historico: 3              # médias de margem, capex, depreciação e capital de giro
+  aliquota_ir: efetiva           # efetiva = média histórica (limitada a 10%–34%); ou um número (0.34 = IR + CSLL nominal)
+  aliquota_ir_minima: 0.10
+  crescimento_real_perpetuidade: 0.01   # g real na perpetuidade (somado à inflação de longo prazo do Brasil)
+  roic_perpetuidade_premio: 0.02  # na perpetuidade, ROIC = WACC + prêmio (vantagem competitiva que sobrevive), limitado ao ROIC histórico
+  cenarios:                      # deslocamentos sobre o cenário base
+    pessimista: {crescimento: -0.03, margem: -0.02}
+    otimista:   {crescimento: 0.03, margem: 0.02}
+
+custo_capital:
+  inflacao_eua: 0.023            # para converter a taxa em dólar para reais (paridade de inflação)
+  ir_beneficio_divida: 0.34
+  beta_minimo: 0.6
+  beta_maximo: 2.5
+  # rating sintético pela cobertura de juros (EBIT ÷ despesa financeira) → spread de crédito sobre o risco-país
+  # (tabela de Damodaran para empresas grandes; atualize com a versão do ano)
+  spreads_cobertura:
+    - {cobertura_min: 8.5, rating: "AAA", spread: 0.0059}
+    - {cobertura_min: 6.5, rating: "AA", spread: 0.0070}
+    - {cobertura_min: 5.5, rating: "A+", spread: 0.0092}
+    - {cobertura_min: 4.25, rating: "A", spread: 0.0107}
+    - {cobertura_min: 3.0, rating: "A-", spread: 0.0121}
+    - {cobertura_min: 2.5, rating: "BBB", spread: 0.0147}
+    - {cobertura_min: 2.25, rating: "BB+", spread: 0.0184}
+    - {cobertura_min: 2.0, rating: "BB", spread: 0.0231}
+    - {cobertura_min: 1.75, rating: "B+", spread: 0.0291}
+    - {cobertura_min: 1.5, rating: "B", spread: 0.0351}
+    - {cobertura_min: 1.25, rating: "B-", spread: 0.0525}
+    - {cobertura_min: 0.8, rating: "CCC", spread: 0.0800}
+    - {cobertura_min: -1.0e9, rating: "C", spread: 0.1200}
+
+# Setor da CVM (palavras do campo Setor_Atividade) → indústria do Damodaran (betas de emergentes).
+# A primeira regra que bater vale; dá para forçar com o parâmetro setor_damodaran na análise.
+setores_damodaran:
+  - {contem: ["MÁQS", "MAQUINAS", "EQUIP"], industria: "Machinery"}
+  - {contem: ["PETRÓLEO", "PETROLEO", "GÁS", "GAS"], industria: "Oil/Gas (Integrated)"}
+  - {contem: ["MINERAÇÃO", "MINERACAO", "EXTRAÇÃO MINERAL"], industria: "Metals & Mining"}
+  - {contem: ["SIDERURGIA", "METALURGIA"], industria: "Steel"}
+  - {contem: ["ENERGIA ELÉTRICA", "ENERGIA ELETRICA"], industria: "Utility (General)"}
+  - {contem: ["SANEAMENTO"], industria: "Utility (Water)"}
+  - {contem: ["TELECOMUNICAÇÕES", "TELECOMUNICACOES"], industria: "Telecom. Services"}
+  - {contem: ["ALIMENTOS"], industria: "Food Processing"}
+  - {contem: ["BEBIDAS"], industria: "Beverage (Alcoholic)"}
+  - {contem: ["COMÉRCIO", "COMERCIO"], industria: "Retail (General)"}
+  - {contem: ["CONSTRUÇÃO CIVIL", "CONSTRUCAO CIVIL"], industria: "Homebuilding"}
+  - {contem: ["PAPEL", "CELULOSE"], industria: "Paper/Forest Products"}
+  - {contem: ["QUÍMIC", "QUIMIC"], industria: "Chemical (Basic)"}
+  - {contem: ["FARMAC", "HOSPITAL", "SAÚDE", "SAUDE"], industria: "Healthcare Support Services"}
+  - {contem: ["EDUCAÇÃO", "EDUCACAO"], industria: "Education"}
+  - {contem: ["TRANSPORTE", "LOGÍSTICA", "LOGISTICA"], industria: "Transportation"}
+  - {contem: ["AGRICULTURA", "AGRO"], industria: "Farming/Agriculture"}
+  - {contem: ["TÊXTIL", "TEXTIL", "VESTUÁRIO"], industria: "Apparel"}
+  - {contem: ["SOFTWARE", "TECNOLOGIA", "INFORMÁTICA"], industria: "Software (System & Application)"}
+  - {contem: ["VEÍC", "VEIC", "AUTOPEÇAS", "AUTOPECAS"], industria: "Auto Parts"}
+padrao_damodaran: "Total Market (without financials)"

@@ -186,6 +186,17 @@ Arquivos com DRM não são processados.
   `analise/tipos/fundos.py` (tabela de conferência com as cotas da CVM; DY de FII pelos proventos pagos via Yahoo).
   MCP `quiron-mercado`: `buscar_fundo`, `buscar_gestora`, `fii_dados`. Skill `agente/skills/fundos.md`; comandos
   /fundo, /comparar_fundos, /gestor, /previdencia, /fii, /alternativos. Aceite online em `testes/test_fundos_online.py`.
+- Valuation (Fase 11, `quiron/servicos/valuation/`, USO INTERNO): `cvm_cias.py` (zips DFP/ITR/FCA em `dados/cache_cvm/`;
+  contas pelo código do plano padronizado da CVM + depreciação/capex/arrendamentos/minoritários pelo nome dentro do grupo,
+  sem somar pai e filho; consolidado com plano B individual; versão mais recente; LTM = ano + YTD − YTD anterior; ações da
+  composição do capital; tickers/setor do FCA) e `dcf.py` (WACC em US$ → R$ por paridade de inflação: ^TNX + β de setor
+  Damodaran realavancado × ERP madura + risco-país; Kd por rating sintético; IR efetivo histórico; projeção de 10 anos com
+  fade até g = IPCA LP + real; perpetuidade com reinvestimento g ÷ ROIC; cenários, sensibilidade, DCF reverso e WACC
+  implícito). Tipos `valuation_dcf` (pontos de debate calculados; β de regressão como visão alternativa; tese),
+  `setor_multiplos` (corrige ações informadas em milhares), `resultado_trimestral` em `analise/tipos/valuation.py`, todos
+  com rodapé "Uso interno — não constitui relatório de análise (Resolução CVM 20)". Financeiras: sem DCF da firma.
+  MCP `quiron-mercado` `buscar_empresa`; skill `agente/skills/valuation.md`; comandos /empresa, /valuation, /tese,
+  /setor, /resultado; premissas em `config/valuation.yaml`; aceite online em `testes/test_valuation_online.py`.
 - Deploy: `Dockerfile` (python:3.12-slim + uv + tesseract, usuário 1000), `docker-compose.yml` (serviços `agente` e
   `terminal`, porta só em 127.0.0.1:8765 e publicada pelo `tailscale serve`), `deploy/` (preparar_host, instalar,
   backup às 3h com rclone opcional, restaurar, migrar). Volumes: dados, biblioteca, config, agente.
