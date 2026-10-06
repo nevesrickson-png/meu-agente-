@@ -365,15 +365,23 @@ def ler_frase(frase: str) -> dict[str, Any]:
                 break
     f = re.sub(r"\d{1,3}\s*anos", " ", f)  # idades e prazos já lidos: não confundir com dinheiro
     regras = [
-        ("aporte_mensal", rf"(?:invisto|aporto|aporte(?:\s+mensal)?(?:\s+de)?|guardo|poupo|investir)\s*(?:r\$\s*)?{_NUM}\s*(?:por mês|/m[eê]s|ao mês|mensais)?"),
+        ("aporte_mensal", rf"(?:invisto|aporto|aportando|aporte(?:\s+mensal)?(?:\s+de)?|guardo|guardando|poupo|investir|investindo)\s*(?:r\$\s*)?{_NUM}\s*(?:por mês|/m[eê]s|ao mês|mensais)?"),
         ("renda_desejada", rf"(?:renda(?:\s+de)?|viver com|receber)\s*(?:r\$\s*)?{_NUM}"),
         ("meta", rf"(?:meta(?:\s+de)?|chegar a|chegar aos|juntar|acumular|ter)\s*(?:r\$\s*)?{_NUM}"),
         ("patrimonio", rf"(?:tenho|patrim[oô]nio(?:\s+de)?|investido[s]?|aplicado[s]?|j[aá] tenho)\s*(?:r\$\s*)?{_NUM}"),
         ("imovel_valor", rf"(?:im[oó]vel(?:\s+de)?|apartamento(?:\s+de)?|casa(?:\s+de)?)\s*(?:r\$\s*)?{_NUM}"),
     ]
+    usados: list[tuple[int, int]] = []
     for chave, rx in regras:
         if m := re.search(rx, f):
             d[chave] = _valor(m.group(1), m.group(2))
+            usados.append(m.span())
+    if "patrimonio" not in d:  # "/simular 500 mil, aporte 5 mil": o 1º valor sem rótulo é o patrimônio de hoje
+        for m in re.finditer(rf"(?:r\$\s*)?{_NUM}", f):
+            if m.group(2) or "r$" in m.group(0):  # só valores com cara de dinheiro (mil, milhão, R$)
+                if not any(a <= m.start() < b for a, b in usados):
+                    d["patrimonio"] = _valor(m.group(1), m.group(2))
+                break
     if m := re.search(r"\b(conservador|moderado|arrojado)\b", f):
         d["perfil"] = m.group(1)
     horizonte = d.pop("_horizonte", None)

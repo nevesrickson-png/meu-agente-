@@ -1,6 +1,5 @@
 """Resumo de mercado escrito, correções vistas no Telegram, perfil de empresa e imóveis de FII — sem internet."""
 
-import asyncio
 import io
 import zipfile
 from datetime import date, datetime, timedelta

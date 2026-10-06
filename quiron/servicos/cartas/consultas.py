@@ -21,14 +21,21 @@ def _data(iso: str) -> str:
 def listar(gestora: str | None = None, dias: int = 60, tipo: str | None = None, limite: int = 15) -> str:
     """Cartas recentes (ou as últimas de uma gestora). Confere as fontes vencidas antes (rápido se já conferiu hoje)."""
     try:
-        coleta.atualizar(nomes=None if not gestora else [f["nome"] for f in coleta.fontes() if gestora.lower() in f["nome"].lower()])
+        if gestora:  # uma gestora: confere na hora (rápido); nome que não existe não dispara nada
+            if nomes := coleta.casar_gestoras(gestora):
+                coleta.atualizar(nomes=nomes)
+        elif coleta.recentes(dias=3650, limite=1):
+            coleta.atualizar_em_segundo_plano()  # já há cartas guardadas: responde já e confere as vencidas por trás
+        else:
+            coleta.atualizar()  # primeira vez: sem isso não haveria o que mostrar
     except Exception:  # noqa: BLE001 — sem rede: mostra o que já está guardado
         pass
     if gestora:
         itens = coleta.da_fonte(gestora, limite)
         cab = f"📬 **Cartas — {gestora}**"
         if not itens:
-            nomes = [s for s in coleta.situacoes() if gestora.lower() in s["fonte"].lower()]
+            casadas = set(coleta.casar_gestoras(gestora))
+            nomes = [s for s in coleta.situacoes() if s["fonte"] in casadas]
             if not nomes:
                 return f"Não tenho a gestora “{gestora}” na lista (config/cartas_gestores.yaml)."
             s = nomes[0]

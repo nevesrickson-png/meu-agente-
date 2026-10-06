@@ -164,7 +164,29 @@ def yahoo(ativo: str) -> Cotacao:
     var = (preco / float(fech.iloc[-2]) - 1) * 100 if len(fech) >= 2 else None
     horario = fech.index[-1].to_pydatetime()
     moeda = "BRL" if simbolo.endswith((".SA", "BRL=X")) or simbolo in {"^BVSP", "BRL=X"} else "USD"
-    return Cotacao(ativo, NOMES.get(ativo, simbolo), preco, var, moeda, horario, "Yahoo Finance", datetime.now(), "pode ter atraso")
+    atraso = "pode ter atraso"
+    if ativo in PTAX:  # barras diárias de câmbio do Yahoo vêm defasadas/repetidas: o "dia" sai contra a PTAX oficial
+        var, atraso = _variacao_contra_ptax(ativo, preco, horario)
+    return Cotacao(ativo, NOMES.get(ativo, simbolo), preco, var, moeda, horario, "Yahoo Finance", datetime.now(), atraso)
+
+
+PTAX = {"USDBRL": "dolar_ptax", "EURBRL": "euro_ptax"}
+
+
+def _variacao_contra_ptax(ativo: str, preco: float, horario: datetime) -> tuple[float | None, str]:
+    """Variação do câmbio de agora contra a PTAX (Banco Central) do último dia útil ANTES da data do dado."""
+    try:
+        from quiron.servicos.mercado import bcb
+
+        serie = bcb.sgs(PTAX[ativo], 5)
+    except Exception:  # noqa: BLE001 — sem PTAX: melhor não mostrar variação do que mostrar a errada
+        return None, "pode ter atraso · variação do dia indisponível"
+    dia = horario.date()
+    anteriores = [p for p in serie.pontos if p.data < dia and p.valor]
+    if not anteriores:
+        return None, "pode ter atraso · variação do dia indisponível"
+    base = anteriores[-1]
+    return (preco / base.valor - 1) * 100, f"pode ter atraso · variação contra a PTAX de {base.data:%d/%m}"
 
 
 def cotacao(ativo: str) -> Cotacao:
@@ -175,7 +197,10 @@ def cotacao(ativo: str) -> Cotacao:
         return brapi(ativo)
     except FonteIndisponivel as erro_brapi:
         try:
-            return yahoo(f"{ativo.upper()}.SA")
+            c = yahoo(f"{ativo.upper()}.SA")
+            c.ativo = ativo.upper()  # mostra "TRXF11", não o símbolo do Yahoo
+            c.nome = c.nome if c.nome != f"{ativo.upper()}.SA" else ativo.upper()
+            return c
         except FonteIndisponivel as erro_yahoo:
             dica = ""
             if "401" in str(erro_brapi) or "token" in str(erro_brapi).lower():

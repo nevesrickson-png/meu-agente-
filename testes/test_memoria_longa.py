@@ -10,7 +10,6 @@ import pytest
 
 from quiron.nucleo import cerebro
 from quiron.nucleo.config import Config
-from quiron.runtime import memoria_longa as ml
 from quiron.runtime.agente import Agente
 from quiron.runtime.memoria import Memoria
 from quiron.runtime.memoria_longa import Escriba, MemoriaLonga

@@ -170,7 +170,7 @@ def _mercados(fontes: list[str], avisos: list[str]) -> tuple[list[str], str]:
             preco = _br(c.preco, 0)
         itens.append(f"{rotulo} {preco} {_var(c.variacao_pct)}".strip())
         contexto.append(f"{rotulo} {preco} ({_var(c.variacao_pct)})")
-        if c.horario and not referencia:
+        if c.horario and not referencia and ativo == "IBOV":  # referência = pregão da B3 (câmbio é contínuo, 24 h)
             if (c.horario.hour, c.horario.minute) == (0, 0):  # barra diária (meia-noite na fonte): é o fechamento do dia
                 referencia = f"fech. {c.horario:%d/%m}"
             else:

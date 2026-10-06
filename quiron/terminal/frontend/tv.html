@@ -169,12 +169,13 @@ function canaisVisiveis() {
 }
 
 async function conferirVivos(lista) {
-  const faltam = lista.map((c) => c.id).filter((id) => !vivos[id] || Date.now() - vivos[id]._em > 180000);
-  if (!faltam.length) return;
-  try {
-    const d = await api(`/api/tv/ao_vivo?canais=${encodeURIComponent(faltam.slice(0, 40).join(","))}`, undefined, "GET");
-    for (const [id, st] of Object.entries(d.canais)) vivos[id] = { ...st, _em: Date.now() };
-  } catch (e) { /* sem resposta: segue sem selo */ }
+  const faltam = lista.map((c) => c.id).filter((id) => !vivos[id] || Date.now() - vivos[id]._em > 170000);
+  for (let i = 0; i < faltam.length; i += 40) {  // de 40 em 40 (limite da rota): a busca por todos os canais também ganha selo
+    try {
+      const d = await api(`/api/tv/ao_vivo?canais=${encodeURIComponent(faltam.slice(i, i + 40).join(","))}`, undefined, "GET");
+      for (const [id, st] of Object.entries(d.canais)) vivos[id] = { ...st, _em: Date.now() };
+    } catch (e) { /* sem resposta: segue sem selo */ }
+  }
 }
 
 function desenharCanais() {
@@ -271,7 +272,9 @@ async function sintonizar(canal) {
 }
 
 function zapear(passo) {
-  const lista = canaisVisiveis().length ? canaisVisiveis() : todos;
+  // ordem fixa (a dos números): a lista na tela sobe quem está no ar, mas o ◀ ▶ não pode pular nem repetir canal
+  const visiveis = canaisVisiveis();
+  const lista = (visiveis.length ? visiveis : todos).slice().sort((a, b) => a.numero - b.numero);
   if (!lista.length) return;
   const i = atual ? lista.findIndex((c) => c.id === atual.id) : -1;
   sintonizar(lista[i < 0 ? 0 : (i + passo + lista.length) % lista.length]);

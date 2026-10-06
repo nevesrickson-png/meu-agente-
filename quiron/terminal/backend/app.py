@@ -51,8 +51,29 @@ def _autorizado(cookies: dict[str, str]) -> bool:
     return not senha or hmac.compare_digest(cookies.get(COOKIE, ""), _token(senha))
 
 
+def _host_permitido(host: str | None) -> bool:
+    """Sem TERMINAL_SENHA, o Terminal só atende pelo nome do próprio PC ou do Tailscale: um site malicioso que aponte
+    um domínio para 127.0.0.1 (“DNS rebinding”) não consegue ler nada. Com senha, o cookie já protege."""
+    if _senha():
+        return True
+    nome = (host or "").rsplit(":", 1)[0].strip("[]").lower()
+    return nome in {"127.0.0.1", "localhost", "::1", "testserver"} or nome.endswith(".ts.net")
+
+
+def _origem_permitida(origem: str | None, host: str | None) -> bool:
+    """WebSocket não respeita a política de mesma origem do navegador: confere quem abriu a conexão."""
+    if not origem:
+        return True  # cliente fora do navegador (scripts, testes)
+    from urllib.parse import urlsplit
+
+    o = (urlsplit(origem).netloc or "").lower()
+    return o == (host or "").lower() or _host_permitido(o)
+
+
 @app.middleware("http")
 async def exigir_senha(request: Request, call_next):
+    if not _host_permitido(request.headers.get("host")):
+        return JSONResponse({"erro": "endereço não permitido sem TERMINAL_SENHA"}, status_code=403)
     livre = request.url.path in {"/login", "/app.css", "/tema.css", "/tema.js", "/manifest.webmanifest", "/icone.svg"} or request.url.path.startswith("/vendor/")
     if not livre and not _autorizado(request.cookies):
         if request.url.path.startswith("/api/"):
@@ -106,13 +127,21 @@ async def obter_topico(topico: str, params: dict[str, Any], forcar: bool = False
 @app.get("/api/topico/{topico}")
 async def api_topico(topico: str, request: Request):
     params = dict(request.query_params)
-    try:
-        return await obter_topico(topico, _converter(topico, params))
-    except KeyError:
+    if topico not in dados.TOPICOS:
         raise HTTPException(404, f"tópico desconhecido: {topico}")
+    try:
+        args = _converter(topico, params)
+    except ValueError as e:
+        raise HTTPException(400, f"parâmetro inválido: {e}") from e
+    import inspect
+
+    aceitos = inspect.signature(dados.TOPICOS[topico][0]).parameters
+    if extras := [k for k in args if k not in aceitos]:
+        raise HTTPException(400, f"parâmetro desconhecido para {topico}: {', '.join(extras)}")
+    return await obter_topico(topico, args)
 
 
-def _converter(topico: str, params: dict[str, str]) -> dict[str, Any]:
+def _converter(topico: str, params: dict[str, str]) -> dict[str, Any]:  # ValueError vira 400 em api_topico
     inteiros = {"horas", "limite", "dias"}
     return {k: int(v) if k in inteiros else v for k, v in params.items() if v not in ("", None)}
 
@@ -146,7 +175,8 @@ def ler_layouts() -> dict:
 
 
 @app.put("/api/layouts/{nome}")
-def salvar_layout(nome: str, layout: list = Body(...)) -> dict:
+def salvar_layout(nome: str, request: Request, layout: list = Body(...)) -> dict:
+    _proteger(request)
     todos = ler_layouts()
     todos[nome[:40]] = layout
     arq = _arquivo_layouts()
@@ -156,7 +186,8 @@ def salvar_layout(nome: str, layout: list = Body(...)) -> dict:
 
 
 @app.delete("/api/layouts/{nome}")
-def apagar_layout(nome: str) -> dict:
+def apagar_layout(nome: str, request: Request) -> dict:
+    _proteger(request)
     todos = ler_layouts()
     todos.pop(nome, None)
     _arquivo_layouts().write_text(json.dumps(todos, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -168,6 +199,9 @@ def apagar_layout(nome: str) -> dict:
 
 @app.websocket("/ws")
 async def ws(socket: WebSocket):
+    if not _host_permitido(socket.headers.get("host")) or not _origem_permitida(socket.headers.get("origin"), socket.headers.get("host")):
+        await socket.close(code=4403)  # outra página aberta no navegador tentando ler os dados do Terminal
+        return
     if not _autorizado(socket.cookies):
         await socket.close(code=4401)
         return
@@ -819,7 +853,11 @@ async def api_chat_historico() -> dict:
 async def api_chat_decidir(request: Request, corpo: dict = Body(...)) -> dict:
     _proteger(request)
     agente = await _chat.obter()
-    p = agente.aprovacoes.decidir(int(corpo.get("id", 0)), bool(corpo.get("aprovar")))
+    try:
+        ident = int(corpo.get("id", 0))
+    except (TypeError, ValueError) as e:
+        raise HTTPException(400, "id inválido") from e
+    p = agente.aprovacoes.decidir(ident, bool(corpo.get("aprovar")))
     if not p:
         return {"resposta": "Esse pedido já foi decidido ou não existe."}
     if not corpo.get("aprovar"):

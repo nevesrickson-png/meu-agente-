@@ -137,7 +137,8 @@ def salvar(novas: dict[str, Any]) -> dict[str, Any]:
         else:
             salvar_ajuste("persona", {"mensagens_automaticas": {"maximo_por_dia": n}})
     if "noticias" in novas:
-        validas = {f["nome"] for f in (ler_yaml("fontes_noticias", com_ajustes=False) or {}).get("fontes", [])}
+        # só as fontes que estão ativas no padrão contam (as com "ativo: false" no config já não servem de reserva)
+        validas = {f["nome"] for f in (ler_yaml("fontes_noticias", com_ajustes=False) or {}).get("fontes", []) if f.get("ativo", True)}
         desligadas = sorted({f["nome"] for f in novas["noticias"] or [] if f.get("nome") in validas and not f.get("ativa", True)})
         if validas and len(desligadas) >= len(validas):
             raise PreferenciaInvalida("Deixe pelo menos uma fonte de notícias ligada.")

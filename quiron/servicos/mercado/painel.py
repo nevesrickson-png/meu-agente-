@@ -53,7 +53,8 @@ def texto_cotacao(c: cotacoes.Cotacao) -> str:
         preco = f"US$ {_num(c.preco)}"
     if c.ativo in {"IBOV", "IFIX"}:
         preco = _num(c.preco, 0) + " pts"
-    quando = f"dado de {c.horario:%d/%m %H:%M}" if c.horario else ""
+    h = c.horario.astimezone(ZoneInfo("America/Sao_Paulo")) if c.horario and c.horario.tzinfo else c.horario  # brapi vem em UTC
+    quando = (f"dado de {h:%d/%m}" if (h.hour, h.minute) == (0, 0) else f"dado de {h:%d/%m %H:%M}") if h else ""
     return f"- **{c.nome}** ({c.ativo}): {preco} ({_pct(c.variacao_pct, sinal=True)} no dia) — {_fonte(c.fonte, c.obtido_em, extra=' · '.join(x for x in (quando, c.atraso) if x))}"
 
 
@@ -63,7 +64,12 @@ def cotacao(ativo: str) -> str:
 
 def texto_desempenho(ativo: str) -> str:
     d = cotacoes.desempenho(ativo)
-    preco = (lambda v: f"R$ {_num(v)}") if not ativo.startswith("^") and ativo not in {"IBOV", "IFIX", "SMLL"} else _num
+    if ativo.startswith("^") or ativo in {"IBOV", "IFIX", "SMLL"}:
+        preco = _num
+    elif ativo in {"petroleo_brent", "ouro", "minerio_ferro"} or ativo.endswith(("-USD", "=F")):
+        preco = lambda v: f"US$ {_num(v)}"  # noqa: E731
+    else:
+        preco = lambda v: f"R$ {_num(v)}"  # noqa: E731
     partes = [f"semana {_pct(d['semana'], sinal=True)}", f"mês {_pct(d['mes'], sinal=True)}", f"no ano {_pct(d['ano'], sinal=True)}"]
     if d["doze_meses"] is not None:
         partes.append(f"12 meses {_pct(d['doze_meses'], sinal=True)}")

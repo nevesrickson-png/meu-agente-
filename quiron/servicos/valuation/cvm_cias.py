@@ -56,7 +56,11 @@ def arquivo(doc: str, ano: int) -> Path | None:
         return destino if destino.exists() else None
     if tmp is None:
         return destino if destino.exists() else None
-    tmp.replace(destino)
+    try:
+        tmp.replace(destino)
+    except PermissionError:  # Windows: outro processo (bot, Terminal, MCP) está lendo o zip agora — usa o que já existe
+        tmp.unlink(missing_ok=True)
+        return destino if destino.exists() else None
     return destino
 
 

@@ -130,7 +130,7 @@ class Relatorio:
         linhas = [f"📑 {self.titulo}", *[f"• {r}" for r in self.resumo]]
         if self.avisos:
             linhas += [f"⚠️ {a}" for a in self.avisos]
-        linhas.append(f"_{self.rodape}_")
+        linhas.append(f"ℹ️ {self.rodape}")  # sublinhados não viram itálico no Telegram
         texto = "\n".join(linhas)
         return texto if len(texto) <= limite else texto[:limite - 1] + "…"
 
@@ -180,7 +180,6 @@ class Relatorio:
         escritor.end_page()
         escritor.close()
         dados = _carimbar(buffer.getvalue(), self.titulo, self.rodape)
-        del escritor, buffer
         _gravar_arquivo(destino, dados)
         return destino
 

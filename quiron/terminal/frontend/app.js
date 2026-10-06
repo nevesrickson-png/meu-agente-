@@ -102,18 +102,19 @@ let layoutsSalvos = {};
 const graficos = new Map(); // id → objetos de gráfico para limpar
 
 function salvarLocal() {
-  try { localStorage.setItem("quiron-layout-atual", JSON.stringify(paineis.map(({ id, _timer, ...r }) => r))); } catch (e) { /* sem storage */ }
+  try { localStorage.setItem("quiron-layout-atual", JSON.stringify(paineis.map(({ id, _timer, _ultimo, ...r }) => r))); } catch (e) { /* sem storage */ }
 }
 function carregarLocal() {
   try { return JSON.parse(localStorage.getItem("quiron-layout-atual") || "null"); } catch (e) { return null; }
 }
 
 function aplicarLayout(lista) {
+  for (const p of paineis) clearTimeout(p._timer);  // RPT/RESUMO/CARTAS param de consultar painéis que saíram
   for (const g of graficos.values()) g.remove?.();
   graficos.clear();
   $("#grade").innerHTML = "";
   paineis = [];
-  for (const item of lista) adicionarPainel(item.tipo, item.p || {}, item, false);
+  for (const item of lista) adicionarPainel(item.tipo, structuredClone(item.p || {}), item, false);  // cópia: não altera o modelo
   assinar();
   salvarLocal();
 }
@@ -160,7 +161,8 @@ function adicionarPainel(tipo, p = {}, pos = null, reassinar = true) {
   posicionar(painel);
   titular(painel);
   el.querySelector('[data-acao="fechar"]').onclick = () => fecharPainel(id);
-  el.querySelector('[data-acao="atualizar"]').onclick = () => enviar({ tipo: "atualizar", id });
+  el.querySelector('[data-acao="atualizar"]').onclick = () => (def.topico ? enviar({ tipo: "atualizar", id })
+    : (clearTimeout(painel._timer), def.render(el.querySelector(".painel-corpo"), null, painel)));  // painéis sem tópico se redesenham
   arrastavel(painel, el);
   if (!def.topico) def.render(el.querySelector(".painel-corpo"), null, painel);
   if (reassinar) { assinar(); salvarLocal(); el.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
@@ -253,6 +255,7 @@ function receber(msg) {
   if (!el) return;
   const corpo = $(".painel-corpo", el);
   if (msg.erro) { corpo.innerHTML = `<div class="erro">Erro: ${esc(msg.erro)}</div>`; return; }
+  painel._ultimo = msg;  // para redesenhar sem buscar de novo (troca de tema, redimensionar)
   try {
     TIPOS[painel.tipo].render(corpo, msg.dados, painel);
   } catch (e) {
@@ -777,6 +780,7 @@ function textoChat(s) { // Markdown simples do modelo → HTML seguro (tudo esca
     .replace(/^\s{0,3}#{1,6}\s+(.+?)\s*#*$/gm, "<b>$1</b>")
     .replace(/\*\*(?=\S)(.+?)(?<=\S)\*\*/g, "<b>$1</b>")
     .replace(/(^|[^\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])/g, "$1<i>$2</i>")
+    .replace(/(^|[^\w_])_(?=\S)([^_\n]+?)(?<=\S)_(?![\w_])/g, "$1<i>$2</i>")
     .replace(/^(\s*)[-*•]\s+/gm, "$1• ")
     .replace(/\n/g, "<br>");
   return t.replace(/\u0000(\d+)\u0000/g, (_, i) => blocos[Number(i)]);
@@ -817,16 +821,7 @@ async function renderChat(corpo, _d, painel) {
     });
     msgs.append(el); msgs.scrollTop = msgs.scrollHeight;
   };
-  try {
-    const h = await (await fetch("/api/chat/historico")).json();
-    h.mensagens.forEach((m, i) => {
-      const { texto, itens } = m.papel === "user" ? { texto: m.texto, itens: [] } : separarSugestoes(m.texto);
-      balao(m.papel === "user" ? "eu" : "quiron", textoChat(texto));
-      if (i === h.mensagens.length - 1) chips(itens);
-    });
-    if (!h.mensagens.length) balao("sistema", "Converse com o Quíron como no Telegram: análises, estudo, fundos, empresas, clientes (só CLI-XXX).");
-  } catch (e) { balao("sistema", "Sem conexão com o servidor."); }
-  form.onsubmit = (e) => { e.preventDefault(); enviar(caixa.value.trim()); };
+  form.onsubmit = (e) => { e.preventDefault(); enviar(caixa.value.trim()); };  // antes de qualquer espera: senão o envio recarrega a página
   const enviar = async (texto) => {
     if (!texto || form.querySelector("button").disabled) return;
     caixa.value = "";
@@ -848,6 +843,18 @@ async function renderChat(corpo, _d, painel) {
   };
   caixa.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
   rodape(painel, "mesmo agente do Telegram (persona, ferramentas e compliance) · conversa própria do Terminal");
+  try {  // histórico por último: os botões já funcionam enquanto ele carrega
+    const h = await (await fetch("/api/chat/historico")).json();
+    const novas = msgs.children.length;  // algo enviado enquanto carregava fica por baixo do histórico
+    const frag = [];
+    h.mensagens.forEach((m, i) => {
+      const { texto, itens } = m.papel === "user" ? { texto: m.texto, itens: [] } : separarSugestoes(m.texto);
+      frag.push(balao(m.papel === "user" ? "eu" : "quiron", textoChat(texto)));
+      if (i === h.mensagens.length - 1 && !novas) chips(itens);
+    });
+    if (novas) frag.forEach((b) => b && msgs.insertBefore(b, msgs.children[frag.indexOf(b)]));
+    if (!h.mensagens.length && !novas) balao("sistema", "Converse com o Quíron como no Telegram: análises, estudo, fundos, empresas, clientes (só CLI-XXX).");
+  } catch (e) { balao("sistema", "Sem conexão com o servidor."); }
 }
 
 // BIB — biblioteca (funciona sem internet)
@@ -1147,7 +1154,7 @@ document.addEventListener("keydown", (e) => {
   if ((e.key === "/" && !naBarra && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) || (e.ctrlKey && e.key.toLowerCase() === "k")) {
     e.preventDefault(); $("#comando").focus(); $("#comando").select();
   } else if (e.key === "Escape" && naBarra) { $("#comando").blur(); }
-  else if (e.altKey && ["1", "2", "3", "4"].includes(e.key)) { e.preventDefault(); aplicarLayout(Object.values(PRESETS)[+e.key - 1]); }
+  else if (e.altKey && ["1", "2", "3", "4"].includes(e.key)) { e.preventDefault(); aplicarLayout(PRESETS[["Manhã", "Análise", "Estudo", "Assessoria"][+e.key - 1]]); }
 });
 $("#barra").addEventListener("submit", (e) => { e.preventDefault(); fecharSugestoes(); executar($("#comando").value); $("#comando").value = ""; });
 
@@ -1197,14 +1204,17 @@ $("#layout").addEventListener("change", (e) => {
 $("#salvar").addEventListener("click", async () => {
   const nome = prompt("Nome do layout:");
   if (!nome) return;
-  await fetch(`/api/layouts/${encodeURIComponent(nome)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(paineis.map(({ id, _timer, ...r }) => r)) });
+  await fetch(`/api/layouts/${encodeURIComponent(nome)}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Quiron": "terminal" }, body: JSON.stringify(paineis.map(({ id, _timer, _ultimo, ...r }) => r)) });
   await carregarLayouts();
   aviso(`Layout "${nome}" salvo.`);
 });
-window.addEventListener("resize", () => { clearTimeout(window._r); window._r = setTimeout(() => paineis.filter((p) => p.tipo === "curva").forEach((p) => enviar({ tipo: "atualizar", id: p.id })), 400); });
+function redesenhar(p) {  // com os últimos dados recebidos: sem consultar as fontes de novo (evita bater limite do Yahoo/BC)
+  if (p._ultimo) receber(p._ultimo); else if (TIPOS[p.tipo]?.topico) enviar({ tipo: "atualizar", id: p.id });
+}
+window.addEventListener("resize", () => { clearTimeout(window._r); window._r = setTimeout(() => paineis.filter((p) => p.tipo === "curva").forEach(redesenhar), 400); });
 
 // troca de tema: redesenha os painéis (os gráficos leem as cores do tema na hora de desenhar)
-document.addEventListener("quiron:tema", () => paineis.forEach((p) => TIPOS[p.tipo]?.topico && enviar({ tipo: "atualizar", id: p.id })));
+document.addEventListener("quiron:tema", () => paineis.forEach((p) => TIPOS[p.tipo]?.topico && redesenhar(p)));
 window.matchMedia?.("(prefers-color-scheme: light)").addEventListener?.("change", (e) => {
   let t = "auto";
   try { t = localStorage.getItem("quiron-tema") || "auto"; } catch (_) { /* segue o sistema */ }

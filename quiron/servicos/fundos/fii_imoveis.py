@@ -35,8 +35,10 @@ def local(endereco: str) -> tuple[str, str]:
     """(cidade, UF) a partir do endereço livre: "Av. X, 3000 - Barra, Rio de Janeiro - RJ" → ("Rio de Janeiro", "RJ")."""
     e = re.sub(r"\s+", " ", endereco or "").strip(" .;")
     e = re.sub(r",?\s*(?:CEP:?\s*)?\d{5}-?\d{3}\b.*$", "", e, flags=re.I).strip(" ,.-")
-    m = re.search(r"(?:^|[\s,/-])([A-Z]{2})\s*(?:[,.;)]|$|\s*-?\s*Brasil)", e)
-    uf = m.group(1) if m and m.group(1) in UFS else ""
+    uf, m = "", None
+    for achado in re.finditer(r"(?:^|[\s,/-])([A-Z]{2})(?=\s*(?:[,.;)/-]|$|\s*-?\s*Brasil))", e):
+        if achado.group(1) in UFS:  # fica a ÚLTIMA sigla que é UF ("Bloco AB, Barueri/SP" → SP)
+            uf, m = achado.group(1), achado
     cidade = ""
     if uf:
         antes = e[: m.start(1)].rstrip(" ,/-")
@@ -86,7 +88,12 @@ def atualizar(forcar: bool = False) -> None:
         if l["_c"] not in ultimo or l["_k"] > ultimo[l["_c"]]:
             ultimo[l["_c"]] = l["_k"]
     with cvm.banco() as con:
-        con.executescript(ESQUEMA + "DELETE FROM fii_imovel; DELETE FROM fii_inquilino; DELETE FROM fii_ativo;")
+        con.executescript(ESQUEMA)
+        # troca numa transação só: quem ler no meio vê os dados antigos, nunca as tabelas vazias
+        con.execute("BEGIN")
+        con.execute("DELETE FROM fii_imovel")
+        con.execute("DELETE FROM fii_inquilino")
+        con.execute("DELETE FROM fii_ativo")
         for l in linhas["imovel"]:
             if ultimo.get(l["_c"]) != l["_k"]:
                 continue
@@ -110,7 +117,16 @@ def atualizar(forcar: bool = False) -> None:
 
 def carteira(cnpj: str) -> dict:
     """Imóveis + agregados (por UF/cidade, vacância ponderada pela área, setores dos inquilinos) + ativos financeiros."""
-    atualizar()
+    try:
+        atualizar()
+    except Exception as e:  # noqa: BLE001 — sem internet/CVM lenta: usa o que já está guardado
+        import logging
+
+        logging.info("informe trimestral de FII não atualizado agora (%s)", type(e).__name__)
+        with cvm.banco() as con:
+            con.executescript(ESQUEMA)
+            # não tenta de novo a cada FII da mesma análise: nova tentativa daqui a 1 hora
+            con.execute("INSERT OR REPLACE INTO meta VALUES ('fii_trimestral', '', ?)", (time.time() - TTL + 3600,))
     c = cvm.digitos(cnpj)
     with cvm.banco() as con:
         imoveis = [dict(r) for r in con.execute("SELECT * FROM fii_imovel WHERE cnpj = ? ORDER BY COALESCE(pct_receitas, 0) DESC, "

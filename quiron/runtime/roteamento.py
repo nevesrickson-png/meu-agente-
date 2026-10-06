@@ -35,6 +35,15 @@ def _do_original(original: str, trecho: str) -> str:
     return base[-len(trecho):].strip() if trecho and len(trecho) <= len(base) else trecho.strip()
 
 
+def _gestora_conhecida(nome: str) -> bool:
+    try:
+        from quiron.servicos.cartas import coleta
+
+        return bool(coleta.casar_gestoras(nome))
+    except Exception:  # noqa: BLE001 — sem a lista, deixa a IA decidir
+        return False
+
+
 def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | None:
     """(comando, argumentos) quando a frase pede claramente uma função direta; senão None (vai para a IA).
     `ultima_tarefa`: a tarefa que acabou de ser criada/mexida — "passa para as 11h" e "feito" valem para ela."""
@@ -63,7 +72,8 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
 
     # tarefas e lembretes
     if m := re.match(r"^(?:por favor,?\s*)?(?:me\s+)?lembr(?:a|e|ar)(?:-me)?\s+(?:de\s+|que\s+)?(.+)$", t):
-        if _DATA_HORA.search(m.group(1)):
+        afirmacao = re.match(r"^(?:lembre|lembra|lembrar)\s+que\s", t) and not re.search(r"\bas\s+\d|\b\d{1,2}\s*h\b|\d{1,2}:\d{2}", t)
+        if _DATA_HORA.search(m.group(1)) and not afirmacao:  # "lembre que hoje prefiro…" é preferência, não lembrete
             return "tarefa", _do_original(original, m.group(1))
     if m := re.match(r"^(?:cria(?:r)?|adiciona(?:r)?|nova|anota(?:r)?)\s+(?:uma\s+)?tarefa:?\s+(.+)$", t):
         return "tarefa", _do_original(original, m.group(1))
@@ -122,7 +132,11 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
         return "radar", "novidades"
     if m := re.match(r"^(?:(?:quais|tem|teve|saiu|sairam|me (?:da|mostra|manda)|mostra|ver)\s+)?(?:as |alguma(?:s)? )?(?:ultimas |novas )?"
                      r"cartas?(?: (?:de|dos|das) gestor(?:es|as)?)?(?: (?:recentes|novas|do mes|da semana))?(?: (?:da|do|de) (.{2,40}))?$", t):
-        return "cartas", (m.group(1) or "").strip()
+        if not m.group(1):
+            return "cartas", ""
+        alvo = _do_original(original, m.group(1)).strip()
+        if _gestora_conhecida(alvo):  # "carta de crédito", "carta de apresentação…" vão para a IA
+            return "cartas", alvo
     if re.match(r"^(?:me )?(?:da|de|sugere|manda) (?:umas |algumas )?(?:ideias|pautas) (?:de|para|pra) (?:post|posts|conteudo|video|reels)$", t):
         return "pauta", ""
     return None

@@ -109,10 +109,28 @@ def test_calculadoras_conferidas_a_mao(cliente):
 
 def test_layouts(cliente):
     assert cliente.get("/api/layouts").json() == {}
-    cliente.put("/api/layouts/Meu", json=[{"tipo": "watchlist", "x": 1, "y": 1, "w": 4, "h": 8}])
+    corpo = [{"tipo": "watchlist", "x": 1, "y": 1, "w": 4, "h": 8}]
+    assert cliente.put("/api/layouts/Meu", json=corpo).status_code == 403  # outro site não grava layout
+    cliente.put("/api/layouts/Meu", json=corpo, headers={"X-Quiron": "terminal"})
     assert cliente.get("/api/layouts").json()["Meu"][0]["tipo"] == "watchlist"
-    cliente.delete("/api/layouts/Meu")
+    assert cliente.delete("/api/layouts/Meu").status_code == 403
+    cliente.delete("/api/layouts/Meu", headers={"X-Quiron": "terminal"})
     assert cliente.get("/api/layouts").json() == {}
+
+
+def test_terminal_recusa_outros_sites_e_dns_rebinding(cliente):
+    import pytest as _pytest
+    from starlette.websockets import WebSocketDisconnect
+
+    assert cliente.get("/api/topico/status", headers={"host": "evil.example"}).status_code == 403  # DNS rebinding
+    assert cliente.get("/api/topico/noticias", params={"horas": "abc"}).status_code == 400
+    assert cliente.get("/api/topico/status", params={"lixo": "1"}).status_code == 400
+    with _pytest.raises(WebSocketDisconnect) as e:
+        with cliente.websocket_connect("/ws", headers={"origin": "https://evil.example"}) as w:
+            w.receive_json()
+    assert e.value.code == 4403
+    with cliente.websocket_connect("/ws", headers={"origin": "http://testserver"}):
+        pass  # a própria tela continua entrando
 
 
 def test_websocket_empurra_os_paineis_assinados(cliente):

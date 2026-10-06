@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import contextvars
 import difflib
+import json
 import logging
 import os
 import re
@@ -113,6 +114,7 @@ def para_html(texto: str) -> str:
     t = re.sub(r"\*\*(?=\S)(.+?)(?<=\S)\*\*", r"<b>\1</b>", t)
     t = re.sub(r"__(?=\S)(.+?)(?<=\S)__", r"<b>\1</b>", t)
     t = re.sub(r"(?<![\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])", r"<i>\1</i>", t)
+    t = re.sub(r"(?<![\w_])_(?=\S)([^_\n]+?)(?<=\S)_(?![\w_])", r"<i>\1</i>", t)  # _Fontes: …_ (snake_case não casa)
     t = re.sub(r"^(\s*)[-*•]\s+", r"\1• ", t, flags=re.M)
     t = re.sub(r"^\s*(?:---+|\*\*\*+)\s*$", "──────────", t, flags=re.M)
     return re.sub(r"\x00(\d+)\x00", lambda m: blocos[int(m.group(1))], t)
@@ -671,19 +673,28 @@ class BotQuiron:
         from quiron.servicos.organizacao import tarefas
 
         saidas: list[Saida] = []
+        dono = min(self.permitidos) if self.permitidos else None  # o mesmo chat para quem os laços enviam
         for a in self.agente.agendador.vencidos(agora):
-            if a.tipo == "lembrete":
-                t = tarefas.por_lembrete(a.id)
-                if t and not t.concluida_em:
-                    saidas.append(Saida(f"⏰ Lembrete: {t.texto}" + (f" ({t.hora})" if t.hora else ""), linhas=botoes_tarefa(t)))
+            try:  # um item com problema não leva junto os outros lembretes da mesma rodada
+                if a.tipo == "lembrete":
+                    t = tarefas.por_lembrete(a.id)
+                    if t and not t.concluida_em:
+                        saidas.append(Saida(f"⏰ Lembrete: {t.texto}" + (f" ({t.hora})" if t.hora else ""), linhas=botoes_tarefa(t)))
+                    else:
+                        saidas.append(Saida(f"⏰ Lembrete: {re.sub(r'^\[T\d+\] ', '', a.texto)}"))
+                elif a.texto.startswith("/") and dono is not None:
+                    saidas += await self.tratar(dono, dono, a.texto)
+                elif (rota := rotear(a.texto)) and rota[0] in ROTINAS_DIRETAS and dono is not None:
+                    # "Faça meu briefing." vira "/briefing" já aqui: texto livre seria capturado por um /pos, treino ou
+                    # entrevista abertos (a rotina viraria transcrição de reunião). Só leituras vão direto.
+                    saidas += await self.tratar(dono, dono, f"/{rota[0]} {rota[1]}".strip())
                 else:
-                    saidas.append(Saida(f"⏰ Lembrete: {re.sub(r'^\[T\d+\] ', '', a.texto)}"))
-            elif (a.texto.startswith("/") or (rotear(a.texto) or ("",))[0] in ROTINAS_DIRETAS) and self.permitidos:
-                # "/revisao", "Faça meu briefing."… (só leituras: rotina com "lembre que…" não pode gravar fato todo dia)
-                saidas += await self.tratar(next(iter(self.permitidos)), next(iter(self.permitidos)), a.texto)
-            else:
-                reg = await self.agente.responder(a.texto, skills=self.skills_para(a.texto))
-                saidas += [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
+                    reg = await self.agente.responder(a.texto, skills=self.skills_para(a.texto))
+                    saidas += [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
+            except Exception:  # noqa: BLE001
+                logging.exception("falha ao executar o agendamento #%s", a.id)
+                saidas.append(Saida(f"⚠️ Não consegui fazer agora: {re.sub(r'^\[T\d+\] ', '', a.texto)[:120]}. "
+                                    "Peça de novo quando quiser."))
             self.agente.agendador.registrar_envio(f"agenda #{a.id}", agora)
             self.agente.workspace.anotar_diario(f"Agenda #{a.id} enviada: {a.texto[:120]}", agora)
         return saidas
@@ -792,8 +803,9 @@ async def _rodar() -> None:
                         conteudo = bytes(await arquivo.download_as_bytearray())
                         imagem = bool(msg.photo) or (msg.document.mime_type or "").startswith("image/")
                         nome = "print.jpg" if msg.photo else (msg.document.file_name or "arquivo")
-                        saidas = await bot.tratar_arquivo(update.effective_user.id, msg.chat_id, conteudo, nome,
-                                                          msg.caption or "", imagem)
+                        saidas = await asyncio.wait_for(bot.tratar_arquivo(update.effective_user.id, msg.chat_id, conteudo,
+                                                                           nome, msg.caption or "", imagem),
+                                                        TEMPO_MAXIMO_RESPOSTA_S)
                 else:
                     saidas = await asyncio.wait_for(bot.tratar(update.effective_user.id, msg.chat_id, msg.text or "", andamento),
                                                     TEMPO_MAXIMO_RESPOSTA_S)
@@ -904,7 +916,10 @@ async def _rodar() -> None:
                 try:
                     for s in await bot.agenda_vencida():
                         bot.registrar_proativo(dono, s.texto, "agenda")
-                        await enviar(dono, s)
+                        try:  # uma mensagem que falha no envio não derruba as seguintes
+                            await enviar(dono, s)
+                        except Exception:  # noqa: BLE001
+                            logging.exception("falha ao enviar item da agenda")
                 except Exception:  # noqa: BLE001 — o laço nunca morre
                     logging.exception("falha no laço da agenda")
                 await asyncio.sleep(30)
@@ -969,36 +984,55 @@ async def _rodar() -> None:
             """Entrega as análises prontas (resumo + PDF + planilha) pedidas pelo Telegram."""
             from quiron.servicos.analise.fila import fila
 
-            try:  # análises que caíram no erro de gravação do Windows (já corrigido) voltam sozinhas para a fila, uma vez
+            try:  # análises que caíram no erro de gravação do Windows (já corrigido) voltam para a fila UMA vez na vida
+                from quiron.nucleo.config import pasta_dados
+
+                marca = pasta_dados() / "analises_repostas.json"
+                ja = set(json.loads(marca.read_text(encoding="utf-8"))) if marca.exists() else set()
                 for t in fila().listar(50, "erro"):
-                    if ("WinError 5" in (t.erro or "") or "PermissionError" in (t.erro or "")) and t.origem == "telegram":
+                    if (t.id not in ja and t.origem == "telegram"
+                            and ("WinError 5" in (t.erro or "") or "PermissionError" in (t.erro or ""))):
                         fila().repetir(t.id)
+                        ja.add(t.id)
+                marca.parent.mkdir(parents=True, exist_ok=True)
+                marca.write_text(json.dumps(sorted(ja)), encoding="utf-8")
             except Exception:  # noqa: BLE001
                 logging.exception("não consegui repor as análises que falharam")
             while True:
                 try:
                     f = fila()
-                    for t in f.a_entregar("telegram"):
+                    pendentes = f.a_entregar("telegram")
+                except Exception:  # noqa: BLE001 — o laço nunca morre
+                    logging.exception("falha ao ler a fila de análises")
+                    pendentes = []
+                for t in pendentes:  # cada análise por conta própria: uma entrega com problema não trava as outras
+                    try:
                         if t.situacao == "erro":
                             from quiron.servicos.analise.fila import motivo_amigavel
 
                             aviso = (f"⚠️ A análise #{t.id}{' — ' + t.titulo if t.titulo else ''} não saiu: "
                                      f"{motivo_amigavel(t.erro)}. Toque abaixo para tentar de novo.")
                             logging.warning("análise #%s falhou: %s", t.id, t.erro)
-                            bot.registrar_proativo(dono, aviso, "analise")
                             await enviar(dono, Saida(aviso, botoes=[("🔁 Tentar de novo", f"an:repetir:{t.id}")]))
-                        else:
-                            rel = f.relatorio(t.id)
-                            texto = rel.resumo_curto() if rel else f"📑 {t.titulo}\n{t.resumo}"
-                            bot.registrar_proativo(dono, f"✅ Análise #{t.id} pronta\n{texto}", "analise")
-                            await enviar(dono, Saida(f"✅ Análise #{t.id} pronta\n{texto}"))
-                            for tipo_arq, caminho in t.arquivos().items():
-                                if tipo_arq in {"pdf", "planilha"}:
+                            f.marcar_entregue(t.id)
+                            bot.registrar_proativo(dono, aviso, "analise")
+                            continue
+                        rel = f.relatorio(t.id)
+                        texto = rel.resumo_curto() if rel else f"📑 {t.titulo}\n{t.resumo}"
+                        await enviar(dono, Saida(f"✅ Análise #{t.id} pronta\n{texto}"))
+                        f.marcar_entregue(t.id)  # o texto já chegou: não repete a cada 10 s se o anexo falhar
+                        bot.registrar_proativo(dono, f"✅ Análise #{t.id} pronta\n{texto}", "analise")
+                        for tipo_arq, caminho in t.arquivos().items():
+                            if tipo_arq in {"pdf", "planilha"}:
+                                try:
                                     with caminho.open("rb") as arq:
                                         await app.bot.send_document(dono, arq, filename=f"quiron-{t.id:04d}-{caminho.name}")
-                        f.marcar_entregue(t.id)
-                except Exception:  # noqa: BLE001 — o laço nunca morre
-                    logging.exception("falha ao entregar análises")
+                                except Exception:  # noqa: BLE001
+                                    logging.exception("não consegui mandar o anexo da análise #%s", t.id)
+                                    await app.bot.send_message(dono, f"Não consegui mandar o {tipo_arq} da análise #{t.id} "
+                                                                     "agora — ele está no Terminal, em RPT.")
+                    except Exception:  # noqa: BLE001
+                        logging.exception("falha ao entregar a análise #%s", t.id)
                 await asyncio.sleep(10)
 
         async def laco_memoria() -> None:

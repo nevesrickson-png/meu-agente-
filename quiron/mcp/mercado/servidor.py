@@ -175,10 +175,13 @@ def fii_dados(ticker: str) -> str:
         return str(e)
     u = h[-1]
     dy12 = sum(x["dy_mes"] or 0 for x in h[-12:])
+    def br(v: float, casas: int = 2) -> str:  # só os números ganham vírgula (nomes com "S.A." ficam intactos)
+        return f"{v:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
     return (f"{u['ticker'] or ticker} — {u['nome']} · {u['segmento']} · informe {u['mes']}\n"
-            f"- VP/cota R$ {u['vp_cota'] or 0:.2f} · PL R$ {u['pl'] or 0:,.0f} · cotistas {u['cotistas']}\n"
-            f"- DY do mês {u['dy_mes'] or 0:.2f}% (12m: {dy12:.2f}% sobre o VP) · rentabilidade efetiva {u['rent_efetiva'] or 0:.2f}%\n"
-            .replace(",", "X").replace(".", ",").replace("X", ".") + cvm.fonte())
+            f"- VP/cota R$ {br(u['vp_cota'] or 0)} · PL R$ {br(u['pl'] or 0, 0)} · cotistas {u['cotistas']}\n"
+            f"- DY do mês {br(u['dy_mes'] or 0)}% (12m: {br(dy12)}% sobre o VP) · rentabilidade efetiva "
+            f"{br(u['rent_efetiva'] or 0)}%\n" + cvm.fonte())
 
 
 @mcp.tool()

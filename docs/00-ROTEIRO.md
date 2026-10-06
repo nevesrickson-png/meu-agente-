@@ -441,6 +441,18 @@ reconhecidas, 12 bloqueiam, 9 fora do ar, 8 sem data); 74 feeds conferidos; TV e
 ✅ Aceite (06/10/2026): resumo real gerado com IA (8 seções, 49 s); HGLG11 com 37 imóveis e XPML11 com 17; perfil
 da WEG e da Petrobras; TV tocando o ao vivo da CNN Brasil; 338+ testes.
 
+
+## Depuração geral (06/10/2026) — pedido do Rickson: "verificar erros e debugar todo o código"
+- [x] Análise estática (ruff), fumaça (10 servidores MCP / 118 ferramentas, 20 tópicos do Terminal, 45 comandos do bot)
+  e 4 revisões por área (bot, módulos novos, mercado, Terminal) — ~35 achados verificados e corrigidos
+- [x] Graves: rotina do briefing engolida por um /pos/treino aberto; um item com erro apagava os outros lembretes da
+  rodada; análise lenta (> 30 min) era refeita em paralelo; WebSocket do Terminal legível por qualquer site aberto no
+  navegador (e “DNS rebinding”); dólar/euro com variação do dia errada (barra repetida do Yahoo → agora contra a PTAX)
+- [x] Médios: cartas (gestora com acento, espera de 40 s, redirecionamento para rede interna, data apagada, “novidades”
+  lido como novembro), perfil sem tradução guardado por 7 dias, FII sem internet, janela do BC que nunca expirava,
+  Alt+4, chat que recarregava a página, tema que rebuscava todas as fontes, `/simular 500 mil` ignorando o valor
+✅ Aceite (06/10/2026): 16 testes de regressão novos; suíte completa e teste de navegador verdes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

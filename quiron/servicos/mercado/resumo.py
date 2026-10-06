@@ -50,16 +50,18 @@ SECOES: list[tuple[str, str, list[tuple[str, str, str]], list[str]]] = [
     ("fiis", "Fundos imobiliários (FIIs)", [("IFIX", "IFIX", "pontos")], ["fundos_previdencia", "renda_fixa"]),
 ]
 # manchete só entra na seção se falar do assunto dela (os temas das notícias são largos)
-FILTRO_SECAO = {
-    "bolsa_br": r"ibovespa|bolsa|b3|a[cç][oõ]es|\b[A-Z]{4}[0-9]{1,2}\b|small caps",
-    "bolsa_eua": r"s&p|nasdaq|dow|wall street|nova york|ny\b|stocks|bolsas? (?:de|em) ny|eua|americana",
-    "renda_fixa": r"tesouro|renda fixa|treasur|t[ií]tulos?|cdb|lci|lca|deb[eê]nture|cr[ia]\b|cr[ai]s\b|yield|juros futuros|di\b",
-    "juros": r"selic|copom|banco central|\bbc\b|fed\b|fomc|juros|infla[cç][aã]o|ipca|powell|galípolo|galipolo",
-    "moedas": r"d[oó]lar|c[aâ]mbio|real\b|euro\b|moeda|dxy|currenc|dollar",
-    "cripto": r"bitcoin|btc|ether|cripto|crypto|stablecoin|etf de bitcoin|blockchain",
-    "agro": r"soja|milho|caf[eé]|a[cç][uú]car|boi|arroba|safra|agro|petr[oó]leo|brent|wti|ouro|min[eé]rio|commodit|oil|gold",
-    "fiis": r"\bfii|\bfiis\b|ifix|fundos? imobili|\b[A-Z]{4}11\b",
+# todas as alternativas começam em início de palavra ("ny" não casa "Germany", "di" não casa "Saudi", "dow" não "window")
+_FILTROS = {
+    "bolsa_br": r"ibovespa|bolsa|b3|a[cç][oõ]es|[A-Z]{4}[0-9]{1,2}\b|small caps",
+    "bolsa_eua": r"s&p|nasdaq|dow\b|dow jones|wall street|nova york|ny\b|stocks\b|eua\b|americana",
+    "renda_fixa": r"tesouro|renda fixa|treasur|t[ií]tulos? p[uú]blic|cdb\b|lci\b|lca\b|deb[eê]nture|cr[ia]s?\b|yield|juros futuros|di\b",
+    "juros": r"selic|copom|banco central|bc\b|fed\b|fomc|juros|infla[cç][aã]o|ipca|powell|gal[ií]polo",
+    "moedas": r"d[oó]lar|c[aâ]mbio|(?<!juro )(?<!juros )real\b|euro\b|moedas?\b|dxy|currenc|dollar",
+    "cripto": r"bitcoin|btc\b|ether|cripto|crypto|stablecoin|blockchain",
+    "agro": r"soja|milho|caf[eé]\b|a[cç][uú]car|boi\b|arroba|safra|agro|petr[oó]leo|brent|wti\b|ouro\b|min[eé]rio|commodit|oil\b|gold\b",
+    "fiis": r"fii|fiis\b|ifix|fundos? imobili|[A-Z]{4}11\b",
 }
+FILTRO_SECAO = {k: rf"\b(?:{v})" for k, v in _FILTROS.items()}
 
 
 @dataclass
@@ -160,7 +162,8 @@ def _linha(codigo: str, nome: str, tipo: str, ref: list | None = None) -> Linha 
             c = cotacoes.cotacao(codigo)
         except ERROS:
             return None
-        return Linha(nome, tipo, c.preco, c.horario or datetime.now(BRT), c.variacao_pct, None, None, None, 0.0, 0.0)
+        dia = None if tipo == "taxa" or codigo in {"USDBRL", "EURBRL"} else c.variacao_pct  # % não é bps; câmbio: PTAX
+        return Linha(nome, tipo, c.preco, c.horario or datetime.now(BRT), dia, None, None, None, 0.0, 0.0)
     confiavel = _dia_confiavel(codigo, serie, ref)
     if tipo == "taxa":  # yield: variação em pontos-base, não em %
         ult = serie[-1][1]
@@ -204,7 +207,7 @@ def _fatos_juros(ano: int) -> list[str]:
 
         hoje = datetime.now(BRT).date()
         for quando, titulo in briefing.eventos_agenda(hoje, 25):
-            if re.search(r"copom|fomc|fed|ata", titulo, re.I):
+            if re.search(r"\b(?:copom|fomc|fed\b|ata\b|federal reserve)", titulo, re.I):
                 fatos.append(f"Agenda: {titulo} em {quando:%d/%m}")
     except ERROS:
         pass
@@ -314,8 +317,8 @@ def coletar(agora: datetime | None = None) -> tuple[list[Bloco], list[str]]:
         fontes.append("Banco Central (SGS e Focus)")
     if por["renda_fixa"].fatos:
         fontes.append("Tesouro Transparente")
-    veiculos = sorted({v.strip() for b in blocos for m in b.manchetes for v in m.rsplit("(", 1)[-1].rstrip(")").split(",")
-                       if v.strip() and not v.strip().startswith("+")})
+    veiculos = sorted({re.sub(r"\s*\+\d+$", "", v).strip() for b in blocos for m in b.manchetes
+                       for v in m.rsplit("(", 1)[-1].rstrip(")").split(",") if re.sub(r"\s*\+\d+$", "", v).strip()})
     if veiculos:
         fontes.append("notícias: " + ", ".join(veiculos[:14]) + (f" e mais {len(veiculos) - 14}" if len(veiculos) > 14 else ""))
     return blocos, fontes
@@ -470,15 +473,17 @@ def pdf_de(r: Resumo) -> Path | None:
 
 
 _GERANDO = __import__("threading").Event()
+_INICIO = __import__("threading").Lock()
 
 
 def gerar_em_segundo_plano(config=None) -> bool:
     """Para o Terminal: gera sem esperar (um de cada vez). True se começou agora."""
     import threading
 
-    if _GERANDO.is_set():
-        return False
-    _GERANDO.set()
+    with _INICIO:  # dois cliques ao mesmo tempo não geram dois resumos
+        if _GERANDO.is_set():
+            return False
+        _GERANDO.set()
 
     def rodar():
         try:

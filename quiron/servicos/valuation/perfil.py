@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 import zipfile
 from dataclasses import asdict, dataclass, field
@@ -179,10 +180,17 @@ def perfil(termo: str | cvm_cias.Empresa, traduzir: bool = True, config=None) ->
                fca.get("fundacao", ""), fca.get("controle", ""), fca.get("site", ""), yh.get("setor", ""), yh.get("industria", ""),
                yh.get("funcionarios"), "", yh.get("negocio_original", ""), fre.get("acionistas", []), fre.get("controladas", []),
                fre.get("empregados_regiao", {}))
-    p.negocio = (_traduzir(p.negocio_original, config) if traduzir else "") or p.negocio_original
+    traducao = _traduzir(p.negocio_original, config) if traduzir else ""
+    p.negocio = traducao or p.negocio_original
     p.fontes = [f for f, ok in (("CVM FCA (cadastro)", fca), ("CVM FRE (Formulário de Referência)", fre),
                                 ("Yahoo Finance (perfil)", yh.get("negocio_original") or yh.get("setor"))) if ok]
-    cache.write_text(json.dumps(asdict(p), ensure_ascii=False), encoding="utf-8")
+    completo = bool(fca and fre and yh.get("negocio_original")) and (bool(traducao) or not traduzir)
+    if fca:  # perfil vazio (sem rede) não vai para o cache; incompleto (sem FRE/Yahoo/tradução) vale só 6 horas
+        tmp = cache.with_suffix(".tmp")
+        tmp.write_text(json.dumps(asdict(p), ensure_ascii=False), encoding="utf-8")
+        tmp.replace(cache)
+        if not completo:
+            os.utime(cache, (time.time() - VALIDADE_S + 6 * 3600,) * 2)
     return p
 
 

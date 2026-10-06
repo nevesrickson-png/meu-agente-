@@ -90,19 +90,24 @@ def _pontos_soap(codigo: int):
     return [Ponto(_data_sgs(d), numero_br(v)) for d, v in itens if v.strip()], r
 
 
+class _JanelaSoap(Exception):
+    """Dentro da janela de 10 min: vai ao web service sem tentar a API (e sem esticar a janela)."""
+
+
 _api_fora_ate = 0.0  # depois de uma recusa da api.bcb.gov.br, vai direto ao web service por 10 min
 
 
 def sgs(chave: str, n: int = 2) -> Serie:
     global _api_fora_ate
     codigo, nome, unidade = SERIES[chave]
-    try:
-        if time.time() < _api_fora_ate:
-            raise FonteIndisponivel("api.bcb.gov.br recusou a conexão há pouco")
-        pontos, r = _pontos_api(codigo, n)
-    except FonteIndisponivel:
-        _api_fora_ate = time.time() + 600
+    if time.time() < _api_fora_ate:  # janela de 10 min após uma recusa: direto ao web service (sem renovar a janela)
         pontos, r = _pontos_soap(codigo)
+    else:
+        try:
+            pontos, r = _pontos_api(codigo, n)
+        except FonteIndisponivel:
+            _api_fora_ate = time.time() + 600
+            pontos, r = _pontos_soap(codigo)
     pontos = [p for p in pontos if p.data <= date.today() and p.valor is not None][-n:]
     if not pontos:
         raise ValueError(f"SGS {codigo} sem dados")
@@ -118,12 +123,13 @@ def sgs_periodo(codigo: int, inicio: date, fim: date | None = None) -> tuple[lis
     fim = fim or date.today()
     try:
         if time.time() < _api_fora_ate:
-            raise FonteIndisponivel("api.bcb.gov.br recusou a conexão há pouco")
+            raise _JanelaSoap()
         r = obter(URL_SGS_PERIODO.format(codigo=codigo), params={"formato": "json", "dataInicial": inicio.strftime("%d/%m/%Y"),
                   "dataFinal": fim.strftime("%d/%m/%Y")}, fonte=f"Banco Central (SGS {codigo})", ttl=12 * 3600)
         pontos = [Ponto(_data_sgs(p["data"]), numero_br(p["valor"])) for p in r.conteudo]
-    except FonteIndisponivel:
-        _api_fora_ate = time.time() + 600
+    except (FonteIndisponivel, _JanelaSoap) as e:
+        if not isinstance(e, _JanelaSoap):  # só uma recusa de verdade abre (ou renova) a janela de 10 min
+            _api_fora_ate = time.time() + 600
         corpo = _SOAP.format(codigo=codigo, inicio=inicio.strftime("%d/%m/%Y"), fim=fim.strftime("%d/%m/%Y"))
         r = obter(URL_SGS_SOAP, metodo="POST", corpo=corpo,
                   cabecalhos={"Content-Type": "text/xml; charset=utf-8", "SOAPAction": '""'},

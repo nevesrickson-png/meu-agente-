@@ -148,6 +148,15 @@ Arquivos com DRM não são processados.
   ativo; último trimestre por fundo; tabelas `fii_imovel/fii_inquilino/fii_ativo` em `dados/fundos.db`, 1 download por
   semana); `local` tira cidade/UF do endereço; `carteira` (por UF, vacância ponderada pela área, setores, ativos por
   tipo); seções no `fii_comparativo`; MCP `fii_imoveis`.
+- Depuração 06/10/2026 (`testes/test_revisao_bugs.py`): `agenda_vencida` roteia a rotina para "/comando" antes do
+  `tratar` (texto livre seria capturado por /pos/treino/entrevista) e isola cada item em try; `laco_analises` marca
+  entregue logo após o texto, anexo com falha avisa; re-tentativa de PermissionError uma vez na vida
+  (`dados/analises_repostas.json`); fila: `dono` = máquina:PID, órfã só com dono morto (ou > 6 h), UPDATE final com
+  `AND dono=?`; Terminal: `_host_permitido` (middleware, sem senha só 127.0.0.1/localhost/.ts.net) + `_origem_permitida`
+  no `/ws` + `_proteger` nos layouts + 400 para parâmetro inválido; câmbio do dia em `cotacoes.yahoo` =
+  `_variacao_contra_ptax`; `painel.texto_cotacao` em horário de Brasília; BCB: janela de 10 min só abre com recusa
+  real; cartas: `casar_gestoras` sem acento, `atualizar(nomes=[])` não confere nada, `ler_carta` segue redirecionamento à
+  mão só para endereço público, `_MES` com fronteira de palavra, data não se apaga; `vencidas()` antes de abrir thread.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

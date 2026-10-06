@@ -123,7 +123,9 @@ def test_rotas_do_bot_para_cartas():
 
     assert rotear("cartas recentes") == ("cartas", "")
     assert rotear("Quais as últimas cartas de gestores?") == ("cartas", "")
-    assert rotear("carta da Dynamo") == ("cartas", "dynamo")
+    assert rotear("carta da Dynamo") == ("cartas", "Dynamo")
+    assert rotear("cartas da Itaú") == ("cartas", "Itaú")  # com acento (antes virava "itau" e não achava a gestora)
+    assert rotear("carta de crédito") is None  # não é gestora: vai para a IA
     assert rotear("resuma a carta da Verde") is None  # resumir vai para a IA (lê a carta)
     assert skills_provaveis("resuma a carta da Verde") == ["noticias"]
 

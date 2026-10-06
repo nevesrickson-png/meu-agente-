@@ -107,7 +107,7 @@ def referencias(rel: Relatorio) -> list[float]:
 # ---------------------------------------------------------------- redação
 def _contexto(rel: Relatorio) -> str:
     partes = [f"Título: {rel.titulo}", f"Pedido/parâmetros: {json.dumps(rel.parametros, ensure_ascii=False)}",
-              "Fatos calculados (JSON):\n" + json.dumps(rel.fatos, ensure_ascii=False, default=str)[:6000],
+              "Fatos calculados (JSON):\n" + json.dumps(rel.fatos, ensure_ascii=False, default=str)[:14000],
               "Premissas:\n" + "\n".join(f"- {p}" for p in rel.premissas)]
     for s in rel.secoes:
         for t in s.tabelas:

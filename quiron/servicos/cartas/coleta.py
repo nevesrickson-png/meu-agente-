@@ -42,6 +42,10 @@ _NAO_CARTA = re.compile(r"carta[\s_-]*consulta|emiss[aã]o[\s_-]*de[\s_-]*cotas|
                         r"proposta[\s_-]*da[\s_-]*administra|ata[\s_-]+d[ae]|one[\s_-]?page|l[aâ]mina", re.I)
 _GENERICO = re.compile(r"^(baixar|download|pdf|leia mais|saiba mais|clique\b.*|visualizar.*|ver|acesse|acessar|abrir|read more|"
                        r"carta do gestor|carta mensal|carta|relat[oó]rio( mensal)?|coment[aá]rio( mensal)?)$", re.I)
+# mês por extenso ou abreviado, nunca dentro de outra palavra ("novidades" não é novembro, "setor" não é setembro)
+_MES = (r"(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|"
+        r"march|april|may|june|july|august|september|october|november|december|jan|fev|feb|mar|abr|apr|mai|jun|jul|ago|"
+        r"aug|set|sep|sept|out|oct|nov|dez|dec)(?![a-zçã])")
 _TRAVA = threading.Lock()
 
 
@@ -85,6 +89,20 @@ def fontes() -> list[dict]:
     return [f for f in (ler_yaml("cartas_gestores") or {}).get("fontes", []) if f.get("ativo", True)]
 
 
+def _sem_acento(t: str) -> str:
+    import unicodedata
+
+    return "".join(c for c in unicodedata.normalize("NFD", t or "") if unicodedata.category(c) != "Mn").lower().strip()
+
+
+def casar_gestoras(nome: str) -> list[str]:
+    """Nomes cadastrados que contêm o termo, sem ligar para acento/maiúscula ("itau" acha "Itaú Asset")."""
+    alvo = _sem_acento(nome)
+    if len(alvo) < 2:
+        return []
+    return [f["nome"] for f in fontes() if alvo in _sem_acento(f["nome"])]
+
+
 # ---------------------------------------------------------------- datas
 def extrair_data(texto: str, hoje: date | None = None) -> str:
     """Data no título/link: 2025-09, 09/2025, 15/09/2025, "setembro de 2025", "set/25", "carta-setembro-2025"…"""
@@ -92,24 +110,23 @@ def extrair_data(texto: str, hoje: date | None = None) -> str:
     t = _html.unescape(texto or "").lower()
     candidatos: list[date] = []
     # "Nov 26, 2025" / "26 de novembro de 2025": mês + dia + ano (tira do texto para "nov 26" não virar novembro/2026)
-    for nome, d, a in re.findall(r"\b(jan|fev|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|out|oct|nov|dez|dec)[a-zçã]*\.?\s+"
+    for nome, d, a in re.findall(r"\b(?:" + _MES + r")\.?\s+"
                                  r"(\d{1,2}),?\s+(20\d\d)\b", t):
-        candidatos.append((int(a), MESES[nome], int(d)))
-    for d, nome, a in re.findall(r"\b(\d{1,2})\s+(?:de\s+)?(jan|fev|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|out|oct|nov|dez|dec)"
-                                 r"[a-zçã]*\.?,?\s+(?:de\s+)?(20\d\d)\b", t):
-        candidatos.append((int(a), MESES[nome], int(d)))
-    t = re.sub(r"\b(?:jan|fev|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|out|oct|nov|dez|dec)[a-zçã]*\.?\s+\d{1,2},?\s+20\d\d\b", " ", t)
-    t = re.sub(r"\b\d{1,2}\s+(?:de\s+)?(?:jan|fev|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|out|oct|nov|dez|dec)[a-zçã]*\.?,?\s+(?:de\s+)?20\d\d\b", " ", t)
+        candidatos.append((int(a), MESES[nome[:3]], int(d)))
+    for d, nome, a in re.findall(r"\b(\d{1,2})\s+(?:de\s+)?" + _MES + r"\.?,?\s+(?:de\s+)?(20\d\d)\b", t):
+        candidatos.append((int(a), MESES[nome[:3]], int(d)))
+    t = re.sub(r"\b(?:" + _MES + r")\.?\s+\d{1,2},?\s+20\d\d\b", " ", t)
+    t = re.sub(r"\b\d{1,2}\s+(?:de\s+)?(?:" + _MES + r")\.?,?\s+(?:de\s+)?20\d\d\b", " ", t)
     for d, m, a in re.findall(r"\b(\d{1,2})[/.-](\d{1,2})[/.-](20\d\d)\b", t):
         candidatos.append((int(a), int(m), int(d)))
     for a, m in re.findall(r"(?<!\d)(20\d\d)[-/_.]?(0[1-9]|1[0-2])(?!\d)", t):
         candidatos.append((int(a), int(m), 1))
     for m, a in re.findall(r"(?<!\d)(0[1-9]|1[0-2])[-/_.](20\d\d)(?!\d)", t):
         candidatos.append((int(a), int(m), 1))
-    for nome, a in re.findall(r"\b(jan|fev|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|out|oct|nov|dez|dec)[a-zçã]*"
+    for nome, a in re.findall(r"\b(?:" + _MES + r")"
                               r"[\s/._-]*(?:de[\s_-]+)?(20\d\d|\d\d)\b", t):
         ano = int(a) if len(a) == 4 else 2000 + int(a)
-        candidatos.append((ano, MESES[nome], 1))
+        candidatos.append((ano, MESES[nome[:3]], 1))
     validas = []
     for a, m, d in candidatos:
         try:
@@ -281,18 +298,29 @@ def _gravar(sit: Situacao, cartas: list[Carta]) -> int:
             ident = hashlib.sha1(c.link.encode()).hexdigest()[:16]
             if con.execute("SELECT 1 FROM cartas WHERE id = ?", (ident,)).fetchone():
                 # já conhecida: só corrige título/data (melhorias da leitura valem para as antigas também)
-                con.execute("UPDATE cartas SET titulo = ?, data = ? WHERE id = ?", (c.titulo, c.data, ident))
+                # leitura sem data (ex.: feed fora do ar, caiu na página) não apaga a data que já se sabia
+                con.execute("UPDATE cartas SET titulo = ?, data = COALESCE(NULLIF(?, ''), data) WHERE id = ?",
+                            (c.titulo, c.data, ident))
                 continue
             con.execute("INSERT INTO cartas VALUES (?,?,?,?,?,?,?)", (ident, c.fonte, c.tipo, c.titulo, c.link, c.data, agora))
             novas += 1
     return novas
 
 
+def vencidas() -> list[dict]:
+    """Fontes nunca conferidas ou conferidas há mais de ~20 h."""
+    with conectar() as con:
+        quando = {r["fonte"]: r["conferido_em"] for r in con.execute("SELECT fonte, conferido_em FROM situacao")}
+    agora = datetime.now(timezone.utc)
+    return [f for f in fontes() if not quando.get(f["nome"])
+            or (agora - datetime.fromisoformat(quando[f["nome"]])).total_seconds() > INTERVALO_S]
+
+
 def atualizar(forcar: bool = False, nomes: list[str] | None = None, paralelo: int = 8) -> dict:
     """Confere as fontes vencidas (ou todas, com `forcar`). Devolve o resumo da rodada."""
     from concurrent.futures import ThreadPoolExecutor
 
-    lista = [f for f in fontes() if not nomes or f["nome"] in nomes]
+    lista = [f for f in fontes() if nomes is None or f["nome"] in nomes]  # [] = nenhuma (não "todas")
     with conectar() as con:
         quando = {r["fonte"]: r["conferido_em"] for r in con.execute("SELECT fonte, conferido_em FROM situacao")}
     agora = datetime.now(timezone.utc)
@@ -310,13 +338,17 @@ def atualizar(forcar: bool = False, nomes: list[str] | None = None, paralelo: in
 
 
 _EM_ANDAMENTO = threading.Event()
+_INICIO = threading.Lock()
 
 
 def atualizar_em_segundo_plano(forcar: bool = False) -> bool:
     """Para telas: dispara a rodada sem esperar (uma de cada vez). True se começou agora."""
-    if _EM_ANDAMENTO.is_set():
+    if not forcar and not vencidas():  # nada vencido: nem abre a thread (a tela pede de novo a cada poucos segundos)
         return False
-    _EM_ANDAMENTO.set()
+    with _INICIO:  # dois cliques ao mesmo tempo não disparam duas rodadas
+        if _EM_ANDAMENTO.is_set():
+            return False
+        _EM_ANDAMENTO.set()
 
     def rodar():
         try:
@@ -359,9 +391,14 @@ def recentes(dias: int = 60, tipo: str | None = None, termo: str | None = None, 
 
 
 def da_fonte(nome: str, limite: int = 12) -> list[dict]:
+    alvo = _sem_acento(nome)
     with conectar() as con:
-        return [dict(l) for l in con.execute("SELECT * FROM cartas WHERE fonte LIKE ? ORDER BY data DESC LIMIT ?",
-                                             (f"%{nome}%", limite))]
+        nomes = [r[0] for r in con.execute("SELECT DISTINCT fonte FROM cartas") if alvo and alvo in _sem_acento(r[0])]
+        if not nomes:
+            return []
+        marcas = ",".join("?" * len(nomes))
+        return [dict(l) for l in con.execute(f"SELECT * FROM cartas WHERE fonte IN ({marcas}) ORDER BY data DESC LIMIT ?",
+                                             (*nomes, limite))]
 
 
 def situacoes() -> list[dict]:
@@ -390,27 +427,63 @@ def link_conhecido(link: str) -> bool:
         return con.execute("SELECT 1 FROM cartas WHERE link = ?", (link,)).fetchone() is not None
 
 
+def _endereco_publico(url: str) -> bool:
+    """Bloqueia endereços internos (127.0.0.1, rede local…) mesmo vindos de um redirecionamento."""
+    import ipaddress
+    import socket
+
+    host = urlsplit(url).hostname or ""
+    if host in {"localhost"} or host.endswith((".local", ".internal", ".ts.net")):
+        return False
+    try:
+        enderecos = {i[4][0] for i in socket.getaddrinfo(host, None)}
+    except OSError:
+        return False
+    return all(ipaddress.ip_address(e.split("%")[0]).is_global for e in enderecos)
+
+
 def ler_carta(link: str, max_caracteres: int = 14000) -> str:
-    """Baixa uma carta pública (PDF ou página) e devolve o texto, para o Quíron resumir. Respeita robots.txt."""
-    if not link_conhecido(link):
-        return "Só leio cartas das gestoras cadastradas em config/cartas_gestores.yaml (ou listadas em /cartas)."
-    with _cliente() as cliente:
-        if not permitido(link, cliente):
-            return "O site pede que robôs não leiam este endereço (robots.txt). Abra a carta no navegador."
-        with cliente.stream("GET", link) as r:
-            if r.status_code >= 400:
-                return f"Não consegui abrir a carta (HTTP {r.status_code})."
-            tipo = r.headers.get("content-type", "")
-            dados = b""
-            for parte in r.iter_bytes():
-                dados += parte
-                if len(dados) > 15_000_000:
-                    return "Arquivo grande demais (mais de 15 MB) para ler aqui."
+    """Baixa uma carta pública (PDF ou página) e devolve o texto, para o Quíron resumir. Respeita robots.txt.
+    Redirecionamentos são seguidos à mão, um a um, e cada destino passa de novo pelas conferências."""
+    url = link
+    dados = bytearray()
+    tipo = ""
+    try:
+        with httpx.Client(headers={"User-Agent": UA}, follow_redirects=False, timeout=httpx.Timeout(30, connect=10)) as cliente:
+            for salto in range(5):
+                # o 1º endereço tem de ser de gestora cadastrada; destinos de redirecionamento (CDN, S3…) só precisam ser
+                # públicos — nunca 127.0.0.1/rede local
+                if (salto == 0 and not link_conhecido(url)) or urlsplit(url).scheme not in {"http", "https"} \
+                        or not _endereco_publico(url):
+                    return "Só leio cartas dos sites das gestoras cadastradas em config/cartas_gestores.yaml."
+                if not permitido(url, cliente):
+                    return "O site pede que robôs não leiam este endereço (robots.txt). Abra a carta no navegador."
+                with cliente.stream("GET", url) as r:
+                    if r.is_redirect and r.headers.get("location"):
+                        url = urljoin(url, r.headers["location"])
+                        continue
+                    if r.status_code >= 400:
+                        return f"Não consegui abrir a carta (HTTP {r.status_code})."
+                    tipo = r.headers.get("content-type", "")
+                    for parte in r.iter_bytes():
+                        dados.extend(parte)
+                        if len(dados) > 15_000_000:
+                            return "Arquivo grande demais (mais de 15 MB) para ler aqui."
+                break
+            else:
+                return "A carta redireciona demais; abra no navegador."
+    except httpx.HTTPError as e:
+        return f"Não consegui abrir a carta agora ({type(e).__name__}). Tente de novo ou abra no navegador."
+    dados = bytes(dados)
+    link = url
     if "pdf" in tipo or link.lower().split("?")[0].endswith(".pdf") or dados[:4] == b"%PDF":
         import pymupdf
 
-        with pymupdf.open(stream=dados, filetype="pdf") as doc:
-            texto = "\n".join(p.get_text() for p in doc)
+        try:
+            with pymupdf.open(stream=dados, filetype="pdf") as doc:
+                texto = "\n".join(p.get_text() for p in doc)
+        except Exception:  # noqa: BLE001 — PDF corrompido ou protegido
+            return "Não consegui ler esse PDF (corrompido ou protegido). Abra no navegador."
     else:
         bruto = dados.decode("utf-8", "replace")
         bruto = re.sub(r"<(script|style|nav|header|footer)[^>]*>.*?</\1>", " ", bruto, flags=re.I | re.S)

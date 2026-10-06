@@ -389,7 +389,9 @@ def cartas_gestores(termo: str | None = None, dias: int = 90, tipo: str | None =
     return {"itens": cartas.recentes(dias=dias, tipo=tipo or None, termo=termo or None, limite=120),
             "gestoras": sits if aba == "gestoras" else [],
             "contagem": dict(Counter(s["situacao"] for s in sits)), "total_fontes": len(sits),
-            "atualizando": cartas.em_andamento(), "conferido_em": max(conferidas) if conferidas else None}
+            "atualizando": cartas.em_andamento(), "conferido_em": max(conferidas) if conferidas else None,
+            # enquanto confere, o resultado é parcial: a tela volta a pedir em segundos (e mostra as cartas que vão chegando)
+            "parcial": cartas.em_andamento()}
 
 
 # Tópicos que a tela pode assinar pelo WebSocket: função + intervalo de atualização (segundos)

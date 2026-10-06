@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import re
+import socket
 import sqlite3
 import threading
 import unicodedata
@@ -112,7 +113,9 @@ class Fila:
             c.executescript(ESQUEMA)
         self._acordar = threading.Event()
         self._processador: threading.Thread | None = None
-        self.dono = str(os.getpid())  # processo que reservou a tarefa (se ele morrer, a tarefa volta para a fila)
+        # processo que reservou a tarefa (se ele morrer, a tarefa volta para a fila); máquina:PID porque o Terminal, o bot
+        # e o Claude Code processam a mesma fila (no Docker, cada contêiner tem os seus PIDs)
+        self.dono = f"{socket.gethostname()}:{os.getpid()}"
 
     @contextmanager
     def _con(self) -> Iterator[sqlite3.Connection]:
@@ -181,15 +184,18 @@ class Fila:
             pasta = self.pasta_relatorios / datetime.now().strftime("%Y-%m") / f"{t.id:04d}-{_slug(rel.titulo)}"
             rel.salvar(pasta)
             with self._con() as c:
-                c.execute("UPDATE tarefas SET situacao='pronta', terminada_em=?, titulo=?, resumo=?, pasta=? WHERE id=?",
-                          (_agora(), rel.titulo, "\n".join(rel.resumo), str(pasta), t.id))
+                ok = c.execute("UPDATE tarefas SET situacao='pronta', terminada_em=?, titulo=?, resumo=?, pasta=? "
+                               "WHERE id=? AND dono=? AND situacao='rodando'",
+                               (_agora(), rel.titulo, "\n".join(rel.resumo), str(pasta), t.id, self.dono)).rowcount
+                if not ok:  # outro processo assumiu a tarefa (a nossa foi dada como órfã): não grava por cima
+                    return self.obter(t.id)
                 c.execute("INSERT INTO busca_relatorios (tarefa_id, titulo, texto) VALUES (?,?,?)",
                           (t.id, rel.titulo, rel.markdown()))
         except Exception as e:  # noqa: BLE001 — uma análise com problema não trava a fila
             logging.exception("análise #%s falhou", t.id)
             with self._con() as c:
-                c.execute("UPDATE tarefas SET situacao='erro', terminada_em=?, erro=? WHERE id=?",
-                          (_agora(), f"{type(e).__name__}: {str(e)[:300]}", t.id))
+                c.execute("UPDATE tarefas SET situacao='erro', terminada_em=?, erro=? WHERE id=? AND dono=? AND situacao='rodando'",
+                          (_agora(), f"{type(e).__name__}: {str(e)[:300]}", t.id, self.dono))
         return self.obter(t.id)
 
     def repetir(self, ident: int) -> Tarefa | None:
@@ -202,15 +208,21 @@ class Fila:
         return self.obter(ident) if ok else None
 
     def recuperar_orfas(self) -> int:
-        """Tarefas 'rodando' cujo processo morreu (programa fechado no meio) ou paradas há mais de 30 min voltam à fila."""
+        """Tarefas 'rodando' cujo processo morreu (programa fechado no meio) voltam à fila. Processo vivo só perde a tarefa
+        depois de 6 h (travada de verdade): análises lentas (1º download da CVM) passam fácil de 30 min."""
         import psutil
 
+        maquina = socket.gethostname()
         with self._con() as c:
             rodando = c.execute("SELECT id, dono, iniciada_em FROM tarefas WHERE situacao='rodando'").fetchall()
-            limite = datetime.now().timestamp() - 30 * 60
+            limite = datetime.now().timestamp() - 6 * 3600
+
             def vivo(dono: str) -> bool:
+                host, _, pid = dono.rpartition(":")
+                if host and host != maquina:
+                    return True  # outra máquina/contêiner: não dá para conferir o PID daqui
                 try:
-                    return dono.isdigit() and psutil.pid_exists(int(dono))
+                    return pid.isdigit() and psutil.pid_exists(int(pid))
                 except (OverflowError, ValueError):
                     return False
 
