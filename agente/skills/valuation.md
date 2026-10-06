@@ -9,6 +9,9 @@
   constitui relatório de análise" vai sempre.
 
 ## Dados e ferramentas
+- "O que a empresa faz / onde atua / quem controla": `quiron_mercado__perfil_empresa` (negócio, segmentos, sede,
+  controle, acionistas ≥ 5%, controladas e empregados por região — CVM FCA/FRE + Yahoo). Os relatórios de valuation e
+  resultado já abrem com a seção "Perfil e atividades".
 - Ticker com `quiron_mercado__buscar_empresa`. Demonstrações da **CVM** (DFP/ITR padronizados), cotação brapi/Yahoo,
   custo de capital com Treasury (^TNX), Damodaran (ERP, risco-país, β por setor) e Focus (IPCA longo).
 - `analisar("valuation_dcf", {"empresa": "WEGE3", "tese": "...opcional..."})` — raio-X, WACC, DCF de 10 anos, cenários,

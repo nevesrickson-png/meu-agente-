@@ -228,13 +228,19 @@ ARQUIVOS_RELATORIO = {"relatorio.pdf": "application/pdf", "planilha.xlsx":
                       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "relatorio.md": "text/markdown"}
 
 
+def _motivo(erro: str) -> str:
+    from quiron.servicos.analise.fila import motivo_amigavel
+
+    return motivo_amigavel(erro) if erro else ""
+
+
 @app.get("/api/relatorios")
 def api_relatorios(busca: str = "", limite: int = 30) -> dict:
     from quiron.servicos.analise.fila import fila
 
     f = fila()
     tarefas = f.buscar(busca, limite) if busca.strip() else f.listar(limite)
-    return {"itens": [{"id": t.id, "titulo": t.titulo or t.tipo, "situacao": t.situacao, "erro": t.erro,
+    return {"itens": [{"id": t.id, "titulo": t.titulo or t.tipo, "situacao": t.situacao, "erro": _motivo(t.erro),
                        "quando": (t.terminada_em or t.criada_em).replace("T", " ")[:16],
                        "pdf": "pdf" in t.arquivos(), "planilha": "planilha" in t.arquivos()} for t in tarefas]}
 
@@ -427,6 +433,34 @@ def api_cartas_atualizar(request: Request) -> dict:
     return {"comecou": cartas.atualizar_em_segundo_plano(forcar=True), "atualizando": True}
 
 
+# ---------------------------------------------------------------- Resumo de mercado escrito
+@app.get("/api/resumo")
+def api_resumo() -> dict:
+    from quiron.servicos.mercado import resumo
+
+    return {"ultimo": resumo.ultimo(), "gerando": resumo.gerando()}
+
+
+@app.post("/api/resumo/gerar")
+def api_resumo_gerar(request: Request) -> dict:
+    from quiron.servicos.mercado import resumo
+
+    _proteger(request)
+    return {"comecou": resumo.gerar_em_segundo_plano(), "gerando": True}
+
+
+@app.get("/resumos/{ident}/relatorio.pdf")
+def api_resumo_pdf(ident: str) -> FileResponse:
+    from quiron.servicos.mercado import resumo
+
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}-\d{4}", ident):
+        raise HTTPException(404, "resumo não encontrado")
+    arq = resumo.pasta_resumos() / ident / "relatorio.pdf"
+    if not arq.exists():
+        raise HTTPException(404, "resumo não encontrado")
+    return FileResponse(arq, media_type="application/pdf", filename=f"resumo-de-mercado-{ident[:10]}.pdf")
+
+
 # ---------------------------------------------------------------- TV (canais do YouTube)
 @app.get("/tv")
 def pagina_tv() -> FileResponse:
@@ -448,6 +482,14 @@ async def api_tv_videos(canal: str) -> dict:
         return await asyncio.to_thread(tv.videos, canal)
     except tv.CanalInvalido as e:
         raise HTTPException(400, str(e)) from e
+
+
+@app.get("/api/tv/ao_vivo")
+async def api_tv_ao_vivo(canais: str = "") -> dict:
+    """Quais dos canais pedidos (separados por vírgula, até 40) estão transmitindo ao vivo agora."""
+    from quiron.servicos import tv
+
+    return {"canais": await asyncio.to_thread(tv.ao_vivo_varios, canais.split(","))}
 
 
 @app.post("/api/tv/canal")

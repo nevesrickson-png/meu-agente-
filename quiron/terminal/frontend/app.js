@@ -54,7 +54,7 @@ const COMANDOS = [
     ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["SIM [CLI-XXX]", "Simulador de patrimônio: quanto investir, quando parar, meta, imóvel × aplicações"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
     ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
     ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
-    ["CARTAS", "Cartas de gestores publicadas recentemente (e quais gestoras seguem ativas)"], ["TV", "Canais do YouTube: notícias, gestoras e os seus — igual uma TV"],
+    ["RESUMO", "Resumo de mercado escrito: bolsa, EUA, renda fixa, juros, moedas, cripto, agro e FIIs (+ PDF)"], ["CARTAS", "Cartas de gestores publicadas recentemente (e quais gestoras seguem ativas)"], ["TV", "Canais do YouTube: notícias, gestoras e os seus — igual uma TV"],
     ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
 ];
 
@@ -1061,9 +1061,32 @@ Object.assign(TIPOS, {
   cartas: { titulo: "Cartas de gestores — CARTAS", topico: "cartas", params: (p) => ({ termo: p.termo || "", tipo: p.tipo || "", aba: p.aba || "recentes", dias: 90 }), w: 6, h: 12, render: renderCartas },
 });
 
+// RESUMO — resumo de mercado escrito (8 seções com leitura prática + PDF)
+function renderResumo(corpo, _d, painel) {
+  clearTimeout(painel._timer);
+  const carregar = async () => {
+    try {
+      const r = await (await fetch("/api/resumo")).json();
+      const u = r.ultimo;
+      const topo = `<div class="periodos acoes"><button type="button" data-gerar ${r.gerando ? "disabled" : ""}>${r.gerando ? "gerando… (~1 min)" : "gerar agora"}</button>
+        ${u && u.pdf ? `<a class="mini" href="/resumos/${esc(u.id)}/relatorio.pdf" target="_blank" rel="noopener">PDF</a>` : ""}</div>`;
+      corpo.innerHTML = topo + (u ? `<div class="chat-msg resumo-texto">${textoChat(u.texto)}</div>`
+        : '<div class="dica">Nenhum resumo ainda. Clique em “gerar agora” (leva cerca de 1 minuto) ou peça /resumo no Telegram.</div>');
+      $("[data-gerar]", corpo).onclick = async (e) => {
+        e.target.disabled = true; e.target.textContent = "gerando… (~1 min)";
+        try { await acao("/api/resumo/gerar"); painel._timer = setTimeout(carregar, 8000); } catch (err) { aviso(err.message); }
+      };
+      if (r.gerando) painel._timer = setTimeout(carregar, 8000);
+      rodape(painel, u ? `gerado ${hora(u.data)} · ${u.ia ? "texto da IA conferido (frases com número fora das fontes saem)" : "em tópicos (IA indisponível)"}` : "Yahoo, Banco Central, Tesouro e as notícias do Quíron");
+    } catch (e) { corpo.innerHTML = '<div class="erro">Sem conexão com o servidor</div>'; }
+  };
+  carregar();
+}
+Object.assign(TIPOS, { resumo: { titulo: "Resumo de mercado — RESUMO", topico: null, w: 6, h: 14, render: renderResumo } });
+
 // comandos da v2; devolve true se tratou
 function executarV2(original, a, b, resto) {
-  const unico = { CARTAS: "cartas", CARTA: "cartas", PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat", CLI: "cli", BIB: "bib" };
+  const unico = { RESUMO: "resumo", CARTAS: "cartas", CARTA: "cartas", PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat", CLI: "cli", BIB: "bib" };
   if (a === "BIB" && b) { adicionarPainel("bib", { q: original.trim().split(/\s+/).slice(1).join(" ") }); return true; }
   if (unico[a] && !b) { adicionarPainel(unico[a]); return true; }
   if (a === "CHAT" || a === "IA") { // CHAT <pergunta>: abre o chat já com a pergunta

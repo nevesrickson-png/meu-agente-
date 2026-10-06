@@ -426,6 +426,21 @@ JavaScript; 316 testes + teste de navegador.
 ✅ Aceite (06/10/2026): 1ª rodada real nas 140 gestoras em 43 s (55 ativas, 17 desatualizadas, 39 sem cartas
 reconhecidas, 12 bloqueiam, 9 fora do ar, 8 sem data); 74 feeds conferidos; TV e CARTAS no navegador (computador e celular).
 
+
+## Resumo de mercado, correções do Telegram, TV ao vivo e análises mais completas (06/10/2026)
+- [x] Resumo de mercado escrito (`/resumo`, RESUMO, rotina): resumo executivo + 8 seções com leitura prática, números
+  em Python, frases com número sem fonte cortadas, PDF; fontes novas do relatório (CNN Brasil, BPMoney, CoinDesk,
+  Cointelegraph, TheStreet)
+- [x] Correções: PDF gravado sem arquivo temporário (erro "Acesso negado" do Windows), análises que falharam voltam
+  sozinhas para a fila e ganham botão "Tentar de novo" com motivo em português; resposta só com sugestões vira botões;
+  sem "Modo:" na confirmação da fila; variação na semana/mês/ano (`desempenho`) e proibição de estimar números
+- [x] TV: ao vivo primeiro (selo AO VIVO, canais no ar no topo, transmissão toca antes dos gravados); RSS do YouTube
+  removido (proibido no robots.txt)
+- [x] Empresas: seção "Perfil e atividades" (FCA/FRE da CVM + Yahoo); FIIs: imóveis, estados, vacância, inquilinos e
+  ativos financeiros (informe trimestral da CVM)
+✅ Aceite (06/10/2026): resumo real gerado com IA (8 seções, 49 s); HGLG11 com 37 imóveis e XPML11 com 17; perfil
+da WEG e da Petrobras; TV tocando o ao vivo da CNN Brasil; 338+ testes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

@@ -26,6 +26,8 @@ YAHOO = {
     "petroleo_brent": "BZ=F",
     "ouro": "GC=F",
     "minerio_ferro": "TIO=F",
+    "BTC-USD": "BTC-USD",
+    "ETH-USD": "ETH-USD",
 }
 NOMES = {
     "IBOV": "Ibovespa", "IFIX": "IFIX", "SMLL": "Small Caps (via SMAL11)", "^GSPC": "S&P 500", "^IXIC": "Nasdaq",
@@ -120,6 +122,33 @@ def historico(ativo: str, periodo: str = "6mo") -> list[tuple[datetime, float]]:
         raise FonteIndisponivel(f"Yahoo sem histórico para {simbolo}")
     fech = hist["Close"].dropna()
     return [(i.to_pydatetime(), float(v)) for i, v in fech.items()]
+
+
+def desempenho(ativo: str, serie: list[tuple[datetime, float]] | None = None) -> dict:
+    """Variações calculadas sobre os fechamentos diários do último ano (Yahoo): 1 semana, 1 mês, no ano, 12 meses,
+    mínima/máxima de 52 semanas. Cada variação compara o último fechamento com o último pregão até a data-base."""
+    serie = serie or historico(ativo, "1y")
+    if len(serie) < 2:
+        raise FonteIndisponivel(f"histórico curto demais para {ativo}")
+    ultimo_dia, ultimo = serie[-1]
+
+    def base_em(limite) -> float | None:
+        anteriores = [v for d, v in serie if d.date() <= limite]
+        return anteriores[-1] if anteriores else None
+
+    def var(base: float | None) -> float | None:
+        return (ultimo / base - 1) * 100 if base else None
+
+    hoje = ultimo_dia.date()
+    from datetime import timedelta as _td
+
+    fim_ano = base_em(hoje.replace(month=1, day=1) - _td(days=1))
+    precos = [v for _, v in serie]
+    return {"ativo": ativo, "ultimo": ultimo, "data": ultimo_dia, "anterior": serie[-2][1], "dia": var(serie[-2][1]),
+            "semana": var(base_em(hoje - _td(days=7))),
+            "mes": var(base_em(hoje - _td(days=30))), "ano": var(fim_ano),
+            "doze_meses": var(precos[0]) if (hoje - serie[0][0].date()).days >= 330 else None,
+            "minima_52s": min(precos), "maxima_52s": max(precos), "pregoes": len(serie)}
 
 
 def yahoo(ativo: str) -> Cotacao:

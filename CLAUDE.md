@@ -86,7 +86,7 @@ Arquivos com DRM não são processados.
   fichas/relatório; `consultas.py` formata as respostas); MCP fino em `quiron/mcp/biblioteca/`. As ferramentas devolvem
   trechos com citação; quem redige é o agente, seguindo `agente/skills/` (espelhadas em `.claude/skills/` para o Claude Code).
 - Dados: Banco Central (SGS, Focus), Tesouro Transparente, ANBIMA (ETTJ), CVM Dados Abertos, IBGE, brapi, `yfinance`,
-  datasets do Damodaran, RSS de notícias (74 fontes, grupos brasil/global/asia/oficiais/setores_br/setores_global), Bluesky, Reddit e YouTube pelas APIs oficiais.
+  datasets do Damodaran, RSS de notícias (79 fontes, grupos brasil/global/asia/oficiais/setores_br/setores_global), Bluesky, Reddit e YouTube pelas APIs oficiais.
 - Mercado (código): `quiron/servicos/mercado/` — `http.py` (httpx + cache SQLite em `dados/quiron.db`; fonte fora do ar
   devolve o último valor marcado DESATUALIZADO), um módulo por fonte (`bcb`, `tesouro`, `curva` (ANBIMA, plano B Tesouro),
   `cotacoes` (brapi/yfinance), `abertos` (CVM, IBGE, Damodaran)) e `painel.py` (Markdown com `📊 Fonte — horário`).
@@ -123,9 +123,31 @@ Arquivos com DRM não são processados.
   `carreira_bot`) e `laco_cartas` de hora em hora. Guardamos só título/data/link.
 - TV (06/10/2026, `quiron/servicos/tv.py` + `terminal/frontend/tv.html`, rota `/tv`): canais em `config/tv_canais.yaml`,
   os do Rickson em `dados/ajustes/tv_canais.yaml` (`meus`, `ocultos`); `resolver` (link/@/UC… pela Data API ou página
-  pública), `videos` (RSS oficial → Data API → vazio: a tela toca `videoseries?list=UU…`); player embed oficial
-  (youtube-nocookie; ao vivo `embed/live_stream?channel=`). Rotas `/api/tv/*` (escrita com `_proteger`). Nuvem: o RSS do
-  YouTube dá 404 daqui (bloqueio de IP); no PC funciona.
+  pública), `videos` (só Data API; o RSS /feeds/videos.xml é proibido no robots.txt do YouTube → sem chave a tela toca
+  `videoseries?list=UU…`), `ao_vivo`/`ao_vivo_varios` (página pública /channel/<id>/live: vídeo, título, quantos
+  assistem; cache 3 min); tela "ao vivo primeiro" (modo auto: conferir antes de tocar, selo AO VIVO, canais no ar no
+  topo, reconfere a cada 3 min). Rotas `/api/tv/*` (+ `/api/tv/ao_vivo`; escrita com `_proteger`).
+- Resumo de mercado (06/10/2026, `quiron/servicos/mercado/resumo.py`): `coletar` (8 seções `SECOES`; `_linha` =
+  `cotacoes.desempenho` sobre 1 ano do Yahoo, com `_dia_confiavel` contra os pregões do Ibovespa (o Yahoo pula/repete
+  dias; câmbio do dia só pela PTAX); Tesouro com bps, Focus, agenda Copom/FOMC; manchetes por tema + `FILTRO_SECAO`)
+  → `redigir` (uma chamada, max_tokens 8000 por causa do pensamento do Gemini 3; `_limpar` corta frase com número fora
+  dos fatos/manchetes; sem IA = tópicos) → `Resumo.texto()` + PDF (Relatorio) em `dados/resumos/AAAA-MM-DD-HHMM/`.
+  Bot `/resumo` (direto), rota "resumo de mercado", MCP `quiron-mercado.resumo_mercado`, Terminal `GET /api/resumo`,
+  `POST /api/resumo/gerar`, `/resumos/<id>/relatorio.pdf`, painel RESUMO. `cotacoes.desempenho` + MCP `desempenho`
+  (semana/mês/ano/12m/52 semanas).
+- Correções do Telegram (06/10/2026): `relatorio.pdf` monta o PDF em memória (`DocumentWriter(BytesIO)` → `_carimbar`
+  em bytes → `_gravar_arquivo` com novas tentativas; nada de `.tmp` + rename, que dava WinError 5); `fila.repetir` +
+  `motivo_amigavel` (bot manda o motivo em português com botão `an:repetir:<id>`; falhas de PermissionError voltam à
+  fila ao ligar o bot; MCP `repetir_analise`); `com_sugestoes` nunca deixa linhas "»" no texto; prompt: sem "Modo:" em
+  confirmação de fila, não estimar número que não veio, conferir a fila antes de falar de análises.
+- Perfil de empresa (06/10/2026, `quiron/servicos/valuation/perfil.py`): FCA (setor, descrição, sede, fundação,
+  controle, site) + FRE (`posicao_acionaria` ≥ 5% sem CPF/CNPJ e sem cadeia societária, `participacao_sociedade`,
+  `empregado_posicao_local`; última versão) + Yahoo `info` traduzido pelo cérebro; cache 7 dias em
+  `dados/cache_cvm/perfis/`. `secao` abre `valuation_dcf` e `resultado_trimestral` (`_com_perfil`); MCP `perfil_empresa`.
+- Imóveis de FII (06/10/2026, `quiron/servicos/fundos/fii_imoveis.py`): informe TRIMESTRAL da CVM (imovel, inquilino,
+  ativo; último trimestre por fundo; tabelas `fii_imovel/fii_inquilino/fii_ativo` em `dados/fundos.db`, 1 download por
+  semana); `local` tira cidade/UF do endereço; `carteira` (por UF, vacância ponderada pela área, setores, ativos por
+  tipo); seções no `fii_comparativo`; MCP `fii_imoveis`.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

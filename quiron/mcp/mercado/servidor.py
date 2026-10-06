@@ -26,6 +26,24 @@ def cotacao(ativos: list[str]) -> str:
 
 
 @mcp.tool()
+def desempenho(ativos: list[str]) -> str:
+    """Variação na semana, no mês, no ano e em 12 meses + mínima/máxima de 52 semanas (fechamentos diários).
+    Use quando pedirem variação semanal/mensal/anual, rentabilidade de período ou "como andou" um ativo/FII."""
+    return "\n".join(painel.desempenho(a) for a in ativos)
+
+
+@mcp.tool()
+def resumo_mercado() -> str:
+    """Resumo de Mercado escrito (resumo executivo + bolsa BR, EUA, renda fixa, juros, moedas, cripto, agro, FIIs, cada
+    um com 'Leitura prática'), com PDF salvo. Demora ~1 minuto. Devolva o texto como veio (já conferido)."""
+    from quiron.servicos.mercado import resumo
+
+    r = resumo.gerar()
+    pdf = resumo.pdf_de(r)
+    return r.texto() + (f"\n\n📄 PDF: {pdf}" if pdf else "")
+
+
+@mcp.tool()
 def watchlist() -> str:
     """Cotações de todos os ativos de config/watchlist.yaml."""
     return painel.watchlist()
@@ -164,6 +182,22 @@ def fii_dados(ticker: str) -> str:
 
 
 @mcp.tool()
+def fii_imoveis(ticker: str) -> str:
+    """Imóveis de um FII (nome, cidade/UF, área, vacância, inadimplência, % da receita), estados onde estão, setores dos
+    inquilinos e ativos financeiros (CRI, LCI, cotas) — informe trimestral da CVM."""
+    from quiron.servicos.fundos import cvm, fii_imoveis as imoveis
+
+    try:
+        h = cvm.fii(ticker)
+    except cvm.FundoNaoEncontrado as e:
+        return str(e)
+    try:
+        return imoveis.texto(h[-1]["ticker"] or ticker.upper(), imoveis.carteira(h[-1]["cnpj"]))
+    except Exception as e:  # noqa: BLE001
+        return f"Informe trimestral indisponível agora ({type(e).__name__})."
+
+
+@mcp.tool()
 def buscar_empresa(termo: str) -> str:
     """Companhias abertas no cadastro da CVM (FCA) por ticker (WEGE3), CNPJ ou nome: setor, tickers e segmento — use o
     ticker nas análises de valuation (quiron_analise: valuation_dcf, setor_multiplos, resultado_trimestral)."""
@@ -178,6 +212,20 @@ def buscar_empresa(termo: str) -> str:
     linhas = [f"- **{e.nome}** — {', '.join(e.tickers) or 'sem ação em bolsa'} · CNPJ {e.cnpj_formatado} · {e.setor} · "
               f"{e.segmento or '—'}" for e in achadas]
     return "\n".join(linhas + [f"📊 {cvm_cias.FONTE}"])
+
+
+@mcp.tool()
+def perfil_empresa(termo: str) -> str:
+    """O que a companhia faz e onde atua: descrição do negócio, segmentos, sede, controle, acionistas com 5% ou mais,
+    controladas/participações e empregados por região (CVM FCA/FRE + Yahoo). termo = ticker (WEGE3), CNPJ ou nome."""
+    from quiron.servicos.valuation import cvm_cias, perfil
+
+    try:
+        return perfil.texto(perfil.perfil(termo))
+    except cvm_cias.EmpresaNaoEncontrada as e:
+        return str(e)
+    except Exception as e:  # noqa: BLE001
+        return f"Perfil indisponível agora ({type(e).__name__})."
 
 
 @mcp.tool()

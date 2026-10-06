@@ -192,6 +192,15 @@ class Fila:
                           (_agora(), f"{type(e).__name__}: {str(e)[:300]}", t.id))
         return self.obter(t.id)
 
+    def repetir(self, ident: int) -> Tarefa | None:
+        """Análise que falhou volta para a fila (mesmos parâmetros). None se não existe ou não falhou."""
+        with self._con() as c:
+            ok = c.execute("UPDATE tarefas SET situacao='na fila', erro='', entregue=0, dono='', iniciada_em=NULL, "
+                           "terminada_em=NULL WHERE id=? AND situacao='erro'", (ident,)).rowcount
+        if ok:
+            self._acordar.set()
+        return self.obter(ident) if ok else None
+
     def recuperar_orfas(self) -> int:
         """Tarefas 'rodando' cujo processo morreu (programa fechado no meio) ou paradas há mais de 30 min voltam à fila."""
         import psutil
@@ -263,3 +272,19 @@ def fila() -> Fila:
     if _FILA is None or _FILA.banco != pasta_dados() / "analise.db":
         _FILA = Fila()
     return _FILA
+
+
+def motivo_amigavel(erro: str) -> str:
+    """O erro técnico vira uma frase que o Rickson entende (o detalhe fica no registro)."""
+    e = erro or ""
+    if "PermissionError" in e or "WinError 5" in e or "Acesso negado" in e:
+        return "o Windows não deixou gravar o arquivo do relatório (antivírus ou o arquivo aberto em outro programa)"
+    if any(x in e for x in ("ConnectError", "ConnectTimeout", "ReadTimeout", "HTTPStatusError", "RemoteProtocolError")):
+        return "uma fonte de dados não respondeu (internet ou site fora do ar)"
+    if "CerebroIndisponivel" in e or "RateLimit" in e or "429" in e:
+        return "os modelos de IA grátis estão sem cota agora"
+    if "não encontr" in e.lower() or "not found" in e.lower() or "KeyError" in e:
+        return "não encontrei o ativo/fundo pedido nas bases (confira o código ou o nome)"
+    if "No space left" in e or "Errno 28" in e:
+        return "falta espaço em disco"
+    return "um erro inesperado (detalhe salvo no registro)"

@@ -41,6 +41,12 @@ fontes:
   - {nome: Suno Notícias, grupo: brasil, peso: 0.65, url: "https://www.suno.com.br/noticias/feed/"}
   - {nome: ADVFN, grupo: brasil, peso: 0.6, url: "https://br.advfn.com/jornal/rss"}
   - {nome: Monitor do Mercado, grupo: brasil, peso: 0.6, url: "https://monitordomercado.com.br/feed/"}
+  # --- fontes do "Resumo de Mercado" (conferidas em 06/10/2026)
+  - {nome: CNN Brasil, grupo: brasil, peso: 0.75, url: "https://www.cnnbrasil.com.br/feed/"}
+  - {nome: BPMoney, grupo: brasil, peso: 0.6, url: "https://bpmoney.com.br/feed/"}
+  - {nome: Cointelegraph Brasil, grupo: brasil, peso: 0.55, url: "https://cointelegraph.com.br/rss"}
+  - {nome: CoinDesk, grupo: global, peso: 0.75, url: "https://www.coindesk.com/arc/outboundfeeds/rss/"}
+  - {nome: TheStreet, grupo: global, peso: 0.6, url: "https://www.thestreet.com/.rss/full/"}
   # --- Global: mais portais (EUA, Reino Unido, Europa, Canadá)
   - {nome: Fortune, grupo: global, peso: 0.75, url: "https://fortune.com/feed/"}
   - {nome: The Guardian Business, grupo: global, peso: 0.8, url: "https://www.theguardian.com/uk/business/rss"}
@@ -93,4 +99,5 @@ fontes:
 #   Reuters (encerrou o RSS público), Tesouro Nacional, Ministério da Fazenda, ANBIMA, B3, CNN Brasil;
 #   WSJ (feed parado desde 2025); Receita Federal (feed desatualizado); Poder360 (bloqueia leitores de feed).
 #   Conferidos em 06/10/2026, sem feed ou bloqueando leitura: Barron's, Bloomberg, MarketWatch (site), Mining.com (403),
-#   Agrolink e Natural Gas World (feeds parados), Global Times (datas antigas), Autocar (feed vazio).
+#   Agrolink e Natural Gas World (feeds parados), Global Times (datas antigas), Autocar (feed vazio),
+#   Trading Economics (403), Fiis.com.br (feed parado), O Povo (sem feed de economia).

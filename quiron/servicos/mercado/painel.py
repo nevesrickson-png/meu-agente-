@@ -61,6 +61,21 @@ def cotacao(ativo: str) -> str:
     return _seguro(lambda: texto_cotacao(cotacoes.cotacao(ativo)), ativo)
 
 
+def texto_desempenho(ativo: str) -> str:
+    d = cotacoes.desempenho(ativo)
+    preco = (lambda v: f"R$ {_num(v)}") if not ativo.startswith("^") and ativo not in {"IBOV", "IFIX", "SMLL"} else _num
+    partes = [f"semana {_pct(d['semana'], sinal=True)}", f"mês {_pct(d['mes'], sinal=True)}", f"no ano {_pct(d['ano'], sinal=True)}"]
+    if d["doze_meses"] is not None:
+        partes.append(f"12 meses {_pct(d['doze_meses'], sinal=True)}")
+    return (f"- **{ativo}**: {preco(d['ultimo'])} em {d['data']:%d/%m} · " + " · ".join(partes)
+            + f" · faixa de 52 semanas {preco(d['minima_52s'])} a {preco(d['maxima_52s'])}"
+            + f" — {_fonte('Yahoo Finance (fechamentos diários)', datetime.now().astimezone(), extra='preço sem proventos')}")
+
+
+def desempenho(ativo: str) -> str:
+    return _seguro(lambda: texto_desempenho(ativo), ativo)
+
+
 def watchlist() -> str:
     w = ler_yaml("watchlist") or {}
     ativos = [*w.get("indices", []), *w.get("moedas", []), *w.get("acoes", []), *w.get("fiis", []), *w.get("etfs", []), *w.get("commodities", [])]

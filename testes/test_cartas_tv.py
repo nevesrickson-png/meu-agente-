@@ -159,19 +159,29 @@ def test_tv_resolver_pela_pagina_do_canal():
             tv.resolver(ruim, _transporte({}))
 
 
-FEED_YT = """<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://www.youtube.com/xml/schemas/2015">
-<entry><yt:videoId>abcdefghijk</yt:videoId><title>Fechamento de mercado</title><published>2026-10-05T21:00:00+00:00</published></entry>
-</feed>"""
+PAGINA_VIVO = ('<html>"currentVideoEndpoint":{"clickTrackingParams":"x","watchEndpoint":{"videoId":"QB5BNdBFujE"}},'
+               '"videoPrimaryInfoRenderer":{"title":{"runs":[{"text":"Bloomberg Business News Live"}]},"viewCount":'
+               '{"videoViewCountRenderer":{"viewCount":{"runs":[{"text":"8.889"}]},"isLive":true,"originalViewCount":"8889"}}}</html>')
 
 
-def test_tv_videos_feed_e_plano_b(monkeypatch):
-    canal = "UCxm0tptjIc76-i26EKQ9NpA"
-    monkeypatch.setattr(tv, "_cliente", lambda: _transporte({"https://www.youtube.com/feeds/videos.xml": httpx.Response(200, text=FEED_YT)}))
-    v = tv.videos(canal)
-    assert v["fonte"] == "rss" and v["itens"][0]["id"] == "abcdefghijk" and v["uploads"] == "UU" + canal[2:]
-    tv._MEMO.clear()
-    monkeypatch.setattr(tv, "_cliente", lambda: _transporte({}))  # feed fora (como na nuvem): a tela toca a playlist de uploads
+def test_tv_videos_sem_rss_e_ao_vivo(monkeypatch):
+    canal = "UCIALMKvObZNtJ6AmdCLP7Lg"
+    pedidos = []
+
+    def roteador(req):
+        pedidos.append(str(req.url))
+        return httpx.Response(200, text=PAGINA_VIVO if "/live" in str(req.url) else "<html>canal</html>")
+
+    monkeypatch.setattr(tv, "_cliente", lambda: httpx.Client(transport=httpx.MockTransport(roteador)))
+    # sem chave: nada de RSS (o robots.txt do YouTube proíbe /feeds/videos.xml) — a tela toca a playlist de uploads
     assert tv.videos(canal) == {"canal": canal, "itens": [], "fonte": "nenhuma", "uploads": "UU" + canal[2:]}
+    assert not any("feeds/videos.xml" in u for u in pedidos)
+    v = tv.ao_vivo(canal)
+    assert v == {"canal": canal, "ao_vivo": True, "video": "QB5BNdBFujE", "titulo": "Bloomberg Business News Live", "assistindo": 8889}
+    outro = "UCzRipjQYhKGNFdTHNMzNfIQ"
+    monkeypatch.setattr(tv, "_cliente", lambda: httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, text="<html>canal</html>"))))
+    assert tv.ao_vivo_varios([outro, canal, "lixo"]) == {outro: {"canal": outro, "ao_vivo": False, "video": "", "titulo": "",
+                                                                 "assistindo": None}, canal: v}
     with pytest.raises(tv.CanalInvalido):
         tv.videos("x")
 
@@ -190,6 +200,8 @@ def test_api_tv_e_cartas(monkeypatch):
     assert c.delete("/api/tv/canal/UCT4nDeU5pv1XIGySbSK-GgA").status_code == 403
     assert c.delete("/api/tv/canal/UCT4nDeU5pv1XIGySbSK-GgA", headers={"X-Quiron": "terminal"}).status_code == 200
     assert c.get("/api/tv/videos/nao-e-canal").status_code == 400
+    monkeypatch.setattr(tv, "ao_vivo_varios", lambda canais: {canais[0]: {"canal": canais[0], "ao_vivo": True}})
+    assert c.get("/api/tv/ao_vivo", params={"canais": "UCT4nDeU5pv1XIGySbSK-GgA"}).json()["canais"]["UCT4nDeU5pv1XIGySbSK-GgA"]["ao_vivo"]
 
     monkeypatch.setattr(coleta, "atualizar_em_segundo_plano", lambda forcar=False: False)
     d = c.get("/api/topico/cartas", params={"aba": "gestoras"}).json()

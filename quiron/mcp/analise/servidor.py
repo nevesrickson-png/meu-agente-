@@ -65,8 +65,17 @@ def situacao_analise(numero: int) -> str:
     if t.situacao == "pronta":
         return f"{t.descrever()}\n{t.resumo}\nArquivos: {', '.join(str(p) for p in t.arquivos().values())}"
     if t.situacao == "erro":
-        return f"{t.descrever()}: {t.erro}"
+        from quiron.servicos.analise.fila import motivo_amigavel
+
+        return f"{t.descrever()}: falhou — {motivo_amigavel(t.erro)}. Dá para refazer com `repetir_analise`."
     return t.descrever() + (f" — {fila().posicao(t.id)} na frente" if t.situacao == "na fila" else "")
+
+
+@mcp.tool()
+def repetir_analise(numero: int) -> str:
+    """Põe de volta na fila uma análise que falhou (mesmos parâmetros)."""
+    t = fila().repetir(numero)
+    return f"Análise #{numero} de volta à fila." if t else f"A análise #{numero} não está com erro (ou não existe)."
 
 
 @mcp.tool()

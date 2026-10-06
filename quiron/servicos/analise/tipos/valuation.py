@@ -10,6 +10,8 @@ Focus). Toda premissa sai com a fonte ou a conta que a gerou.
 
 from __future__ import annotations
 
+import logging
+
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -353,9 +355,24 @@ def valuation_dcf(params: dict[str, Any], modo: str = "entregar", coleta: Coleta
     if tese:
         secoes.append(Secao("Tese para debate", f"> {tese}\n\nConfronte a tese com o DCF reverso: o preço de hoje exige "
                                                   "as premissas da tabela acima."))
+    _com_perfil(rel, secoes, col)
     rel.secoes = secoes
     rel.parametros = {"empresa": col.ticker, **{k: v for k, v in params.items() if k != "empresa"}}
     return redacao.redigir(rel, modo) if redigir else rel
+
+
+def _com_perfil(rel: Relatorio, secoes: list, col: Coleta) -> None:
+    """Abre o relatório com o perfil da companhia (atividades, sede, controle, acionistas, controladas, empregados)."""
+    try:
+        from quiron.servicos.valuation import perfil
+
+        p = perfil.perfil(col.empresa)
+    except Exception as e:  # noqa: BLE001 — sem perfil o relatório sai do mesmo jeito
+        logging.info("relatório sem perfil da empresa (%s)", type(e).__name__)
+        return
+    secoes.insert(0, perfil.secao(p))
+    rel.fatos["perfil"] = perfil.fatos(p)
+    rel.fontes += [f for f in p.fontes if f not in rel.fontes]
 
 
 # ---------------------------------------------------------------- setor_multiplos
@@ -482,5 +499,6 @@ def resultado_trimestral(params: dict[str, Any], modo: str = "entregar", coleta:
     rel.premissas = ["Trimestre isolado = demonstração de 3 meses do ITR; acumulado = desde janeiro.",
                      "Comparação com o mesmo período do ano anterior, como reapresentado no próprio ITR."]
     rel.secoes = [Secao("Resultado do trimestre", "", [t_tri, t_ytd, t_bal])]
+    _com_perfil(rel, rel.secoes, col)
     rel.parametros = {k: v for k, v in params.items()}
     return redacao.redigir(rel, modo) if redigir else rel

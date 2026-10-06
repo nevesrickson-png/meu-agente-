@@ -11,6 +11,7 @@ import html
 import io
 import json
 import re
+import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -149,7 +150,9 @@ class Relatorio:
             pix = pymupdf.Pixmap(png)
             largura = 487
             imagens[id(g)] = (nome, largura, round(largura * pix.height / pix.width))
-        escritor = pymupdf.DocumentWriter(str(destino))
+        # tudo em memória: no Windows o arquivo aberto pelo DocumentWriter ficava preso (WinError 5 ao trocar o .tmp)
+        buffer = io.BytesIO()
+        escritor = pymupdf.DocumentWriter(buffer)
         pagina = pymupdf.paper_rect("a4")
         esq, topo, dir_, base = 54, 56, pagina.width - 54, pagina.height - 60
         estado = {"disp": None, "y": topo}
@@ -176,7 +179,9 @@ class Relatorio:
                 nova_pagina()
         escritor.end_page()
         escritor.close()
-        _carimbar(destino, self.titulo, self.rodape)
+        dados = _carimbar(buffer.getvalue(), self.titulo, self.rodape)
+        del escritor, buffer
+        _gravar_arquivo(destino, dados)
         return destino
 
     def _blocos(self, imagens: dict[int, tuple[str, int, int]]) -> list[tuple[str, int]]:
@@ -387,13 +392,26 @@ def _latin1(texto: str) -> str:
     return texto.encode("latin-1", "ignore").decode("latin-1")
 
 
-def _carimbar(caminho: Path, titulo: str, rodape: str) -> None:
-    """Cabeçalho discreto + rodapé de compliance e numeração em todas as páginas."""
+def _gravar_arquivo(destino: Path, dados: bytes, tentativas: int = 6) -> None:
+    """Grava de uma vez, sem renomear; antivírus/OneDrive às vezes seguram o arquivo por instantes no Windows."""
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    for i in range(tentativas):
+        try:
+            destino.write_bytes(dados)
+            return
+        except PermissionError:
+            if i == tentativas - 1:
+                raise
+            time.sleep(0.5 * (i + 1))
+
+
+def _carimbar(pdf: bytes, titulo: str, rodape: str) -> bytes:
+    """Cabeçalho discreto + rodapé de compliance e numeração em todas as páginas (em memória)."""
     import pymupdf
 
     titulo, rodape = _latin1(titulo), _latin1(rodape)
 
-    doc = pymupdf.open(caminho)
+    doc = pymupdf.open(stream=pdf, filetype="pdf")
     total = doc.page_count
     for i, pg in enumerate(doc, 1):
         r = pg.rect
@@ -404,10 +422,9 @@ def _carimbar(caminho: Path, titulo: str, rodape: str) -> None:
         pg.insert_textbox(pymupdf.Rect(r.width - 110, r.height - 44, r.width - 54, r.height - 20), f"{i}/{total}",
                           fontsize=7, color=(0.45, 0.45, 0.43), align=2)
     # o Story grava as imagens sem compressão: salvar de novo comprimido (gráficos de ~1 MB cada viram dezenas de KB)
-    temporario = caminho.with_suffix(".tmp.pdf")
-    doc.save(temporario, garbage=4, deflate=True, deflate_images=True, deflate_fonts=True)
+    dados = doc.tobytes(garbage=4, deflate=True, deflate_images=True, deflate_fonts=True)
     doc.close()
-    temporario.replace(caminho)
+    return dados
 
 
 def desenhar(g: Grafico) -> bytes:

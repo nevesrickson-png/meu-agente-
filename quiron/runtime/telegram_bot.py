@@ -40,7 +40,7 @@ from quiron.runtime.workspace import carregar_comandos
 # objeto se misturariam; ContextVar é separado por tarefa assíncrona).
 _ESTADO: contextvars.ContextVar[dict] = contextvars.ContextVar("estado_mensagem")
 TEMPO_MAXIMO_RESPOSTA_S = 420  # uma resposta travada não pode prender o bot (as mensagens são atendidas em fila)
-ROTINAS_DIRETAS = {"briefing", "hoje", "tarefas", "revisao", "radar", "cartas", "metas", "notas", "pauta", "diagnostico", "flashcards"}
+ROTINAS_DIRETAS = {"briefing", "resumo", "hoje", "tarefas", "revisao", "radar", "cartas", "metas", "notas", "pauta", "diagnostico", "flashcards"}
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
 INATIVIDADE_MODO_S = 3 * 3600  # treino/entrevista/pós-reunião parados há mais que isso se encerram sozinhos
 SAIR = {"/sair", "sair", "/cancelar"}
@@ -284,7 +284,7 @@ class BotQuiron:
             botoes.append([(f"» {rotulo}", f"ms:{chave}")])
         while len(self.sugestoes) > 300:  # guarda só as recentes
             self.sugestoes.pop(next(iter(self.sugestoes)))
-        saidas[-1].texto = texto or saidas[-1].texto
+        saidas[-1].texto = texto or "Escolha o próximo passo:"  # resposta só com sugestões: nunca mostrar as linhas "»"
         saidas[-1].linhas = botoes
         return saidas
 
@@ -321,6 +321,13 @@ class BotQuiron:
 
             self._marcar("direto")  # montado em Python (formato fixo); a IA só escreve "Para os clientes"
             return [Saida(await asyncio.to_thread(briefing.completo, None, True, self.agente.config))]
+        if texto.split(" ", 1)[0].split("@")[0].lower() in {"/resumo", "/resumo_mercado"}:
+            from quiron.servicos.mercado import resumo
+
+            self._marcar("direto")  # números em Python; a IA só redige (frases com número fora das fontes saem)
+            r = await asyncio.to_thread(resumo.gerar, None, self.agente.config)
+            pdf = resumo.pdf_de(r)
+            return [Saida(r.texto(), arquivo=str(pdf) if pdf else "")]
         if texto.split(" ", 1)[0].split("@")[0].lower() in {"/simular", "/simulador", "/patrimonio"}:
             self._marcar("direto")
             return await asyncio.to_thread(self.comando_simular, texto.partition(" ")[2])
@@ -508,7 +515,7 @@ class BotQuiron:
             self._pos_desde[chat] = time.time()
 
     def nomes_comandos(self) -> list[str]:
-        fixos = ["start", "ajuda", "simular", "novo", "agenda", "memoria", "lembrar", "sair"]
+        fixos = ["start", "ajuda", "simular", "resumo", "novo", "agenda", "memoria", "lembrar", "sair"]
         return fixos + sorted(set(self.comandos) | COMANDOS_ACADEMIA | COMANDOS_ASSESSORIA | COMANDOS_ORGANIZACAO
                               | COMANDOS_CARREIRA | COMANDOS_CONTEUDO)
 
@@ -531,7 +538,7 @@ class BotQuiron:
                       "adiar": "Adiar tarefa", "hoje": "Meu dia", "nota": "Anotar", "notas": "Minhas notas", "meta": "Nova meta",
                       "metas": "Minhas metas", "revisao": "Revisão da semana", "evento": "Evento no Google Agenda",
                       "carreira": "Plano de carreira", "diario": "Diário de teses", "portfolio": "Portfólio de análises",
-                      "entrevista": "Simular entrevista", "radar": "Normas novas (CVM, Receita, BC)", "cartas": "Cartas de gestores recentes (/cartas Verde)", "pauta": "Ideias de conteúdo",
+                      "entrevista": "Simular entrevista", "radar": "Normas novas (CVM, Receita, BC)", "cartas": "Cartas de gestores recentes (/cartas Verde)", "resumo": "Resumo de mercado escrito + PDF", "pauta": "Ideias de conteúdo",
                       "roteiro": "Roteiro/carrossel/artigo", "fio": "Fio para redes", "ideia": "Guardar ideia",
                       "ideias": "Banco de ideias", "conferir": "Conferir um texto seu (compliance)"}
         itens = []
@@ -828,6 +835,17 @@ async def _rodar() -> None:
                 for s in saidas:
                     await enviar(q.message.chat_id, s)
                 return
+            if (q.data or "").startswith("an:repetir:"):
+                from quiron.servicos.analise.fila import fila
+
+                t = await asyncio.to_thread(fila().repetir, int(q.data.rsplit(":", 1)[1]))
+                try:
+                    await q.edit_message_reply_markup(None)
+                except Exception:  # noqa: BLE001
+                    pass
+                await enviar(q.message.chat_id, Saida(f"🔁 Análise #{t.id} de volta à fila. Te aviso quando ficar pronta." if t
+                                                      else "Essa análise não está mais com erro (já foi refeita ou não existe)."))
+                return
             if (q.data or "").startswith(("qa:", "ms:")):  # botões rápidos do /start e sugestões de próximo passo
                 sinal = asyncio.create_task(digitando(q.message.chat_id))
                 andamento = Andamento(q.message.chat_id)
@@ -951,13 +969,24 @@ async def _rodar() -> None:
             """Entrega as análises prontas (resumo + PDF + planilha) pedidas pelo Telegram."""
             from quiron.servicos.analise.fila import fila
 
+            try:  # análises que caíram no erro de gravação do Windows (já corrigido) voltam sozinhas para a fila, uma vez
+                for t in fila().listar(50, "erro"):
+                    if ("WinError 5" in (t.erro or "") or "PermissionError" in (t.erro or "")) and t.origem == "telegram":
+                        fila().repetir(t.id)
+            except Exception:  # noqa: BLE001
+                logging.exception("não consegui repor as análises que falharam")
             while True:
                 try:
                     f = fila()
                     for t in f.a_entregar("telegram"):
                         if t.situacao == "erro":
-                            bot.registrar_proativo(dono, f"⚠️ A análise #{t.id} falhou: {t.erro[:500]}", "analise")
-                            await app.bot.send_message(dono, f"⚠️ A análise #{t.id} falhou: {t.erro[:500]}")
+                            from quiron.servicos.analise.fila import motivo_amigavel
+
+                            aviso = (f"⚠️ A análise #{t.id}{' — ' + t.titulo if t.titulo else ''} não saiu: "
+                                     f"{motivo_amigavel(t.erro)}. Toque abaixo para tentar de novo.")
+                            logging.warning("análise #%s falhou: %s", t.id, t.erro)
+                            bot.registrar_proativo(dono, aviso, "analise")
+                            await enviar(dono, Saida(aviso, botoes=[("🔁 Tentar de novo", f"an:repetir:{t.id}")]))
                         else:
                             rel = f.relatorio(t.id)
                             texto = rel.resumo_curto() if rel else f"📑 {t.titulo}\n{t.resumo}"

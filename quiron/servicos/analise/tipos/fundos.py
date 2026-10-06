@@ -472,6 +472,7 @@ def fii_comparativo(params: dict[str, Any], modo: str = "entregar", precos: dict
         raise ValueError("informe os tickers dos FIIs (ex.: HGLG11, KNRI11)")
     cvm.atualizar_fii()
     linhas, fatos, avisos = [], [], []
+    secoes_imoveis, imoveis_fatos = [], {}
     for t in tickers:
         try:
             hist = cvm.fii(t)
@@ -497,6 +498,16 @@ def fii_comparativo(params: dict[str, Any], modo: str = "entregar", precos: dict
         linhas.append([t, ult["segmento"] or "—", ult["mes"], _r(ult["vp_cota"]), _r(preco), _r(p_vp), round(dy_vp_12, 2),
                        _p(dy_preco), round((rent_12 - 1) * 100, 2), _r(ult["pl"]), ult["cotistas"], _r(ult["taxa_adm"], 3),
                        len(ultimos)])
+        try:  # imóveis, inquilinos e ativos financeiros (informe trimestral da CVM)
+            from quiron.servicos.fundos import fii_imoveis
+
+            cart = fii_imoveis.carteira(ult["cnpj"])
+            sec = fii_imoveis.secoes(t, cart)
+            if sec:
+                secoes_imoveis.append(sec)
+                imoveis_fatos[t] = fii_imoveis.fatos(cart)
+        except Exception as e:  # noqa: BLE001 — sem o trimestral, o comparativo sai do mesmo jeito
+            avisos.append(f"{t}: imóveis do informe trimestral indisponíveis agora ({type(e).__name__}).")
         fatos.append({"ticker": t, "segmento": ult["segmento"], "mes": ult["mes"], "vp_cota": _r(ult["vp_cota"]),
                       "preco": _r(preco), "p_vp": _r(p_vp), "dy_12m_sobre_vp_pct": round(dy_vp_12, 2),
                       "dy_12m_sobre_preco_pct": _p(dy_preco), "rentabilidade_efetiva_12m_pct": round((rent_12 - 1) * 100, 2),
@@ -512,9 +523,10 @@ def fii_comparativo(params: dict[str, Any], modo: str = "entregar", precos: dict
                      "Rentabilidade efetiva = composição mensal informada pela administradora (rendimentos + variação patrimonial).",
                      "P/VP = cotação ÷ valor patrimonial da cota do último informe."]
     rel.limitacoes = ["Informe mensal chega com 1–2 meses de atraso; o VP pode mudar com reavaliação dos imóveis.",
-                      "Sem vacância, inadimplência ou contratos (estão nos relatórios gerenciais da gestora).",
+                      "Imóveis, vacância e inquilinos vêm do informe TRIMESTRAL (defasagem de até 3 meses); contratos e "
+                      "prazos de locação estão nos relatórios gerenciais da gestora.",
                       "Rendimento passado não garante distribuição futura. Ganho de capital em FII paga 20% de IR."]
-    rel.fatos = {"fiis": fatos}
+    rel.fatos = {"fiis": fatos, "imoveis": imoveis_fatos}
     melhor_dy = max((f for f in fatos if f["dy_12m_sobre_preco_pct"]), key=lambda f: f["dy_12m_sobre_preco_pct"], default=None)
     rel.resumo = [f"{f['ticker']} ({f['segmento']}): P/VP {num_ou(f['p_vp'])}, DY 12m {pct_ou(f['dy_12m_sobre_preco_pct'])} "
                   f"sobre o preço, rentabilidade efetiva 12m {pct(f['rentabilidade_efetiva_12m_pct'])}." for f in fatos]
@@ -526,7 +538,9 @@ def fii_comparativo(params: dict[str, Any], modo: str = "entregar", precos: dict
                linhas, ["texto", "texto", "texto", "num", "num", "num", "pct", "pct", "pct", "reais", "int", "pct", "int"])
     g = Grafico("Dividend yield 12 meses sobre o preço", "barras_h", [l[0] for l in linhas if l[7] is not None],
                 {"DY": [l[7] for l in linhas if l[7] is not None]}, "pct")
-    rel.secoes = [Secao("Comparativo", "", [t], [g] if g.rotulos else [])]
+    rel.secoes = [Secao("Comparativo", "", [t], [g] if g.rotulos else []), *secoes_imoveis]
+    if secoes_imoveis:
+        rel.fontes.append("📊 CVM Dados Abertos — informe trimestral de FII (imóveis, inquilinos, ativos)")
     rel.parametros = {"fiis": tickers}
     return redacao.redigir(rel, modo) if redigir else rel
 

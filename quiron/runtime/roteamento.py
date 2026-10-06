@@ -56,6 +56,11 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
     if re.match(r"^(?:(?:me )?(?:faz|faca|manda|mande|envia|quero|cade)(?: o| um)?(?: meu)? ?)?briefing(?: (?:de hoje|do dia|do mercado|agora))?$", t):
         return "briefing", ""
 
+    # resumo de mercado escrito (relatório com as 8 seções)
+    if re.match(r"^(?:(?:me )?(?:faz|faca|manda|mande|envia|quero|gera|gere|cade)(?: o| um)?(?: meu)? ?)?(?:resumo|relatorio) (?:de|do) mercado"
+                r"(?: (?:de hoje|do dia|completo|agora))?$", t):
+        return "resumo", ""
+
     # tarefas e lembretes
     if m := re.match(r"^(?:por favor,?\s*)?(?:me\s+)?lembr(?:a|e|ar)(?:-me)?\s+(?:de\s+|que\s+)?(.+)$", t):
         if _DATA_HORA.search(m.group(1)):
@@ -128,7 +133,7 @@ SKILL_POR_ASSUNTO = (
     ("noticias", r"\bnoticia|manchete|o que (?:esta|ta|anda) saindo|o que (?:aconteceu|houve|rolou)|imprensa|"
                  r"o que (?:estao|tao) (?:falando|dizendo)|repercuss|sentimento (?:do mercado|sobre)|clima do mercado|"
                  r"\bcartas? (?:d[aeo]s? |recentes|nova)"),
-    ("briefing", r"\bbriefing\b"),
+    ("briefing", r"\bbriefing\b|resumo (?:de|do) mercado"),
 )
 
 
@@ -142,7 +147,7 @@ def skills_provaveis(texto: str) -> list[str]:
 # ---------------------------------------------------------------- 2. só as ferramentas que importam
 AREAS = {
     "quiron_mercado": r"selic|cdi|ipca|igpm|inflacao|dolar|euro|cambio|cotac|acao|acoes|bolsa|ibov|juro|tesouro|curva|focus|"
-                      r"mercado|fundo|fii|gestor|empresa|ticker|balanco|dividend|commodit|petroleo|ouro|cvm|preco|\b[a-z]{4}\d{1,2}\b",
+                      r"mercado|fundo|fii|gestor|empresa|ticker|balanco|dividend|commodit|petroleo|ouro|cvm|preco|variac|rentabil|desempenh|subiu|caiu|\b[a-z]{4}\d{1,2}\b",
     "quiron_noticias": r"noticia|manchete|aconteceu|saiu|jornal|redes|bluesky|reddit|youtube|sentimento|clima do mercado|"
                        r"carta|gestora|gestor|letter",
     "quiron_biblioteca": r"livro|autor|biblioteca|explica|conceito|estudar|teoria|graham|buffett|marks|debate|citac",

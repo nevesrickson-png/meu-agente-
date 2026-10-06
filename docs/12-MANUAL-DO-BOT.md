@@ -30,6 +30,9 @@ chat igual ao do Telegram). Tudo o que está aqui funciona nos dois, salvo quand
 | “o que você sabe sobre mim?” · “o que fizemos hoje?” · “lembre que…” | memória |
 | “tem norma nova?” · “me dá ideias de post” | radar regulatório · pautas de conteúdo |
 | “cartas recentes” · “carta da Dynamo” · “resuma a carta da Verde” | cartas de gestores (lista ou resumo) |
+| “resumo de mercado” | resumo escrito por tema (bolsa, EUA, renda fixa, juros, moedas, cripto, agro, FIIs) + PDF |
+| “como o TRXF11 andou na semana e no mês?” | variação na semana, no mês, no ano e em 12 meses |
+| “o que a WEG faz?” · “quais imóveis o HGLG11 tem?” | perfil da empresa · imóveis do FII |
 
 Enquanto pensa, ele mostra **“⏳ Consultando dados de mercado…”**. A conversa tem continuidade: “e o IPCA?” depois de
 perguntar da Selic é entendido. `/novo` começa outro assunto (o anterior fica guardado na memória).
@@ -72,6 +75,8 @@ Montado direto dos dados, sempre no mesmo formato, para ler no celular:
 | Pedido | Comando | Exemplo |
 |---|---|---|
 | Briefing agora | `/briefing` | “faz meu briefing” |
+| Resumo de mercado escrito (+ PDF) | `/resumo` | “resumo de mercado” — leva cerca de 1 minuto |
+| Variação semanal/mensal/anual | — | “quanto o TRXF11 subiu no mês?” |
 | Taxas, cotações, curva, Focus, macro | — (fale normal) | “qual a Selic e o dólar?”, “como está a curva de juros?” |
 | Notícias de um tema ou ativo | `/noticia` | `/noticia copom` |
 | Clima nas redes (Bluesky, Reddit, YouTube) | — | “qual o sentimento sobre PETR4?” |
@@ -132,10 +137,16 @@ e por revisão de outro modelo antes de entrar.
 | Simulador de patrimônio (4 perguntas + gráfico) | `/simular …` ou fale normal · Terminal `SIM` |
 
 ### 🏦 Fundos, FIIs e previdência (dados da CVM)
+FIIs: o comparativo agora traz, para cada fundo, os **imóveis** (nome, cidade/UF, área, vacância, inadimplência e % da
+receita), os estados onde estão, a vacância média ponderada, os setores dos inquilinos e os ativos financeiros (CRIs,
+LCIs, cotas) — informe trimestral da CVM. Rápido: “quais imóveis o HGLG11 tem?”.
 `/fundo Verde 30` · `/comparar_fundos A, B, C` · `/gestor Ibiuna` · `/fii HGLG11 KNRI11` ·
 `/previdencia atual X, destino Y, saldo 300 mil` · `/alternativos FIDC`
 
 ### 🏭 Empresas listadas (uso interno — não é relatório de análise, Resolução CVM 20)
+Os relatórios de valuation e de resultado abrem com **Perfil e atividades**: o que a empresa faz e seus segmentos,
+sede, fundação, controle, acionistas com 5% ou mais, controladas/participações (com atividade e sede) e empregados por
+região — do cadastro e do Formulário de Referência da CVM + perfil do Yahoo (traduzido). Rápido: “o que a WEG faz?”.
 `/empresa WEGE3` (raio-X) · `/valuation WEGE3` (DCF com premissas rastreáveis, cenários, DCF reverso) ·
 `/tese WEGE3 merece prêmio` (debate ou advogado do diabo) · `/setor WEGE3 RAPT4 TUPY3` · `/resultado WEGE3`
 
@@ -165,6 +176,14 @@ Ele aprende sozinho com as conversas (preferências, objetivos, rotina, estudo, 
 e no Terminal. `/memoria` (ver) · `/memoria buscar <tema>` · `/memoria esquecer <nº>` · `/memoria mudar <nº> <texto>` ·
 `/memoria hoje` (tudo o que aconteceu no dia) · `/memoria conversas` · `/memoria exportar` · `/lembrar <fato>`
 
+### 📰 Resumo de mercado (`/resumo` · Terminal: `RESUMO`)
+Complementa o briefing (que continua igual): um texto corrido, como um boletim, com **resumo executivo** e 8 seções —
+bolsa brasileira, bolsa americana, renda fixa, juros, moedas, cripto, agro/commodities e FIIs —, cada uma terminando
+com **Leitura prática** (o que muda na conversa com os clientes). Os números são buscados e calculados pelo Quíron
+(Yahoo, Banco Central, Tesouro, PTAX, Focus) e as explicações vêm das manchetes das fontes de notícias, sempre
+citadas; a IA só escreve o texto, e frase com número que não veio das fontes é cortada. Junto vai o PDF (com as
+tabelas de cada seção). Para receber todo dia: “todo dia útil às 8h15 me manda o resumo de mercado”.
+
 ### 📬 Cartas de gestores (Terminal: `CARTAS` · Telegram: `/cartas`)
 ~140 gestoras do compilado “Insights do Mercado” (Brasil, globais e family offices). Uma vez por dia o Quíron confere o site
 público de cada uma (respeitando o robots.txt, sem login) e guarda título, data e link das cartas. No Terminal, o painel
@@ -178,8 +197,10 @@ Canais do YouTube como uma TV: botões por grupo (Notícias Brasil, Notícias gl
 **Meus canais**), player grande, **● Ao vivo** (quando o canal está transmitindo) e a lista dos últimos vídeos. Controle
 remoto pelo teclado: ← → troca de canal, números escolhem o canal, L = ao vivo, F = tela cheia. Para incluir um canal,
 cole o link (youtube.com/@nome) ou o @ e clique em “+ Adicionar canal”; “Remover canal atual” tira da lista (os do padrão
-voltam com “Mostrar escondidos”). Sem a chave do YouTube a lista lateral pode não aparecer, mas o player toca os envios
-mais recentes do canal mesmo assim.
+voltam com “Mostrar escondidos”). **Ao vivo primeiro:** os canais que estão transmitindo agora ganham o selo AO VIVO e
+sobem na lista; ao escolher um canal no ar, a transmissão toca antes dos vídeos gravados (com o título e quantas
+pessoas assistem). “Recentes” toca só os vídeos gravados. A lista lateral de vídeos aparece com a chave do YouTube
+(Configurações → Opcionais); sem ela, o player toca o ao vivo ou os envios mais recentes do canal.
 
 ### 🎨 Aparência do Terminal
 Visual escuro ou claro: botão no canto superior direito (◐ automático, segue o computador/celular · ☀ claro · ☾ escuro).

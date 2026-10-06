@@ -57,7 +57,12 @@
   .canal[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); }
   .canal .n { font: 600 12px var(--mono); color: var(--texto-3); min-width: 22px; }
   .canal[aria-pressed="true"] .n { color: var(--acento-texto); }
-  .canal .c { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .canal .c { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .selo-vivo { flex: none; font: 700 10px var(--sans); letter-spacing: .4px; color: #fff; background: var(--queda); border-radius: 4px; padding: 2px 5px; }
+  .canal { position: relative; }
+  .canal .selo-vivo { position: absolute; top: -8px; right: 8px; font-size: 9px; padding: 1px 5px; box-shadow: 0 0 0 2px var(--painel); }
+  .canal.no-ar { border-color: color-mix(in srgb, var(--queda) 45%, var(--borda)); }
+  .agora .modo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .rodape-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 0 14px 14px; }
   .rodape-ctrl form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .rodape-ctrl form input[name=entrada] { width: min(340px, 70vw); }
@@ -83,8 +88,8 @@
       <div class="agora"><span class="num" id="agora-num"></span><span class="nome" id="agora-nome">—</span><span class="modo" id="agora-modo"></span></div>
       <button type="button" id="ant" title="Canal anterior (← ou PageUp)" aria-label="Canal anterior">◀</button>
       <button type="button" id="prox" title="Próximo canal (→ ou PageDown)" aria-label="Próximo canal">▶</button>
-      <button type="button" id="recentes" aria-pressed="true" title="Vídeos mais recentes do canal">Recentes</button>
-      <button type="button" id="vivo" class="ao-vivo" aria-pressed="false" title="Transmissão ao vivo, se o canal estiver no ar (tecla L)">● Ao vivo</button>
+      <button type="button" id="vivo" class="ao-vivo" aria-pressed="true" title="Se o canal estiver transmitindo, a transmissão vem primeiro (tecla L alterna)">● Ao vivo primeiro</button>
+      <button type="button" id="recentes" aria-pressed="false" title="Só os vídeos gravados mais recentes do canal">Recentes</button>
       <a class="botao" id="abrir-yt" target="_blank" rel="noopener noreferrer" title="Abrir o canal no YouTube">↗ YouTube</a>
     </div>
   </section>
@@ -108,7 +113,7 @@
       </form>
       <button type="button" id="remover" title="Tira o canal atual da lista (os do padrão podem voltar em “mostrar escondidos”)">Remover canal atual</button>
       <button type="button" id="restaurar" title="Mostra de novo os canais do padrão que você escondeu">Mostrar escondidos</button>
-      <span class="ajuda"><kbd>←</kbd><kbd>→</kbd> trocar · números = canal · <kbd>L</kbd> ao vivo · <kbd>F</kbd> tela cheia</span>
+      <span class="ajuda"><kbd>←</kbd><kbd>→</kbd> trocar · números = canal · <kbd>L</kbd> ao vivo primeiro/recentes · <kbd>F</kbd> tela cheia · canais no ar aparecem primeiro</span>
     </div>
   </section>
 </main>
@@ -123,7 +128,8 @@ const ID = /^UC[\w-]{22}$/, VID = /^[\w-]{11}$/;
 const guardar = (k, v) => { try { localStorage.setItem("quiron-tv-" + k, v); } catch (e) { /* sem armazenamento */ } };
 const lerGuardado = (k) => { try { return localStorage.getItem("quiron-tv-" + k); } catch (e) { return null; } };
 
-let grupos = [], todos = [], grupoAtivo = lerGuardado("grupo") || "noticias_br", atual = null, modo = lerGuardado("modo") === "vivo" ? "vivo" : "recentes", videoAtual = null;
+let grupos = [], todos = [], grupoAtivo = lerGuardado("grupo") || "noticias_br", atual = null, modo = lerGuardado("modo") === "recentes" ? "recentes" : "auto", videoAtual = null;
+const vivos = {};  // canal → {ao_vivo, video, titulo, assistindo}; atualizado a cada 3 min
 
 function aviso(t, ms = 3500) { const a = $("#aviso-tv"); a.textContent = t; a.style.display = "block"; clearTimeout(aviso._t); aviso._t = setTimeout(() => (a.style.display = "none"), ms); }
 
@@ -149,24 +155,48 @@ function desenharGrupos() {
     if (g.id === "meus" && !g.canais.length) continue;
     const b = document.createElement("button");
     b.type = "button"; b.textContent = `${g.nome} (${g.canais.length})`; b.setAttribute("aria-pressed", g.id === grupoAtivo && !$("#filtro").value ? "true" : "false");
-    b.onclick = () => { grupoAtivo = g.id; guardar("grupo", g.id); $("#filtro").value = ""; desenharGrupos(); desenharCanais(); };
+    b.onclick = () => { grupoAtivo = g.id; guardar("grupo", g.id); $("#filtro").value = ""; desenharGrupos(); mostrarCanais(); };
     caixa.insertBefore(b, filtro);
   }
 }
 
 function canaisVisiveis() {
   const q = $("#filtro").value.trim().normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  if (q) return todos.filter((c) => c.nome.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q));
-  return (grupos.find((g) => g.id === grupoAtivo) || { canais: [] }).canais;
+  const lista = q ? todos.filter((c) => c.nome.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q))
+    : (grupos.find((g) => g.id === grupoAtivo) || { canais: [] }).canais;
+  // quem está transmitindo agora vem primeiro (como numa TV: o que está no ar)
+  return [...lista].sort((a, b) => (vivos[b.id]?.ao_vivo ? 1 : 0) - (vivos[a.id]?.ao_vivo ? 1 : 0));
+}
+
+async function conferirVivos(lista) {
+  const faltam = lista.map((c) => c.id).filter((id) => !vivos[id] || Date.now() - vivos[id]._em > 180000);
+  if (!faltam.length) return;
+  try {
+    const d = await api(`/api/tv/ao_vivo?canais=${encodeURIComponent(faltam.slice(0, 40).join(","))}`, undefined, "GET");
+    for (const [id, st] of Object.entries(d.canais)) vivos[id] = { ...st, _em: Date.now() };
+  } catch (e) { /* sem resposta: segue sem selo */ }
 }
 
 function desenharCanais() {
   const lista = canaisVisiveis();
-  $("#canais").innerHTML = lista.length ? lista.map((c) => `<button type="button" class="canal" data-id="${esc(c.id)}" aria-pressed="${atual && atual.id === c.id}" title="${esc(c.nome)}">
-      <span class="n">${c.numero}</span><span class="c">${esc(c.nome)}</span></button>`).join("")
+  $("#canais").innerHTML = lista.length ? lista.map((c) => { const v = vivos[c.id]; return `<button type="button" class="canal${v?.ao_vivo ? " no-ar" : ""}" data-id="${esc(c.id)}" aria-pressed="${atual && atual.id === c.id}" title="${esc(v?.ao_vivo ? `AO VIVO: ${v.titulo}` : c.nome)}">
+      <span class="n">${c.numero}</span><span class="c">${esc(c.nome)}</span>${v?.ao_vivo ? '<span class="selo-vivo">AO VIVO</span>' : ""}</button>`; }).join("")
     : '<div class="dica">Nenhum canal aqui. Adicione pelo link abaixo.</div>';
   $("#canais").querySelectorAll(".canal").forEach((b) => (b.onclick = () => sintonizar(todos.find((c) => c.id === b.dataset.id))));
 }
+
+function mostrarCanais() {  // desenha já e acende os selos AO VIVO assim que a conferência voltar
+  desenharCanais();
+  conferirVivos(canaisVisiveis()).then(desenharCanais);
+}
+
+// a cada 3 min: atualiza os selos; se o canal atual entrou no ar, a transmissão passa a tocar
+setInterval(async () => {
+  const antes = atual && vivos[atual.id]?.ao_vivo;
+  await conferirVivos([...canaisVisiveis(), ...(atual ? [atual] : [])]);
+  desenharCanais();
+  if (atual && modo === "auto" && !videoAtual && !antes && vivos[atual.id]?.ao_vivo) { tocar(); aviso(`${atual.nome} entrou ao vivo.`); }
+}, 180000);
 
 function embed(url) {
   const v = $("#video");
@@ -183,11 +213,14 @@ function embed(url) {
 function tocar() {
   if (!atual || !ID.test(atual.id)) return;
   const base = "https://www.youtube-nocookie.com/embed/";
-  if (modo === "vivo") { embed(`https://www.youtube.com/embed/live_stream?channel=${atual.id}&autoplay=1`); $("#agora-modo").textContent = "ao vivo (se o canal estiver transmitindo)"; }
-  else if (videoAtual && VID.test(videoAtual)) { embed(`${base}${videoAtual}?autoplay=1&rel=0`); $("#agora-modo").textContent = "vídeo escolhido"; }
-  else { embed(`${base}videoseries?list=UU${atual.id.slice(2)}&autoplay=1&rel=0`); $("#agora-modo").textContent = "últimos envios do canal"; }
+  const v = vivos[atual.id];
+  if (videoAtual && VID.test(videoAtual)) { embed(`${base}${videoAtual}?autoplay=1&rel=0`); $("#agora-modo").textContent = "vídeo escolhido"; }
+  else if (modo === "auto" && v?.ao_vivo && VID.test(v.video)) {
+    embed(`${base}${v.video}?autoplay=1&rel=0`);
+    $("#agora-modo").innerHTML = `<span class="selo-vivo">AO VIVO</span> ${esc(v.titulo)}${v.assistindo ? ` · ${Number(v.assistindo).toLocaleString("pt-BR")} assistindo` : ""}`;
+  } else { embed(`${base}videoseries?list=UU${atual.id.slice(2)}&autoplay=1&rel=0`); $("#agora-modo").textContent = modo === "auto" ? "sem transmissão agora · últimos envios do canal" : "últimos envios do canal"; }
   $("#recentes").setAttribute("aria-pressed", modo === "recentes");
-  $("#vivo").setAttribute("aria-pressed", modo === "vivo");
+  $("#vivo").setAttribute("aria-pressed", modo === "auto");
 }
 
 function quando(iso) {
@@ -207,22 +240,27 @@ async function carregarVideos(canal) {
     const d = await api(`/api/tv/videos/${encodeURIComponent(canal.id)}`, undefined, "GET");
     if (!atual || atual.id !== canal.id) return;
     if (!d.itens.length) {
-      alvo.innerHTML = '<div class="dica">A lista de vídeos não veio agora; o player está tocando os envios mais recentes do canal (use ⏭ dentro do vídeo para avançar). Com a chave do YouTube em Configurações, a lista aparece sempre.</div>';
+      alvo.innerHTML = '<div class="dica">A lista de vídeos aparece com a chave do YouTube (Configurações → Opcionais). Sem ela, o player toca a transmissão ao vivo (quando houver) ou os envios mais recentes do canal — use ⏭ dentro do vídeo para avançar.</div>';
       return;
     }
     $("#fonte-videos").textContent = d.fonte === "api" ? "YouTube API" : "feed do canal";
     alvo.innerHTML = d.itens.map((v) => `<button type="button" class="vid" data-v="${esc(v.id)}" aria-current="${videoAtual === v.id}">
         <img loading="lazy" alt="" src="${esc(v.miniatura)}"><span><span class="t">${esc(v.titulo)}</span><span class="d">${esc(quando(v.publicado))}</span></span></button>`).join("");
     alvo.querySelectorAll(".vid").forEach((b) => (b.onclick = () => {
-      videoAtual = b.dataset.v; modo = "recentes"; guardar("modo", modo); tocar();
+      videoAtual = b.dataset.v; tocar();
       alvo.querySelectorAll(".vid").forEach((x) => x.setAttribute("aria-current", x === b));
     }));
   } catch (e) { alvo.innerHTML = `<div class="dica">${esc(e.message)}</div>`; }
 }
 
-function sintonizar(canal) {
+async function sintonizar(canal) {
   if (!canal) return;
   atual = canal; videoAtual = null;
+  if (modo === "auto" && !vivos[canal.id]) {  // ao vivo primeiro: confere antes de tocar (fica guardado 3 min)
+    $("#agora-modo").textContent = "conferindo se está ao vivo…";
+    await conferirVivos([canal]);
+    if (atual !== canal) return;  // trocou de canal enquanto conferia
+  }
   guardar("canal", canal.id);
   $("#agora-num").textContent = String(canal.numero).padStart(2, "0");
   $("#agora-nome").textContent = canal.nome;
@@ -250,7 +288,7 @@ document.addEventListener("keydown", (e) => {
   if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); zapear(1); }
   else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); zapear(-1); }
-  else if (e.key.toLowerCase() === "l") { modo = modo === "vivo" ? "recentes" : "vivo"; guardar("modo", modo); tocar(); }
+  else if (e.key.toLowerCase() === "l") { modo = modo === "auto" ? "recentes" : "auto"; videoAtual = null; guardar("modo", modo); tocar(); }
   else if (e.key.toLowerCase() === "f") { const f = $("#video iframe"); if (f && f.requestFullscreen) f.requestFullscreen().catch(() => {}); }
   else if (/^\d$/.test(e.key)) {
     digitos = (digitos + e.key).slice(-3); mostrarNumero(digitos);
@@ -261,9 +299,9 @@ document.addEventListener("keydown", (e) => {
 
 $("#ant").onclick = () => zapear(-1);
 $("#prox").onclick = () => zapear(1);
-$("#recentes").onclick = () => { modo = "recentes"; guardar("modo", modo); tocar(); };
-$("#vivo").onclick = () => { modo = "vivo"; guardar("modo", modo); tocar(); };
-$("#filtro").oninput = () => { desenharGrupos(); desenharCanais(); };
+$("#recentes").onclick = () => { modo = "recentes"; videoAtual = null; guardar("modo", modo); tocar(); };
+$("#vivo").onclick = async () => { modo = "auto"; videoAtual = null; guardar("modo", modo); if (atual) await conferirVivos([atual]); tocar(); desenharCanais(); };
+$("#filtro").oninput = () => { desenharGrupos(); mostrarCanais(); };
 $("#form-canal").onsubmit = async (e) => {
   e.preventDefault();
   const f = Object.fromEntries(new FormData(e.target)), botao = $("button", e.target);
@@ -294,6 +332,9 @@ $("#restaurar").onclick = async () => {
     carregarGrupos(d.grupos);
     const salvo = todos.find((c) => c.id === lerGuardado("canal"));
     if (salvo) { grupoAtivo = salvo.grupo; desenharGrupos(); desenharCanais(); }
+    await conferirVivos(canaisVisiveis());
+    desenharCanais();
+    // sem canal salvo: começa pelo primeiro que estiver no ar
     sintonizar(salvo || canaisVisiveis()[0] || todos[0]);
   } catch (e) { aviso("Não consegui carregar os canais: " + e.message, 8000); }
 })();
