@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import base64
 import os
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
+
+import httpx
 
 from quiron.nucleo.config import ler_yaml
 from quiron.servicos.mercado import http
@@ -61,19 +64,35 @@ def _dt(texto: str) -> datetime:
 
 # ---------------------------------------------------------------- Bluesky
 
-_token_bsky: dict[str, str] = {}
+_token_bsky: dict[str, tuple[str, float]] = {}  # usuário → (token, vale até)
+
+
+def _login(nome: str, url: str, chave: str, **kw) -> tuple[str, int | None]:
+    """POST de login com os mesmos cuidados do resto da coleta: nunca no offline; rede fora vira FonteIndisponivel."""
+    from quiron.nucleo import offline
+
+    if offline.ativo():
+        raise FonteIndisponivel(f"{nome}: versão offline (sem internet)")
+    try:
+        r = http.cliente().post(url, **kw)
+        dados = r.json() if r.status_code == 200 else {}
+    except (httpx.HTTPError, ValueError) as e:
+        raise FonteIndisponivel(f"{nome}: não consegui fazer login ({type(e).__name__})") from e
+    if not dados.get(chave):
+        raise FonteIndisponivel(f"{nome} recusou o login ({r.status_code}): confira as credenciais")
+    return dados[chave], dados.get("expires_in")
 
 
 def _sessao_bluesky() -> str:
     usuario, senha = _env("BLUESKY_HANDLE"), _env("BLUESKY_APP_PASSWORD")
     if not usuario or not senha:
         raise RedeNaoConfigurada(COMO_CONFIGURAR["bluesky"])
-    if usuario not in _token_bsky:
-        r = http.cliente().post("https://bsky.social/xrpc/com.atproto.server.createSession", json={"identifier": usuario, "password": senha})
-        if r.status_code != 200:
-            raise FonteIndisponivel(f"Bluesky recusou o login ({r.status_code}): confira usuário e senha de app")
-        _token_bsky[usuario] = r.json()["accessJwt"]
-    return _token_bsky[usuario]
+    token, vale = _token_bsky.get(usuario, ("", 0.0))
+    if time.time() >= vale:  # o token do Bluesky dura ~2 h: renova antes
+        token, _ = _login("Bluesky", "https://bsky.social/xrpc/com.atproto.server.createSession", "accessJwt",
+                          json={"identifier": usuario, "password": senha})
+        _token_bsky[usuario] = (token, time.time() + 90 * 60)
+    return token
 
 
 def bluesky(termo: str, limite: int = 25) -> list[Post]:
@@ -96,7 +115,7 @@ def bluesky(termo: str, limite: int = 25) -> list[Post]:
 
 # ---------------------------------------------------------------- Reddit
 
-_token_reddit: dict[str, str] = {}
+_token_reddit: dict[str, tuple[str, float]] = {}  # app → (token, vale até)
 _UA_REDDIT = "python:quiron:0.1 (uso pessoal)"
 
 
@@ -104,16 +123,14 @@ def _token_do_reddit() -> str:
     cid, segredo = _env("REDDIT_CLIENT_ID"), _env("REDDIT_CLIENT_SECRET")
     if not cid or not segredo:
         raise RedeNaoConfigurada(COMO_CONFIGURAR["reddit"])
-    if cid not in _token_reddit:
+    token, vale = _token_reddit.get(cid, ("", 0.0))
+    if time.time() >= vale:  # ~24 h; renova 10 min antes
         basico = base64.b64encode(f"{cid}:{segredo}".encode()).decode()
-        r = http.cliente().post(
-            "https://www.reddit.com/api/v1/access_token", data={"grant_type": "client_credentials"},
-            headers={"Authorization": f"Basic {basico}", "User-Agent": _UA_REDDIT},
-        )
-        if r.status_code != 200 or "access_token" not in r.text:
-            raise FonteIndisponivel(f"Reddit recusou as credenciais ({r.status_code}): confira o app em reddit.com/prefs/apps")
-        _token_reddit[cid] = r.json()["access_token"]
-    return _token_reddit[cid]
+        token, dura = _login("Reddit", "https://www.reddit.com/api/v1/access_token", "access_token",
+                             data={"grant_type": "client_credentials"},
+                             headers={"Authorization": f"Basic {basico}", "User-Agent": _UA_REDDIT})
+        _token_reddit[cid] = (token, time.time() + max(60, int(dura or 3600) - 600))
+    return token
 
 
 def reddit(termo: str, limite: int = 25, subreddits: list[str] | None = None) -> list[Post]:
@@ -142,7 +159,8 @@ def youtube(termo: str, limite: int = 15) -> list[Post]:
     if not chave:
         raise RedeNaoConfigurada(COMO_CONFIGURAR["youtube"])
     cfg = (ler_yaml("redes") or {}).get("youtube") or {}
-    desde = (datetime.now(timezone.utc) - timedelta(days=int(cfg.get("dias", 7)))).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # arredondado à hora: com segundos a chave do cache mudava a cada chamada (100 unidades de cota por busca)
+    desde = (datetime.now(timezone.utc) - timedelta(days=int(cfg.get("dias", 7)))).strftime("%Y-%m-%dT%H:00:00Z")
     params = {"part": "snippet", "q": termo, "type": "video", "order": "relevance", "maxResults": str(limite),
               "publishedAfter": desde, "regionCode": cfg.get("regiao", "BR"), "relevanceLanguage": cfg.get("idioma", "pt"), "key": chave}
     r = obter("https://www.googleapis.com/youtube/v3/search", params=params, fonte="YouTube", ttl=TTL_BUSCA)

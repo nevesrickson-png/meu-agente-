@@ -106,7 +106,8 @@ def _juros(fontes: list[str], avisos: list[str]) -> list[str]:
                     continue
                 antes = anterior.get((t.tipo, t.vencimento))
                 rotulo = f"{'Pré' if chave == 'prefixado' else 'IPCA+'} {t.vencimento.year}"
-                delta = f" ({_bps(taxa - antes)})" if antes is not None else ""
+                # variação só taxa de compra × taxa de compra (o histórico guarda só a de compra; 0,00 = sem oferta)
+                delta = f" ({_bps(t.taxa_compra - antes)})" if t.taxa_compra and antes else ""
                 itens.append(f"{rotulo} {painel._pct(taxa)}{delta}")
             if itens:
                 linhas.append(" · ".join(itens))

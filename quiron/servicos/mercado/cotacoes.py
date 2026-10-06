@@ -73,7 +73,7 @@ def brapi(ticker: str) -> Cotacao:
         datetime.fromisoformat(horario.replace("Z", "+00:00")) if horario else None,
         r.fonte,
         r.obtido_em,
-        "dados da B3 com atraso de ~15 min",
+        "⚠️ DESATUALIZADO (brapi fora do ar; último valor guardado)" if r.desatualizado else "dados da B3 com atraso de ~15 min",
     )
 
 

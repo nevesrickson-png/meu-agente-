@@ -103,6 +103,6 @@ def historico_taxas(chave: str) -> tuple[list[tuple[date, date, float]], str]:
     """Todo o histórico de taxas de compra de um tipo de título: [(data-base, vencimento, taxa % a.a.)]."""
     linhas, r = _linhas(12 * 3600)
     nomes = TIPOS[chave]
-    saida = [(base, venc, tc) for tipo, base, venc, tc, *_ in linhas if tipo in nomes and tc is not None]
+    saida = [(base, venc, tc) for tipo, base, venc, tc, *_ in linhas if tipo in nomes and tc]  # 0,00 = sem oferta de compra
     saida.sort()
     return saida, r.fonte

@@ -386,7 +386,7 @@ def ler_frase(frase: str) -> dict[str, Any]:
     if "patrimonio" not in d:  # "/simular 500 mil, aporte 5 mil": valor sem rótulo LOGO NO INÍCIO é o patrimônio de hoje
         m = re.search(rf"(?:r\$\s*)?{_NUM}", f)
         if m and (m.group(2) or "r$" in m.group(0)) and not any(a <= m.start() < b for a, b in usados) \
-                and not re.sub(r"[/\s,.;:\-]|simular|simula", "", f[:m.start()]) \
+                and not re.sub(r"[/\s,.;:\-]|simular|simula|\b(?:com|e|hoje|atualmente)\b", "", f[:m.start()]) \
                 and not re.match(r"\s*(?:por m[eê]s|/m[eê]s|ao m[eê]s|mensais|de renda)", f[m.end():]):
             d["patrimonio"] = _valor(m.group(1), m.group(2))
     if m := re.search(r"\b(conservador|moderado|arrojado)\b", f):

@@ -157,7 +157,7 @@ def _noticias(termo: str) -> list[dict]:
     from quiron.servicos.noticias import consultas
 
     consultas._garantir_coleta()
-    return [{"titulo": n.titulo, "link": n.link} for n in coleta.listar(6) if re.search(re.escape(termo), n.titulo, re.I)]
+    return [{"titulo": n.titulo, "link": n.link} for n in coleta.listar(6, limite=None) if re.search(re.escape(termo), n.titulo, re.I)]
 
 
 def mensagem(a: Alerta) -> str:

@@ -244,7 +244,7 @@ def valuation_dcf(params: dict[str, Any], modo: str = "entregar", coleta: Coleta
     if g_impl and g_impl > h.cagr_receita * 1.5:
         contra.append(f"Para o preço fechar com o WACC estimado, a receita teria de crescer {pct(g_impl * 100, 1)} no início, "
                       f"contra CAGR histórico de {pct(h.cagr_receita * 100, 1)}.")
-    if upside < 0:
+    if cen[2][3] < col.preco:  # a frase fala do otimista: a condição tem de ser do otimista (não do caso-base)
         contra.append(f"Mesmo o cenário otimista ({brl(cen[2][3])}) fica abaixo do preço de {brl(col.preco)}.")
     contra.append(f"P/L de {_x(mu.pl)} e EV/EBITDA de {_x(mu.ev_ebitda)}: pouca margem para decepção nos resultados.")
     if res.peso_terminal > 0.6:
@@ -457,7 +457,7 @@ def resultado_trimestral(params: dict[str, Any], modo: str = "entregar", coleta:
     ytd, tri, ytd_ant, tri_ant = col.trimestrais
 
     def var(a: float, b: float) -> float | None:
-        return a / b - 1 if b else None
+        return (a - b) / abs(b) if b else None  # base negativa: prejuízo → lucro é alta, não queda
 
     def margem(p: Periodo, k: str) -> float | None:
         return p[k] / p["receita"] if p["receita"] else None

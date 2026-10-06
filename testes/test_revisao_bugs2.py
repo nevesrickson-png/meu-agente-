@@ -99,14 +99,14 @@ def test_ressalva_de_rentabilidade_precisa_estar_perto():
     assert not conferir("O CDB não é sem risco.") and not conferir("Não há risco de crédito relevante, mas há de mercado.")
 
 
-def test_numeros_do_conteudo_nao_validam_por_data_ou_sinal():
+def test_numeros_do_conteudo_nao_validam_por_data():
     from quiron.servicos.conteudo.insumos import Insumo
     from quiron.servicos.conteudo.revisao import conferir_numeros
 
     ins = [Insumo(1, "sgs", "Selic meta: 15,00% a.a. (ref. 06/10/2026)", "BC"),
            Insumo(2, "sgs", "Dólar PTAX: R$ 5,2210 (ref. 05/10/2026)", "BC")]
-    texto = "Selic em 15% (15,00%), dólar a R$ 5,221. Inventados: 10%, 6%, 2026%, -15%, 10.5%."
-    assert conferir_numeros(texto, ins) == ["10%", "6%", "2026%", "-15%", "10.5%"]
+    texto = "Selic em 15% (15,00%), dólar a R$ 5,221, caiu 15%. Inventados: 10%, 6%, 2026%, 10.5%. Faixa 15%-15,00%."
+    assert conferir_numeros(texto, ins) == ["10%", "6%", "2026%", "10.5%"]  # o sinal não conta ("caiu 15%" = −15%)
 
 
 def test_disclaimer_de_acoes_com_bdr_minusculas_e_caixa_alta():

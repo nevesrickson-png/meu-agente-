@@ -13,7 +13,7 @@ import time
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from quiron.nucleo import offline
+from quiron.nucleo import offline, privacidade
 from quiron.nucleo.config import Config, carregar_config
 
 
@@ -46,7 +46,7 @@ def _pausar_se_cota(modelo: str, erro: Exception) -> None:
     if not any(x in texto for x in ("429", "RateLimit", "RESOURCE_EXHAUSTED", "quota")):
         return
     segundos = 60.0
-    if "PerDay" in texto or "per day" in texto.lower():  # antes do retryDelay: o Gemini manda "17s" mesmo na cota diária
+    if "PerDay" in texto:  # cota diária do GEMINI (antes do retryDelay: ele manda "17s" mesmo na cota diária)
         from datetime import datetime, timedelta
         from zoneinfo import ZoneInfo
 
@@ -59,6 +59,8 @@ def _pausar_se_cota(modelo: str, erro: Exception) -> None:
     elif m := re.search(r"retry in (?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?", texto):
         h, mi, se = (float(x or 0) for x in m.groups())
         segundos = h * 3600 + mi * 60 + se or 60.0
+    elif "per day" in texto.lower():  # outro provedor com cota diária e sem prazo dito
+        segundos = 3600.0
     _PAUSA[modelo] = time.time() + min(segundos, 12 * 3600)
 
 
@@ -102,7 +104,7 @@ def perguntar(
         try:
             r = llm.completion(
                 model=modelo,
-                messages=mensagens,
+                messages=mensagens if offline.e_local(modelo) else privacidade.mascarar_mensagens(mensagens),
                 api_key=_chave(config, modelo),
                 temperature=temperatura,
                 max_tokens=max_tokens,
@@ -155,8 +157,9 @@ def conversar(
             falhas.append(f"{modelo}: cota esgotada (em pausa)")
             continue
         try:
-            r = llm.completion(
-                model=modelo, messages=mensagens, tools=ferramentas or None, api_key=_chave(config, modelo),
+            r = llm.completion(  # na nuvem, telefone/CPF/e-mail saem mascarados (histórico, ferramentas, escriba…)
+                model=modelo, messages=mensagens if offline.e_local(modelo) else privacidade.mascarar_mensagens(mensagens),
+                tools=ferramentas or None, api_key=_chave(config, modelo),
                 temperature=temperatura, num_retries=2, timeout=300 if offline.e_local(modelo) else 90,
                 **{**offline.extras_modelo(modelo), **extras},
             )

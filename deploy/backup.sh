@@ -22,8 +22,13 @@ done
 TAR="$TMP/backup.tar"
 ITENS=()
 for item in dados biblioteca config agente/workspace segredos .env; do [[ -e "$item" ]] && ITENS+=("$item"); done
-tar -cf "$TAR" --exclude='dados/*.db' --exclude='dados/*.db-wal' --exclude='dados/*.db-shm' --exclude='dados/modelos' \
-    --exclude='dados/hermes' "${ITENS[@]}"
+# --anchored/--no-wildcards-match-slash: exclui só os .db da raiz de dados/ (as cópias diárias da memória em
+# dados/backups/... continuam no backup); código 1 do tar = "arquivo mudou durante a leitura" (log do bot): não aborta
+rc=0
+tar -cf "$TAR" --anchored --no-wildcards-match-slash --warning=no-file-changed \
+    --exclude='dados/*.db' --exclude='dados/*.db-wal' --exclude='dados/*.db-shm' --exclude='dados/modelos' \
+    --exclude='dados/hermes' "${ITENS[@]}" || rc=$?
+if [[ $rc -gt 1 ]]; then echo "ERRO: tar falhou (código $rc)"; exit $rc; fi
 tar -rf "$TAR" -C "$TMP" dados
 (umask 077; gzip -c "$TAR" > "$ARQUIVO")  # o backup leva .env e segredos/: só o dono do servidor lê
 tar -tzf "$ARQUIVO" | grep -q '^dados/.*\.db$' || echo "AVISO: o backup saiu sem nenhum banco (.db) — confira a pasta dados/."

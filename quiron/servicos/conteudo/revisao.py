@@ -35,8 +35,11 @@ def _valor(txt: str) -> float:
 def _numeros(texto: str) -> list[tuple[str, float, str, bool]]:
     """(bruto, valor com sinal, unidade, tem_decimal) — datas ficam de fora (o dia/mês/ano não é dado)."""
     saida = []
-    for m in RE_NUMERO.finditer(RE_DATA.sub(" ", texto)):
+    limpo = RE_DATA.sub(" ", texto)
+    for m in RE_NUMERO.finditer(limpo):
         rs, menos, num, pct = m.group(1), m.group(2), m.group(3), m.group(4)
+        if menos and re.search(r"[\d%]\s*$", limpo[:m.start(2)]):
+            menos = None  # "10%-12%" é intervalo, não "−12%"
         unidade = "R$" if rs else ("%" if pct == "%" else ("pp" if pct else ""))
         v = _valor(num) * (-1 if menos else 1)
         saida.append((m.group(0).strip(), v, unidade, "," in num or bool(re.fullmatch(r"\d+\.\d{1,2}", num))))
@@ -49,15 +52,16 @@ def numeros_do_texto(texto: str) -> list[tuple[str, float]]:
 
 
 def conferir_numeros(texto: str, insumos: list[Insumo]) -> list[str]:
-    """Número do texto sem par nos insumos (mesmo valor, sinal e unidade; número sem unidade nos insumos vale para
-    R$/decimal, mas não para % — senão o ano "2026" ou um prazo validariam um "2026%" inventado)."""
-    base = {(round(v, 4), un) for i in insumos for _, v, un, _ in _numeros(i.texto)}
+    """Número do texto sem par nos insumos (mesmo valor e unidade; o sinal não conta — "caiu 1,5%" confere com
+    "−1,50%"; número sem unidade nos insumos vale para R$/decimal, mas não para % — senão o ano "2026" ou um prazo
+    validariam um "2026%" inventado)."""
+    base = {(round(abs(v), 4), un) for i in insumos for _, v, un, _ in _numeros(i.texto)}
     soltos = {v for v, un in base if un == ""}
     fora = []
     for bruto, v, un, dec in _numeros(texto):
         if not (un or dec):
             continue
-        v = round(v, 4)
+        v = round(abs(v), 4)
         if (v, un) in base or (un == "pp" and (v, "%") in base) or (un in ("R$", "") and v in soltos):
             continue
         fora.append(bruto)

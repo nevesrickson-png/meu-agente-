@@ -86,8 +86,10 @@ def retornos_esperados(m: Mercado) -> dict[str, float]:
 
 
 def covariancia(df: pd.DataFrame, classes: list[str], meses: int = 60, encolher: float = 0.2) -> np.ndarray:
-    proxies = [CLASSES[c]["proxy"] for c in classes]
-    sub = df.tail(meses)[proxies].fillna(df.tail(meses)["CDI"].mean())
+    janela = df.tail(meses)
+    # proxy que não veio (Yahoo/Tesouro fora do ar) usa o CDI, como em risco.serie_posicao — em vez de KeyError
+    sub = pd.DataFrame({i: janela[CLASSES[c]["proxy"]] if CLASSES[c]["proxy"] in janela else janela["CDI"]
+                        for i, c in enumerate(classes)}).fillna(janela["CDI"].mean())
     cov = np.cov(sub.values.T, ddof=1) * 12
     return (1 - encolher) * cov + encolher * np.diag(np.diag(cov))
 

@@ -170,15 +170,17 @@ class Fila:
             r = c.execute("SELECT id FROM tarefas WHERE situacao='na fila' ORDER BY id LIMIT 1").fetchone()
             if not r:
                 return None
+            self._em_andamento.add(r["id"])  # antes do UPDATE: outra Fila deste processo não a dá como órfã no meio
             ok = c.execute("UPDATE tarefas SET situacao='rodando', iniciada_em=?, dono=? WHERE id=? AND situacao='na fila'",
                            (_agora(), self.dono, r["id"])).rowcount
+            if not ok:
+                self._em_andamento.discard(r["id"])
         return self.obter(r["id"]) if ok else self._reservar()
 
     def processar_uma(self) -> Tarefa | None:
         t = self._reservar()
         if not t:
             return None
-        self._em_andamento.add(t.id)
         try:
             tipo_ = carregar_tipos()[t.tipo]
             rel = tipo_.executar(t.parametros, t.modo)
@@ -225,8 +227,8 @@ class Fila:
                 if dono == self.dono:  # "eu" — mas o contêiner reiniciado repete nome e PID: só vale se está rodando aqui
                     return ident in self._em_andamento
                 host, _, pid = dono.rpartition(":")
-                if host and host != maquina:  # outra máquina/contêiner: não dá para conferir o PID; confia por 2 h
-                    return datetime.fromisoformat(iniciada).timestamp() > agora - 2 * 3600
+                if host and host != maquina:  # outra máquina/contêiner: não dá para conferir o PID (vale o limite de 6 h)
+                    return True
                 try:
                     return pid.isdigit() and psutil.pid_exists(int(pid))
                 except (OverflowError, ValueError):

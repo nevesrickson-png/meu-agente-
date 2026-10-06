@@ -69,13 +69,13 @@ def ler_csv_ettj(texto: str) -> list[Vertice]:
 def ettj_anbima(data: date | None = None) -> Curva:
     """Tenta a data pedida (ou o último dia útil) e volta até 5 dias úteis se ainda não houver curva publicada."""
     d = data or _dia_util_anterior(date.today() + timedelta(days=1))
-    for _ in range(5):
+    for i in range(5):
         r = obter(
             URL_ETTJ,
             metodo="POST",
             dados={"Idioma": "PT", "Dt_Ref": d.strftime("%d/%m/%Y"), "saida": "csv"},
             fonte="ANBIMA (ETTJ)",
-            ttl=12 * 3600,
+            ttl=12 * 3600 if (i or data) else 1800,  # o dia mais recente pode ainda não ter curva: reconfere em 30 min
             formato="texto",
             codificacao="latin-1",
         )

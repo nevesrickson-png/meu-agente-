@@ -66,11 +66,13 @@ def _linha_para_noticia(l: tuple) -> Noticia:
     )
 
 
-def listar(horas: int = 24, limite: int = 500) -> list[Noticia]:
+def listar(horas: int = 24, limite: int | None = 500) -> list[Noticia]:
+    """Notícias das últimas `horas`, mais novas primeiro. Busca por termo passa `limite=None` (o filtro vem depois:
+    com 79 fontes, 500 itens cobrem só ~1 dia)."""
     desde = (datetime.now(timezone.utc) - timedelta(hours=horas)).isoformat()
     with _banco() as con:
         linhas = con.execute(
-            "SELECT * FROM noticias WHERE publicado_em >= ? ORDER BY publicado_em DESC LIMIT ?", (desde, limite)
+            "SELECT * FROM noticias WHERE publicado_em >= ? ORDER BY publicado_em DESC LIMIT ?", (desde, limite or -1)
         ).fetchall()
     desligadas = set((ler_yaml("fontes_noticias") or {}).get("desligadas") or [])  # fonte desligada some na hora
     return [n for n in (_linha_para_noticia(l) for l in linhas) if n.fonte not in desligadas]
@@ -166,10 +168,11 @@ def _gravar(noticias: list[Noticia]) -> int:
             if con.execute("SELECT 1 FROM noticias WHERE id = ?", (n.id,)).fetchone():
                 continue
             ct = chave_titulo(n.titulo)
+            # mesma manchete em ~12 h = mesma notícia; colunas fixas ("Ibovespa hoje") do dia seguinte são outra
             igual = con.execute(
-                "SELECT id, fonte, outras_fontes FROM noticias WHERE chave_titulo = ? AND publicado_em >= ?",
-                (ct, (n.publicado_em - timedelta(days=2)).isoformat()),
-            ).fetchone()
+                "SELECT id, fonte, outras_fontes FROM noticias WHERE chave_titulo = ? AND publicado_em BETWEEN ? AND ?",
+                (ct, (n.publicado_em - timedelta(hours=12)).isoformat(), (n.publicado_em + timedelta(hours=12)).isoformat()),
+            ).fetchone() if len(ct.split()) >= 3 else None
             if igual:
                 outras = json.loads(igual[2])
                 if n.fonte != igual[1] and n.fonte not in outras:

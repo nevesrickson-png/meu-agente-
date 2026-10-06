@@ -34,6 +34,7 @@ GRUPOS = {
 
 _executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="quiron-fundo")
 _fundo: dict[str, tuple[Future, float]] = {}
+_ultimo_ok: dict[str, Any] = {}  # último resultado bom de cada fonte lenta (mostrado enquanto a nova busca roda)
 
 
 def _em_segundo_plano(nome: str, func: Callable[[], Any], validade: int = 600) -> Any:
@@ -46,10 +47,13 @@ def _em_segundo_plano(nome: str, func: Callable[[], Any], validade: int = 600) -
         if tarefa is None or tarefa.exception() is not None:
             tarefa = nova
     if not tarefa.done():
-        return None
+        return _ultimo_ok.get(nome)  # renovando: o painel continua com o dado anterior (não volta a "carregando")
     if tarefa.exception() is not None:
         _fundo.pop(nome, None)  # mostra o erro uma vez e tenta de novo no próximo pedido
-    return tarefa.result()
+        if nome in _ultimo_ok:
+            return _ultimo_ok[nome]
+    _ultimo_ok[nome] = tarefa.result()
+    return _ultimo_ok[nome]
 
 
 def _iso(d: datetime | None, brasilia: bool = False) -> str | None:
@@ -202,9 +206,9 @@ def _noticia(n: coleta.Noticia) -> dict:
 
 def noticias(termo: str | None = None, horas: int = 24, limite: int = 30) -> dict:
     noticias_consultas._garantir_coleta()
-    lista = noticias_consultas._filtrar(coleta.listar(horas), termo)
+    lista = noticias_consultas._filtrar(coleta.listar(horas, limite=None if termo else 500), termo)
     if not lista and termo:
-        lista = noticias_consultas._filtrar(coleta.listar(720), termo)
+        lista = noticias_consultas._filtrar(coleta.listar(720, limite=None if termo else 500), termo)
     tom = sentimento.tom_medio([n.titulo for n in lista])
     return {"termo": termo, "total": len(lista), "tom": {"rotulo": tom.rotulo, "nota": tom.nota},
             "itens": [_noticia(n) for n in lista[:limite]]}

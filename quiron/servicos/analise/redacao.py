@@ -71,14 +71,34 @@ def numeros_do_texto(texto: str) -> list[float]:
     return achados
 
 
+_ESCALA = re.compile(r"\s*(mil(?:h[õo]es|h[ãa]o)?|mi\b|bilh[õo]es|bilh[ãa]o|bi\b|tri(?:lh[õo]es|lh[ãa]o)?\b)", re.I)
+
+
+def _com_escala(texto: str) -> list[tuple[float, float]]:
+    """(número, multiplicador dito depois: 'R$ 1,2 milhão' → (1.2, 1e6))."""
+    saida = []
+    for m, n in zip(RE_NUM.finditer(texto), (numeros_do_texto(x.group()) for x in RE_NUM.finditer(texto))):
+        if not n:
+            continue
+        e = _ESCALA.match(texto, m.end())
+        palavra = (e.group(1).lower() if e else "")
+        mult = 1e3 if palavra == "mil" else 1e6 if palavra.startswith("mi") else 1e9 if palavra.startswith("bi") else \
+            1e12 if palavra.startswith("tri") else 1.0
+        saida.append((n[0], mult))
+    return saida
+
+
 def conferir(texto: str, referencias: list[float]) -> list[float]:
     """Números do texto que não batem com nenhuma referência (tolerância de arredondamento; ignora inteiros ≤ 12
-    e anos)."""
+    e anos). O sinal não conta ("caiu 12,3%" confere com −12,3) e "1,2 milhão" confere com 1.200.000."""
     estranhos = []
-    for n in numeros_do_texto(texto):
-        if (n.is_integer() and 0 <= n <= 12) or (n.is_integer() and 1990 <= n <= 2100):
+    for n, mult in _com_escala(texto):
+        if (n.is_integer() and 0 <= n <= 12 and mult == 1) or (n.is_integer() and 1990 <= n <= 2100):
             continue
-        ok = any(abs(n - r) <= max(0.051, abs(r) * 0.0051) or abs(n - r * 100) <= 0.051 or abs(n * 1000 - r) <= max(1, abs(r) * 0.006)
+        a = abs(n)
+        ok = any(abs(a - abs(r)) <= max(0.051, abs(r) * 0.0051) or abs(a - abs(r) * 100) <= 0.051
+                 or abs(a * 1000 - abs(r)) <= max(1, abs(r) * 0.006)
+                 or (mult > 1 and abs(a * mult - abs(r)) <= abs(r) * 0.051)  # "1,2 milhão" ≈ 1.234.567 arredondado
                  for r in referencias)
         if not ok:
             estranhos.append(n)

@@ -28,12 +28,16 @@ def _norm(t: str) -> str:
 REGRAS: list[tuple[str, str, str, str]] = [
     # (regra, gravidade, padrão sobre o texto sem acento, sugestão)
     ("Promessa de rentabilidade", "grave",
-     r"\b(garant|assegur)\w*\b[^.?!]{0,40}\b(rend\w*|retorno|lucro|ganho|rentabilidade|valoriza\w*)"
-     r"|(rend\w*|retorno|lucro|ganho|rentabilidade)[^.?!]{0,25}\b(garantid|assegurad)[oa]s?\b"
-     r"|\b(retorno|rentabilidade|ganho|lucro|rendimento)s? (cert[oa]s?|seguros?)\b",
+     # "renda" (vitalícia, de aluguel) fica de fora: garantir renda de previdência contratada é fato, não promessa
+     r"\b(garant\w*|assegur(?:o|a|amos|am|ando|ar|ei|ou)\b)[^.?!]{0,40}\b(rendiment\w*|rende\w*|retorno|lucro|ganho|rentabilidade|valoriza\w*)"
+     r"|(rendiment\w*|rende\w*|retorno|lucro|ganho|rentabilidade)[^.?!]{0,25}\b(garantid|assegurad)[oa]s?\b"
+     r"|\b(retorno|rentabilidade|ganho|lucro|rendimento)s? (cert[oa]s?|seguros?)\b(?!\s+nao\b)",
      "não prometa retorno; diga o que é contratado (ex.: taxa do título) e os riscos"),
-    ("Negar o risco", "grave", r"\bsem (nenhum )?riscos?\b|\brisco (praticamente |quase )?(zero|nulo|inexistente)\b|\bnao (ha|tem|existe|corre) (nenhum )?riscos?\b(?! de credito| de mercado| de liquidez)"
-     r"|\bnao (ha|tem|existe) riscos? (nenhum|algum)\b|\b100 ?% (segur|garantid)\w*|\bnao tem (como|risco de) perder\b|\bnao (vai|tem como) dar errado\b|\bdinheiro certo\b",
+    ("Negar o risco", "grave",
+     r"\bsem (nenhum )?riscos?\b(?!\s+(sem|nao)\b)|\brisco (praticamente |quase )?(zero|nulo|inexistente)\b"
+     # "não há risco" sozinho (fim da frase ou "nesse/aqui…"); com qualificador ("risco cambial", "de crédito") é fato
+     r"|\bnao (ha|tem|existe|corre) (nenhum )?riscos?(?: (nenhum|algum))?(?=\s*(?:[.,;!]|$|\s(?:nesse|nessa|neste|nesta|nisso|aqui|em|no|na|para|pra)\b))"
+     r"|\b100 ?% (segur|garantid)\w*(?![^.?!]{0,30}\b(fgc|ate)\b)|\bnao tem (como|risco de) perder\b|\bnao (vai|tem como) dar errado\b|\bdinheiro certo\b",
      "todo investimento tem algum risco (crédito, mercado, liquidez); explique qual"),
     ("Certeza sobre o futuro", "grave", r"\bcom certeza (vai|sobe|rende|valoriza)\w*|\bvai (subir|valorizar|bombar) com certeza\b|\bpode confiar que (vai|sobe)",
      "use cenários e probabilidades, não certezas"),
@@ -48,14 +52,15 @@ REGRAS: list[tuple[str, str, str, str]] = [
      "dê tempo para o cliente decidir; urgência só se for real (ex.: vencimento de oferta)"),
 ]
 SENSIVEIS = [
-    ("CPF no texto", r"\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b"),
-    ("Telefone no texto", r"\(?\b\d{2}\)?\s?9?\d{4}-?\d{4}\b"),
+    ("CPF no texto", r"\b\d{3}[.\s]?\d{3}[.\s]?\d{3}[\s-]?\d{2}\b"),
+    ("Telefone no texto", r"\+\s?55\s?\(?\d{2}\)?[\s.-]?9?\s?\d{4}[\s.-]?\d{4}\b|\(?\b\d{2}\)?[\s.-]?9?\s?\d{4}[\s.-]?\d{4}\b"),
     ("E-mail no texto", r"\b[\w.+-]+@[\w-]+\.[\w.]+\b"),
 ]
 
 
 def _vizinhanca(norm: str, pos: int) -> str:
-    """A frase de `pos` e a seguinte."""
+    """A frase de `pos` e a seguinte (abreviações como "a.a." não terminam frase)."""
+    norm = re.sub(r"\b(?:a\.a|a\.m|p\.p|s\.a|ltda|sr|sra|dr|dra|etc)\.", lambda m: m.group(0).replace(".", " "), norm)
     ini = max(norm.rfind(c, 0, pos) for c in ".?!\n") + 1
     fim, frases = pos, 0
     while frases < 2 and (prox := min([i for c in ".?!\n" if (i := norm.find(c, fim)) >= 0] or [len(norm)])) < len(norm):

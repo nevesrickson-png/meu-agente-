@@ -346,6 +346,7 @@ class MemoriaLonga:
         regs = [r["id"] for r in self.con.execute("SELECT id, conteudo, meta FROM registros WHERE conteudo LIKE ? OR meta LIKE ?",
                                                   (f"%{codigo}%", f"%{codigo}%"))
                 if padrao.search(f"{r['conteudo']} {r['meta']}")]
+        self.con.execute("PRAGMA secure_delete=ON")  # LGPD: apagado de verdade (sobrescrito no arquivo)
         with self.con:
             self.con.executemany("DELETE FROM registros WHERE id = ?", [(i,) for i in regs])
             self.con.execute("INSERT INTO registros_busca(registros_busca) VALUES ('rebuild')")
@@ -762,7 +763,7 @@ class MemoriaLonga:
         # e desativaria os fatos restaurados
         from quiron.servicos import lgpd
 
-        for cod in lgpd.esquecidos():  # cliente esquecido (LGPD) depois da cópia continua esquecido
+        for cod in lgpd.esquecidos(copia_de=dia):  # cliente esquecido (LGPD) depois da cópia continua esquecido
             self.apagar_por_cliente(cod)
             lgpd._apagar_conversas(self.caminho.with_name("conversas.db"), cod)
         self._exportar_md()  # a conexão aberta já enxerga o banco restaurado (o backup do SQLite grava pelo próprio SQLite)

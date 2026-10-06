@@ -30,7 +30,7 @@ RADICAIS_POSITIVOS = ("dispar", "valoriz", "otimis", "recuper", "cresc", "avanc"
                       "rally", "surge", "soar", "rebound", "bullish")
 RADICAIS_NEGATIVOS = ("despenc", "desvaloriz", "prejuiz", "pessim", "recess", "rebaix", "inadimpl", "pression", "incert",
                       "volatil", "turbul", "tombo", "derrub", "afund", "plung", "slump", "bearish", "selloff", "downgrad")
-NEGACOES = {"nao", "sem", "nem", "nunca", "not", "no", "never"}
+NEGACOES = {"nao", "sem", "nem", "nunca", "not", "never"}  # "no" fica de fora: em português é "em + o" ("juros no Brasil")
 # expressões de duas palavras normalizadas antes da contagem
 _EXPRESSOES = {"recuperacao judicial": "recuperacao_judicial", "queda dos juros": "queda_juros", "queda da selic": "queda_juros",
                "corte de juros": "queda_juros", "inflacao alta": "inflacao_alta",

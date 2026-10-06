@@ -45,6 +45,7 @@ def cliente(tmp_path, monkeypatch):
     cotacoes._memo.clear()
     terminal._memo.clear()
     dados._fundo.clear()
+    dados._ultimo_ok.clear()
     yield TestClient(terminal.app)
     http.definir_cliente(None)
 
@@ -85,6 +86,7 @@ def test_topicos(cliente):
 def test_fonte_fora_do_ar_vira_erro_no_item(cliente):
     http.definir_cliente(httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(503))))
     dados._fundo.clear()
+    dados._ultimo_ok.clear()
     j = cliente.get("/api/topico/juros").json()
     for _ in range(50):
         if not j.get("parcial"):

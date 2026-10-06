@@ -83,7 +83,7 @@ def historico(carteira: Carteira, df: pd.DataFrame, nome: str, inicio: str, fim:
         return None
     itens = []
     for p in carteira.posicoes:
-        s, origem = risco.serie_posicao(p, janela)
+        s, origem = risco.serie_posicao(p, janela, historia=df)  # 24 meses contados no histórico todo, não no episódio
         acum = float((1 + s.fillna(0)).prod() - 1)
         itens.append(ImpactoPosicao(p.nome, p.classe, p.valor, p.valor * acum, f"{origem} no período"))
     total = sum(x.impacto for x in itens)

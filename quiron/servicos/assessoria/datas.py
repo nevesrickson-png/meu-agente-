@@ -148,10 +148,10 @@ RE_DATA = re.compile(
 _PERIODO = r"(?:\s*(?:da\s+)?(?P<{}>manhã|manha|tarde|noite))"
 RE_HORA = re.compile(r"(?:\b(?:às|as|a partir das|lá pelas|umas)\s*)?\b(?P<h>\d{1,2})\s*(?:h|:)\s*(?P<m>\d{2})?\b(?:min)?"
                      + _PERIODO.format("p1") + "?"
-                     r"|\bàs\s+(?P<h2>\d{1,2})(?:\s+horas?|\s*hs)?" + _PERIODO.format("p2") + r"?\b"
+                     r"|\bàs\s+(?P<h2>\d{1,2})(?:\s+horas?|\s*hs)?(?:\s+e\s+(?P<m2>meia|quinze|\d{2})\b)?" + _PERIODO.format("p2") + r"?\b"
                      # "as" sem acento também é artigo ("comprar as 3 apostilas"): só vale com horas/período ou no fim
                      r"|\bas\s+(?P<h4>\d{1,2})(?:(?:\s+horas?|\s*hs)" + _PERIODO.format("p4") + r"?\b|" + _PERIODO.format("p5")
-                     + r"\b|(?=\s*(?:$|[,.;!?]|\s(?:com|para|pra|no|na|em|e)\b)))"
+                     + r"\b|(?=\s*(?:$|[,.;!?]|\s(?:com|para|pra|no|na|em)\b)))"
                      r"|\b(?P<h3>\d{1,2})\s+(?:horas?\s+)?da\s+(?P<p3>manhã|manha|tarde|noite)\b", re.I)
 _PREFIXOS = re.compile(r"^(?:me\s+lembr[ae]\s+(?:de\s+)?|lembr(?:ar|e-me|e)\s+(?:de\s+)?|lembrete:?\s*|tarefa:?\s*|anota(?:r)?\s+(?:a[ií]\s+)?(?:que\s+)?|"
                        r"preciso\s+|tenho\s+que\s+|não\s+esquecer\s+de\s+|nao\s+esquecer\s+de\s+)", re.I)
@@ -172,11 +172,15 @@ def extrair(texto: str, hoje: date) -> tuple[str, date | None, tuple[int, int] |
     if m and m.group("h") and re.match(r"\s*(de|por|semanais|diárias|diarias|seguidas)\b", resto[m.end():], re.I) \
             and not re.match(r"(às|as)\b", m.group(0), re.I):
         m = None  # "estudar 2h por dia" é duração, não horário
+    if m and m.group("h4") and not (m.group("p4") or m.group("p5")) and not re.search(r"hora|hs", m.group(0), re.I) \
+            and int(m.group("h4")) < 6 and resto[m.end():].strip()[:1] not in ("", ",", ".", ";", "!", "?"):
+        m = None  # "vender as 2 no fechamento": "as" sem acento + número pequeno no meio da frase é quantidade
     if m:
         if m.group("h"):
             hh, mm = int(m.group("h")), int(m.group("m") or 0)
         else:
-            hh, mm = int(m.group("h2") or m.group("h4") or m.group("h3")), 0
+            hh = int(m.group("h2") or m.group("h4") or m.group("h3"))
+            mm = {"meia": 30, "quinze": 15}.get(m.group("m2") or "", int(m.group("m2") or 0) if (m.group("m2") or "").isdigit() else 0)
         periodo = next((m.group(g) for g in ("p1", "p2", "p3", "p4", "p5") if m.group(g)), "") or ""
         if periodo.lower() in {"tarde", "noite"} and hh < 12:
             hh += 12

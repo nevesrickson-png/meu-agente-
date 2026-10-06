@@ -243,7 +243,10 @@ async def ws(socket: WebSocket):
                 novas = {}
                 for item in msg.get("paineis", []):
                     if item.get("topico") in dados.TOPICOS:
-                        params = _converter(item["topico"], {k: str(v) for k, v in (item.get("params") or {}).items()})
+                        try:
+                            params = _converter(item["topico"], {k: str(v) for k, v in (item.get("params") or {}).items()})
+                        except (ValueError, TypeError):
+                            continue  # parâmetro inválido: ignora o painel (a rota REST devolve 400), não derruba a conexão
                         antigo = assinaturas.get(item["id"])
                         mesma = antigo and antigo["topico"] == item["topico"] and antigo["params"] == params
                         novas[item["id"]] = antigo if mesma else {"topico": item["topico"], "params": params, "proximo": 0.0}

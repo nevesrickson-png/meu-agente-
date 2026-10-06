@@ -132,7 +132,7 @@ def _risco(r: pd.Series, bench: pd.DataFrame) -> Risco | None:
     neg = exc[exc < 0]
     down = float(np.sqrt((neg ** 2).sum() / len(exc)) * np.sqrt(12)) if len(neg) else 0.0
     curva = (1 + r).cumprod()
-    dd = float((curva / curva.cummax() - 1).min())
+    dd = float((curva / curva.cummax().clip(lower=1.0) - 1).min())  # capital inicial também é pico
     beta = corr = None
     if "IBOV" in bench:
         ib = bench["IBOV"].reindex(r.index)

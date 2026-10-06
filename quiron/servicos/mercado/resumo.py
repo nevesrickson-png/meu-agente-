@@ -244,7 +244,7 @@ def _fatos_tesouro() -> list[str]:
             if taxa is None:
                 continue
             antes = anterior.get((t.tipo, t.vencimento))
-            delta = f", {(taxa - antes) * 100:+.0f} bps no dia" if antes is not None else ""
+            delta = f", {(t.taxa_compra - antes) * 100:+.0f} bps no dia" if t.taxa_compra and antes else ""
             fatos.append(f"{rotulo} {t.vencimento.year}: {painel._pct(taxa)} a.a. (Tesouro, taxas de {tab.data_base:%d/%m}{delta})")
     return fatos
 

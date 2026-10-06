@@ -74,8 +74,8 @@ def _citar(valor: str) -> str:
     """Valor com espaço, #, $, aspas ou barra vai entre aspas (senão a senha "ab #1" voltaria como "ab")."""
     if not valor or re.fullmatch(r"[A-Za-z0-9_.,:/@+=\-]*", valor):
         return valor
-    if "'" not in valor:
-        return f"'{valor}'"  # aspas simples: literal, sem interpolação
+    if "'" not in valor and "\\" not in valor:
+        return f"'{valor}'"  # aspas simples: literal, sem interpolação (o dotenv ainda trata "\\" dentro delas)
     return '"' + valor.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 

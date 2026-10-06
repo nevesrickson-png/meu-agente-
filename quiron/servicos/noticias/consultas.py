@@ -62,7 +62,7 @@ def linha_historia(h: relevancia.Historia, com_link: bool = True) -> str:
 
 def historias(horas: int = 12, termo: str | None = None) -> list[relevancia.Historia]:
     _garantir_coleta()
-    return relevancia.agrupar(_filtrar(coleta.listar(horas), termo))
+    return relevancia.agrupar(_filtrar(coleta.listar(horas, limite=None if termo else 500), termo))
 
 
 def _filtrar(noticias: list[coleta.Noticia], termo: str | None) -> list[coleta.Noticia]:
@@ -79,12 +79,12 @@ def _filtrar(noticias: list[coleta.Noticia], termo: str | None) -> list[coleta.N
 def noticias(termo: str | None = None, horas: int = 24, limite: int = 15, grupo: str | None = None) -> str:
     """Notícias recentes; `termo` pode ser um tema (juros, inflacao…), um ticker (PETR4) ou uma palavra."""
     _garantir_coleta()
-    lista = _filtrar(coleta.listar(horas), termo)
+    lista = _filtrar(coleta.listar(horas, limite=None if termo else 500), termo)
     if grupo:
         lista = [n for n in lista if n.grupo == grupo]
     ampliado = ""
     if not lista and termo and horas < 720:  # nada no período: amplia até 30 dias e avisa
-        lista = _filtrar(coleta.listar(720), termo)
+        lista = _filtrar(coleta.listar(720, limite=None if termo else 500), termo)
         if lista:
             ampliado = f"_Nada nas últimas {horas}h; mostrando os últimos 30 dias._"
             horas = 720
@@ -120,7 +120,7 @@ def top(horas: int = 6, limite: int = 12) -> str:
 
 def alertas(horas: int = 24) -> str:
     _garantir_coleta()
-    lista = [n for n in coleta.listar(horas) if n.alertas]
+    lista = [n for n in coleta.listar(horas, limite=None) if n.alertas]
     if not lista:
         return f"Nenhuma palavra-alerta nas últimas {horas}h (lista em config/temas_noticias.yaml)."
     return "\n".join([f"## ⚠️ Alertas — últimas {horas}h"] + [_linha(n) for n in lista])
@@ -162,7 +162,7 @@ def redes_sociais(termo: str, redes_pedidas: list[str] | None = None, limite: in
 def sentimento_tema(termo: str, horas: int = 48) -> str:
     """Tom das manchetes sobre o tema/ativo, por fonte, e das redes configuradas."""
     _garantir_coleta()
-    lista = _filtrar(coleta.listar(horas), termo)
+    lista = _filtrar(coleta.listar(horas, limite=None if termo else 500), termo)
     linhas = [f"## Sentimento: {termo} — últimas {horas}h"]
     if lista:
         geral = sentimento.tom_medio([n.titulo for n in lista])

@@ -189,7 +189,9 @@ def _extrair(linhas: list[dict]) -> dict[str, float]:
         elif dem == "BPP":
             if c in BPP:
                 v[BPP[c]] = valor
-            if re.search(r"rrendamento", nome) and c.count(".") >= 2 and c.startswith(("2.01", "2.02")):
+            # arrendamento DENTRO de empréstimos (2.01.04.xx / 2.02.01.xx) já está na dívida bruta: não somar de novo
+            if re.search(r"rrendamento", nome) and c.count(".") >= 2 and c.startswith(("2.01", "2.02")) \
+                    and not c.startswith(("2.01.04", "2.02.01")):
                 arrend[c] = valor
             if re.search(r"n[ãa]o\s+controlador", nome, re.I) and c.startswith("2.03"):
                 minor[c] = valor
@@ -206,7 +208,7 @@ def _extrair(linhas: list[dict]) -> dict[str, float]:
             elif c.startswith("6.02") and re.search(r"imobiliz|intang", nome, re.I) and valor < 0 and \
                     not re.search(r"venda|alienaç|recebimento|baixa", nome, re.I):
                 capex[c] = valor
-            elif c.startswith("6.03") and re.search(r"dividend|juros\s+s", nome, re.I) and valor < 0:
+            elif c.startswith("6.03") and re.search(r"dividend|juros\s+sobre\s+(?:o\s+)?capital|\bjcp\b", nome, re.I) and valor < 0:
                 divid[c] = valor
     v["depreciacao"] = abs(_profundos(dep))
     v["capex"] = abs(_profundos(capex))
@@ -314,6 +316,8 @@ def ltm(anuais: list[Periodo], trimestrais: list[Periodo]) -> Periodo:
     if len(trimestrais) < 4:
         return Periodo(f"{ult.rotulo} (anual)", ult.fim, "ltm", dict(ult.valores), ult.consolidado)
     ytd, ytd_ant = trimestrais[0], trimestrais[2]
+    if not (ult.fim[:4] == ytd_ant.fim[:4] and int(ytd.fim[:4]) == int(ult.fim[:4]) + 1):  # anos não casam: não é 12 meses
+        return Periodo(f"{ult.rotulo} (anual)", ult.fim, "ltm", dict(ult.valores), ult.consolidado)
     v = dict(ytd.valores)  # balanço mais recente
     for k in FLUXOS:
         v[k] = ult[k] + ytd[k] - ytd_ant[k]

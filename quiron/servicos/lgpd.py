@@ -14,6 +14,7 @@ import re
 import shutil
 import sqlite3
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 from quiron.nucleo.config import pasta_dados
@@ -101,6 +102,12 @@ def esquecer_cliente(cliente: str) -> Apagado:
     return r
 
 
+def _conectar(banco: Path) -> sqlite3.Connection:
+    con = sqlite3.connect(banco)
+    con.execute("PRAGMA secure_delete=ON")  # o que é apagado é sobrescrito no arquivo (não fica legível nas páginas livres)
+    return con
+
+
 def _relatorio_cita(pasta: str | None, cod: str) -> bool:
     if not pasta or not Path(pasta).exists():
         return False
@@ -117,7 +124,7 @@ def _relatorio_cita(pasta: str | None, cod: str) -> bool:
 def _apagar_relatorios(banco: Path, cod: str, carteiras: list[str] | None = None) -> int:
     if not banco.exists():
         return 0
-    con = sqlite3.connect(banco)
+    con = _conectar(banco)
     try:
         alvos = [cod, *(carteiras or [])]  # análise de carteira só guarda o CART-…: o cliente estava dentro do arquivo
         linhas = [(i, p) for i, p, *textos in con.execute("SELECT id, pasta, parametros, titulo, resumo FROM tarefas")
@@ -136,11 +143,13 @@ def _apagar_relatorios(banco: Path, cod: str, carteiras: list[str] | None = None
 def _apagar_organizacao(banco: Path, cod: str) -> int:
     if not banco.exists():
         return 0
-    con = sqlite3.connect(banco)
+    con = _conectar(banco)
     try:
         n = 0
         for tabela in ("tarefas", "notas", "metas"):
-            ids = [i for i, t in con.execute(f"SELECT id, texto FROM {tabela} WHERE texto LIKE ?", (f"%{cod}%",)) if _cita(t, cod)]
+            col_cliente = ", cliente" if tabela != "metas" else ", ''"
+            ids = [i for i, t, cli in con.execute(f"SELECT id, texto{col_cliente} FROM {tabela} WHERE texto LIKE ? OR {col_cliente[2:]} LIKE ?",
+                                                  (f"%{cod}%", f"%{cod}%")) if _cita(t, cod) or _cita(cli or "", cod)]
             con.executemany(f"DELETE FROM {tabela} WHERE id = ?", [(i,) for i in ids])  # o gatilho limpa a busca das notas
             if tabela == "metas":
                 con.executemany("DELETE FROM metas_registros WHERE meta = ?", [(i,) for i in ids])
@@ -157,7 +166,7 @@ def _apagar_organizacao(banco: Path, cod: str) -> int:
 def _apagar_lembretes(banco: Path, cod: str) -> int:
     if not banco.exists():
         return 0
-    con = sqlite3.connect(banco)
+    con = _conectar(banco)
     try:
         ids = [i for i, t in con.execute("SELECT id, texto FROM agendamentos WHERE texto LIKE ?", (f"%{cod}%",)) if _cita(t, cod)]
         con.executemany("DELETE FROM agendamentos WHERE id = ?", [(i,) for i in ids])
@@ -170,7 +179,7 @@ def _apagar_lembretes(banco: Path, cod: str) -> int:
 def _apagar_conversas(banco: Path, cod: str) -> int:
     if not banco.exists():
         return 0
-    con = sqlite3.connect(banco)
+    con = _conectar(banco)
     try:
         ids = [i for i, t in con.execute("SELECT id, texto FROM mensagens WHERE texto LIKE ?", (f"%{cod}%",)) if _cita(t, cod)]
         con.executemany("DELETE FROM mensagens WHERE id = ?", [(i,) for i in ids])
@@ -190,7 +199,7 @@ def _apagar_linhas(banco: Path, cod: str, tabelas: dict[str, list[str]],
     """Apaga as linhas cujas colunas de texto citam o código (nomes de tabela/coluna fixos, deste módulo)."""
     if not banco.exists():
         return 0
-    con = sqlite3.connect(banco)
+    con = _conectar(banco)
     try:
         existentes = {r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         n = 0
@@ -267,19 +276,28 @@ def _apagar_exportacoes(raiz: Path, cod: str) -> int:
     return n
 
 
+def _ler_esquecidos(arq: Path) -> dict[str, str]:
+    """{código: data em que foi esquecido}. Formato antigo (lista) vale como esquecido hoje."""
+    try:
+        dados = json.loads(arq.read_text(encoding="utf-8")) if arq.exists() else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if isinstance(dados, list):
+        return {c: date.today().isoformat() for c in dados}
+    return dict(dados)
+
+
 def _anotar_esquecido(raiz: Path, cod: str) -> None:
     arq = raiz / "lgpd_esquecidos.json"
-    try:
-        lista = json.loads(arq.read_text(encoding="utf-8")) if arq.exists() else []
-    except (OSError, json.JSONDecodeError):
-        lista = []
-    if cod not in lista:
-        arq.write_text(json.dumps(sorted([*lista, cod])), encoding="utf-8")
+    dados = _ler_esquecidos(arq)
+    dados[cod] = date.today().isoformat()
+    arq.write_text(json.dumps(dados, sort_keys=True), encoding="utf-8")
 
 
-def esquecidos() -> list[str]:
-    arq = pasta_dados() / "lgpd_esquecidos.json"
-    try:
-        return list(json.loads(arq.read_text(encoding="utf-8"))) if arq.exists() else []
-    except (OSError, json.JSONDecodeError):
-        return []
+def esquecidos(copia_de: str | None = None) -> list[str]:
+    """Códigos esquecidos. Com `copia_de` (AAAA-MM-DD), só os esquecidos NO DIA da cópia ou depois: um código
+    reaproveitado por um cliente novo não é apagado ao restaurar uma cópia posterior ao esquecimento."""
+    dados = _ler_esquecidos(pasta_dados() / "lgpd_esquecidos.json")
+    if copia_de and re.fullmatch(r"\d{4}-\d{2}-\d{2}", copia_de[:10]):
+        return [c for c, quando in dados.items() if quando >= copia_de[:10]]
+    return list(dados)

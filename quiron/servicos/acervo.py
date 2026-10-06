@@ -130,20 +130,18 @@ class Acervo:
         while True:
             try:
                 os.link(temp, alvo)  # falha se o nome já existe
-                temp.unlink(missing_ok=True)
-                return alvo
+                return alvo  # o temporário é apagado por quem chamou (finally) — erro ao apagá-lo não republica
             except FileExistsError:
-                alvo = base.with_name(f"{Path(base.name).stem} ({i}){base.suffix}")
-                i += 1
+                pass
             except OSError:  # sistema de arquivos sem link: reserva exclusiva + troca
                 try:
                     os.close(os.open(alvo, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+                    os.replace(temp, alvo)
+                    return alvo
                 except FileExistsError:
-                    alvo = base.with_name(f"{Path(base.name).stem} ({i}){base.suffix}")
-                    i += 1
-                    continue
-                os.replace(temp, alvo)
-                return alvo
+                    pass
+            alvo = base.with_name(f"{Path(base.name).stem} ({i}){base.suffix}")
+            i += 1
 
     def _temporario(self, alvo: Path) -> Path:
         fd, nome = tempfile.mkstemp(prefix=f".{alvo.name}.", suffix=".parcial", dir=alvo.parent)

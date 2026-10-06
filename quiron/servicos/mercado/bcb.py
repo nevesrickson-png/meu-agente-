@@ -105,9 +105,14 @@ def sgs(chave: str, n: int = 2) -> Serie:
     else:
         try:
             pontos, r = _pontos_api(codigo, n)
+            if r.desatualizado:  # a API recusou e veio a cópia velha do cache: o web service pode ter o dado de hoje
+                raise FonteIndisponivel("API do SGS respondeu só com cópia antiga")
         except FonteIndisponivel:
             _api_fora_ate = time.time() + 600
-            pontos, r = _pontos_soap(codigo)
+            try:
+                pontos, r = _pontos_soap(codigo)
+            except FonteIndisponivel:
+                pontos, r = _pontos_api(codigo, n)  # nenhum dos dois respondeu: fica a cópia antiga (marcada)
     pontos = [p for p in pontos if p.data <= date.today() and p.valor is not None][-n:]
     if not pontos:
         raise ValueError(f"SGS {codigo} sem dados")

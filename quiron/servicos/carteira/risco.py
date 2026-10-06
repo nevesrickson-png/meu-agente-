@@ -17,10 +17,12 @@ from quiron.servicos.carteira.modelo import CLASSES, ORDEM, Carteira, Posicao
 Z95 = 1.6449
 
 
-def serie_posicao(p: Posicao, df: pd.DataFrame) -> tuple[pd.Series, str]:
+def serie_posicao(p: Posicao, df: pd.DataFrame, historia: pd.DataFrame | None = None) -> tuple[pd.Series, str]:
+    """Série do próprio ativo se ele tem ≥ 24 meses de histórico (contados em `historia`, ou em `df`), senão a proxy."""
     proxy = CLASSES[p.classe]["proxy"]
     base = df[proxy] if proxy in df else df["CDI"]
-    if p.ticker and p.ticker in df and df[p.ticker].count() >= 24:
+    h = df if historia is None else historia
+    if p.ticker and p.ticker in df and p.ticker in h and h[p.ticker].count() >= 24:
         return df[p.ticker].combine_first(base), p.ticker
     return base, proxy
 
@@ -62,6 +64,8 @@ class Metricas:
 def metricas(r: pd.Series, cdi: pd.Series | None = None, ibov: pd.Series | None = None) -> Metricas:
     r = r.dropna()
     n = len(r)
+    if not n:
+        raise ValueError("série de retornos vazia")
     acumulado = float((1 + r).prod())
     ret_aa = acumulado ** (12 / n) - 1 if n else 0.0
     vol = float(r.std(ddof=1) * np.sqrt(12)) if n > 1 else 0.0
@@ -70,10 +74,10 @@ def metricas(r: pd.Series, cdi: pd.Series | None = None, ibov: pd.Series | None 
         cdi_aa = float((1 + cdi.reindex(r.index).fillna(0)).prod()) ** (12 / n) - 1
         sharpe = (ret_aa - cdi_aa) / vol
     curva = (1 + r).cumprod()
-    pico = curva.cummax()
+    pico = curva.cummax().clip(lower=1.0)  # o capital inicial (1,0) também é pico: queda logo no 1º mês conta
     dd = curva / pico - 1
     fundo = dd.idxmin()
-    inicio = curva[:fundo].idxmax()
+    inicio = curva[:fundo].idxmax() if curva[:fundo].max() >= 1.0 else r.index[0]
     q = float(np.quantile(r, 0.05))
     beta = None
     if ibov is not None:
