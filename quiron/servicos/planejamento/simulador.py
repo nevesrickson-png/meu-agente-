@@ -370,9 +370,14 @@ def ler_frase(frase: str) -> dict[str, Any]:
         ("meta", rf"(?:meta(?:\s+de)?|chegar a|chegar aos|juntar|acumular|ter)\s*(?:r\$\s*)?{_NUM}"),
         ("patrimonio", rf"(?:tenho|patrim[oô]nio(?:\s+de)?|investido[s]?|aplicado[s]?|j[aá] tenho)\s*(?:r\$\s*)?{_NUM}"),
         ("imovel_valor", rf"(?:im[oó]vel(?:\s+de)?|apartamento(?:\s+de)?|casa(?:\s+de)?)\s*(?:r\$\s*)?{_NUM}"),
+        # formas soltas (só se a forma com rótulo não apareceu): "aposentar com 10 mil por mês", "quero 1 milhão"
+        ("renda_desejada", rf"\bcom\s*(?:r\$\s*)?{_NUM}\s*(?:por m[eê]s|/m[eê]s|ao m[eê]s|mensais)"),
+        ("meta", rf"\bquero(?:\s+ter)?\s*(?:r\$\s*)?{_NUM}"),
     ]
     usados: list[tuple[int, int]] = []
     for chave, rx in regras:
+        if chave in d:
+            continue
         if m := re.search(rx, f):
             d[chave] = _valor(m.group(1), m.group(2))
             usados.append(m.span())

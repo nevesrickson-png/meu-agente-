@@ -121,9 +121,13 @@ def numeros(texto: str) -> list[float]:
 
 def confere_conta(alternativa: str, expressao: str, tolerancia: float = 0.01) -> bool:
     valor = calcular(expressao)
-    for n in numeros(alternativa):
-        for candidato in (valor, valor * 100):  # aceita 0,125 escrito como 12,5%
-            if abs(n - candidato) <= max(abs(candidato) * tolerancia, 0.011):
+    for m in re.finditer(r"-?\d[\d.,]*\d|-?\d", alternativa):
+        n = numeros(m.group())
+        if not n:
+            continue
+        pct = alternativa[m.end():m.end() + 2].lstrip().startswith("%")
+        for candidato in (valor, valor * 100) if pct else (valor,):  # 0,125 escrito como 12,5% (só com o sinal de %)
+            if abs(n[0] - candidato) <= max(abs(candidato) * tolerancia, 0.011):
                 return True
     return False
 
@@ -209,6 +213,8 @@ def validar(item: dict[str, Any], codigo: str, cert: str = "CFP") -> tuple[dict[
         try:
             if not confere_conta(alts[correta], verif):
                 return None, f"conta não confere ({verif} ≠ alternativa {letra})"
+            if outras := [LETRAS[i] for i, a in enumerate(alts) if i != correta and confere_conta(a, verif)]:
+                return None, f"a conta também bate com a alternativa {', '.join(outras)} (questão ambígua)"
         except (ValueError, SyntaxError, ZeroDivisionError, OverflowError) as e:
             return None, f"verificação inválida ({e})"
     sub = str(item.get("subtopico") or "").strip()
