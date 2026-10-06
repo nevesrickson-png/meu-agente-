@@ -533,7 +533,7 @@ $("#verificar-tudo").addEventListener("click", (ev) => acao(ev.currentTarget, as
 // ------------------------------------------------------------------ preferências
 const ROTULOS_WATCH = { acoes: "Ações", fiis: "Fundos imobiliários (FIIs)", etfs: "ETFs", indices: "Índices", moedas: "Moedas", commodities: "Commodities" };
 const EXEMPLO_WATCH = { acoes: "PETR4, WEGE3, ITUB4", fiis: "HGLG11, KNRI11", etfs: "BOVA11, IVVB11", indices: "IBOV, IFIX, ^GSPC", moedas: "USDBRL, EURBRL", commodities: "petroleo_brent, ouro" };
-const GRUPOS_FONTE = { brasil: "Brasil", global: "Internacional", oficiais: "Órgãos oficiais" };
+const GRUPOS_FONTE = { brasil: "Brasil", global: "Internacional", asia: "Ásia", oficiais: "Órgãos oficiais", setores_br: "Setores no Brasil", setores_global: "Setores no mundo" };
 function chaveLiga(rotulo, ligado, attrs = {}) {
   return el("label", { class: "chave-liga" }, el("input", { type: "checkbox", role: "switch", ...attrs, checked: ligado || false }), rotulo);
 }

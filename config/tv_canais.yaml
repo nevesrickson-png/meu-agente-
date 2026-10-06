@@ -1,0 +1,82 @@
+# Canais da tela TV do Terminal (/tv). Os do compilado "Insights do Mercado" + notícias; conferidos em 06/10/2026.
+# Os que você adicionar/esconder pela tela ficam em dados/ajustes/tv_canais.yaml (este arquivo continua como padrão).
+# id = identificador do canal no YouTube (começa com UC). handle = o @ do canal (só para mostrar e abrir no YouTube).
+grupos:
+  - id: noticias_br
+    nome: Notícias Brasil
+    canais:
+      - {nome: CNN Brasil, id: UCvdwhh_fDyWccR42-rReZLw, handle: CNNbrasil}
+      - {nome: CNN Brasil Money, id: UCqfm5IQhpMlfeAWMmVL_uNg, handle: cnnbrmoney}
+      - {nome: Times Brasil (CNBC), id: UCY-FPXguTtLHSTK5YpQ-sgQ, handle: otimesbrasil}
+      - {nome: InfoMoney, id: UCxm0tptjIc76-i26EKQ9NpA, handle: infomoney}
+      - {nome: g1, id: UCaGmdJSSiR7fkh2A-c6emsA, handle: g1}
+      - {nome: BBC News Brasil, id: UCthbIFAxbXTTQEC7EcQvP1Q, handle: BBCNewsBrasil}
+      - {nome: Valor Investe, id: UC4y-ALozdhd1wp0tr51XLkg, handle: ValorInveste}
+      - {nome: Money Times, id: UComAl6MjIyRzDhMuXXQExKw, handle: MoneyTimesBR}
+      - {nome: InvestNews, id: UCo0jMsIPccAXghE_FCWIdNg, handle: InvestNewsBR}
+      - {nome: Insider Português, id: UC0V3st2U7XOpRPR5cyfp3wA, handle: InsiderPortugues}
+      - {nome: Money Report, id: UCiO23gbJ0bLPv2NQttdqSVQ, handle: moneyreportoficial}
+      - {nome: Euronews em Português, id: UCUmEPYxmnyQDeRUcFkslmQw, handle: euronewspt}
+  - id: noticias_global
+    nome: Notícias globais
+    canais:
+      - {nome: Bloomberg Television, id: UCIALMKvObZNtJ6AmdCLP7Lg, handle: markets}
+      - {nome: CNBC, id: UCvJJ_dzjViJCoLf5uKUTwoA, handle: CNBC}
+      - {nome: Yahoo Finance, id: UCEAZeUIeJs0IjQiqTCdVSIg, handle: YahooFinance}
+      - {nome: Schwab Network, id: UCqoSrYgusd8ZddtMoWhjHYA, handle: SchwabNetwork}
+      - {nome: Reuters, id: UChqUTb7kYRX8-EiaN3XFrSQ, handle: Reuters}
+      - {nome: Financial Times, id: UCoUxsWakJucWg46KW5RsvPw, handle: FinancialTimes}
+      - {nome: The Economist, id: UC0p5jTq6Xx_DosDFxVXnWaQ, handle: TheEconomist}
+      - {nome: Bloomberg Originals, id: UCUMZ7gohGI9HcU9VNsr2FJQ, handle: bloomberg}
+      - {nome: Bloomberg Live, id: UC7UFcUbAd8oyCBWCogVpJ6g, handle: Bloomberg_Live}
+      - {nome: Bloomberg Podcasts, id: UChF5O40UBqAc82I7-i5ig6A, handle: bloombergpodcasts}
+      - {nome: MarketWatch, id: UCPaSu8qnjJhF1vkXVOGojBQ, handle: MarketWatch}
+      - {nome: Barron's, id: UCOfQuCs1g5_wjr3GPKKYSoA, handle: Barrons}
+      - {nome: Business Insider, id: UCcyq283he07B7_KUX07mmtA, handle: BusinessInsider}
+      - {nome: Forbes, id: UCmh7afBz-uWwOSSNTqUBAhg, handle: Forbes}
+      - {nome: TheStreet, id: UCp6aBHRM6ZS_kLeC57HV4kg, handle: TheStreet}
+      - {nome: Morning Brew, id: UCqit4NtRDfdEHKX_zgmAwrg, handle: morning-brew}
+      - {nome: DW News, id: UCknLrEdhRCp1aegoMqRaCZg, handle: dwnews}
+      - {nome: ABC News, id: UCBi2mrWuNuyYy4gbM6fU18Q, handle: ABCNews}
+      - {nome: NBC News, id: UCeY0bbntWzzVIaj2z3QigXg, handle: NBCNews}
+      - {nome: Washington Post, id: UCHd62-u_v4DvJ8TCFtpi4GA, handle: WashingtonPost}
+      - {nome: CGTN Europe, id: UCj0TppyxzQWm9JbMg3CP8Rg, handle: CGTNEurope}
+  - id: gestoras_br
+    nome: Gestoras e bancos (Brasil)
+    canais:
+      - {nome: BTG Pactual, id: UCE5Uu3nZlVbTur6xwhdoKhg, handle: btgpactual}
+      - {nome: XP Asset, id: UC-jNfX6MhcLLfMATynctQBQ, handle: XPAssetManagement}
+      - {nome: Itaú Asset, id: UCO80zH_xXmn3lsCFfI_hLlQ, handle: itauasset}
+      - {nome: Itaú Personnalité, id: UCTG13Q7JyL9Cho5oQEzov0w, handle: itaupersonnalite}
+      - {nome: íon Itaú, id: UCvlKt-vMt_dZcxz2esiK-Cw, handle: ionitau}
+      - {nome: Kinea, id: UCuP3yzTmY6AWjIljW0GPuPg, handle: KineaInvestimentos}
+      - {nome: Bradesco Asset, id: UCR1tyF_iMeiS_5kLMfdctkA, handle: BradescoAssetManagement}
+      - {nome: Banco do Brasil, id: UCayJQj7hiNhfFk-MJ8Z9H0w, handle: bancodobrasil}
+      - {nome: Safra, id: UC_eA5WnJz2rQ2iJ9cF97adw, handle: SafraBanco}
+      - {nome: Santander Private, id: UCc1DoN_Ocuevw-uGnormeGw, handle: santanderprivatebanking}
+      - {nome: Genial Investimentos, id: UCYSOMA4Yx1CJvrdI8epLfnA, handle: genialinvestimentos}
+      - {nome: Ágora Investimentos, id: UCWbptFn7mT9OMHX4ErtenJg, handle: AgoraInvestimentos}
+      - {nome: Principal Brasil, id: UCfkKClaFpuh1w2uYJtchlEw, handle: principalambr}
+      - {nome: RBR Asset, id: UCfeFPKDC7gEP_BOaIdY46jw, handle: RBRAssetManagement}
+      - {nome: Encore, id: UCAcNRPxtAGVXTjMZTZaBlUw, handle: EncoreAssetManagement}
+      - {nome: Trígono Capital, id: UCIvAMTR2gh1RySFiC7w4_ag, handle: TrigonoCapital}
+      - {nome: Sparta, id: UCKNQrMiAckB3wwXEqB3OmYw, handle: sparta_fundos}
+      - {nome: Safari Capital, id: UCh6oDFcB3KSz17oPR1z0pxQ, handle: safaricapital1805}
+      - {nome: Blackbird, id: UC7Fxo8kW2R35n0olXCbXaqA, handle: BlackbirdInvestimentos}
+      - {nome: WHG, id: UCW6y1JeoJZA5jjD3Tb15euA, handle: wealthhighgovernance}
+  - id: gestoras_global
+    nome: Gestoras globais
+    canais:
+      - {nome: J.P. Morgan Asset Management, id: UCzRipjQYhKGNFdTHNMzNfIQ, handle: jpmorganassetmanagement}
+      - {nome: J.P. Morgan, id: UCBnFes2U2diA3QfR5m8l_Tw, handle: jpmorgan}
+      - {nome: Morgan Stanley, id: UCz6RzD6KG_hH_oHb2kyW5jQ, handle: morganstanley}
+      - {nome: Charles Schwab, id: UCToe3dspZyw2L_JY-JmP3Mw, handle: CharlesSchwab}
+      - {nome: Oaktree, id: UCfzbRPUn_YvJCl6npbZKXJA, handle: oaktreecapital}
+      - {nome: Brookfield, id: UCVQqnwSap9-WmNWzx7pX4Bw, handle: brookfieldcorporation}
+      - {nome: Carlyle, id: UCUXYziRJuyq3mzmCEP9NS6A, handle: OneCarlyle}
+      - {nome: Norges Bank (NBIM), id: UCRhQsN8AVIfZuBNeRV1A37w, handle: norgesbankinvestmentmanagement}
+      - {nome: BNP Paribas AM, id: UC8WeyDQAPMcYYwM2vE0O0pw, handle: BNPPAM}
+      - {nome: Rockefeller Capital, id: UCbbJmcLqOxc9rNZ1MkDuU7w, handle: rockefellercapitalmanagement}
+      - {nome: Fisher Investments UK, id: UCkP5aEQ_LURS_I9Oaeh4O5Q, handle: FisherInvestmentsUK}
+      - {nome: Mizuho Americas, id: UCZJrNEnO9qDz87xI-MIQfzg, handle: MizuhoAmericas}
+      - {nome: VettaFi, id: UCevtHy5_dad111wfZsiO7ag, handle: VettaFi}

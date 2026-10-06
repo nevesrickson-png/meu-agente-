@@ -1,4 +1,4 @@
-"""Carreira no Telegram, direto (sem o laço do agente): /carreira, /diario, /portfolio, /entrevista, /radar.
+"""Carreira no Telegram, direto (sem o laço do agente): /carreira, /diario, /portfolio, /entrevista, /radar, /cartas.
 
 O registro de tese usa o cérebro só para estruturar o texto (com plano B por regras); revisão, radar e plano são Python.
 A entrevista ativa captura as mensagens seguintes (como o treino da Fase 13)."""
@@ -14,7 +14,7 @@ from quiron.nucleo.cerebro import CerebroIndisponivel
 from quiron.runtime.academia_bot import Tela
 from quiron.servicos.carreira import diario, entrevista, plano, portfolio, radar
 
-COMANDOS = {"carreira", "diario", "portfolio", "entrevista", "radar"}
+COMANDOS = {"carreira", "diario", "portfolio", "entrevista", "radar", "cartas"}
 AJUDA_DIARIO = ("Diário de teses:\n/diario <tese> — ex.: /diario WEGE3 vai superar o Ibovespa em 6 meses porque… confiança 70%; "
                 "se a margem cair abaixo de 20%, a tese morre\n/diario lista · /diario revisar [nº] · /diario <nº> acertou|parcial|errou|abandonada "
                 "<aprendizado> · /diario adiar <nº> 3 meses · /diario placar")
@@ -59,6 +59,14 @@ class CarreiraBot:
             if al in {"fim", "encerrar", "feedback"}:
                 return [Tela(entrevista.encerrar()[1])]
             return [Tela(entrevista.iniciar(a)[1])]
+        if nome == "cartas":  # /cartas · /cartas 30 · /cartas Verde · /cartas gestoras
+            from quiron.servicos.cartas import consultas as cartas
+
+            if a.lower() in {"gestoras", "situacao", "situação", "status"}:
+                return [Tela(cartas.situacao())]
+            if a.isdigit():
+                return [Tela(cartas.listar(dias=min(int(a), 365)))]
+            return [Tela(cartas.listar(gestora=a or None))]
         if nome == "radar":
             dias = int(m[0]) if (m := re.search(r"\d+", a)) else 14
             return [Tela(radar.relatorio(dias, so_novos=a.lower().startswith("novidade")))]

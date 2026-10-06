@@ -418,6 +418,70 @@ def api_simulador(request: Request, corpo: dict = Body(...)) -> dict:
     return {**sim.como_dict(), "texto": simulador.texto(sim)}
 
 
+@app.post("/api/cartas/atualizar")
+def api_cartas_atualizar(request: Request) -> dict:
+    """Confere todas as gestoras agora (em segundo plano; leva ~1 minuto)."""
+    from quiron.servicos.cartas import coleta as cartas
+
+    _proteger(request)
+    return {"comecou": cartas.atualizar_em_segundo_plano(forcar=True), "atualizando": True}
+
+
+# ---------------------------------------------------------------- TV (canais do YouTube)
+@app.get("/tv")
+def pagina_tv() -> FileResponse:
+    return FileResponse(FRONTEND / "tv.html")
+
+
+@app.get("/api/tv/canais")
+def api_tv_canais() -> dict:
+    from quiron.servicos import tv
+
+    return {"grupos": tv.grupos()}
+
+
+@app.get("/api/tv/videos/{canal}")
+async def api_tv_videos(canal: str) -> dict:
+    from quiron.servicos import tv
+
+    try:
+        return await asyncio.to_thread(tv.videos, canal)
+    except tv.CanalInvalido as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@app.post("/api/tv/canal")
+async def api_tv_adicionar(request: Request, corpo: dict = Body(...)) -> dict:
+    from quiron.servicos import tv
+
+    _proteger(request)
+    try:
+        canal = await asyncio.to_thread(tv.adicionar, str(corpo.get("entrada", ""))[:300], str(corpo.get("nome", ""))[:60])
+    except tv.CanalInvalido as e:
+        raise HTTPException(400, str(e)) from e
+    return {"canal": canal, "grupos": tv.grupos()}
+
+
+@app.delete("/api/tv/canal/{canal}")
+def api_tv_remover(canal: str, request: Request) -> dict:
+    from quiron.servicos import tv
+
+    _proteger(request)
+    try:
+        tv.remover(canal)
+    except tv.CanalInvalido as e:
+        raise HTTPException(400, str(e)) from e
+    return {"grupos": tv.grupos()}
+
+
+@app.post("/api/tv/restaurar")
+def api_tv_restaurar(request: Request) -> dict:
+    from quiron.servicos import tv
+
+    _proteger(request)
+    return {"restaurados": tv.restaurar(), "grupos": tv.grupos()}
+
+
 @app.post("/api/alertas")
 def api_alerta_criar(request: Request, corpo: dict = Body(...)) -> dict:
     from quiron.servicos import alertas

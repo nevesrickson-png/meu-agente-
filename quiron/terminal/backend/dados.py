@@ -375,6 +375,23 @@ def alertas_lista() -> dict:
     return {"itens": [{**a.__dict__, "descricao": a.descrever()} for a in alertas.listar()], "tipos": alertas.TIPOS}
 
 
+def cartas_gestores(termo: str | None = None, dias: int = 90, tipo: str | None = None, aba: str = "recentes") -> dict:
+    """CARTAS: cartas de gestores publicadas recentemente + situação de cada gestora (ativa, desatualizada, fora do ar…).
+
+    Abrir o painel dispara, em segundo plano, a conferência das gestoras que não são vistas há ~20 h."""
+    from collections import Counter
+
+    from quiron.servicos.cartas import coleta as cartas
+
+    cartas.atualizar_em_segundo_plano()
+    sits = cartas.situacoes()
+    conferidas = [s["conferido_em"] for s in sits if s["conferido_em"]]
+    return {"itens": cartas.recentes(dias=dias, tipo=tipo or None, termo=termo or None, limite=120),
+            "gestoras": sits if aba == "gestoras" else [],
+            "contagem": dict(Counter(s["situacao"] for s in sits)), "total_fontes": len(sits),
+            "atualizando": cartas.em_andamento(), "conferido_em": max(conferidas) if conferidas else None}
+
+
 # Tópicos que a tela pode assinar pelo WebSocket: função + intervalo de atualização (segundos)
 TOPICOS: dict[str, tuple[Callable[..., Any], int]] = {
     "watchlist": (watchlist, 60),
@@ -396,4 +413,5 @@ TOPICOS: dict[str, tuple[Callable[..., Any], int]] = {
     "academia": (academia, 300),
     "tarefas": (tarefas, 60),
     "alertas": (alertas_lista, 60),
+    "cartas": (cartas_gestores, 600),
 }

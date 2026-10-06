@@ -23,3 +23,10 @@
   .selo-sistema { padding: 8px; }
 }
 @media (min-width: 761px) { .abas .curto { display: none; } }
+@media (max-width: 480px) {  /* celular: 5 abas + selo + tema cabem sem rolar para o lado */
+  .abas a { padding: 5px 6px; font-size: 12.5px; }
+  .nav-extra { margin-left: 4px; gap: 4px; }
+  .marca span { display: none; }
+  header:has(> .abas) { flex-wrap: wrap; row-gap: 8px; }  /* se ainda não couber, o selo e o tema descem uma linha */
+  header .sub { display: none; }
+}

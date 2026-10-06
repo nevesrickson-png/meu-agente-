@@ -24,3 +24,12 @@ referência (Valor, Brazil Journal, Bloomberg Línea, NeoFeed, FT, Economist), p
    Post de rede social é opinião de terceiros: nunca trate como fato.
 5. Jornais com paywall: trabalhe só com manchete e resumo do feed; não tente abrir a matéria completa.
 6. Rede sem chave configurada: mostre o passo a passo que a ferramenta devolveu, uma vez, sem insistir.
+
+## Cartas de gestores ("cartas recentes", "o que a Verde escreveu", "resuma a carta da Dynamo")
+1. Lista → `cartas_gestores` (gestora opcional; dias padrão 60). Quem continua publicando → `situacao_gestoras`.
+2. Resumir uma carta → `ler_carta(link)` com o link que `cartas_gestores` devolveu (nunca invente link). Formato:
+   **Gestora — mês/ano** (link) · **Visão de cenário** (juros, inflação, câmbio, bolsa) · **Onde estão posicionados**
+   (o que aumentaram/reduziram e por quê) · **Ideia mais interessante** · **Para os clientes / para o meu estudo** (1–2 linhas).
+   Cite a gestora; não reproduza trechos longos. Carta é opinião da gestora, não fato nem recomendação do Rickson.
+3. Várias cartas sobre um tema ("o que os gestores acham da Selic?"): leia no máximo 3–4, compare consensos e divergências
+   e diga quais cartas usou.

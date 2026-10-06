@@ -2,7 +2,8 @@
 # Regra: só feeds públicos; nada de contornar paywall (de jornais com paywall vêm só manchete e resumo do próprio feed).
 # Para desligar uma fonte: ativo: false. Para acrescentar: copie um bloco e teste com `uv run quiron-noticias --fontes`.
 fontes:
-  # peso = credibilidade/prioridade na nota de relevância (oficial 1,0 · imprensa de referência 0,9 · portal 0,75).
+  # peso = credibilidade/prioridade na nota de relevância (oficial 1,0 · imprensa de referência 0,9 · portal 0,75 · setorial 0,4–0,65).
+  # grupos: brasil · global · asia · oficiais · setores_br · setores_global (notícia de setor só sobe se tiver tema de mercado).
   # --- Brasil: imprensa de referência
   - {nome: Valor Econômico, grupo: brasil, peso: 0.9, url: "https://valor.globo.com/rss/valor"}
   - {nome: Brazil Journal, grupo: brasil, peso: 0.9, url: "https://braziljournal.com/feed/"}
@@ -32,6 +33,64 @@ fontes:
   - {nome: Federal Reserve, grupo: oficiais, url: "https://www.federalreserve.gov/feeds/press_all.xml"}
   - {nome: BCE (Banco Central Europeu), grupo: oficiais, url: "https://www.ecb.europa.eu/rss/press.html"}
 
+  # --- Brasil: mais portais (compilado "Insights do Mercado", conferidos em 06/10/2026)
+  - {nome: Pipeline Valor, grupo: brasil, peso: 0.85, url: "https://pipelinevalor.globo.com/rss/pipelinevalor"}
+  - {nome: Estadão Economia, grupo: brasil, peso: 0.8, url: "https://www.estadao.com.br/arc/outboundfeeds/feeds/rss/sections/economia/?body=%7B%22layout%22:%22google-news%22%7D"}
+  - {nome: Forbes Brasil, grupo: brasil, peso: 0.7, url: "https://forbes.com.br/feed/"}
+  - {nome: InvestNews, grupo: brasil, peso: 0.7, url: "https://investnews.com.br/feed/"}
+  - {nome: Suno Notícias, grupo: brasil, peso: 0.65, url: "https://www.suno.com.br/noticias/feed/"}
+  - {nome: ADVFN, grupo: brasil, peso: 0.6, url: "https://br.advfn.com/jornal/rss"}
+  - {nome: Monitor do Mercado, grupo: brasil, peso: 0.6, url: "https://monitordomercado.com.br/feed/"}
+  # --- Global: mais portais (EUA, Reino Unido, Europa, Canadá)
+  - {nome: Fortune, grupo: global, peso: 0.75, url: "https://fortune.com/feed/"}
+  - {nome: The Guardian Business, grupo: global, peso: 0.8, url: "https://www.theguardian.com/uk/business/rss"}
+  - {nome: Euronews Business, grupo: global, peso: 0.7, url: "https://www.euronews.com/rss?level=vertical&name=business"}
+  - {nome: Euromoney, grupo: global, peso: 0.75, url: "https://www.euromoney.com/feed/"}
+  - {nome: Global Finance, grupo: global, peso: 0.65, url: "https://gfmag.com/feed/"}
+  - {nome: American Banker, grupo: global, peso: 0.7, url: "https://www.americanbanker.com/rss"}
+  - {nome: Risk.net, grupo: global, peso: 0.75, url: "https://www.risk.net/feeds/rss/"}
+  - {nome: Financial Post, grupo: global, peso: 0.7, url: "https://financialpost.com/feed/"}
+  - {nome: The Globe and Mail Business, grupo: global, peso: 0.75, url: "https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/business/"}
+  - {nome: BNN Bloomberg, grupo: global, peso: 0.7, url: "https://www.bnnbloomberg.ca/arc/outboundfeeds/rss/"}
+  - {nome: National Post, grupo: global, peso: 0.6, url: "https://nationalpost.com/feed/"}
+  - {nome: Global News Money, grupo: global, peso: 0.6, url: "https://globalnews.ca/category/money/feed/"}
+  # --- Ásia
+  - {nome: South China Morning Post, grupo: asia, peso: 0.75, url: "https://www.scmp.com/rss/feed"}
+  - {nome: Nikkei Asia, grupo: asia, peso: 0.85, url: "https://asia.nikkei.com/rss/feed/nar"}
+  - {nome: The Business Times (Singapura), grupo: asia, peso: 0.7, url: "https://www.businesstimes.com.sg/rss/top-stories"}
+  - {nome: The Japan Times, grupo: asia, peso: 0.7, url: "https://www.japantimes.co.jp/feed/"}
+  - {nome: Japan Today, grupo: asia, peso: 0.55, url: "https://japantoday.com/feed"}
+  # --- Setores no Brasil (peso menor: entram quando o tema é de mercado)
+  - {nome: Petronotícias, grupo: setores_br, peso: 0.6, url: "https://petronoticias.com.br/feed/"}
+  - {nome: Teletime, grupo: setores_br, peso: 0.6, url: "https://teletime.com.br/feed/"}
+  - {nome: Telesíntese, grupo: setores_br, peso: 0.55, url: "https://telesintese.com.br/feed/"}
+  - {nome: Mobile Time, grupo: setores_br, peso: 0.55, url: "https://www.mobiletime.com.br/feed/"}
+  - {nome: O Setor Elétrico, grupo: setores_br, peso: 0.55, url: "https://www.osetoreletrico.com.br/feed/"}
+  - {nome: Globo Rural, grupo: setores_br, peso: 0.65, url: "https://globorural.globo.com/rss/globorural"}
+  - {nome: Canal Rural, grupo: setores_br, peso: 0.6, url: "https://www.canalrural.com.br/feed/"}
+  - {nome: Terra Viva, grupo: setores_br, peso: 0.55, url: "https://terraviva.uol.com.br/rss.xml"}
+  - {nome: Safras & Mercado, grupo: setores_br, peso: 0.6, url: "https://safras.com.br/feed/"}
+  - {nome: Revista Rural, grupo: setores_br, peso: 0.5, url: "https://www.revistarural.com.br/feed/"}
+  # --- Setores no mundo
+  - {nome: The Northern Miner, grupo: setores_global, peso: 0.55, url: "https://www.northernminer.com/feed/"}
+  - {nome: International Mining, grupo: setores_global, peso: 0.5, url: "https://im-mining.com/feed/"}
+  - {nome: Oil & Gas Journal, grupo: setores_global, peso: 0.6, url: "https://www.ogj.com/__rss/website-scheduled-content.xml?input=%7B%22sectionAlias%22%3A%22home%22%7D"}
+  - {nome: STAT News, grupo: setores_global, peso: 0.6, url: "https://www.statnews.com/feed/"}
+  - {nome: BioSpace, grupo: setores_global, peso: 0.5, url: "https://www.biospace.com/index.rss"}
+  - {nome: PharmExec, grupo: setores_global, peso: 0.5, url: "https://www.pharmexec.com/rss"}
+  - {nome: FlightGlobal, grupo: setores_global, peso: 0.55, url: "https://www.flightglobal.com/feed/"}
+  - {nome: IndustryWeek, grupo: setores_global, peso: 0.5, url: "https://www.industryweek.com/__rss/website-scheduled-content.xml?input=%7B%22sectionAlias%22%3A%22home%22%7D"}
+  - {nome: Automation World, grupo: setores_global, peso: 0.45, url: "https://www.automationworld.com/__rss/website-scheduled-content.xml?input=%7B%22sectionAlias%22%3A%22home%22%7D"}
+  - {nome: WardsAuto, grupo: setores_global, peso: 0.5, url: "https://www.wardsauto.com/feeds/news/"}
+  - {nome: Retail Dive, grupo: setores_global, peso: 0.5, url: "https://www.retaildive.com/feeds/news/"}
+  - {nome: Adweek, grupo: setores_global, peso: 0.45, url: "https://www.adweek.com/feed/"}
+  - {nome: Deadline, grupo: setores_global, peso: 0.4, url: "https://deadline.com/feed/rss/"}
+  - {nome: Variety, grupo: setores_global, peso: 0.4, url: "https://variety.com/feed/rss/"}
+  - {nome: The Hollywood Reporter, grupo: setores_global, peso: 0.4, url: "https://www.hollywoodreporter.com/feed/rss/"}
+  - {nome: Billboard, grupo: setores_global, peso: 0.4, url: "https://www.billboard.com/feed/rss/"}
+
 # Sem feed público oficial (conferido em 05/10/2026; não raspamos páginas):
 #   Reuters (encerrou o RSS público), Tesouro Nacional, Ministério da Fazenda, ANBIMA, B3, CNN Brasil;
 #   WSJ (feed parado desde 2025); Receita Federal (feed desatualizado); Poder360 (bloqueia leitores de feed).
+#   Conferidos em 06/10/2026, sem feed ou bloqueando leitura: Barron's, Bloomberg, MarketWatch (site), Mining.com (403),
+#   Agrolink e Natural Gas World (feeds parados), Global Times (datas antigas), Autocar (feed vazio).

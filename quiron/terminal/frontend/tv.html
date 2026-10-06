@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quíron — TV</title>
+<link rel="icon" href="/icone.svg" type="image/svg+xml">
+<script src="/tema.js"></script>
+<link rel="stylesheet" href="/tema.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
+  header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+           background: var(--vidro); backdrop-filter: blur(12px); border-bottom: 1px solid var(--borda); }
+  main { max-width: 1440px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
+         grid-template-columns: minmax(0, 1fr) 340px; }
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); min-width: 0; }
+  .tela { overflow: hidden; }
+  .video { position: relative; aspect-ratio: 16 / 9; background: #000; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .video .vazio-tv { position: absolute; inset: 0; display: grid; place-items: center; color: #9aa3ad; text-align: center; padding: 20px; }
+  .barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--borda); }
+  .agora { display: flex; align-items: baseline; gap: 8px; min-width: 0; margin-right: auto; }
+  .agora .num { font: 600 13px var(--mono); color: var(--acento-texto); }
+  .agora .nome { font: 650 16px var(--titulo); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agora .modo { font-size: 12px; color: var(--texto-3); }
+  button, .botao { background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: var(--raio-p);
+           padding: 7px 11px; cursor: pointer; font: inherit; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  button:hover, .botao:hover { border-color: var(--borda-forte); background: var(--painel-3); }
+  button[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); color: var(--acento-texto); }
+  button.ao-vivo[aria-pressed="true"] { border-color: var(--queda); background: var(--queda-suave); color: var(--queda); }
+  button:focus-visible, .canal:focus-visible, .botao:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+  .lado { display: flex; flex-direction: column; max-height: calc(100vh - 100px); }
+  @media (max-width: 980px) { .lado { max-height: none; } }
+  .lado h2, .controle h2 { margin: 0; padding: 11px 14px; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: var(--texto-3);
+             border-bottom: 1px solid var(--borda); display: flex; align-items: center; gap: 8px; }
+  .lista { overflow: auto; padding: 6px; }
+  .vid { display: grid; grid-template-columns: 112px 1fr; gap: 10px; padding: 6px; border-radius: var(--raio-p); cursor: pointer;
+         background: none; border: 0; text-align: left; width: 100%; color: inherit; }
+  .vid:hover, .vid[aria-current="true"] { background: var(--painel-2); }
+  .vid img { width: 112px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: var(--painel-3); }
+  .vid .t { font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .vid .d { font-size: 11.5px; color: var(--texto-3); margin-top: 3px; }
+  .dica { color: var(--texto-3); font-size: 12.5px; padding: 10px 12px; }
+  .controle { grid-column: 1 / -1; }
+  .grupos { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px 0; }
+  .grupos button { border-radius: 99px; }
+  .filtro { margin-left: auto; }
+  .filtro input, form input { background: var(--campo); border: 1px solid var(--borda); color: var(--texto); border-radius: var(--raio-p);
+           padding: 7px 10px; font: inherit; font-size: 13px; }
+  .filtro input:focus, form input:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
+  .canais { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 8px; padding: 12px 14px 14px; }
+  .canal { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--raio-m); cursor: pointer; text-align: left;
+           background: var(--painel-2); border: 1px solid var(--borda); color: var(--texto); font: inherit; min-width: 0; }
+  .canal:hover { border-color: var(--borda-forte); }
+  .canal[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); }
+  .canal .n { font: 600 12px var(--mono); color: var(--texto-3); min-width: 22px; }
+  .canal[aria-pressed="true"] .n { color: var(--acento-texto); }
+  .canal .c { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rodape-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 0 14px 14px; }
+  .rodape-ctrl form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .rodape-ctrl form input[name=entrada] { width: min(340px, 70vw); }
+  .rodape-ctrl .ajuda { margin-left: auto; color: var(--texto-3); font-size: 12px; }
+  kbd { font: 11px var(--mono); border: 1px solid var(--borda-forte); border-radius: 4px; padding: 0 4px; }
+  .numero-tv { position: fixed; top: 76px; right: 28px; z-index: 5; font: 700 44px var(--mono); color: #fff; text-shadow: 0 2px 12px #000;
+               pointer-events: none; display: none; }
+  .aviso-tv { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 6; background: var(--painel-3); color: var(--texto);
+              border: 1px solid var(--borda-forte); border-radius: var(--raio-m); padding: 9px 14px; box-shadow: var(--sombra-flutuante); display: none; max-width: 90vw; }
+</style>
+<link rel="stylesheet" href="/nav.css">
+</head>
+<body>
+<header>
+  <a class="marca" href="/">Quíron<span>TV</span></a>
+  <nav id="abas" style="margin-left:auto"></nav>
+</header>
+
+<main>
+  <section class="cartao tela" aria-label="Player">
+    <div class="video" id="video"><div class="vazio-tv">Escolha um canal abaixo.</div></div>
+    <div class="barra">
+      <div class="agora"><span class="num" id="agora-num"></span><span class="nome" id="agora-nome">—</span><span class="modo" id="agora-modo"></span></div>
+      <button type="button" id="ant" title="Canal anterior (← ou PageUp)" aria-label="Canal anterior">◀</button>
+      <button type="button" id="prox" title="Próximo canal (→ ou PageDown)" aria-label="Próximo canal">▶</button>
+      <button type="button" id="recentes" aria-pressed="true" title="Vídeos mais recentes do canal">Recentes</button>
+      <button type="button" id="vivo" class="ao-vivo" aria-pressed="false" title="Transmissão ao vivo, se o canal estiver no ar (tecla L)">● Ao vivo</button>
+      <a class="botao" id="abrir-yt" target="_blank" rel="noopener noreferrer" title="Abrir o canal no YouTube">↗ YouTube</a>
+    </div>
+  </section>
+
+  <section class="cartao lado" aria-label="Vídeos do canal">
+    <h2>Últimos vídeos <span id="fonte-videos" style="margin-left:auto;text-transform:none;letter-spacing:0"></span></h2>
+    <div class="lista" id="videos"><div class="dica">—</div></div>
+  </section>
+
+  <section class="cartao controle" aria-label="Canais">
+    <h2>Canais</h2>
+    <div class="grupos" id="grupos" role="toolbar" aria-label="Grupos de canais">
+      <span class="filtro"><input id="filtro" type="search" placeholder="procurar canal…" aria-label="Procurar canal"></span>
+    </div>
+    <div class="canais" id="canais"></div>
+    <div class="rodape-ctrl">
+      <form id="form-canal">
+        <input name="entrada" required placeholder="link do canal ou @nome (ex.: youtube.com/@primorico)" aria-label="Link ou @ do canal">
+        <input name="nome" placeholder="nome (opcional)" aria-label="Nome do canal" style="width:150px">
+        <button type="submit">+ Adicionar canal</button>
+      </form>
+      <button type="button" id="remover" title="Tira o canal atual da lista (os do padrão podem voltar em “mostrar escondidos”)">Remover canal atual</button>
+      <button type="button" id="restaurar" title="Mostra de novo os canais do padrão que você escondeu">Mostrar escondidos</button>
+      <span class="ajuda"><kbd>←</kbd><kbd>→</kbd> trocar · números = canal · <kbd>L</kbd> ao vivo · <kbd>F</kbd> tela cheia</span>
+    </div>
+  </section>
+</main>
+<div class="numero-tv" id="numero-tv" aria-hidden="true"></div>
+<div class="aviso-tv" id="aviso-tv" role="status"></div>
+
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ID = /^UC[\w-]{22}$/, VID = /^[\w-]{11}$/;
+const guardar = (k, v) => { try { localStorage.setItem("quiron-tv-" + k, v); } catch (e) { /* sem armazenamento */ } };
+const lerGuardado = (k) => { try { return localStorage.getItem("quiron-tv-" + k); } catch (e) { return null; } };
+
+let grupos = [], todos = [], grupoAtivo = lerGuardado("grupo") || "noticias_br", atual = null, modo = lerGuardado("modo") === "vivo" ? "vivo" : "recentes", videoAtual = null;
+
+function aviso(t, ms = 3500) { const a = $("#aviso-tv"); a.textContent = t; a.style.display = "block"; clearTimeout(aviso._t); aviso._t = setTimeout(() => (a.style.display = "none"), ms); }
+
+async function api(url, corpo, metodo = "POST") {
+  const r = await fetch(url, corpo === undefined && metodo === "GET" ? {} : { method: metodo, headers: { "Content-Type": "application/json", "X-Quiron": "terminal" }, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.erro || `erro ${r.status}`);
+  return d;
+}
+
+function carregarGrupos(lista) {
+  grupos = lista;
+  todos = grupos.flatMap((g) => g.canais);
+  todos.forEach((c, i) => (c.numero = i + 1));
+  if (!grupos.some((g) => g.id === grupoAtivo && g.canais.length)) grupoAtivo = (grupos.find((g) => g.canais.length) || {}).id;
+  desenharGrupos(); desenharCanais();
+}
+
+function desenharGrupos() {
+  const caixa = $("#grupos"), filtro = $(".filtro", caixa);
+  caixa.querySelectorAll("button").forEach((b) => b.remove());
+  for (const g of grupos) {
+    if (g.id === "meus" && !g.canais.length) continue;
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = `${g.nome} (${g.canais.length})`; b.setAttribute("aria-pressed", g.id === grupoAtivo && !$("#filtro").value ? "true" : "false");
+    b.onclick = () => { grupoAtivo = g.id; guardar("grupo", g.id); $("#filtro").value = ""; desenharGrupos(); desenharCanais(); };
+    caixa.insertBefore(b, filtro);
+  }
+}
+
+function canaisVisiveis() {
+  const q = $("#filtro").value.trim().normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  if (q) return todos.filter((c) => c.nome.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q));
+  return (grupos.find((g) => g.id === grupoAtivo) || { canais: [] }).canais;
+}
+
+function desenharCanais() {
+  const lista = canaisVisiveis();
+  $("#canais").innerHTML = lista.length ? lista.map((c) => `<button type="button" class="canal" data-id="${esc(c.id)}" aria-pressed="${atual && atual.id === c.id}" title="${esc(c.nome)}">
+      <span class="n">${c.numero}</span><span class="c">${esc(c.nome)}</span></button>`).join("")
+    : '<div class="dica">Nenhum canal aqui. Adicione pelo link abaixo.</div>';
+  $("#canais").querySelectorAll(".canal").forEach((b) => (b.onclick = () => sintonizar(todos.find((c) => c.id === b.dataset.id))));
+}
+
+function embed(url) {
+  const v = $("#video");
+  v.innerHTML = "";
+  const f = document.createElement("iframe");
+  f.src = url;
+  f.title = atual ? `YouTube — ${atual.nome}` : "YouTube";
+  f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+  f.allowFullscreen = true;
+  f.referrerPolicy = "strict-origin-when-cross-origin";
+  v.append(f);
+}
+
+function tocar() {
+  if (!atual || !ID.test(atual.id)) return;
+  const base = "https://www.youtube-nocookie.com/embed/";
+  if (modo === "vivo") { embed(`https://www.youtube.com/embed/live_stream?channel=${atual.id}&autoplay=1`); $("#agora-modo").textContent = "ao vivo (se o canal estiver transmitindo)"; }
+  else if (videoAtual && VID.test(videoAtual)) { embed(`${base}${videoAtual}?autoplay=1&rel=0`); $("#agora-modo").textContent = "vídeo escolhido"; }
+  else { embed(`${base}videoseries?list=UU${atual.id.slice(2)}&autoplay=1&rel=0`); $("#agora-modo").textContent = "últimos envios do canal"; }
+  $("#recentes").setAttribute("aria-pressed", modo === "recentes");
+  $("#vivo").setAttribute("aria-pressed", modo === "vivo");
+}
+
+function quando(iso) {
+  if (!iso) return "";
+  const d = new Date(iso), h = (Date.now() - d) / 36e5;
+  if (h < 1) return "agora há pouco";
+  if (h < 24) return `há ${Math.round(h)} h`;
+  if (h < 24 * 7) return `há ${Math.round(h / 24)} dia${h >= 36 ? "s" : ""}`;
+  return d.toLocaleDateString("pt-BR");
+}
+
+async function carregarVideos(canal) {
+  const alvo = $("#videos");
+  alvo.innerHTML = '<div class="dica">carregando…</div>';
+  $("#fonte-videos").textContent = "";
+  try {
+    const d = await api(`/api/tv/videos/${encodeURIComponent(canal.id)}`, undefined, "GET");
+    if (!atual || atual.id !== canal.id) return;
+    if (!d.itens.length) {
+      alvo.innerHTML = '<div class="dica">A lista de vídeos não veio agora; o player está tocando os envios mais recentes do canal (use ⏭ dentro do vídeo para avançar). Com a chave do YouTube em Configurações, a lista aparece sempre.</div>';
+      return;
+    }
+    $("#fonte-videos").textContent = d.fonte === "api" ? "YouTube API" : "feed do canal";
+    alvo.innerHTML = d.itens.map((v) => `<button type="button" class="vid" data-v="${esc(v.id)}" aria-current="${videoAtual === v.id}">
+        <img loading="lazy" alt="" src="${esc(v.miniatura)}"><span><span class="t">${esc(v.titulo)}</span><span class="d">${esc(quando(v.publicado))}</span></span></button>`).join("");
+    alvo.querySelectorAll(".vid").forEach((b) => (b.onclick = () => {
+      videoAtual = b.dataset.v; modo = "recentes"; guardar("modo", modo); tocar();
+      alvo.querySelectorAll(".vid").forEach((x) => x.setAttribute("aria-current", x === b));
+    }));
+  } catch (e) { alvo.innerHTML = `<div class="dica">${esc(e.message)}</div>`; }
+}
+
+function sintonizar(canal) {
+  if (!canal) return;
+  atual = canal; videoAtual = null;
+  guardar("canal", canal.id);
+  $("#agora-num").textContent = String(canal.numero).padStart(2, "0");
+  $("#agora-nome").textContent = canal.nome;
+  $("#abrir-yt").href = `https://www.youtube.com/channel/${canal.id}`;
+  document.title = `${canal.nome} — Quíron TV`;
+  mostrarNumero(canal.numero);
+  tocar(); carregarVideos(canal); desenharCanais();
+}
+
+function zapear(passo) {
+  const lista = canaisVisiveis().length ? canaisVisiveis() : todos;
+  if (!lista.length) return;
+  const i = atual ? lista.findIndex((c) => c.id === atual.id) : -1;
+  sintonizar(lista[i < 0 ? 0 : (i + passo + lista.length) % lista.length]);
+}
+
+function mostrarNumero(n) {
+  const el = $("#numero-tv"); el.textContent = String(n).padStart(2, "0"); el.style.display = "block";
+  clearTimeout(mostrarNumero._t); mostrarNumero._t = setTimeout(() => (el.style.display = "none"), 1500);
+}
+
+// controle remoto: setas trocam, números escolhem o canal (como na TV), L = ao vivo, F = tela cheia
+let digitos = "";
+document.addEventListener("keydown", (e) => {
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); zapear(1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); zapear(-1); }
+  else if (e.key.toLowerCase() === "l") { modo = modo === "vivo" ? "recentes" : "vivo"; guardar("modo", modo); tocar(); }
+  else if (e.key.toLowerCase() === "f") { const f = $("#video iframe"); if (f && f.requestFullscreen) f.requestFullscreen().catch(() => {}); }
+  else if (/^\d$/.test(e.key)) {
+    digitos = (digitos + e.key).slice(-3); mostrarNumero(digitos);
+    clearTimeout(zapear._t);
+    zapear._t = setTimeout(() => { const c = todos.find((x) => x.numero === Number(digitos)); digitos = ""; if (c) sintonizar(c); else aviso("Não há canal com esse número."); }, 1100);
+  }
+});
+
+$("#ant").onclick = () => zapear(-1);
+$("#prox").onclick = () => zapear(1);
+$("#recentes").onclick = () => { modo = "recentes"; guardar("modo", modo); tocar(); };
+$("#vivo").onclick = () => { modo = "vivo"; guardar("modo", modo); tocar(); };
+$("#filtro").oninput = () => { desenharGrupos(); desenharCanais(); };
+$("#form-canal").onsubmit = async (e) => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target)), botao = $("button", e.target);
+  botao.disabled = true;
+  try {
+    const r = await api("/api/tv/canal", f);
+    carregarGrupos(r.grupos);
+    e.target.reset();
+    const c = todos.find((x) => x.id === r.canal.id);
+    if (c) { grupoAtivo = c.grupo; guardar("grupo", grupoAtivo); desenharGrupos(); desenharCanais(); sintonizar(c); }
+    aviso(`Adicionado: ${r.canal.nome}`);
+  } catch (err) { aviso(err.message, 6000); } finally { botao.disabled = false; }
+};
+$("#remover").onclick = async () => {
+  if (!atual) return aviso("Escolha um canal primeiro.");
+  if (!confirm(`Tirar “${atual.nome}” da lista?`)) return;
+  try { const r = await api(`/api/tv/canal/${encodeURIComponent(atual.id)}`, undefined, "DELETE"); aviso(`Removido: ${atual.nome}`); carregarGrupos(r.grupos); zapear(0); }
+  catch (err) { aviso(err.message); }
+};
+$("#restaurar").onclick = async () => {
+  try { const r = await api("/api/tv/restaurar"); carregarGrupos(r.grupos); aviso(r.restaurados ? `${r.restaurados} canal(is) de volta.` : "Nenhum canal escondido."); }
+  catch (err) { aviso(err.message); }
+};
+
+(async () => {
+  try {
+    const d = await api("/api/tv/canais", undefined, "GET");
+    carregarGrupos(d.grupos);
+    const salvo = todos.find((c) => c.id === lerGuardado("canal"));
+    if (salvo) { grupoAtivo = salvo.grupo; desenharGrupos(); desenharCanais(); }
+    sintonizar(salvo || canaisVisiveis()[0] || todos[0]);
+  } catch (e) { aviso("Não consegui carregar os canais: " + e.message, 8000); }
+})();
+</script>
+<script src="/nav.js"></script>
+</body>
+</html>

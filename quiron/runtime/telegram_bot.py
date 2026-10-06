@@ -40,7 +40,7 @@ from quiron.runtime.workspace import carregar_comandos
 # objeto se misturariam; ContextVar é separado por tarefa assíncrona).
 _ESTADO: contextvars.ContextVar[dict] = contextvars.ContextVar("estado_mensagem")
 TEMPO_MAXIMO_RESPOSTA_S = 420  # uma resposta travada não pode prender o bot (as mensagens são atendidas em fila)
-ROTINAS_DIRETAS = {"briefing", "hoje", "tarefas", "revisao", "radar", "metas", "notas", "pauta", "diagnostico", "flashcards"}
+ROTINAS_DIRETAS = {"briefing", "hoje", "tarefas", "revisao", "radar", "cartas", "metas", "notas", "pauta", "diagnostico", "flashcards"}
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
 INATIVIDADE_MODO_S = 3 * 3600  # treino/entrevista/pós-reunião parados há mais que isso se encerram sozinhos
 SAIR = {"/sair", "sair", "/cancelar"}
@@ -227,7 +227,8 @@ class BotQuiron:
                    "/nota texto #tag · /notas [busca] · /meta estudar 5 horas por semana · /meta 1 +2 · /metas · /revisao · "
                    "/evento quinta às 15h reunião (Google Agenda)", "",
                    "🧭 Carreira: /carreira (plano) · /diario <tese> · /diario revisar · /portfolio · /entrevista [cargo] · "
-                   "/radar [dias] (normas da CVM, Receita, BC e Câmara)", "",
+                   "/radar [dias] (normas da CVM, Receita, BC e Câmara)",
+                   "", "📬 Cartas de gestores: /cartas (recentes) · /cartas Verde · /cartas 30 · /cartas gestoras (quem segue ativo)", "",
                    "✍️ Conteúdo: /pauta [tema] · /roteiro reels|youtube|carrossel|fio|artigo <tema> · /fio <tema> · /ideia · /ideias · "
                    "/conferir <seu texto> (sai como RASCUNHO, com disclaimer e fontes)", "",
                    "📈 Patrimônio: /simular <sua situação em palavras> ou /simular CLI-012 — quanto investir por mês, quando dá para "
@@ -479,7 +480,7 @@ class BotQuiron:
     def _registrar_evento(self, nome: str, args: str, saidas: list[Saida]) -> None:
         """O que ele faz pelos comandos diretos entra na memória (listagens não, só ações)."""
         so_leitura = {"tarefas", "notas", "metas", "ideias", "hoje", "revisao", "carreira", "portfolio", "academia",
-                      "diagnostico", "plano", "area", "flashcards", "radar", "pauta", "questoes"}
+                      "diagnostico", "plano", "area", "flashcards", "radar", "cartas", "pauta", "questoes"}
         if (nome in so_leitura and not args.strip()) or not saidas:
             return
         primeira = next((l for l in saidas[0].texto.splitlines() if l.strip()), "")[:160]
@@ -530,7 +531,7 @@ class BotQuiron:
                       "adiar": "Adiar tarefa", "hoje": "Meu dia", "nota": "Anotar", "notas": "Minhas notas", "meta": "Nova meta",
                       "metas": "Minhas metas", "revisao": "Revisão da semana", "evento": "Evento no Google Agenda",
                       "carreira": "Plano de carreira", "diario": "Diário de teses", "portfolio": "Portfólio de análises",
-                      "entrevista": "Simular entrevista", "radar": "Normas novas (CVM, Receita, BC)", "pauta": "Ideias de conteúdo",
+                      "entrevista": "Simular entrevista", "radar": "Normas novas (CVM, Receita, BC)", "cartas": "Cartas de gestores recentes (/cartas Verde)", "pauta": "Ideias de conteúdo",
                       "roteiro": "Roteiro/carrossel/artigo", "fio": "Fio para redes", "ideia": "Guardar ideia",
                       "ideias": "Banco de ideias", "conferir": "Conferir um texto seu (compliance)"}
         itens = []
@@ -921,6 +922,18 @@ async def _rodar() -> None:
                     logging.exception("falha ao pré-carregar o briefing")
                 await asyncio.sleep(60)
 
+        async def laco_cartas() -> None:
+            """Cartas de gestores: confere, de hora em hora, as gestoras que não são vistas há ~20 h (1 leitura por dia)."""
+            from quiron.servicos.cartas import coleta as cartas
+
+            await asyncio.sleep(120)
+            while True:
+                try:
+                    await asyncio.to_thread(cartas.atualizar)
+                except Exception:  # noqa: BLE001 — o laço nunca morre
+                    logging.exception("falha ao conferir as cartas de gestores")
+                await asyncio.sleep(3600)
+
         async def laco_batimento() -> None:
             while True:
                 cfg = batimento.ConfigBatimento.ler()
@@ -1017,7 +1030,7 @@ async def _rodar() -> None:
             await app.updater.start_polling(drop_pending_updates=False)
             tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer()),
                        asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises()),
-                       asyncio.create_task(laco_alertas()), asyncio.create_task(laco_memoria())]
+                       asyncio.create_task(laco_alertas()), asyncio.create_task(laco_memoria()), asyncio.create_task(laco_cartas())]
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

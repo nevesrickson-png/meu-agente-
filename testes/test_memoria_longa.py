@@ -367,6 +367,8 @@ def test_bot_memoria_hoje_estado_exportar(monkeypatch):
 def test_terminal_faz_a_copia_do_dia(dados):
     from quiron.terminal.backend import central
 
+    from quiron.runtime.memoria_longa import _brt
+
     central.copia_diaria_da_memoria(vezes=1)
-    hoje = datetime.now().astimezone().strftime("%Y-%m-%d")
+    hoje = datetime.now(_brt()).strftime("%Y-%m-%d")  # a pasta da cópia leva a data de Brasília (perto da meia-noite UTC difere)
     assert (dados / "backups" / "memoria" / hoje / "memoria.db").exists()

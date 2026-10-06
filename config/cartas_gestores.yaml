@@ -1,0 +1,426 @@
+# Cartas e relatórios de gestoras, family offices e casas globais.
+# Origem: guia "Insights do Mercado — Lista de Fontes Confiáveis" do Rickson (06/10/2026), caps. 1–3.
+# O Quíron confere cada página uma vez por dia (respeitando robots.txt), descobre o feed quando existe e lista as cartas
+# mais recentes (título, data e link — o conteúdo fica no site da gestora). Para incluir uma: copie um item.
+# tipo: gestora · family_office · global. Campo opcional `feed:` (RSS conhecido) e `ativo: false` (ignorar).
+fontes:
+- nome: 4i Capital
+  url: https://4icapital.com.br/carta-mensal/
+  tipo: gestora
+- nome: ACE Capital
+  url: https://acecapital.com.br/cartas-multimercado/
+  tipo: gestora
+- nome: Adam Capital
+  url: https://adamcapital.com.br/documentos/relatorios-e-call/
+  tipo: gestora
+- nome: AF Invest
+  url: https://afinvest.com.br/
+  tipo: gestora
+- nome: Alianza Trust (ALZR11)
+  url: https://alzr11.alianza.com.br/Listgroup.aspx?idCanal=ZUXuvYqqsD7BlgGwmkMoxg==&linguagem=pt
+  tipo: gestora
+- nome: Angá Asset
+  url: https://www.angaasset.com.br/conteudo/cartas-de-gestao/
+  tipo: gestora
+- nome: Apex Capital
+  url: https://apexcapital.com.br/cartas
+  tipo: gestora
+- nome: Armor Capital
+  url: https://armorcapital.com.br/carta-do-gestor/
+  tipo: gestora
+- nome: Artesanal Investimentos
+  url: https://www.artesanalinvestimentos.com.br/carta-do-gestor/
+  tipo: gestora
+- nome: Ártica Asset
+  url: https://artica.capital/asset-cartas/
+  tipo: gestora
+- nome: ARX Investimentos
+  url: https://www.arxinvestimentos.com.br/pt/communication.html
+  tipo: gestora
+- nome: ASA Investments
+  url: https://www.asa.com.br/asa-asset-management/multimercado/asa-hedge/carta-de-gestao
+  tipo: gestora
+- nome: Asset 1
+  url: https://www.asset1.com.br/category/cartas/
+  tipo: gestora
+- nome: Augme Capital
+  url: https://www.augme.com.br/cartas-gestao
+  tipo: gestora
+- nome: AZ Quest
+  url: https://azquest.com.br/comunicacao-gestor.php
+  tipo: gestora
+- nome: B.Side Investimentos
+  url: https://insights.bsideinvestimentos.com.br/
+  tipo: gestora
+- nome: Bahia Asset
+  url: https://www.bahiaasset.com.br/carta-do-gestor/
+  tipo: gestora
+- nome: Banco do Brasil (InvesTalk)
+  url: https://investalk.bb.com.br/relatorios-e-analises
+  tipo: gestora
+- nome: BNP Paribas AM
+  url: https://www.bnpparibas-am.com/pt-br/pessoa-juridica/insights/carta-do-gestor/
+  tipo: gestora
+- nome: Bocaína Capital
+  url: https://bocainacapital.com/bodb11/resultados/
+  tipo: gestora
+- nome: BOCOM BBM Asset
+  url: https://www.bocombbm.com.br/nosso-negocio/asset-management/
+  tipo: gestora
+- nome: Bradesco (Economia em Dia)
+  url: https://www.economiaemdia.com.br/home
+  tipo: gestora
+- nome: Bradesco Asset
+  url: https://bradescoasset.com.br/pt/conteudos/conteudo
+  tipo: gestora
+- nome: Brasil Capital
+  url: https://brasilcapital.com/cartas-de-gestao/
+  tipo: gestora
+- nome: Brasilprev
+  url: https://blog.brasilprev.com.br/categoria/mercado-e-investimentos
+  tipo: gestora
+- nome: BTG Pactual Research
+  url: https://content.btgpactual.com/research/home/macro-e-estrategia
+  tipo: gestora
+- nome: Butiá Investimentos
+  url: https://butiainvestimentos.com.br/carta/
+  tipo: gestora
+- nome: C6 / Carbon Asset
+  url: https://www.c6bank.com.br/carbon-asset/
+  tipo: gestora
+- nome: Canuma Capital
+  url: https://canumacapital.com.br/relatorios/
+  tipo: gestora
+- nome: Canvas Capital
+  url: https://www.canvascapital.com.br/conteudo/comunicacoes/
+  tipo: gestora
+- nome: Constância Investimentos
+  url: https://www.constanciainvest.com.br/publicacoes/
+  tipo: gestora
+- nome: Dahlia Capital
+  url: https://www.dahliacapital.com.br/nossas-cartas
+  tipo: gestora
+- nome: DAO Capital
+  url: https://www.daocapital.com.br/cartas
+  tipo: gestora
+- nome: Dry's Capital
+  url: https://dryscapital.com.br/insights
+  tipo: gestora
+- nome: Dynamo
+  url: https://www.dynamo.com.br/2436-2/
+  tipo: gestora
+- nome: Empiricus Asset
+  url: https://asset.empiricus.com.br/conteudos/carta-do-gestor/
+  tipo: gestora
+- nome: Exploritas
+  url: https://www.exploritas.com.br/cartas-mensais/
+  tipo: gestora
+- nome: Forpus Capital
+  url: https://www.forpuscapital.com.br/arquivos/fundos
+  tipo: gestora
+- nome: Franklin Templeton
+  url: https://www.franklintempleton.com.br/articles
+  tipo: gestora
+- nome: Galapagos Capital
+  url: https://galapagoscapital.com/asset-management/carta-mensal/
+  tipo: gestora
+- nome: Genial (Carta Macro)
+  url: https://analisa.genialinvestimentos.com.br/carta-macro/
+  tipo: gestora
+- nome: Genoa Capital
+  url: https://www.genoacapital.com.br/relatorios.html
+  tipo: gestora
+- nome: Giant Steps Capital
+  url: https://gscap.com.br/artigos/
+  tipo: gestora
+- nome: Guepardo
+  url: https://www.guepardoinvest.com.br/cartas-da-gestora/
+  tipo: gestora
+- nome: Hashdex
+  url: https://hashdex.com/pt-BR/insights/listing?filterCategory=Monthly+Letters
+  tipo: gestora
+- nome: Hix Capital
+  url: https://hixcapital.com.br/index.php/conteudo/
+  tipo: gestora
+- nome: Icatu Vanguarda
+  url: https://www.icatuvanguarda.com.br/relatorios
+  tipo: gestora
+- nome: Indie Capital
+  url: https://indiecapital.com.br/
+  tipo: gestora
+- nome: Inter Asset
+  url: https://www.interasset.com.br/acesso-a-informacao/?category=comentarios-de-gestao
+  tipo: gestora
+- nome: Itaú Asset
+  url: https://blog.itau.com.br/itauasset
+  tipo: gestora
+- nome: JGP
+  url: https://www.jgp.com.br/comunicacoes/relatorios/
+  tipo: gestora
+- nome: Journey Capital
+  url: https://www.journeycapital.com.br/relatorios/
+  tipo: gestora
+- nome: Kapitalo
+  url: https://www.kapitalo.com.br/cartas-do-gestor
+  tipo: gestora
+- nome: Kinea
+  url: https://www.kinea.com.br/atualizacoes/
+  tipo: gestora
+- nome: Kinitro Capital
+  url: https://www.kinitro.com.br/cartas-mensais-e-estudos.php
+  tipo: gestora
+- nome: Legacy Capital
+  url: https://www.legacycapital.com.br/cartas-e-calls-mensais/
+  tipo: gestora
+- nome: MAG Investimentos
+  url: https://maginvestimentos.com.br/carta-economica-mensal/
+  tipo: gestora
+- nome: Mar Asset
+  url: https://www.marasset.com.br/conteudo-mar/
+  tipo: gestora
+- nome: Meraki Capital
+  url: https://www.merakicapital.com.br/mensagemdagestao
+  tipo: gestora
+- nome: Meta Asset
+  url: https://metaasset.com.br/cartas-mensais/
+  tipo: gestora
+- nome: Moat Capital
+  url: https://www.moat.com.br/news/
+  tipo: gestora
+- nome: Neo Investimentos
+  url: https://neo.com.br/cartas-de-gestao/
+  tipo: gestora
+- nome: Netz Asset
+  url: https://www.netzasset.com.br/conteudos/categories/cartas-do-gestor
+  tipo: gestora
+- nome: Norte Asset
+  url: https://norteasset.com.br/news/
+  tipo: gestora
+- nome: Occam Brasil
+  url: https://occambrasil.com.br/cartas-mensais/
+  tipo: gestora
+- nome: Opportunity
+  url: https://www.opportunity.com.br/Home/Destaques
+  tipo: gestora
+- nome: Patrimonial Gestão
+  url: https://patrimonialgestao.com.br/
+  tipo: gestora
+- nome: Persevera
+  url: https://www.persevera.com.br/carta-mensal
+  tipo: gestora
+- nome: Porto Asset
+  url: https://www.portoasset.com.br/relatorios-economicos/
+  tipo: gestora
+- nome: Principal Asset
+  url: https://principalam.com.br/nossos-fundos/
+  tipo: gestora
+- nome: Quantitas
+  url: https://www.quantitas.com.br/cartas/
+  tipo: gestora
+- nome: Quatá Investimentos
+  url: https://quatainvestimentos.com.br/fundos
+  tipo: gestora
+- nome: RBR Asset
+  url: https://www.rbrasset.com.br/artigos-rbr/
+  tipo: gestora
+- nome: Reach Capital
+  url: https://www.reachcapital.com.br/carta
+  tipo: gestora
+- nome: TRX (TRXF11)
+  url: https://www.trxf11.com.br/list.aspx?idCanal=YxuLv1rWnYVtrab1vVY7AA==&linguagem=pt
+  tipo: gestora
+- nome: Renova Gestora
+  url: https://renovagestora.com.br/cartamensal/
+  tipo: gestora
+- nome: Rio Bravo
+  url: https://www.riobravo.com.br/dados-e-analises-carta-estrategicas
+  tipo: gestora
+- nome: Safra (O Especialista)
+  url: https://oespecialista.com.br/investimentos/
+  tipo: gestora
+- nome: Santander Asset
+  url: https://www.santanderassetmanagement.com.br/conteudos/carta-mensal
+  tipo: gestora
+- nome: SFA Investimentos
+  url: https://sfainvestimentos.com.br/cartas-do-gestor/
+  tipo: gestora
+- nome: Sicredi Asset
+  url: https://sicredi.com.br/site/asset/conteudos/
+  tipo: gestora
+- nome: Solana Capital
+  url: https://solanacapital.com.br/?page_id=1193
+  tipo: gestora
+- nome: Sparta
+  url: https://www.sparta.com.br/cartas-mensais/
+  tipo: gestora
+- nome: Squadra
+  url: https://www.squadrainvest.com.br/cartas/
+  tipo: gestora
+- nome: SulAmérica Investimentos
+  url: https://www.sulamericainvestimentos.com.br/produtos/palavra-do-gestor/
+  tipo: gestora
+- nome: TAG Investimentos
+  url: https://taginvest.com.br/cartas-mensais/
+  tipo: gestora
+- nome: TC Pandhora
+  url: https://www.pandhora.com/cartas-mensais
+  tipo: gestora
+- nome: Tenax Capital
+  url: https://www.tenax.capital/conteudos
+  tipo: gestora
+- nome: TG Core (TG Real Estate)
+  url: https://tgrealestate.com.br/relatorio/desempenho/
+  tipo: gestora
+- nome: Tivio Capital
+  url: https://tivio.com/blog/carta-do-gestor/
+  tipo: gestora
+- nome: Trígono Capital
+  url: https://trigonocapital.com/conteudos
+  tipo: gestora
+- nome: TRX Investimentos (TRXY11)
+  url: https://trxy11.com.br/relatorios-gerenciais-2/
+  tipo: gestora
+- nome: V8 Capital
+  url: https://www.v8capital.com.br/conteudo/
+  tipo: gestora
+- nome: Valora Investimentos
+  url: https://valorainvest.com.br/
+  tipo: gestora
+- nome: Venice RC
+  url: https://asset.venicerc.com.br/categoria/carta-do-gestor/
+  tipo: gestora
+- nome: Verde Asset
+  url: https://www.verdeasset.com.br/
+  tipo: gestora
+- nome: Versa Asset
+  url: https://versaasset.com.br/categoria/cartas/
+  tipo: gestora
+- nome: Vinci Compass
+  url: https://cgcompass.com/pt/publicacoes/portugues/
+  tipo: gestora
+- nome: Vista Capital
+  url: https://vistacapital.com.br/relatorios/
+  tipo: gestora
+- nome: Vokin Investimentos
+  url: https://www.vokin.com.br/cartas-mensais/
+  tipo: gestora
+- nome: Western Asset
+  url: https://www.westernasset.com.br/pt/research/Newsletters.cfm
+  tipo: gestora
+- nome: WHG
+  url: https://www.whg.com.br/conteudo/
+  tipo: gestora
+- nome: Azimut Wealth
+  url: https://media.azimutwealth.com.br/categoria/carta-mensal/
+  tipo: family_office
+- nome: Capri
+  url: https://capribr.com/conteudos/
+  tipo: family_office
+- nome: GHIA MFO
+  url: https://ghiamfo.com.br/carta-mensal/
+  tipo: family_office
+- nome: Gordon MFO
+  url: https://gordonmfo.com.br/cartas/
+  tipo: family_office
+- nome: Mirabaud
+  url: https://www.mirabaud.com.br/pt/insights
+  tipo: family_office
+- nome: MMZR Family Office
+  url: https://www.mmzrfo.com.br/publicacoes
+  tipo: family_office
+- nome: Monte Bravo
+  url: https://www.montebravo.com.br/categoria/analise/carta-mensal/
+  tipo: family_office
+- nome: Somma Investimentos
+  url: https://www.sommainvestimentos.com.br/
+  tipo: family_office
+- nome: Tera Capital
+  url: https://www.teracapital.com.br/carta-mensal
+  tipo: family_office
+- nome: Zanella Wealth
+  url: https://zanellawealth.com.br/category/carta-mensal/
+  tipo: family_office
+- nome: Bain & Company
+  url: https://www.bain.com/insights/
+  tipo: global
+- nome: Bank of America
+  url: https://business.bofa.com/en-us/content/market-strategies-insights.html
+  tipo: global
+- nome: BNY
+  url: https://www.bny.com/corporate/global/en/insights.html
+  tipo: global
+- nome: Barclays
+  url: https://www.ib.barclays/our-insights.html
+  tipo: global
+- nome: BCG
+  url: https://www.bcg.com/industries/financial-institutions/insights
+  tipo: global
+- nome: BlackRock
+  url: https://www.blackrock.com/us/individual/insights
+  tipo: global
+- nome: Blackstone
+  url: https://www.blackstone.com/insights/
+  tipo: global
+- nome: Citi
+  url: https://www.citigroup.com/global/insights/all
+  tipo: global
+- nome: DC Advisory
+  url: https://www.dcadvisory.com/news-deals-insights/?ContentType=Insights
+  tipo: global
+- nome: Deutsche Bank Research
+  url: https://www.dbresearch.com/PROD/RPS_EN-PROD/Latest_publications_studies_and_analysis_english_only/LATEST_PUBLICAT_EN.alias
+  tipo: global
+- nome: Goldman Sachs Research
+  url: https://www.goldmansachs.com/insights/goldman-sachs-research
+  tipo: global
+- nome: Hamilton Lane
+  url: https://www.hamiltonlane.com/en-us/insight
+  tipo: global
+- nome: Houlihan Lokey
+  url: https://hl.com/insights/
+  tipo: global
+- nome: HSBC Global Private Banking
+  url: https://www.privatebanking.hsbc.com/wih/investments-Insights/
+  tipo: global
+- nome: J.P. Morgan
+  url: https://www.jpmorgan.com/insights/banking/investment-banking
+  tipo: global
+- nome: Jefferies
+  url: https://www.jefferies.com/insights/
+  tipo: global
+- nome: Kearney
+  url: https://www.kearney.com/industry/private-equity/insights
+  tipo: global
+- nome: KKR
+  url: https://www.kkr.com/insights
+  tipo: global
+- nome: KPMG
+  url: https://kpmg.com/us/en/insights-by-industry/insights-banking-capital-markets.html
+  tipo: global
+- nome: McKinsey
+  url: https://www.mckinsey.com/industries/financial-services/our-insights/corporate-and-investment-banking
+  tipo: global
+- nome: Merrill
+  url: https://www.ml.com/financial-research-and-insights/todays-markets.html
+  tipo: global
+- nome: Morgan Stanley
+  url: https://www.morganstanley.com/ideas
+  tipo: global
+- nome: Natixis CIB
+  url: https://home.cib.natixis.com/library
+  tipo: global
+- nome: Norges Bank (NBIM)
+  url: https://www.nbim.no/en/news-and-insights/
+  tipo: global
+- nome: Raymond James
+  url: https://www.raymondjames.com/corporations-and-institutions/investment-banking/industry-insight
+  tipo: global
+- nome: Santander CIB
+  url: https://www.santandercib.com/insights
+  tipo: global
+- nome: Standard Chartered
+  url: https://www.sc.com/en/corporate-investment-banking/news-and-views/
+  tipo: global
+- nome: William Blair
+  url: https://www.williamblair.com/Investment-Banking/Insights
+  tipo: global

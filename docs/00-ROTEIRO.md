@@ -416,6 +416,16 @@ celular, Configurações e Acervo conferidos por imagem; 306 testes + testes de 
 ✅ Aceite (05/10/2026): preferências salvas pelo navegador e conferidas no disco; 29 comandos nos dois temas sem erro de
 JavaScript; 316 testes + teste de navegador.
 
+
+## Cartas de gestores, mais portais e TV (06/10/2026) — pedido do Rickson (PDF “Insights do Mercado”)
+- [x] Cartas: 140 gestoras do compilado em `config/cartas_gestores.yaml`; leitura diária do site público (feed quando
+  existe, robots.txt respeitado), situação de cada uma (ativa · desatualizada · sem data · sem cartas · bloqueada · fora
+  do ar); painel CARTAS, `/cartas`, ferramentas `cartas_gestores`/`situacao_gestoras`/`ler_carta` e resumo pelo chat
+- [x] Notícias: 50 portais novos (74 no total), incluindo Ásia e setores; os que bloqueiam ou estão parados ficaram de fora
+- [x] TV: aba nova com 66 canais em 4 grupos + “Meus canais”, ao vivo, últimos vídeos, controle pelo teclado
+✅ Aceite (06/10/2026): 1ª rodada real nas 140 gestoras em 43 s (55 ativas, 17 desatualizadas, 39 sem cartas
+reconhecidas, 12 bloqueiam, 9 fora do ar, 8 sem data); 74 feeds conferidos; TV e CARTAS no navegador (computador e celular).
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

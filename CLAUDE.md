@@ -86,7 +86,7 @@ Arquivos com DRM não são processados.
   fichas/relatório; `consultas.py` formata as respostas); MCP fino em `quiron/mcp/biblioteca/`. As ferramentas devolvem
   trechos com citação; quem redige é o agente, seguindo `agente/skills/` (espelhadas em `.claude/skills/` para o Claude Code).
 - Dados: Banco Central (SGS, Focus), Tesouro Transparente, ANBIMA (ETTJ), CVM Dados Abertos, IBGE, brapi, `yfinance`,
-  datasets do Damodaran, RSS de notícias, Bluesky, Reddit e YouTube pelas APIs oficiais.
+  datasets do Damodaran, RSS de notícias (74 fontes, grupos brasil/global/asia/oficiais/setores_br/setores_global), Bluesky, Reddit e YouTube pelas APIs oficiais.
 - Mercado (código): `quiron/servicos/mercado/` — `http.py` (httpx + cache SQLite em `dados/quiron.db`; fonte fora do ar
   devolve o último valor marcado DESATUALIZADO), um módulo por fonte (`bcb`, `tesouro`, `curva` (ANBIMA, plano B Tesouro),
   `cotacoes` (brapi/yfinance), `abertos` (CVM, IBGE, Damodaran)) e `painel.py` (Markdown com `📊 Fonte — horário`).
@@ -114,6 +114,18 @@ Arquivos com DRM não são processados.
   (`TICKER FA|DCF`, `FUND`, `CMPF`, `PORT`, `PLAN`, `ACAD`, `TASK`, `ALRT`, `CHAT`), layout "Assessoria", manifest para o
   celular. Alertas em `quiron/servicos/alertas.py` (`dados/alertas.json`; avisa uma vez por disparo; o bot avalia a cada
   5 min em `laco_alertas`; MCP `criar_alerta`/`listar_alertas`/`remover_alerta`; comando `/alerta`).
+- Cartas de gestores (06/10/2026, `quiron/servicos/cartas/`, `dados/cartas.db`): `coleta.py` (fontes em
+  `config/cartas_gestores.yaml`; `conferir` = robots.txt → página → feed da categoria (feed geral do site é ignorado) ou
+  links com PDF/palavra + data (`extrair_data`, futuro ≤ hoje+5; `_NAO_CARTA` tira carta-consulta/assembleia/lâmina);
+  situação ativa ≤ 120 dias; `atualizar` só as vencidas (20 h), 8 em paralelo; `ler_carta` só de domínio cadastrado ou
+  link já listado, ≤ 15 MB) e `consultas.py` (textos). MCP `quiron-noticias` (`cartas_gestores`, `situacao_gestoras`,
+  `ler_carta`); Terminal tópico `cartas` + `POST /api/cartas/atualizar` + painel CARTAS; bot `/cartas` (em
+  `carreira_bot`) e `laco_cartas` de hora em hora. Guardamos só título/data/link.
+- TV (06/10/2026, `quiron/servicos/tv.py` + `terminal/frontend/tv.html`, rota `/tv`): canais em `config/tv_canais.yaml`,
+  os do Rickson em `dados/ajustes/tv_canais.yaml` (`meus`, `ocultos`); `resolver` (link/@/UC… pela Data API ou página
+  pública), `videos` (RSS oficial → Data API → vazio: a tela toca `videoseries?list=UU…`); player embed oficial
+  (youtube-nocookie; ao vivo `embed/live_stream?channel=`). Rotas `/api/tv/*` (escrita com `_proteger`). Nuvem: o RSS do
+  YouTube dá 404 daqui (bloqueio de IP); no PC funciona.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`
@@ -218,7 +230,7 @@ Arquivos com DRM não são processados.
   chaves (salvar aplica no `os.environ` e reinicia o bot); Google Agenda (credencial por upload, `autorizar(abrir=…)`);
   verificação offline e troca de modo (sair força `os._exit` após 5 s); início automático do Windows; versão).
   Rotas de sistema: `_proteger` + cliente local (ou com TERMINAL_SENHA). Frontend: `nav.js`/`nav.css` (abas
-  TERMINAL · ACERVO · CONFIGURAÇÕES + selo do Telegram) em `index.html`, `acervo.html` e `config.html`. Sem `--central`
+  TERMINAL · TV · ACERVO · CONFIGURAÇÕES + selo do Telegram) em `index.html`, `acervo.html` e `config.html`. Sem `--central`
   (Docker) o bot aparece como "gerenciado pelo servidor". `.bat` restantes: `Abrir Quiron.bat`, `Quiron Offline.bat`
   (`quiron --offline`) e `Quiron Telegram.bat` (só compatibilidade com o Abrir antigo). Testes: `testes/test_central.py`.
   `verificar_tudo` (POST `/api/sistema/verificar`, botão "Verificar tudo"): chaves, testes de rede, bot, servidores MCP,

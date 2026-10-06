@@ -115,6 +115,9 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
     # carreira e conteúdo
     if re.match(r"^(?:tem |teve |alguma )?(?:norma|normas|regulacao|regra) nova(?:s)?(?: da cvm| do bc| da receita)?$|^novidades (?:da cvm|regulatorias)$", t):
         return "radar", "novidades"
+    if m := re.match(r"^(?:(?:quais|tem|teve|saiu|sairam|me (?:da|mostra|manda)|mostra|ver)\s+)?(?:as |alguma(?:s)? )?(?:ultimas |novas )?"
+                     r"cartas?(?: (?:de|dos|das) gestor(?:es|as)?)?(?: (?:recentes|novas|do mes|da semana))?(?: (?:da|do|de) (.{2,40}))?$", t):
+        return "cartas", (m.group(1) or "").strip()
     if re.match(r"^(?:me )?(?:da|de|sugere|manda) (?:umas |algumas )?(?:ideias|pautas) (?:de|para|pra) (?:post|posts|conteudo|video|reels)$", t):
         return "pauta", ""
     return None
@@ -123,7 +126,8 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
 # ---------------------------------------------------------------- 1b. instrução certa já carregada
 SKILL_POR_ASSUNTO = (
     ("noticias", r"\bnoticia|manchete|o que (?:esta|ta|anda) saindo|o que (?:aconteceu|houve|rolou)|imprensa|"
-                 r"o que (?:estao|tao) (?:falando|dizendo)|repercuss|sentimento (?:do mercado|sobre)|clima do mercado"),
+                 r"o que (?:estao|tao) (?:falando|dizendo)|repercuss|sentimento (?:do mercado|sobre)|clima do mercado|"
+                 r"\bcartas? (?:d[aeo]s? |recentes|nova)"),
     ("briefing", r"\bbriefing\b"),
 )
 
@@ -139,7 +143,8 @@ def skills_provaveis(texto: str) -> list[str]:
 AREAS = {
     "quiron_mercado": r"selic|cdi|ipca|igpm|inflacao|dolar|euro|cambio|cotac|acao|acoes|bolsa|ibov|juro|tesouro|curva|focus|"
                       r"mercado|fundo|fii|gestor|empresa|ticker|balanco|dividend|commodit|petroleo|ouro|cvm|preco|\b[a-z]{4}\d{1,2}\b",
-    "quiron_noticias": r"noticia|manchete|aconteceu|saiu|jornal|redes|bluesky|reddit|youtube|sentimento|clima do mercado",
+    "quiron_noticias": r"noticia|manchete|aconteceu|saiu|jornal|redes|bluesky|reddit|youtube|sentimento|clima do mercado|"
+                       r"carta|gestora|gestor|letter",
     "quiron_biblioteca": r"livro|autor|biblioteca|explica|conceito|estudar|teoria|graham|buffett|marks|debate|citac",
     "quiron_academia": r"questao|questoes|simulado|prova|cfp|cnpi|cea|cfa|flashcard|estudo|edital|modulo|academia|aula|diagnostic",
     "quiron_organizacao": r"tarefa|lembr|agenda|reuniao|compromisso|evento|nota|anot|meta|pendenc|revisao semanal|lembrete|remarc|adia",

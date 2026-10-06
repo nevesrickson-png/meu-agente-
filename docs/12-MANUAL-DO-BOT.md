@@ -29,6 +29,7 @@ chat igual ao do Telegram). Tudo o que está aqui funciona nos dois, salvo quand
 | “quando posso parar de trabalhar com 1 milhão e 8 mil por mês?” | simulador de patrimônio com gráfico |
 | “o que você sabe sobre mim?” · “o que fizemos hoje?” · “lembre que…” | memória |
 | “tem norma nova?” · “me dá ideias de post” | radar regulatório · pautas de conteúdo |
+| “cartas recentes” · “carta da Dynamo” · “resuma a carta da Verde” | cartas de gestores (lista ou resumo) |
 
 Enquanto pensa, ele mostra **“⏳ Consultando dados de mercado…”**. A conversa tem continuidade: “e o IPCA?” depois de
 perguntar da Selic é entendido. `/novo` começa outro assunto (o anterior fica guardado na memória).
@@ -44,6 +45,7 @@ perguntar da Selic é entendido. `/novo` começa outro assunto (o anterior fica 
 | Domingo, 18h | Revisão da semana (tarefas, metas, teses a revisar) |
 | Na hora marcada | Lembretes das tarefas, com botões Feito / +1h / Amanhã |
 | A cada 5 min | Confere seus alertas de preço, variação e notícia e avisa uma vez por disparo |
+| 1 vez por dia | Confere os sites das ~140 gestoras e guarda as cartas novas (só título, data e link) |
 | Quando fica pronta | Entrega a análise pedida (resumo + PDF + planilha) |
 | De 2 em 2 h (7h–22h) | Confere suas rotinas e só fala se valer a pena |
 | Toda noite, 3h | Organiza a memória e faz cópia de segurança |
@@ -74,14 +76,18 @@ Montado direto dos dados, sempre no mesmo formato, para ler no celular:
 | Notícias de um tema ou ativo | `/noticia` | `/noticia copom` |
 | Clima nas redes (Bluesky, Reddit, YouTube) | — | “qual o sentimento sobre PETR4?” |
 | Alertas | `/alerta` | `/alerta PETR4 abaixo de 30` · `/alerta "fato relevante" Vale` |
+| Cartas de gestores recentes | `/cartas` | `/cartas` · `/cartas Verde` · `/cartas 30` (dias) · `/cartas gestoras` (quem segue ativo) |
+| Resumo de uma carta | — | “resuma a carta da Dynamo” (ele lê o PDF e resume cenário, posições e ideias) |
 
 Dados de fontes oficiais (Banco Central, Tesouro, ANBIMA, CVM, IBGE, B3/Yahoo), sempre com fonte e horário. Fonte fora
 do ar → último valor marcado DESATUALIZADO.
 
-**Notícias — 24 fontes, organizadas por relevância.** Imprensa de referência (Valor, Brazil Journal, Bloomberg Línea,
-NeoFeed, Financial Times, The Economist), portais de finanças (InfoMoney, Folha Mercado, Estadão E-Investidor, Exame,
-Money Times, Seu Dinheiro, g1, Agência Brasil, CNBC, MarketWatch, BBC) e órgãos oficiais (Banco Central, CVM, IBGE,
-Federal Reserve, BCE). A mesma notícia em vários veículos vira **uma história** (“+3 veículos” = confirmada). A ordem
+**Notícias — 74 fontes, organizadas por relevância.** Imprensa de referência (Valor, Pipeline, Brazil Journal, Bloomberg
+Línea, NeoFeed, Financial Times, The Economist, Nikkei Asia), portais de finanças do Brasil (InfoMoney, Folha, Estadão,
+Exame, Forbes, InvestNews, Money Times, Seu Dinheiro, Suno, ADVFN…), do mundo (CNBC, MarketWatch, BBC, Guardian, Fortune,
+Euromoney, Risk.net, Globe and Mail, BNN Bloomberg…), da Ásia (SCMP, Nikkei Asia, Business Times, Japan Times), sites de
+setor (petróleo, telecom, energia, agro, mineração, saúde, aviação, varejo, mídia) e órgãos oficiais (Banco Central, CVM,
+IBGE, Federal Reserve, BCE). Notícia de setor só sobe na lista se tiver tema de mercado. A mesma notícia em vários veículos vira **uma história** (“+3 veículos” = confirmada). A ordem
 leva em conta o tema (juros, inflação, fiscal e Copom pesam mais), a credibilidade da fonte, quantos veículos cobriram e
 a hora; esporte, celebridade e afins ficam de fora. Pesos e fontes ajustáveis em `config/temas_noticias.yaml` e
 `config/fontes_noticias.yaml`.
@@ -158,6 +164,22 @@ Os números são sempre calculados em Python, com fonte; a IA só interpreta e e
 Ele aprende sozinho com as conversas (preferências, objetivos, rotina, estudo, clientes por código) e lembra no Telegram
 e no Terminal. `/memoria` (ver) · `/memoria buscar <tema>` · `/memoria esquecer <nº>` · `/memoria mudar <nº> <texto>` ·
 `/memoria hoje` (tudo o que aconteceu no dia) · `/memoria conversas` · `/memoria exportar` · `/lembrar <fato>`
+
+### 📬 Cartas de gestores (Terminal: `CARTAS` · Telegram: `/cartas`)
+~140 gestoras do compilado “Insights do Mercado” (Brasil, globais e family offices). Uma vez por dia o Quíron confere o site
+público de cada uma (respeitando o robots.txt, sem login) e guarda título, data e link das cartas. No Terminal, o painel
+**CARTAS** mostra as mais recentes (filtro por Brasil/Globais/Family offices e por nome) e a aba **Gestoras** diz quem
+segue ativa, quem parou (“desatualizada” = última carta antiga: pode ter encerrado ou mudado de site), quem bloqueia
+leitura automática e quem saiu do ar. O botão **resumir** manda a carta para o chat do Quíron. Lista em
+`config/cartas_gestores.yaml` (para incluir uma gestora: nome, link da página de cartas e tipo).
+
+### 📺 TV (aba **TV** no topo, ou `TV` na busca do Terminal)
+Canais do YouTube como uma TV: botões por grupo (Notícias Brasil, Notícias globais, Gestoras e bancos, Gestoras globais e
+**Meus canais**), player grande, **● Ao vivo** (quando o canal está transmitindo) e a lista dos últimos vídeos. Controle
+remoto pelo teclado: ← → troca de canal, números escolhem o canal, L = ao vivo, F = tela cheia. Para incluir um canal,
+cole o link (youtube.com/@nome) ou o @ e clique em “+ Adicionar canal”; “Remover canal atual” tira da lista (os do padrão
+voltam com “Mostrar escondidos”). Sem a chave do YouTube a lista lateral pode não aparecer, mas o player toca os envios
+mais recentes do canal mesmo assim.
 
 ### 🎨 Aparência do Terminal
 Visual escuro ou claro: botão no canto superior direito (◐ automático, segue o computador/celular · ☀ claro · ☾ escuro).

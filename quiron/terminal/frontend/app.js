@@ -54,6 +54,7 @@ const COMANDOS = [
     ["PORT", "Cola a carteira → enquadramento no perfil e diagnóstico completo"], ["SIM [CLI-XXX]", "Simulador de patrimônio: quanto investir, quando parar, meta, imóvel × aplicações"], ["PLAN [CLI-XXX]", "Fichas de planejamento e relatórios"],
     ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
     ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
+    ["CARTAS", "Cartas de gestores publicadas recentemente (e quais gestoras seguem ativas)"], ["TV", "Canais do YouTube: notícias, gestoras e os seus — igual uma TV"],
     ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
 ];
 
@@ -90,7 +91,7 @@ const PRESETS = {
   ],
   "Estudo": [
     { tipo: "calc", x: 1, y: 1, w: 4, h: 11 }, { tipo: "curva", x: 5, y: 1, w: 8, h: 11 }, { tipo: "noticias", x: 1, y: 12, w: 8, h: 9 },
-    { tipo: "ajuda", x: 9, y: 12, w: 4, h: 9 },
+    { tipo: "cartas", x: 9, y: 12, w: 4, h: 9 },
   ],
 };
 
@@ -1015,9 +1016,54 @@ function graficoPatrimonio(alvo, r) {
   $("[data-alvo]", alvo).addEventListener("mouseleave", () => { cursor.setAttribute("visibility", "hidden"); dica.hidden = true; });
 }
 
+// CARTAS — cartas de gestores publicadas recentemente (sites públicos das gestoras; só título, data e link)
+const SITUACAO_CARTA = { ativa: ["Ativa", "carta nos últimos 120 dias"], desatualizada: ["Desatualizada", "última carta antiga: pode ter encerrado ou mudado de site"],
+  sem_data: ["Sem data", "achei cartas, mas sem data no título"], sem_cartas: ["Sem cartas", "página no ar, nada reconhecido (abra no navegador)"],
+  bloqueada: ["Bloqueada", "o site não permite leitura automática"], fora_do_ar: ["Fora do ar", "site ou página não responde"], nao_conferida: ["A conferir", "ainda não conferida"] };
+function perguntarNoChat(texto) {
+  const p = paineis.find((x) => x.tipo === "chat") || adicionarPainel("chat");
+  setTimeout(() => { const c = $(`#${p.id} textarea`); if (c) { c.value = texto; $(`#${p.id} form`).requestSubmit(); } }, 400);
+}
+function renderCartas(corpo, d, painel) {
+  const aba = painel.p.aba || "recentes", tipos = [["", "Todas"], ["gestora", "Brasil"], ["global", "Globais"], ["family_office", "Family offices"]];
+  const cont = d.contagem || {};
+  const topo = `<div class="periodos">${[["recentes", "Recentes"], ["gestoras", `Gestoras (${d.total_fontes})`]].map(([k, t]) => `<button type="button" data-aba="${k}" class="${aba === k ? "ativo" : ""}">${t}</button>`).join("")}
+    ${aba === "recentes" ? tipos.map(([k, t]) => `<button type="button" data-tipo="${k}" class="${(painel.p.tipo || "") === k ? "ativo" : ""}">${t}</button>`).join("") : ""}
+    <button type="button" data-atualizar style="margin-left:auto" title="Confere todas as gestoras agora (~1 min)" ${d.atualizando ? "disabled" : ""}>${d.atualizando ? "conferindo…" : "conferir agora"}</button></div>
+    <form class="form-v2" data-busca style="margin:6px 0"><input name="termo" aria-label="Filtrar cartas" placeholder="filtrar por gestora ou título (ex.: Verde, Dynamo, outlook) e Enter" value="${esc(painel.p.termo || "")}" style="width:100%"></form>`;
+  let lista;
+  if (aba === "gestoras") {
+    const ordem = ["ativa", "desatualizada", "sem_data", "sem_cartas", "bloqueada", "fora_do_ar", "nao_conferida"];
+    const gs = [...d.gestoras].filter((g) => !painel.p.termo || semAcento(g.fonte).includes(semAcento(painel.p.termo)))
+      .sort((a, b) => ordem.indexOf(a.situacao) - ordem.indexOf(b.situacao) || (b.ultima_carta || "").localeCompare(a.ultima_carta || ""));
+    lista = `<div class="dica" style="margin-bottom:4px">${ordem.filter((k) => cont[k]).map((k) => `${SITUACAO_CARTA[k][0]}: <b>${cont[k]}</b>`).join(" · ")}</div>
+      ${gs.map((g) => `<div class="noticia"><a href="${linkSeguro(g.url)}" target="_blank" rel="noopener noreferrer">${esc(g.fonte)}</a>
+        <div class="meta"><span class="tag ${g.situacao === "ativa" ? "" : "alerta"}" title="${esc(SITUACAO_CARTA[g.situacao]?.[1] || "")}">${esc(SITUACAO_CARTA[g.situacao]?.[0] || g.situacao)}</span>
+        ${g.ultima_carta ? "última carta " + esc(g.ultima_carta.slice(5, 7) + "/" + g.ultima_carta.slice(0, 4)) : ""}${g.detalhe ? ` · ${esc(g.detalhe)}` : ""}</div></div>`).join("")}`;
+  } else {
+    lista = d.itens.length ? d.itens.map((c) => `<div class="noticia"><a href="${linkSeguro(c.link)}" target="_blank" rel="noopener noreferrer">${esc(c.titulo)}</a>
+      <div class="meta">${esc(c.fonte)} · ${esc(c.data.slice(8) === "01" ? c.data.slice(5, 7) + "/" + c.data.slice(0, 4) : c.data.split("-").reverse().join("/"))}
+      <button type="button" class="mini" data-resumir="${esc(c.link)}" data-fonte="${esc(c.fonte)}" data-titulo="${esc(c.titulo)}" title="O Quíron lê a carta e resume no chat">resumir</button></div></div>`).join("")
+      : `<div class="dica">${d.atualizando ? "Conferindo as gestoras pela primeira vez (cerca de 1 minuto)…" : "Nenhuma carta nos últimos 90 dias com esse filtro."}</div>`;
+  }
+  corpo.innerHTML = topo + lista;
+  corpo.querySelectorAll("[data-aba]").forEach((b) => (b.onclick = () => { painel.p.aba = b.dataset.aba; reabrir(painel); }));
+  corpo.querySelectorAll("[data-tipo]").forEach((b) => (b.onclick = () => { painel.p.tipo = b.dataset.tipo; reabrir(painel); }));
+  $("[data-busca]", corpo).onsubmit = (e) => { e.preventDefault(); painel.p.termo = e.target.termo.value.trim(); reabrir(painel); };
+  $("[data-atualizar]", corpo).onclick = async (e) => {
+    e.target.disabled = true; e.target.textContent = "conferindo…";
+    try { await acao("/api/cartas/atualizar"); aviso("Conferindo as gestoras; a lista se atualiza sozinha em instantes."); setTimeout(() => atualizarPainel(painel), 60000); } catch (err) { aviso(err.message); }
+  };
+  corpo.querySelectorAll("[data-resumir]").forEach((b) => (b.onclick = () => perguntarNoChat(`Leia e resuma a carta da ${b.dataset.fonte} — “${b.dataset.titulo}”: ${b.dataset.resumir}`)));
+  rodape(painel, `${d.conferido_em ? "conferido " + hora(d.conferido_em) + " · " : ""}sites públicos das gestoras, 1 vez por dia, respeitando robots.txt · lista em config/cartas_gestores.yaml`);
+}
+Object.assign(TIPOS, {
+  cartas: { titulo: "Cartas de gestores — CARTAS", topico: "cartas", params: (p) => ({ termo: p.termo || "", tipo: p.tipo || "", aba: p.aba || "recentes", dias: 90 }), w: 6, h: 12, render: renderCartas },
+});
+
 // comandos da v2; devolve true se tratou
 function executarV2(original, a, b, resto) {
-  const unico = { PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat", CLI: "cli", BIB: "bib" };
+  const unico = { CARTAS: "cartas", CARTA: "cartas", PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat", CLI: "cli", BIB: "bib" };
   if (a === "BIB" && b) { adicionarPainel("bib", { q: original.trim().split(/\s+/).slice(1).join(" ") }); return true; }
   if (unico[a] && !b) { adicionarPainel(unico[a]); return true; }
   if (a === "CHAT" || a === "IA") { // CHAT <pergunta>: abre o chat já com a pergunta
@@ -1058,7 +1104,7 @@ function executar(texto) {
   const simples = { TOP: ["noticias", {}], ECO: ["agenda", {}], CURV: ["curva", {}], MACRO: ["macro", {}], JUROS: ["juros", {}], WEI: ["mundo", {}],
     FX: ["moedas", {}], CMDTY: ["commodities", {}], W: ["watchlist", {}], CALC: ["calc", {}], RPT: ["rpt", {}], STATUS: ["status", {}], HELP: ["ajuda", {}], "?": ["ajuda", {}] };
   if (simples[a] && !b) return adicionarPainel(...simples[a]);
-  const telas = { CONFIG: "/config", CONF: "/config", CONFIGURACOES: "/config", "CONFIGURAÇÕES": "/config", SIS: "/config", ACERVO: "/acervo" };
+  const telas = { TV: "/tv", YOUTUBE: "/tv", CONFIG: "/config", CONF: "/config", CONFIGURACOES: "/config", "CONFIGURAÇÕES": "/config", SIS: "/config", ACERVO: "/acervo" };
   if (telas[a] && !b) { location.href = telas[a]; return; }
   if ((a === "NEWS" || a === "N") && b) return adicionarPainel("noticias", { termo: [b, ...resto].join(" ").toLowerCase() });
   if (a === "SOC" && b) return adicionarPainel("redes", { termo: [b, ...resto].join(" ").toLowerCase() });
