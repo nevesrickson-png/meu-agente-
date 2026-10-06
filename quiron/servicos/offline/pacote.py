@@ -10,6 +10,7 @@ import shutil
 import sqlite3
 import tarfile
 import tempfile
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 
@@ -39,8 +40,8 @@ def gerar(destino: Path | None = None) -> Path:
                 continue
             if p.suffix == ".db":
                 copia = Path(tmp) / p.name
-                with sqlite3.connect(p) as origem, sqlite3.connect(copia) as dest:
-                    origem.backup(dest)
+                with closing(sqlite3.connect(p)) as origem, closing(sqlite3.connect(copia)) as dest:
+                    origem.backup(dest)  # fechadas antes do fim: no Windows, arquivo aberto não sai da pasta temporária
                 tar.add(copia, arcname=rel)
             else:
                 tar.add(p, arcname=rel)
@@ -48,32 +49,56 @@ def gerar(destino: Path | None = None) -> Path:
 
 
 def _seguro(nome: str) -> bool:
-    caminho = Path(nome)
-    return not caminho.is_absolute() and ".." not in caminho.parts and caminho.parts[0] in {"dados", "biblioteca"}
+    """Só caminhos simples dentro de dados/ ou biblioteca/ — nada de '..', absolutos, 'C:', '\\' ou '//'."""
+    if not nome or ":" in nome or "\\" in nome or nome.startswith("/") or "//" in nome:
+        return False
+    partes = nome.rstrip("/").split("/")
+    if partes[0] not in {"dados", "biblioteca"} or any(p in {"", ".", ".."} for p in partes):
+        return False
+    base = _origem(partes[0]).resolve()
+    return _origem(nome.rstrip("/")).resolve().is_relative_to(base)
 
 
 def importar(arquivo: Path) -> dict:
-    """Extrai o pacote. O que já existia e seria sobrescrito vai antes para `dados/antes-da-importacao-<data>/`."""
+    """Extrai o pacote numa pasta temporária e só depois troca: o que existia vai para
+    `dados/antes-da-importacao-<data>/`. Qualquer erro no meio desfaz a troca (nada fica pela metade)."""
     arquivo = Path(arquivo)
-    reserva = pasta_dados() / f"antes-da-importacao-{datetime.now():%Y%m%d-%H%M%S}"
+    agora = datetime.now()
+    reserva = pasta_dados() / f"antes-da-importacao-{agora:%Y%m%d-%H%M%S}"
     copiados = 0
     with tarfile.open(arquivo, "r:gz") as tar:
         membros = [m for m in tar.getmembers() if (m.isfile() or m.isdir()) and _seguro(m.name)]
         if not membros:
             raise ValueError("pacote vazio ou inválido")
-        topos = sorted({"/".join(Path(m.name).parts[:2]) for m in membros})
-        for rel in topos:  # guarda o que vai ser substituído
-            atual = _origem(rel)
-            if atual.exists():
-                alvo = reserva / rel
-                alvo.parent.mkdir(parents=True, exist_ok=True)
-                shutil.move(str(atual), alvo)
-        for m in membros:
-            if not m.isfile():
-                continue
-            destino = _origem(m.name)
-            destino.parent.mkdir(parents=True, exist_ok=True)
-            with tar.extractfile(m) as f, destino.open("wb") as d:
-                shutil.copyfileobj(f, d)
-            copiados += 1
+        topos = sorted({"/".join(m.name.rstrip("/").split("/")[:2]) for m in membros})
+        pasta_dados().mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=pasta_dados(), prefix=".importando-") as tmp:
+            for m in membros:  # 1) extrai tudo à parte
+                if not m.isfile():
+                    continue
+                destino = Path(tmp) / m.name
+                destino.parent.mkdir(parents=True, exist_ok=True)
+                with tar.extractfile(m) as f, destino.open("wb") as d:
+                    shutil.copyfileobj(f, d)
+                copiados += 1
+            feitos: list[tuple[Path, Path | None]] = []  # (atual, reserva) para desfazer
+            try:  # 2) troca item por item
+                for rel in topos:
+                    atual, novo = _origem(rel), Path(tmp) / rel
+                    guardado = None
+                    if atual.exists():
+                        guardado = reserva / rel
+                        guardado.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.move(str(atual), guardado)
+                    feitos.append((atual, guardado))
+                    if novo.exists():
+                        atual.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.move(str(novo), atual)
+            except OSError as e:
+                for atual, guardado in reversed(feitos):
+                    if atual.exists():
+                        shutil.rmtree(atual) if atual.is_dir() else atual.unlink()
+                    if guardado is not None and guardado.exists():
+                        shutil.move(str(guardado), atual)
+                raise RuntimeError(f"importação desfeita (feche o Quíron e tente de novo): {e}") from e
     return {"arquivos": copiados, "itens": topos, "reserva": str(reserva) if reserva.exists() else ""}

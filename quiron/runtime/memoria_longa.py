@@ -616,8 +616,10 @@ class MemoriaLonga:
                     if igual:  # fica o mais recente/importante (a vem antes na ordenação)
                         with self.con:
                             self.con.execute("UPDATE fatos SET ativo = 0, substituido_por = ? WHERE id = ?", (a.id, b.id))
-                            self.con.execute("UPDATE fatos SET importancia = MAX(importancia, ?), usos = usos + ? WHERE id = ?",
-                                             (b.importancia, b.usos, a.id))
+                            # o que o Rickson disse continua protegido no fato que fica (apagar nunca remove "dito")
+                            self.con.execute("UPDATE fatos SET importancia = MAX(importancia, ?), usos = usos + ?, "
+                                             "origem = CASE WHEN ? = 'dito' THEN 'dito' ELSE origem END WHERE id = ?",
+                                             (b.importancia, b.usos, b.origem, a.id))
                         fora.add(b.id)
                         juntados += 1
             limite = _iso(hoje - timedelta(days=120))
@@ -756,6 +758,14 @@ class MemoriaLonga:
             if (pasta / nome).exists():
                 with sqlite3.connect(pasta / nome) as fonte, sqlite3.connect(self.caminho.with_name(nome), timeout=30) as destino:
                     fonte.backup(destino)
+        # o MEMORIA.md ainda descreve a memória de antes: sem regerar, a próxima leitura o trataria como edição à mão
+        # e desativaria os fatos restaurados
+        from quiron.servicos import lgpd
+
+        for cod in lgpd.esquecidos():  # cliente esquecido (LGPD) depois da cópia continua esquecido
+            self.apagar_por_cliente(cod)
+            lgpd._apagar_conversas(self.caminho.with_name("conversas.db"), cod)
+        self._exportar_md()  # a conexão aberta já enxerga o banco restaurado (o backup do SQLite grava pelo próprio SQLite)
         return f"Memória restaurada para a cópia de {dia}. Feche e abra o Quíron para recarregar."
 
     def exportar(self, destino: Path | None = None) -> Path:

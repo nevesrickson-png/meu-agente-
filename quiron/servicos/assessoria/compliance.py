@@ -28,9 +28,12 @@ def _norm(t: str) -> str:
 REGRAS: list[tuple[str, str, str, str]] = [
     # (regra, gravidade, padrão sobre o texto sem acento, sugestão)
     ("Promessa de rentabilidade", "grave",
-     r"\bgarant\w*\b[^.?!]{0,40}\b(rend\w*|retorno|lucro|ganho|rentabilidade|valoriza\w*)|(rend\w*|retorno|lucro|ganho|rentabilidade)[^.?!]{0,25}\bgarantid[oa]s?\b",
+     r"\b(garant|assegur)\w*\b[^.?!]{0,40}\b(rend\w*|retorno|lucro|ganho|rentabilidade|valoriza\w*)"
+     r"|(rend\w*|retorno|lucro|ganho|rentabilidade)[^.?!]{0,25}\b(garantid|assegurad)[oa]s?\b"
+     r"|\b(retorno|rentabilidade|ganho|lucro|rendimento)s? (cert[oa]s?|seguros?)\b",
      "não prometa retorno; diga o que é contratado (ex.: taxa do título) e os riscos"),
-    ("Negar o risco", "grave", r"\bsem (nenhum )?risco\b|\brisco zero\b|\bnao tem (como|risco de) perder\b|\bnao (vai|tem como) dar errado\b|\bdinheiro certo\b",
+    ("Negar o risco", "grave", r"\bsem (nenhum )?riscos?\b|\brisco (praticamente |quase )?(zero|nulo|inexistente)\b|\bnao (ha|tem|existe|corre) (nenhum )?riscos?\b(?! de credito| de mercado| de liquidez)"
+     r"|\bnao (ha|tem|existe) riscos? (nenhum|algum)\b|\b100 ?% (segur|garantid)\w*|\bnao tem (como|risco de) perder\b|\bnao (vai|tem como) dar errado\b|\bdinheiro certo\b",
      "todo investimento tem algum risco (crédito, mercado, liquidez); explique qual"),
     ("Certeza sobre o futuro", "grave", r"\bcom certeza (vai|sobe|rende|valoriza)\w*|\bvai (subir|valorizar|bombar) com certeza\b|\bpode confiar que (vai|sobe)",
      "use cenários e probabilidades, não certezas"),
@@ -51,6 +54,15 @@ SENSIVEIS = [
 ]
 
 
+def _vizinhanca(norm: str, pos: int) -> str:
+    """A frase de `pos` e a seguinte."""
+    ini = max(norm.rfind(c, 0, pos) for c in ".?!\n") + 1
+    fim, frases = pos, 0
+    while frases < 2 and (prox := min([i for c in ".?!\n" if (i := norm.find(c, fim)) >= 0] or [len(norm)])) < len(norm):
+        fim, frases = prox + 1, frases + 1
+    return norm[ini:fim if frases == 2 else len(norm)]
+
+
 def conferir(texto: str, dados_pessoais: bool = True) -> list[Alerta]:
     """Alertas de compliance encontrados no texto (vazio = nada óbvio)."""
     if not texto:
@@ -59,8 +71,9 @@ def conferir(texto: str, dados_pessoais: bool = True) -> list[Alerta]:
     alertas = []
     for regra, grav, padrao, sug in REGRAS:
         for m in re.finditer(padrao, norm):
-            if regra == "Rentabilidade passada sem ressalva" and re.search(r"(passad\w* nao|nao (e|eh) garantia|nao garante)", norm):
-                continue
+            if regra == "Rentabilidade passada sem ressalva" and re.search(
+                    r"(passad\w* nao|nao (e|eh) garantia|nao garante)", _vizinhanca(norm, m.start())):
+                continue  # ressalva na mesma frase ou na seguinte (não em qualquer ponto do texto)
             if re.search(r"\bnao( e| eh| ha| tem| existe)?( nenhuma?)?\s*$", norm[max(0, m.start() - 16):m.start()]):
                 continue  # negação: "não é garantia de rentabilidade", "não garantimos retorno"
             alertas.append(Alerta(regra, grav, texto[max(0, m.start() - 15):m.end() + 15].strip(), sug))

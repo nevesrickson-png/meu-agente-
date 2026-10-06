@@ -56,8 +56,21 @@ def _host_permitido(host: str | None) -> bool:
     um domínio para 127.0.0.1 (“DNS rebinding”) não consegue ler nada. Com senha, o cookie já protege."""
     if _senha():
         return True
-    nome = (host or "").rsplit(":", 1)[0].strip("[]").lower()
+    nome = _nome_host(host)
     return nome in {"127.0.0.1", "localhost", "::1", "testserver"} or nome.endswith(".ts.net")
+
+
+def _nome_host(host: str | None) -> str:
+    """'127.0.0.1:8765' → '127.0.0.1' · '[::1]:8765' → '::1' · '[::1]' → '::1'."""
+    h = (host or "").strip().lower()
+    if h.startswith("["):
+        return h[1:].split("]", 1)[0]
+    return h.rsplit(":", 1)[0] if h.count(":") == 1 else h
+
+
+def _porta(host: str) -> str:
+    h = host.rsplit("]", 1)[-1]
+    return h.rsplit(":", 1)[1] if ":" in h else ""
 
 
 def _origem_permitida(origem: str | None, host: str | None) -> bool:
@@ -66,8 +79,12 @@ def _origem_permitida(origem: str | None, host: str | None) -> bool:
         return True  # cliente fora do navegador (scripts, testes)
     from urllib.parse import urlsplit
 
-    o = (urlsplit(origem).netloc or "").lower()
-    return o == (host or "").lower() or _host_permitido(o)
+    o, h = (urlsplit(origem).netloc or "").lower(), (host or "").lower()
+    if o == h:
+        return True
+    # mesma máquina por outro nome (localhost × 127.0.0.1), na MESMA porta; nunca outro site *.ts.net ou outra porta
+    locais = {"127.0.0.1", "localhost", "::1"}
+    return _nome_host(o) in locais and _nome_host(h) in locais and _porta(o) == _porta(h)
 
 
 @app.middleware("http")
@@ -302,8 +319,8 @@ def _proteger_acervo(request: Request) -> None:
     ou o endereço do Tailscale (bloqueia 'DNS rebinding')."""
     if request.headers.get("x-quiron") != "acervo":
         raise HTTPException(403, "pedido fora da tela do Acervo")
-    host = (request.headers.get("host") or "").rsplit(":", 1)[0]
-    if not _senha() and host not in HOSTS_LOCAIS | {"testserver"} and not host.endswith(".ts.net"):
+    host = _nome_host(request.headers.get("host"))
+    if not _senha() and host not in HOSTS_LOCAIS | {"testserver", "::1"} and not host.endswith(".ts.net"):
         raise HTTPException(403, "endereço não permitido sem TERMINAL_SENHA")
 
 
@@ -381,8 +398,8 @@ def _proteger(request: Request) -> None:
     """Toda ação que grava ou dispara algo exige o cabeçalho da própria tela (bloqueia outros sites)."""
     if request.headers.get("x-quiron") not in {"terminal", "acervo"}:
         raise HTTPException(403, "pedido fora da tela do Terminal")
-    host = (request.headers.get("host") or "").rsplit(":", 1)[0]
-    if not _senha() and host not in HOSTS_LOCAIS | {"testserver"} and not host.endswith(".ts.net"):
+    host = _nome_host(request.headers.get("host"))
+    if not _senha() and host not in HOSTS_LOCAIS | {"testserver", "::1"} and not host.endswith(".ts.net"):
         raise HTTPException(403, "endereço não permitido sem TERMINAL_SENHA")
 
 

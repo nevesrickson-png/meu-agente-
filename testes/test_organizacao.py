@@ -250,7 +250,7 @@ def test_esquecer_apaga_tarefas_e_notas_do_cliente():
     tarefas.criar("ligar para o CLI-0120", SEGUNDA)
     notas.criar("CLI-012 prefere WhatsApp")
     r = lgpd.esquecer_cliente("CLI-012")
-    assert r.itens["tarefas/notas"] == 2 and r.itens["lembretes"] == 1
+    assert r.itens["tarefas/notas/metas"] == 2 and r.itens["lembretes"] == 1
     assert [t.texto for t in tarefas.listar()] == ["Ligar para o CLI-0120"] and notas.buscar("WhatsApp") == []
 
 

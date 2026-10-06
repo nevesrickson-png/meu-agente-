@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from quiron.servicos.calculadoras import aliquota_ir
-from quiron.servicos.carteira.modelo import CLASSES, ORDEM, Carteira, Posicao
+from quiron.servicos.carteira.modelo import CLASSES, ORDEM, UNITS, Carteira, Posicao
 
 TOLERANCIA = 0.01  # desvio de até 1 p.p. não gera ordem
 
@@ -47,7 +47,8 @@ def _aliquota(p: Posicao, hoje: date) -> tuple[float, str]:
         return 0.0, "isento para PF"
     if p.classe == "fii":
         return 0.20, "FII: 20% sobre o ganho"
-    if t == "etf" or (p.ticker and p.ticker.endswith("11") and p.classe in {"acoes", "internacional"}):
+    unit = (p.ticker or "").upper().removesuffix(".SA") in UNITS  # TAEE11, KLBN11…: ações, não ETF
+    if t == "etf" or (p.ticker and p.ticker.endswith("11") and not unit and p.classe in {"acoes", "internacional"}):
         return 0.15, "ETF: 15% sobre o ganho (sem isenção de R$ 20 mil)"
     if p.classe == "acoes" and t in {"acao", ""} and p.ticker:
         return 0.15, "ações: 15% sobre o ganho (isento se vendas no mês ≤ R$ 20 mil)"
@@ -80,7 +81,7 @@ def planejar(carteira: Carteira, alvo: dict[str, float], aporte: float = 0.0, ho
                 atual[c] += v
                 usado += v
     # 2) vender o excesso, priorizando menor imposto por real
-    vendas_acoes = 0.0
+    vendas_acoes = vendas_cripto = 0.0
     candidatos = []
     for p in carteira.posicoes:
         excesso = atual[p.classe] - desejado[p.classe]
@@ -101,12 +102,18 @@ def planejar(carteira: Carteira, alvo: dict[str, float], aporte: float = 0.0, ho
         ir = max(0.0, ganho) * aliq
         if p.classe == "acoes" and "isento se vendas" in regra:
             vendas_acoes += v
+        if p.classe == "cripto" and "35 mil" in regra:
+            vendas_cripto += v
         ordens.append(Ordem("vender", p.nome, p.classe, v, ganho, ir, regra))
         atual[p.classe] -= v
     if vendas_acoes and vendas_acoes <= 20_000:
         for o in ordens:
             if o.acao == "vender" and "isento se vendas" in o.nota:
                 o.ir, o.nota = 0.0, "ações: isento (vendas de ações no mês ≤ R$ 20 mil)"
+    if vendas_cripto and vendas_cripto <= 35_000:
+        for o in ordens:
+            if o.acao == "vender" and o.classe == "cripto" and "35 mil" in o.nota:
+                o.ir, o.nota = 0.0, "cripto: isento (vendas de cripto no mês ≤ R$ 35 mil)"
     # 3) o que foi vendido compra as classes ainda abaixo do alvo
     caixa = sum(o.valor for o in ordens if o.acao == "vender")
     faltas = {c: max(0.0, desejado[c] - atual[c]) for c in ORDEM}

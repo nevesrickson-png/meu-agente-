@@ -84,7 +84,7 @@ def _alternativos() -> tuple[str, ...]:
 
 @lru_cache(maxsize=1)
 def carregar_config(arquivo_env: str | None = None) -> Config:
-    load_dotenv(arquivo_env or RAIZ / ".env", override=False)
+    load_dotenv(arquivo_env or RAIZ / ".env", override=False, interpolate=False, encoding="utf-8-sig")
     from quiron.nucleo import offline
 
     if offline.ativo():  # versão offline: só o modelo local, nada de nuvem

@@ -118,7 +118,8 @@ def _horizonte(expr: str | None, hoje: date) -> date:
     if expr:
         t = datas._sem_acento(str(expr))
         if m := re.search(r"\bem\s+(\d+)\s+anos?\b", t):
-            return hoje.replace(year=hoje.year + int(m[1]))
+            ano = hoje.year + int(m[1])
+            return hoje.replace(year=ano, day=min(hoje.day, monthrange(ano, hoje.month)[1]))  # 29/02 → 28/02
         if m := re.search(r"(?:ate|em|no fim de|final de)\s+(" + "|".join(datas._sem_acento(k) for k in MESES) + r")(?:\s+de\s+(\d{4}))?", t):
             mes = {datas._sem_acento(k): v for k, v in MESES.items()}[m[1]]
             ano = int(m[2]) if m[2] else (hoje.year if mes >= hoje.month else hoje.year + 1)

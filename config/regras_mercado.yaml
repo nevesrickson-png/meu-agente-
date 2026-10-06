@@ -89,6 +89,7 @@ irpf_tabela_mensal:
     educacao_por_pessoa: 3561.50
     desconto_simplificado: 0.20
     desconto_simplificado_teto: 16754.34
+    desconto_simplificado_mensal: 607.20   # na fonte: 25% da faixa isenta, no lugar das deduções legais se for maior
     pgbl_maximo_renda_tributavel: 0.12   # só na declaração completa e para quem contribui ao INSS/regime próprio
 
 irpf_alta_renda:

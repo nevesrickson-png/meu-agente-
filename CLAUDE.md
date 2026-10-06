@@ -157,6 +157,15 @@ Arquivos com DRM não são processados.
   `_variacao_contra_ptax`; `painel.texto_cotacao` em horário de Brasília; BCB: janela de 10 min só abre com recusa
   real; cartas: `casar_gestoras` sem acento, `atualizar(nomes=[])` não confere nada, `ler_carta` segue redirecionamento à
   mão só para endereço público, `_MES` com fronteira de palavra, data não se apaga; `vencidas()` antes de abrir thread.
+- Depuração 2 (06/10/2026, `testes/test_revisao_bugs2.py`): `nucleo/trava.py` (`trava_arquivo` entre processos +
+  `gravar_atomico`; usado em `alertas.json`, cuja avaliação consulta a rede fora da trava e mescla no fim);
+  `impostos.ir_na_fonte(rendimento, deducoes)` (redução 2026 sobre o bruto; maior entre deduções e
+  `desconto_simplificado_mensal`); `calculadoras._num` (ponto de milhar); `restaurar_copia` regrava o MEMORIA.md e
+  reaplica `lgpd.esquecidos()`; `lgpd` limpa cópias/exportações/logs/metas/carreira/treino/conteúdo; `datas.RE_HORA`
+  com período em todas as formas e "as" sem acento só com horas/período; `_origem_permitida` = mesma origem (ou
+  localhost×127.0.0.1 na mesma porta); acervo publica com `os.link` (nunca sobrescreve) a partir de temporário único;
+  OCR em cache por sha256; pacote offline extrai à parte e troca com desfazer; backup.sh em dois tars; Gemini PerDay
+  pausa até a meia-noite do Pacífico; `.env` com aspas quando preciso, `utf-8-sig`, sem interpolação.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

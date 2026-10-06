@@ -46,13 +46,19 @@ def _pausar_se_cota(modelo: str, erro: Exception) -> None:
     if not any(x in texto for x in ("429", "RateLimit", "RESOURCE_EXHAUSTED", "quota")):
         return
     segundos = 60.0
+    if "PerDay" in texto or "per day" in texto.lower():  # antes do retryDelay: o Gemini manda "17s" mesmo na cota diária
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+
+        agora = datetime.now(ZoneInfo("America/Los_Angeles"))  # a cota diária do Gemini volta à meia-noite do Pacífico
+        segundos = ((agora + timedelta(days=1)).replace(hour=0, minute=1, second=0, microsecond=0) - agora).total_seconds()
+        _PAUSA[modelo] = time.time() + min(segundos, 24 * 3600)
+        return
     if m := re.search(r'retryDelay"?\s*:\s*"?(\d+)s', texto):
         segundos = float(m.group(1))
     elif m := re.search(r"retry in (?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?", texto):
         h, mi, se = (float(x or 0) for x in m.groups())
         segundos = h * 3600 + mi * 60 + se or 60.0
-    elif "PerDay" in texto or "per day" in texto.lower():
-        segundos = 3600.0
     _PAUSA[modelo] = time.time() + min(segundos, 12 * 3600)
 
 

@@ -274,7 +274,12 @@ def evento_de_texto(texto: str, agora: datetime | None = None, cliente_http: htt
 
     agora = agora or datetime.now(BRT)
     duracao = timedelta(hours=1)
-    if m := re.search(r"\b(?:por|durante|de)\s+(\d+)\s*h(?:oras?)?\s*(?:e\s*)?(\d{1,2})?\s*(?:min)?\b|\b(?:por|durante)\s+(\d+)\s*min(?:utos)?\b", texto, re.I):
+    if m := re.search(r"\b(?:de|das)\s+(\d{1,2})(?:h|:)(\d{2})?\s*(?:às|as|até|ate|a)\s+(\d{1,2})(?:h|:)?(\d{2})?\b", texto, re.I):
+        ini, fim = timedelta(hours=int(m[1]), minutes=int(m[2] or 0)), timedelta(hours=int(m[3]), minutes=int(m[4] or 0))
+        if fim > ini:  # "de 10h às 11h": início e fim, não 10 horas de duração
+            duracao = fim - ini
+            texto = (texto[:m.start()] + f" às {m[1]}h{m[2] or ''} " + texto[m.end():]).strip()
+    elif m := re.search(r"\b(?:por|durante)\s+(\d+)\s*h(?:oras?)?\s*(?:e\s*)?(\d{1,2})?\s*(?:min)?\b|\b(?:por|durante)\s+(\d+)\s*min(?:utos)?\b", texto, re.I):
         duracao = timedelta(hours=int(m[1]), minutes=int(m[2] or 0)) if m[1] else timedelta(minutes=int(m[3]))
         texto = (texto[:m.start()] + texto[m.end():]).strip()
     titulo, d, h = datas.extrair(texto, agora.date())

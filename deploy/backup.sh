@@ -17,8 +17,16 @@ for db in dados/*.db; do
   [[ -f "$db" ]] || continue
   python3 -c "import sqlite3,sys; s=sqlite3.connect(sys.argv[1]); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close()" "$db" "$TMP/$db"
 done
-tar -czf "$ARQUIVO" --exclude='dados/*.db' --exclude='dados/modelos' --exclude='dados/hermes' \
-    dados biblioteca config agente/workspace segredos .env -C "$TMP" dados 2>/dev/null || true
+# 1º o resto (sem os .db vivos); depois as cópias seguras dos bancos — num tar separado, porque o --exclude valeria
+# também para as cópias e o backup sairia sem nenhum banco
+TAR="$TMP/backup.tar"
+ITENS=()
+for item in dados biblioteca config agente/workspace segredos .env; do [[ -e "$item" ]] && ITENS+=("$item"); done
+tar -cf "$TAR" --exclude='dados/*.db' --exclude='dados/*.db-wal' --exclude='dados/*.db-shm' --exclude='dados/modelos' \
+    --exclude='dados/hermes' "${ITENS[@]}"
+tar -rf "$TAR" -C "$TMP" dados
+(umask 077; gzip -c "$TAR" > "$ARQUIVO")  # o backup leva .env e segredos/: só o dono do servidor lê
+tar -tzf "$ARQUIVO" | grep -q '^dados/.*\.db$' || echo "AVISO: o backup saiu sem nenhum banco (.db) — confira a pasta dados/."
 echo "Backup criado: $ARQUIVO ($(du -h "$ARQUIVO" | cut -f1))"
 
 ls -1t "$DESTINO"/quiron-*.tar.gz | tail -n +$((MANTER + 1)) | xargs -r rm -f

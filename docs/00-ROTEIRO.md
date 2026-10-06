@@ -453,6 +453,31 @@ da WEG e da Petrobras; TV tocando o ao vivo da CNN Brasil; 338+ testes.
   Alt+4, chat que recarregava a página, tema que rebuscava todas as fontes, `/simular 500 mil` ignorando o valor
 ✅ Aceite (06/10/2026): 16 testes de regressão novos; suíte completa e teste de navegador verdes.
 
+## Depuração geral — 2ª rodada (06/10/2026) — "verificar erros e debugar todo o código novamente"
+Cinco revisores nas áreas que a 1ª rodada não cobriu (memória/organização, números financeiros, central/Windows/offline,
+biblioteca/conteúdo/carreira/LGPD) + conferência das correções da 1ª rodada. Corrigido:
+- [x] Memória: restaurar cópia apagava todos os fatos (MEMORIA.md antigo lido como edição); consolidação perdia a proteção "dito"
+- [x] Datas: "3h da tarde" virava 03:00; "as 3 apostilas" virava horário; "em 15h" virava "daqui a 15 horas";
+  `/evento de 10h às 11h` durava 10 h; adiar tarefa atrasada só com horário mantinha o dia passado
+- [x] Impostos: redução do IR 2026 calculada sobre a base já deduzida (agora sobre o bruto, com desconto simplificado
+  mensal de R$ 607,20); calculadoras liam "300.000" como 300; units (TAEE11…) sem isenção de R$ 20 mil; cripto sem
+  isenção de R$ 35 mil
+- [x] Compliance: "não há risco", "sem riscos", "100% seguro", "rentabilidade assegurada", "retorno certo"; ressalva de
+  rentabilidade passada só vale na mesma frase ou na seguinte
+- [x] Conteúdo: conferência de números aceitava número inventado igual a pedaço de data ou com sinal trocado; aviso de
+  "não é relatório de análise" para BDR, minúsculas e caixa alta
+- [x] Backup noturno saía SEM nenhum banco (.db) e legível por todos; `Quiron Offline.bat` não abria (parêntese);
+  pacote offline podia gravar fora de dados/ e ficava pela metade em erro
+- [x] Alertas perdidos (3 processos gravando o mesmo arquivo; agora trava entre processos + gravação atômica);
+  WebSocket aceitava qualquer *.ts.net/porta; Gemini sem cota diária era tentado a cada 30 s; "Reiniciar" do bot dizia
+  "já existe outro Quíron"
+- [x] Acervo: dois envios com o mesmo nome se misturavam; fila do acervo podia morrer calada; OCR de livros homônimos
+- [x] LGPD `/esquecer`: agora também cópias da memória, exportações, registro do bot, metas, teses/treinos/ideias,
+  relatórios de carteira; restaurar cópia antiga apaga de novo (`dados/lgpd_esquecidos.json`)
+- [x] Outros: simulador inventava patrimônio, data do câmbio do Yahoo, robots.txt com redirecionamento, fila de
+  análises presa 6 h no Docker, "lembra que amanhã…", `.env` com BOM/senha com "#", tese em 29/02, portfólio sem CLI-XXX
+✅ Aceite (06/10/2026): 30 testes novos em `testes/test_revisao_bugs2.py`; suíte completa (385) e navegador verdes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

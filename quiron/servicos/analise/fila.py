@@ -116,6 +116,7 @@ class Fila:
         # processo que reservou a tarefa (se ele morrer, a tarefa volta para a fila); máquina:PID porque o Terminal, o bot
         # e o Claude Code processam a mesma fila (no Docker, cada contêiner tem os seus PIDs)
         self.dono = f"{socket.gethostname()}:{os.getpid()}"
+        self._em_andamento = _EM_ANDAMENTO.setdefault(str(self.banco), set())  # rodando AGORA neste processo
 
     @contextmanager
     def _con(self) -> Iterator[sqlite3.Connection]:
@@ -177,6 +178,7 @@ class Fila:
         t = self._reservar()
         if not t:
             return None
+        self._em_andamento.add(t.id)
         try:
             tipo_ = carregar_tipos()[t.tipo]
             rel = tipo_.executar(t.parametros, t.modo)
@@ -196,6 +198,8 @@ class Fila:
             with self._con() as c:
                 c.execute("UPDATE tarefas SET situacao='erro', terminada_em=?, erro=? WHERE id=? AND dono=? AND situacao='rodando'",
                           (_agora(), f"{type(e).__name__}: {str(e)[:300]}", t.id, self.dono))
+        finally:
+            self._em_andamento.discard(t.id)
         return self.obter(t.id)
 
     def repetir(self, ident: int) -> Tarefa | None:
@@ -215,19 +219,21 @@ class Fila:
         maquina = socket.gethostname()
         with self._con() as c:
             rodando = c.execute("SELECT id, dono, iniciada_em FROM tarefas WHERE situacao='rodando'").fetchall()
-            limite = datetime.now().timestamp() - 6 * 3600
+            agora = datetime.now().timestamp()
 
-            def vivo(dono: str) -> bool:
+            def vivo(ident: int, dono: str, iniciada: str) -> bool:
+                if dono == self.dono:  # "eu" — mas o contêiner reiniciado repete nome e PID: só vale se está rodando aqui
+                    return ident in self._em_andamento
                 host, _, pid = dono.rpartition(":")
-                if host and host != maquina:
-                    return True  # outra máquina/contêiner: não dá para conferir o PID daqui
+                if host and host != maquina:  # outra máquina/contêiner: não dá para conferir o PID; confia por 2 h
+                    return datetime.fromisoformat(iniciada).timestamp() > agora - 2 * 3600
                 try:
                     return pid.isdigit() and psutil.pid_exists(int(pid))
                 except (OverflowError, ValueError):
                     return False
 
-            orfas = [r["id"] for r in rodando
-                     if not vivo(r["dono"] or "") or datetime.fromisoformat(r["iniciada_em"]).timestamp() < limite]
+            orfas = [r["id"] for r in rodando if not vivo(r["id"], r["dono"] or "", r["iniciada_em"])
+                     or datetime.fromisoformat(r["iniciada_em"]).timestamp() < agora - 6 * 3600]
             for ident in orfas:
                 c.execute("UPDATE tarefas SET situacao='na fila', dono='' WHERE id=? AND situacao='rodando'", (ident,))
         return len(orfas)
@@ -277,6 +283,9 @@ class Fila:
 
 
 _FILA: Fila | None = None
+
+
+_EM_ANDAMENTO: dict[str, set[int]] = {}
 
 
 def fila() -> Fila:

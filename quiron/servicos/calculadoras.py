@@ -5,7 +5,9 @@ Regra do projeto: número sempre calculado em Python, com a memória de cálculo
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from quiron.nucleo import regras
 
@@ -151,11 +153,23 @@ def financiamento(valor: float, taxa_am: float, meses: int, sistema: str = "pric
                                ("Taxa anual equivalente", _pct(taxa_anual(taxa_am)) + " a.a.")], memoria)
 
 
+def _num(v: Any) -> float:
+    """'1.234,56' · '300.000' · '1.000.000' · '10.5' · 7 → float (ponto com 3 dígitos depois = milhar)."""
+    if not isinstance(v, str):
+        return float(v)
+    t = v.strip().replace("R$", "").replace(" ", "").replace("−", "-")
+    if "," in t:
+        t = t.replace(".", "").replace(",", ".")
+    elif t.count(".") > 1 or re.fullmatch(r"-?\d{1,3}(\.\d{3})+", t):
+        t = t.replace(".", "")
+    return float(t)
+
+
 def _fluxos(texto: str | list) -> list[float]:
     if isinstance(texto, list):
-        return [float(x) for x in texto]
+        return [_num(x) for x in texto]
     partes = [p for p in str(texto).replace("\n", ";").split(";") if p.strip()]
-    return [float(p.strip().replace(".", "").replace(",", ".") if "," in p else p.strip()) for p in partes]
+    return [_num(p) for p in partes]
 
 
 def _vpl(taxa: float, fluxos: list[float]) -> float:
@@ -199,7 +213,8 @@ def aporte_necessario(meta: float, anos: float, taxa_aa: float, valor_inicial: f
     falta = meta - valor_inicial * (1 + i) ** n
     pmt = max(0.0, falta * i / ((1 + i) ** n - 1) if i else falta / n)
     return Resultado("Aporte necessário", [("Aporte mensal", _brl(pmt)), ("Total aportado", _brl(pmt * n + valor_inicial)),
-                                           ("Juros no período", _brl(meta - pmt * n - valor_inicial))],
+                                           ("Juros no período", _brl((meta if pmt else valor_inicial * (1 + i) ** n) - pmt * n - valor_inicial))]
+                     + ([] if pmt else [("Observação", "a meta já é alcançada só com o valor inicial")]),
                      [f"Taxa mensal: {_pct(i * 100, 4)}; {n} meses",
                       "PMT = (meta − VP·(1+i)^n) · i ÷ ((1+i)^n − 1)"],
                      ["Use taxa REAL (acima da inflação) se a meta estiver em valores de hoje"])
@@ -305,6 +320,6 @@ def executar(nome: str, entrada: dict) -> Resultado:
         if t in {"texto", "opção"}:
             args[k] = str(v)
         else:
-            valor = float(str(v).replace(".", "").replace(",", ".")) if isinstance(v, str) and "," in v else float(v)
+            valor = _num(v)
             args[k] = int(valor) if t == "int" else valor
     return CALCULADORAS[nome](**args)

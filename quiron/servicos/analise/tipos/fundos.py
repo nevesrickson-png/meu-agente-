@@ -406,7 +406,7 @@ def previdencia(params: dict[str, Any], modo: str = "entregar", dados_bench: pd.
     tabelas_trib = [t_reg]
     renda = float(params.get("renda_mensal_aposentadoria") or 0)
     if renda:
-        ir_prog = impostos.irpf_mensal(renda)
+        ir_prog = impostos.ir_na_fonte(renda)
         tabelas_trib.append(Tabela("Progressiva no resgate (renda informada)", ["Renda mensal (R$)", "IR mensal (R$)",
                                                                                  "Alíquota efetiva"],
                                    [[round(renda, 2), round(ir_prog, 2), round(ir_prog / renda * 100, 2)]],

@@ -177,8 +177,11 @@ def adiar(ident: int, para: str, agora: datetime | None = None) -> Tarefa:
         _, d, h = datas.extrair(para or "", agora.date())
         if not d and not h:
             raise TarefaInvalida(f"não entendi para quando: “{para}”")
-        d = d or (date.fromisoformat(t.prazo) if t.prazo else agora.date())  # "passa para as 11h" mantém o dia
         h = h or ((tuple(map(int, t.hora.split(":"))) if t.hora else None))
+        if not d:  # "passa para as 11h" mantém o dia — mas nunca um dia que já passou
+            d = max(date.fromisoformat(t.prazo), agora.date()) if t.prazo else agora.date()
+            if h and d == agora.date() and h <= (agora.hour, agora.minute):
+                d += timedelta(days=1)
     _cancelar_lembrete(t)
     t.prazo, t.hora = d.isoformat(), f"{h[0]:02d}:{h[1]:02d}" if h else ""
     t.lembrete = _agendar(t, agora)

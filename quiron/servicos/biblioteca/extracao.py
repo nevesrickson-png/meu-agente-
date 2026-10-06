@@ -142,7 +142,11 @@ def extrair_pdf(caminho: Path, pasta_texto: Path | None = None) -> LivroExtraido
     paginas, meta = _paginas_pdf(caminho)
     ocr = False
     if _precisa_ocr(paginas):
-        destino = (pasta_texto or caminho.parent) / f"{caminho.stem}.ocr.pdf"
+        import hashlib
+
+        with caminho.open("rb") as f:  # pelo conteúdo: dois livros "apostila.pdf" de áreas diferentes não trocam de texto
+            sha = hashlib.file_digest(f, "sha256").hexdigest()[:16]
+        destino = (pasta_texto or caminho.parent) / f"{caminho.stem}-{sha}.ocr.pdf"
         if not destino.exists():
             _rodar_ocr(caminho, destino)
         paginas, _ = _paginas_pdf(destino)

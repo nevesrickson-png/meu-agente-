@@ -91,7 +91,9 @@ def test_orfa_so_volta_se_o_dono_morreu(tmp_path):
     antiga = (datetime.now() - timedelta(hours=2)).isoformat()
     with f._con() as c:  # rodando há 2 h, por um processo VIVO (este): análise lenta, não órfã
         c.execute("UPDATE tarefas SET situacao='rodando', iniciada_em=?, dono=? WHERE id=?", (antiga, f.dono, t.id))
+    f._em_andamento.add(t.id)
     assert f.recuperar_orfas() == 0
+    f._em_andamento.discard(t.id)
     with f._con() as c:  # processo morto: volta para a fila
         c.execute("UPDATE tarefas SET dono=? WHERE id=?", (f.dono.rsplit(":", 1)[0] + ":999999999", t.id))
     assert f.recuperar_orfas() == 1 and f.obter(t.id).situacao == "na fila"

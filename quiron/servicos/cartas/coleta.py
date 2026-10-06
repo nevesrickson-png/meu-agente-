@@ -150,6 +150,9 @@ def permitido(url: str, cliente: httpx.Client) -> bool:
         rp: robotparser.RobotFileParser | None = robotparser.RobotFileParser()
         try:
             r = cliente.get(base + "/robots.txt", timeout=10)
+            if r.is_redirect:  # robots.txt que redireciona (site.com → www.site.com): segue, senão leria regra vazia
+                with _cliente() as seguidor:
+                    r = seguidor.get(base + "/robots.txt", timeout=10)
             if r.status_code >= 400:
                 rp = None  # sem robots.txt: permitido
             else:

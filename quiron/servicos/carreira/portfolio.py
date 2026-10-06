@@ -96,7 +96,8 @@ def gerar_pdf(autor: str = "Rickson Messias") -> Path:
         linhas.append(["Acerto (%)", round(est["acerto"], 1)])
     if "brier" in est:
         linhas.append(["Brier (0 = perfeito)", round(est["brier"], 3)])
-    fechadas = [t for t in diario.listar("todas") if t.resultado is not None][-10:]
+    fechadas = [t for t in diario.listar("todas") if t.resultado is not None
+                and not RE_CLIENTE.search(f"{t.titulo} {t.tese} {t.aprendizado}")][-10:]  # documento para terceiros
     tab_teses = Tabela("Últimas teses fechadas", ["Tese", "Confiança", "Resultado", "Aprendizado"],
                        [[t.titulo, f"{t.confianca:.0f}%" if t.confianca is not None else "—", t.situacao, t.aprendizado[:120]] for t in fechadas])
     secoes.append(Secao("Track record (diário de teses)", "Teses registradas com premissas, gatilhos de invalidação e confiança; "

@@ -83,16 +83,16 @@ def renda_liquida(f: Ficha, r: dict | None = None) -> Renda:
         inss = min(f.pro_labore_mensal, impostos.inss_teto(r)) * r["inss"]["pro_labore_retido"]
     fator = 13.33 / 12 if f.tem_13 else 1.0  # 13º e 1/3 de férias (aproximação)
     if f.ocupacao == "empresario":  # lucros isentos; pró-labore tributado na tabela
-        ir_trab = impostos.irpf_mensal(max(0.0, f.pro_labore_mensal - inss - dep), r=r)
-        ir = impostos.irpf_mensal(max(0.0, f.pro_labore_mensal + f.outras_rendas_mensais - inss - dep), r=r)
+        ir_trab = impostos.ir_na_fonte(f.pro_labore_mensal, inss + dep, r)
+        ir = impostos.ir_na_fonte(f.pro_labore_mensal + f.outras_rendas_mensais, inss + dep, r)
     else:
-        ir_trab = impostos.irpf_mensal(max(0.0, bruto - inss - dep), r=r)
-        ir = impostos.irpf_mensal(max(0.0, bruto + f.outras_rendas_mensais - inss - dep), r=r)
+        ir_trab = impostos.ir_na_fonte(bruto, inss + dep, r)
+        ir = impostos.ir_na_fonte(bruto + f.outras_rendas_mensais, inss + dep, r)
     # o IR das outras rendas (aluguéis) é o acréscimo que elas causam sobre o IR do trabalho
     liquido_titular = (bruto - inss - ir_trab) * fator + f.outras_rendas_mensais - (ir - ir_trab)
     conj = f.renda_conjuge_mensal
     inss_c = impostos.inss_empregado(conj, r) if conj else 0.0
-    ir_c = impostos.irpf_mensal(max(0.0, conj - inss_c), r=r) if conj else 0.0
+    ir_c = impostos.ir_na_fonte(conj, inss_c, r) if conj else 0.0
     liquido_conj = (conj - inss_c - ir_c) * (13.33 / 12) if conj else 0.0
     detalhes += [("Titular líquido", liquido_titular)] + ([("Cônjuge líquido (estimado como CLT)", liquido_conj)] if conj else [])
     return Renda(bruto + conj + f.outras_rendas_mensais, inss + inss_c, ir + ir_c, liquido_titular + liquido_conj, detalhes)

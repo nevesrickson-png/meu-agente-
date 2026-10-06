@@ -130,6 +130,8 @@ def relativo(texto: str, agora: datetime) -> tuple[str, datetime | None]:
     if not m:
         return texto, None
     n = {"uma": 1, "um": 1, "duas": 2, "dois": 2, "tres": 3, "três": 3, "meia": 0.5}.get(m["n"].lower()) or int(m["n"])
+    if m.group(0).lower().startswith("em") and m["u"].lower() == "h" and n > 6:
+        return texto, None  # "reunião em 15h" é horário (15h), não "daqui a 15 horas"
     delta = timedelta(hours=n) if m["u"].lower().startswith("h") else timedelta(minutes=n)
     if m["n"].lower() == "meia" and not m["u"].lower().startswith("h"):
         return texto, None  # "meia minuto" não existe
@@ -143,8 +145,13 @@ RE_DATA = re.compile(
     r"sexta|sábado|sabado|domingo)(?:-feira)?(?: que vem| da semana que vem| da próxima semana| passada)?|semana que vem|próxima semana|"
     r"proxima semana|(?:no )?(?:fim|final) do mês|m[êe]s que vem(?: dia \d{1,2})?|(?:no )?dia \d{1,2}(?:/\d{1,2}(?:/\d{2,4})?)?|"
     r"\d{1,2}/\d{1,2}(?:/\d{2,4})?|(?:daqui a|em|dentro de) \w+ (?:dias? úteis|dias? uteis|dias?|semanas?|m[eê]s(?:es)?))\b", re.I)
+_PERIODO = r"(?:\s*(?:da\s+)?(?P<{}>manhã|manha|tarde|noite))"
 RE_HORA = re.compile(r"(?:\b(?:às|as|a partir das|lá pelas|umas)\s*)?\b(?P<h>\d{1,2})\s*(?:h|:)\s*(?P<m>\d{2})?\b(?:min)?"
-                     r"|\b(?:às|as)\s+(?P<h2>\d{1,2})(?:\s+horas?|\s*hs)?(?:\s+(?:da\s+)?(?P<p2>manhã|manha|tarde|noite))?\b"
+                     + _PERIODO.format("p1") + "?"
+                     r"|\bàs\s+(?P<h2>\d{1,2})(?:\s+horas?|\s*hs)?" + _PERIODO.format("p2") + r"?\b"
+                     # "as" sem acento também é artigo ("comprar as 3 apostilas"): só vale com horas/período ou no fim
+                     r"|\bas\s+(?P<h4>\d{1,2})(?:(?:\s+horas?|\s*hs)" + _PERIODO.format("p4") + r"?\b|" + _PERIODO.format("p5")
+                     + r"\b|(?=\s*(?:$|[,.;!?]|\s(?:com|para|pra|no|na|em|e)\b)))"
                      r"|\b(?P<h3>\d{1,2})\s+(?:horas?\s+)?da\s+(?P<p3>manhã|manha|tarde|noite)\b", re.I)
 _PREFIXOS = re.compile(r"^(?:me\s+lembr[ae]\s+(?:de\s+)?|lembr(?:ar|e-me|e)\s+(?:de\s+)?|lembrete:?\s*|tarefa:?\s*|anota(?:r)?\s+(?:a[ií]\s+)?(?:que\s+)?|"
                        r"preciso\s+|tenho\s+que\s+|não\s+esquecer\s+de\s+|nao\s+esquecer\s+de\s+)", re.I)
@@ -169,9 +176,10 @@ def extrair(texto: str, hoje: date) -> tuple[str, date | None, tuple[int, int] |
         if m.group("h"):
             hh, mm = int(m.group("h")), int(m.group("m") or 0)
         else:
-            hh, mm = int(m.group("h2") or m.group("h3")), 0
-            if (m.group("p2") or m.group("p3") or "").lower() in {"tarde", "noite"} and hh < 12:
-                hh += 12
+            hh, mm = int(m.group("h2") or m.group("h4") or m.group("h3")), 0
+        periodo = next((m.group(g) for g in ("p1", "p2", "p3", "p4", "p5") if m.group(g)), "") or ""
+        if periodo.lower() in {"tarde", "noite"} and hh < 12:
+            hh += 12
         if hh <= 23 and mm <= 59:
             h = (hh, mm)
             resto = resto[:m.start()] + " " + resto[m.end():]

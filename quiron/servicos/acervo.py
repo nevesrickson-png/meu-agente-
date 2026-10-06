@@ -10,10 +10,13 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
 import sqlite3
+import tempfile
 import threading
+import time
 import unicodedata
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -120,6 +123,33 @@ class Acervo:
             i += 1
         return area, alvo
 
+    def _publicar(self, temp: Path, alvo: Path) -> Path:
+        """Põe o temporário no nome final SEM sobrescrever: dois envios com o mesmo nome ao mesmo tempo ganham
+        "livro.pdf" e "livro (2).pdf" (o nome é reservado de forma atômica pelo sistema de arquivos)."""
+        base, i = alvo, 2
+        while True:
+            try:
+                os.link(temp, alvo)  # falha se o nome já existe
+                temp.unlink(missing_ok=True)
+                return alvo
+            except FileExistsError:
+                alvo = base.with_name(f"{Path(base.name).stem} ({i}){base.suffix}")
+                i += 1
+            except OSError:  # sistema de arquivos sem link: reserva exclusiva + troca
+                try:
+                    os.close(os.open(alvo, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+                except FileExistsError:
+                    alvo = base.with_name(f"{Path(base.name).stem} ({i}){base.suffix}")
+                    i += 1
+                    continue
+                os.replace(temp, alvo)
+                return alvo
+
+    def _temporario(self, alvo: Path) -> Path:
+        fd, nome = tempfile.mkstemp(prefix=f".{alvo.name}.", suffix=".parcial", dir=alvo.parent)
+        os.close(fd)
+        return Path(nome)
+
     def registrar(self, area_id: str, caminho: Path) -> int:
         with self._con() as c:
             cur = c.execute("INSERT INTO arquivos (area, nome, caminho, tamanho, enviado_em, atualizado_em) VALUES (?,?,?,?,?,?)",
@@ -133,13 +163,18 @@ class Acervo:
         if len(conteudo) > LIMITE_BYTES:
             raise AcervoErro("Arquivo grande demais (máximo 300 MB).")
         area, alvo = self.destino(area_id, nome)
-        alvo.write_bytes(conteudo)
+        temp = self._temporario(alvo)
+        try:
+            temp.write_bytes(conteudo)
+            alvo = self._publicar(temp, alvo)
+        finally:
+            temp.unlink(missing_ok=True)
         return self.registrar(area.id, alvo)
 
     async def salvar_em_partes(self, area_id: str, nome: str, partes) -> int:
         """Grava o corpo da requisição aos pedaços (sem carregar 300 MB na memória)."""
         area, alvo = self.destino(area_id, nome)
-        temp = alvo.with_suffix(alvo.suffix + ".parcial")
+        temp = self._temporario(alvo)  # nome único: dois envios simultâneos não escrevem no mesmo arquivo
         total = 0
         try:
             with temp.open("wb") as f:
@@ -150,7 +185,7 @@ class Acervo:
                     f.write(pedaco)
             if total == 0:
                 raise AcervoErro("Arquivo vazio.")
-            temp.replace(alvo)
+            alvo = self._publicar(temp, alvo)
         finally:
             temp.unlink(missing_ok=True)
         return self.registrar(area.id, alvo)
@@ -202,7 +237,9 @@ class Acervo:
 
             indice = Indice()
             outros = [x for x in self.listar(10_000) if x.livro_id == r.livro_id and x.id != ident]
-            if not outros:  # o mesmo livro pode ter sido enviado duas vezes
+            nome_cat = str((indice.catalogo().get(r.livro_id) or {}).get("arquivo") or "")
+            de_fora = bool(nome_cat) and (pasta_biblioteca() / "entrada" / nome_cat).exists()  # ingerido de lá antes
+            if not outros and not de_fora:  # o mesmo livro pode ter sido enviado duas vezes ou vir de biblioteca/entrada
                 indice.remover_livro(r.livro_id)
                 cat = indice.catalogo()
                 cat.pop(r.livro_id, None)
@@ -223,9 +260,13 @@ class Acervo:
             if arq.suffix.lower() in FORMATOS and str(arq) not in conhecidos and not arq.name.endswith(".ocr.pdf"):
                 area = areas.obter(arq.parent.name)
                 if area:
+                    try:
+                        tamanho = arq.stat().st_size
+                    except OSError:
+                        continue  # movido/apagado entre a listagem e agora
                     with self._con() as c:
                         c.execute("INSERT INTO arquivos (area, nome, caminho, tamanho, enviado_em, atualizado_em) "
-                                  "VALUES (?,?,?,?,?,?)", (area.id, arq.name, str(arq), arq.stat().st_size, _agora(), _agora()))
+                                  "VALUES (?,?,?,?,?,?)", (area.id, arq.name, str(arq), tamanho, _agora(), _agora()))
                     novos += 1
         if novos:
             self.acordar()
@@ -264,14 +305,22 @@ class Acervo:
         with self._con() as c:  # o que estava "processando" quando o programa fechou volta para a fila
             c.execute("UPDATE arquivos SET situacao='na fila' WHERE situacao='processando'")
 
+        def passo(funcao) -> bool:
+            try:
+                return bool(funcao())
+            except Exception:  # noqa: BLE001 — arquivo sumido no meio, banco ocupado…: a fila não pode morrer calada
+                logging.exception("acervo: falha no processador (segue rodando)")
+                time.sleep(5)
+                return False
+
         def laco() -> None:
-            self.conferir_pastas()
+            passo(self.conferir_pastas)
             while True:
-                while self.processar_um():
+                while passo(self.processar_um):
                     pass
                 self._acordar.wait(timeout=300)
                 self._acordar.clear()
-                self.conferir_pastas()
+                passo(self.conferir_pastas)
 
         self._processador = threading.Thread(target=laco, name="acervo", daemon=True)
         self._processador.start()

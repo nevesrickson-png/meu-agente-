@@ -79,6 +79,10 @@ class Supervisor:
                 cmd = " ".join(p.info["cmdline"] or [])
                 if p.info["pid"] in {meu, filho} or not (MARCA_BOT in cmd or "quiron-telegram" in cmd):
                     continue
+                pai = p.info["ppid"] or 0
+                avo = psutil.Process(pai).ppid() if pai and psutil.pid_exists(pai) else 0
+                if meu in {pai, avo}:
+                    continue  # filho deste supervisor (no Windows o venv põe um lançador no meio) — ex.: subindo ao reiniciar
                 if MARCA_BOT in cmd and not psutil.pid_exists(p.info["ppid"] or 0):
                     p.terminate()  # órfão de um Terminal fechado à força: pode encerrar
                     continue
@@ -132,10 +136,19 @@ class Supervisor:
         arq = self.log()
         arq.parent.mkdir(parents=True, exist_ok=True)
         if arq.exists() and arq.stat().st_size > 2_000_000:
-            arq.replace(arq.with_suffix(".log.1"))
+            try:
+                arq.replace(arq.with_suffix(".log.1"))
+            except OSError:
+                pass  # no Windows, log aberto por outro processo: roda na próxima vez (não derruba o supervisor)
         return open(arq, "a", encoding="utf-8", errors="replace")
 
     def _laco(self) -> None:
+        try:
+            self._laco_interno()
+        except Exception as e:  # noqa: BLE001 — sem isso o supervisor morreria calado e o bot nunca mais subiria
+            self.ultimo_erro, self.situacao, self.querer = f"supervisor parou: {e}", "erro", False
+
+    def _laco_interno(self) -> None:
         while self.querer:
             self._acordar.clear()
             with self._abrir_log() as saida:

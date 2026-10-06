@@ -53,8 +53,14 @@ def texto_cotacao(c: cotacoes.Cotacao) -> str:
         preco = f"US$ {_num(c.preco)}"
     if c.ativo in {"IBOV", "IFIX"}:
         preco = _num(c.preco, 0) + " pts"
-    h = c.horario.astimezone(ZoneInfo("America/Sao_Paulo")) if c.horario and c.horario.tzinfo else c.horario  # brapi vem em UTC
-    quando = (f"dado de {h:%d/%m}" if (h.hour, h.minute) == (0, 0) else f"dado de {h:%d/%m %H:%M}") if h else ""
+    h = c.horario
+    if h and (h.hour, h.minute) == (0, 0):  # barra diária (Yahoo: meia-noite de Londres/NY) — só a data, sem converter fuso
+        quando = f"dado de {h:%d/%m}"
+    elif h:
+        h = h.astimezone(ZoneInfo("America/Sao_Paulo")) if h.tzinfo else h  # brapi vem em UTC
+        quando = f"dado de {h:%d/%m %H:%M}"
+    else:
+        quando = ""
     return f"- **{c.nome}** ({c.ativo}): {preco} ({_pct(c.variacao_pct, sinal=True)} no dia) — {_fonte(c.fonte, c.obtido_em, extra=' · '.join(x for x in (quando, c.atraso) if x))}"
 
 

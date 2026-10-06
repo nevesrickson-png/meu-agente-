@@ -67,14 +67,23 @@ def caminho_env() -> Path:
 
 
 def _limpo(valor: str | None) -> str:
-    return (valor or "").split(" #")[0].strip().strip('"').strip("'")
+    return (valor or "").strip()  # o dotenv já tira aspas e comentários (" #…" só fora de aspas)
+
+
+def _citar(valor: str) -> str:
+    """Valor com espaço, #, $, aspas ou barra vai entre aspas (senão a senha "ab #1" voltaria como "ab")."""
+    if not valor or re.fullmatch(r"[A-Za-z0-9_.,:/@+=\-]*", valor):
+        return valor
+    if "'" not in valor:
+        return f"'{valor}'"  # aspas simples: literal, sem interpolação
+    return '"' + valor.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def ler_valores(caminho: Path | None = None) -> dict[str, str]:
     caminho = caminho or caminho_env()
     if not caminho.exists():
         return {}
-    return {k: _limpo(v) for k, v in dotenv_values(caminho).items() if k}
+    return {k: _limpo(v) for k, v in dotenv_values(caminho, interpolate=False, encoding="utf-8-sig").items() if k}
 
 
 def ids_validos(texto: str) -> bool:
@@ -98,9 +107,9 @@ def atualizar_env(valores: dict[str, str], caminho: Path | None = None) -> None:
         if "\n" in v or "\r" in v:
             raise ValueError(f"{k}: valor com quebra de linha")
     if caminho.exists():
-        texto = caminho.read_text(encoding="utf-8")
+        texto = caminho.read_text(encoding="utf-8-sig")  # .env salvo pelo Bloco de Notas pode ter BOM
     elif (modelo := caminho.with_name(".env.example")).exists():
-        texto = modelo.read_text(encoding="utf-8")
+        texto = modelo.read_text(encoding="utf-8-sig")
     else:
         texto = ""
     pendentes = dict(valores)
@@ -111,13 +120,17 @@ def atualizar_env(valores: dict[str, str], caminho: Path | None = None) -> None:
             resto = m.group(3)
             i = resto.find(" #")
             comentario = resto[i:].strip() if i >= 0 else ""
-            nova = f"{m.group(1)}{m.group(2)}={pendentes.pop(m.group(2))}"
+            nova = f"{m.group(1)}{m.group(2)}={_citar(pendentes.pop(m.group(2)))}"
             linha = f"{nova:<40} {comentario}" if comentario else nova
         linhas.append(linha)
-    linhas += [f"{k}={v}" for k, v in pendentes.items()]
+    linhas += [f"{k}={_citar(v)}" for k, v in pendentes.items()]
     temp = caminho.with_suffix(".tmp")
     temp.write_text("\n".join(linhas) + "\n", encoding="utf-8")
-    temp.replace(caminho)
+    try:
+        temp.replace(caminho)
+    except OSError as e:  # Windows: .env aberto no editor/antivírus
+        temp.unlink(missing_ok=True)
+        raise ValueError(f"não consegui gravar o .env (feche-o se estiver aberto e tente de novo): {e}") from e
 
 
 def mascara(valor: str) -> str:

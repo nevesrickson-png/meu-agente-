@@ -8,17 +8,16 @@ from __future__ import annotations
 
 import json
 import re
-import threading
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
 from quiron.nucleo.config import pasta_dados
+from quiron.nucleo.trava import gravar_atomico, trava_arquivo
 
 TIPOS = {"preco_acima": "preço acima de", "preco_abaixo": "preço abaixo de", "variacao": "variação no dia (±%) de pelo menos",
          "noticia": "notícia com a palavra"}
-_trava = threading.Lock()
 
 
 class AlertaInvalido(ValueError):
@@ -57,13 +56,21 @@ def listar() -> list[Alerta]:
     arq = _arquivo()
     if not arq.exists():
         return []
-    return [Alerta(**a) for a in json.loads(arq.read_text(encoding="utf-8"))]
+    try:
+        dados = json.loads(arq.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):  # arquivo estragado (versão antiga sem gravação atômica)
+        arq.replace(arq.with_name(f"alertas-estragado-{datetime.now():%Y%m%d-%H%M%S}.json"))
+        return []
+    return [Alerta(**a) for a in dados]
+
+
+def _trava():
+    """Bot, Terminal e MCP gravam o mesmo arquivo: trava entre processos."""
+    return trava_arquivo(_arquivo())
 
 
 def _gravar(itens: list[Alerta]) -> None:
-    arq = _arquivo()
-    arq.parent.mkdir(parents=True, exist_ok=True)
-    arq.write_text(json.dumps([asdict(a) for a in itens], ensure_ascii=False, indent=1), encoding="utf-8")
+    gravar_atomico(_arquivo(), json.dumps([asdict(a) for a in itens], ensure_ascii=False, indent=1))
 
 
 def criar(tipo: str, alvo: str, valor: float | None = None) -> Alerta:
@@ -78,7 +85,7 @@ def criar(tipo: str, alvo: str, valor: float | None = None) -> Alerta:
         if valor is None or float(valor) <= 0:
             raise AlertaInvalido("informe um valor positivo")
         valor = float(valor)
-    with _trava:
+    with _trava():
         itens = listar()
         novo = Alerta(max((a.id for a in itens), default=0) + 1, tipo, alvo, valor, datetime.now().isoformat(timespec="seconds"))
         _gravar(itens + [novo])
@@ -86,7 +93,7 @@ def criar(tipo: str, alvo: str, valor: float | None = None) -> Alerta:
 
 
 def remover(ident: int) -> bool:
-    with _trava:
+    with _trava():
         itens = listar()
         restantes = [a for a in itens if a.id != ident]
         _gravar(restantes)
@@ -104,36 +111,44 @@ def avaliar(cotacao: Callable[[str], Any] | None = None, buscar_noticias: Callab
         buscar_noticias = _noticias
     agora = agora or datetime.now()
     novos = []
-    with _trava:
-        itens = listar()
-        for a in itens:
-            try:
-                if a.tipo == "noticia":
-                    achadas = [n for n in buscar_noticias(a.alvo) if n.get("link") not in a.vistos]
-                    cond = bool(achadas)
-                    if achadas:
-                        a.detalhe = achadas[0].get("titulo", "")[:160]
-                        a.vistos = (a.vistos + [n.get("link") for n in achadas])[-50:]
+    itens = listar()  # as consultas (rede, segundos) ficam FORA da trava; no fim só o estado é mesclado
+    for a in itens:
+        try:
+            if a.tipo == "noticia":
+                achadas = [n for n in buscar_noticias(a.alvo) if n.get("link") not in a.vistos]
+                cond = bool(achadas)
+                if achadas:
+                    a.detalhe = achadas[0].get("titulo", "")[:160]
+                    a.vistos = (a.vistos + [n.get("link") for n in achadas])[-50:]
+            else:
+                c = cotacao(a.alvo)
+                a.ultimo_valor = float(c.preco) if a.tipo != "variacao" else (c.variacao_pct or 0.0)
+                if a.tipo == "preco_acima":
+                    cond = a.ultimo_valor >= a.valor
+                elif a.tipo == "preco_abaixo":
+                    cond = a.ultimo_valor <= a.valor
                 else:
-                    c = cotacao(a.alvo)
-                    a.ultimo_valor = float(c.preco) if a.tipo != "variacao" else (c.variacao_pct or 0.0)
-                    if a.tipo == "preco_acima":
-                        cond = a.ultimo_valor >= a.valor
-                    elif a.tipo == "preco_abaixo":
-                        cond = a.ultimo_valor <= a.valor
-                    else:
-                        cond = abs(a.ultimo_valor) >= a.valor
-                    a.detalhe = (f"agora {a.ultimo_valor:+.2f}%" if a.tipo == "variacao" else f"agora {a.ultimo_valor:.2f}") \
-                        .replace(".", ",")
-            except Exception as e:  # noqa: BLE001 — uma fonte fora do ar não derruba os outros alertas
-                a.detalhe = f"sem dado agora ({type(e).__name__})"
-                continue
-            if cond and (not a.ativo_agora or a.tipo == "noticia"):
-                a.disparado_em = agora.isoformat(timespec="seconds")
-                novos.append(a)
-            a.ativo_agora = cond
-        _gravar(itens)
-    return novos
+                    cond = abs(a.ultimo_valor) >= a.valor
+                a.detalhe = (f"agora {a.ultimo_valor:+.2f}%" if a.tipo == "variacao" else f"agora {a.ultimo_valor:.2f}") \
+                    .replace(".", ",")
+        except Exception as e:  # noqa: BLE001 — uma fonte fora do ar não derruba os outros alertas
+            a.detalhe = f"sem dado agora ({type(e).__name__})"
+            continue
+        if cond and (not a.ativo_agora or a.tipo == "noticia"):
+            a.disparado_em = agora.isoformat(timespec="seconds")
+            novos.append(a)
+        a.ativo_agora = cond
+    campos = ("disparado_em", "ativo_agora", "ultimo_valor", "detalhe", "vistos")
+    avaliados = {a.id: a for a in itens}
+    with _trava():  # relê: alerta criado ou removido durante a avaliação não se perde nem volta
+        atuais = listar()
+        for a in atuais:
+            if (b := avaliados.get(a.id)) and (a.tipo, a.alvo, a.valor) == (b.tipo, b.alvo, b.valor):
+                for c in campos:
+                    setattr(a, c, getattr(b, c))
+        _gravar(atuais)
+    vivos = {a.id for a in atuais}
+    return [a for a in novos if a.id in vivos]
 
 
 def _noticias(termo: str) -> list[dict]:

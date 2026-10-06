@@ -48,7 +48,7 @@ def _irpf_pro_labore(anual: float, r: dict) -> tuple[float, float]:
     """(INSS retido 11% até o teto, IRPF mensal × 12) sobre o pró-labore (sem 13º)."""
     mensal = anual / 12
     inss = min(mensal, impostos.inss_teto(r)) * r["inss"]["pro_labore_retido"]
-    return inss * 12, impostos.irpf_mensal(max(0.0, mensal - inss), r=r) * 12
+    return inss * 12, impostos.ir_na_fonte(mensal, inss, r) * 12
 
 
 def comparar(e: Empresa, p: dict | None = None, r: dict | None = None) -> Empresario:

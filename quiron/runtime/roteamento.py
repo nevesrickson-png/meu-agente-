@@ -72,7 +72,10 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
 
     # tarefas e lembretes
     if m := re.match(r"^(?:por favor,?\s*)?(?:me\s+)?lembr(?:a|e|ar)(?:-me)?\s+(?:de\s+|que\s+)?(.+)$", t):
-        afirmacao = re.match(r"^(?:lembre|lembra|lembrar)\s+que\s", t) and not re.search(r"\bas\s+\d|\b\d{1,2}\s*h\b|\d{1,2}:\d{2}", t)
+        # "lembre que hoje prefiro…" é preferência; "lembra que amanhã tenho dentista" é lembrete (data que não é "hoje")
+        datas_ditas = [d.group(0) for d in _DATA_HORA.finditer(m.group(1))]
+        afirmacao = re.match(r"^(?:lembre|lembra|lembrar)\s+que\s", t) and not re.search(r"\bas\s+\d|\b\d{1,2}\s*h\b|\d{1,2}:\d{2}", t) \
+            and all(d == "hoje" for d in datas_ditas)
         if _DATA_HORA.search(m.group(1)) and not afirmacao:  # "lembre que hoje prefiro…" é preferência, não lembrete
             return "tarefa", _do_original(original, m.group(1))
     if m := re.match(r"^(?:cria(?:r)?|adiciona(?:r)?|nova|anota(?:r)?)\s+(?:uma\s+)?tarefa:?\s+(.+)$", t):

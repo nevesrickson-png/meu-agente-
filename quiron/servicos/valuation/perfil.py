@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import threading
 import time
 import zipfile
 from dataclasses import asdict, dataclass, field
@@ -186,11 +187,14 @@ def perfil(termo: str | cvm_cias.Empresa, traduzir: bool = True, config=None) ->
                                 ("Yahoo Finance (perfil)", yh.get("negocio_original") or yh.get("setor"))) if ok]
     completo = bool(fca and fre and yh.get("negocio_original")) and (bool(traducao) or not traduzir)
     if fca:  # perfil vazio (sem rede) não vai para o cache; incompleto (sem FRE/Yahoo/tradução) vale só 6 horas
-        tmp = cache.with_suffix(".tmp")
-        tmp.write_text(json.dumps(asdict(p), ensure_ascii=False), encoding="utf-8")
-        tmp.replace(cache)
-        if not completo:
-            os.utime(cache, (time.time() - VALIDADE_S + 6 * 3600,) * 2)
+        tmp = cache.with_name(f"{cache.stem}.{os.getpid()}.{threading.get_ident()}.tmp")  # bot, Terminal e MCP juntos
+        try:
+            tmp.write_text(json.dumps(asdict(p), ensure_ascii=False), encoding="utf-8")
+            tmp.replace(cache)
+            if not completo:
+                os.utime(cache, (time.time() - VALIDADE_S + 6 * 3600,) * 2)
+        except OSError:  # Windows com o arquivo aberto por outro processo: o perfil já está pronto, só não ficou no cache
+            tmp.unlink(missing_ok=True)
     return p
 
 

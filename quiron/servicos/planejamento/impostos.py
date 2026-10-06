@@ -24,13 +24,22 @@ def _tabela(faixas: list[dict], base: float, escala: float = 1.0) -> float:
     return 0.0
 
 
-def irpf_mensal(base: float, com_reducao: bool = True, r: dict | None = None) -> float:
-    """IR do mês sobre a base (rendimento tributável − INSS − dependentes…), com a redução de 2026."""
+def irpf_mensal(base: float, com_reducao: bool = True, r: dict | None = None, rendimento: float | None = None) -> float:
+    """IR do mês sobre a base (rendimento tributável − INSS − dependentes…), com a redução de 2026 — que a lei calcula
+    sobre o RENDIMENTO tributável bruto (sem `rendimento`, usa a própria base)."""
     t = (r or _r())["irpf_tabela_mensal"]
     imposto = _tabela(t["faixas"], base)
     if com_reducao and t.get("reducao_2026"):
-        imposto = max(0.0, imposto - _reducao(t["reducao_2026"]["mensal"], base))
+        imposto = max(0.0, imposto - _reducao(t["reducao_2026"]["mensal"], base if rendimento is None else rendimento))
     return imposto
+
+
+def ir_na_fonte(rendimento: float, deducoes: float = 0.0, r: dict | None = None) -> float:
+    """IR retido no mês: base = rendimento − o maior entre as deduções legais (INSS, dependentes…) e o desconto
+    simplificado mensal; redução de 2026 sobre o rendimento bruto."""
+    r = r or _r()
+    simplificado = float(r["irpf_tabela_mensal"]["deducoes_anuais"].get("desconto_simplificado_mensal") or 0)
+    return irpf_mensal(max(0.0, rendimento - max(deducoes, simplificado)), r=r, rendimento=rendimento)
 
 
 def irpf_anual(base: float, rendimento_tributavel: float | None = None, com_reducao: bool = True,
