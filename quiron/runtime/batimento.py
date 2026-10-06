@@ -41,8 +41,12 @@ class ConfigBatimento:
         return self.inicio <= hhmm <= self.fim
 
 
+ultimas_pendencias: list = []  # aprovações pedidas na última rodada (o bot manda os botões junto do aviso)
+
+
 async def bater(agente, agora: datetime | None = None) -> str | None:
-    """Uma rodada do batimento. Devolve a mensagem a enviar ou None."""
+    """Uma rodada do batimento. Devolve a mensagem a enviar ou None (aprovações pedidas ficam em `ultimas_pendencias`)."""
+    ultimas_pendencias.clear()
     agora = (agora or datetime.now(BRT)).astimezone(BRT)
     cfg = ConfigBatimento.ler()
     if not cfg.ativo or not cfg.dentro_do_horario(agora) or not agente.agendador.pode_enviar(agora):
@@ -51,6 +55,7 @@ async def bater(agente, agora: datetime | None = None) -> str | None:
     if not any(l.strip().startswith("-") for l in rotinas.splitlines()):
         return None  # sem rotinas, não gasta cota do modelo
     reg = await agente.responder(PROMPT.format(rotinas=rotinas, diario=agente.workspace.diario(agora) or "(nada ainda)"))
+    ultimas_pendencias.extend(reg.pendencias)
     texto = (reg.resposta or "").strip()
     if reg.erro or not texto or texto.upper().strip(" .!") == "NADA" or texto.upper().startswith("NADA"):
         return None

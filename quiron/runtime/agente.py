@@ -168,7 +168,11 @@ class Agente:
 
     async def executar_ferramenta(self, nome: str, args: dict[str, Any]) -> str:
         if nome in self.internas.nomes:
-            return await asyncio.to_thread(self.internas.executar, nome, args)
+            try:  # argumento um pouco errado do modelo ("importancia": "alta") não derruba a resposta inteira
+                return await asyncio.to_thread(self.internas.executar, nome, args or {})
+            except Exception as e:  # noqa: BLE001 — o modelo recebe o erro e pode corrigir (como no MCP)
+                logging.exception("ferramenta interna %s", nome)
+                return f"ERRO ao executar {nome}: {type(e).__name__}: {str(e)[:200]}"
         return await self.conexao.chamar(nome, args)
 
     async def responder(self, pergunta: str, historico: list[dict[str, Any]] | None = None, *, chat: int | None = None,

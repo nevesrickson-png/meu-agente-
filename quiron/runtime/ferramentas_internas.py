@@ -50,6 +50,12 @@ DEFINICOES = [
 ]
 
 
+def _inteiro(valor: Any, padrao: int) -> int:
+    """'#5' → 5 · '4' → 4 · 'alta' → padrão (o modelo nem sempre manda número puro)."""
+    m = re.search(r"\d+", str(valor if valor is not None else ""))
+    return int(m.group()) if m else padrao
+
+
 @dataclass
 class FerramentasInternas:
     workspace: Workspace
@@ -78,7 +84,7 @@ class FerramentasInternas:
             if self.longa is None:
                 return self.workspace.lembrar(str(a.get("fato", "")))
             return self.longa.adicionar(str(a.get("fato", "")), str(a.get("categoria") or "geral"),
-                                        int(a.get("importancia") or 4), "dito")[0]
+                                        _inteiro(a.get("importancia"), 4), "dito")[0]
         if nome == "esquecer":
             return self.longa.esquecer(str(a.get("trecho", ""))) if self.longa is not None else \
                 self.workspace.esquecer(str(a.get("trecho", "")))
@@ -98,6 +104,13 @@ class FerramentasInternas:
                     for t in achados))
             return "\n\n".join(partes) or "Nada encontrado na memória nem nas conversas anteriores."
         if nome == "agendar":
+            from quiron.runtime.roteamento import ROTINAS_DIRETAS
+
+            texto = str(a.get("texto", "")).strip()
+            if texto.startswith("/") and texto[1:].split(maxsplit=1)[0:1] and \
+                    texto[1:].split(maxsplit=1)[0].lower() not in ROTINAS_DIRETAS:
+                return ("Não agendei: comandos que alteram dados não podem rodar sozinhos. Agende como pedido em texto "
+                        "(ex.: 'Faça meu briefing.') ou peça ao Rickson para rodar o comando.")
             try:
                 quando = datetime.fromisoformat(a["quando_iso"]) if a.get("quando_iso") else None
                 ag = self.agendador.criar(str(a.get("texto", "")), str(a.get("tipo", "lembrete")), str(a.get("recorrencia", "uma vez")), quando)
@@ -108,15 +121,15 @@ class FerramentasInternas:
             itens = self.agendador.listar()
             return "\n".join(a.descrever() for a in itens) if itens else "Nada agendado."
         if nome == "cancelar_agendamento":
-            return "Cancelado." if self.agendador.cancelar(int(a.get("id", 0))) else "Não encontrei esse agendamento ativo."
+            return "Cancelado." if self.agendador.cancelar(_inteiro(a.get("id"), 0)) else "Não encontrei esse agendamento ativo."
         if nome == "propor_skill":
-            nome_skill = re.sub(r"[^a-z0-9\-]", "", str(a.get("nome", "")).lower())
+            nome_skill = re.sub(r"[^a-z0-9\-]", "", str(a.get("nome", "")).lower().removeprefix("quiron-"))  # como em ler_skill
             if not nome_skill:
                 return "Nome de skill inválido."
             arq = PASTA_SKILLS / f"{nome_skill}.md"
             if arq.exists():
                 return f"Já existe a skill {nome_skill}; não sobrescrevo."
-            arq.write_text(f"# Skill: {nome_skill}\n\n**Quando usar:** {a.get('quando_usar', '').strip()}\n\n{a.get('instrucoes', '').strip()}\n",
+            arq.write_text(f"# Skill: {nome_skill}\n\n**Quando usar:** {str(a.get('quando_usar') or '').strip()}\n\n{str(a.get('instrucoes') or '').strip()}\n",
                            encoding="utf-8")
             return f"Skill {nome_skill} criada em agente/skills/{nome_skill}.md."
         return f"Ferramenta interna desconhecida: {nome}"

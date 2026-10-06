@@ -10,6 +10,7 @@ permissoes:
     esquecer: confirmar                         # apagar memória
     quiron_assessoria__esquecer_cliente: confirmar   # LGPD: apaga tudo de um cliente
     quiron_assessoria__aplicar_reuniao_na_ficha: confirmar   # muda a ficha com o que saiu da reunião
+    quiron_assessoria__salvar_ficha: confirmar       # pode refazer a ficha do zero (substituir=true)
     propor_skill: confirmar                     # o agente criar uma skill nova
     # Ações que apagam algo ou mexem fora do Quíron: pela IA pedem ✅ (os comandos diretos, como /feito, continuam na hora).
     # Protege também contra texto malicioso vindo de notícias/páginas tentando "mandar" o agente fazer algo.

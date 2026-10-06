@@ -478,6 +478,25 @@ biblioteca/conteúdo/carreira/LGPD) + conferência das correções da 1ª rodada
   análises presa 6 h no Docker, "lembra que amanhã…", `.env` com BOM/senha com "#", tese em 29/02, portfólio sem CLI-XXX
 ✅ Aceite (06/10/2026): 30 testes novos em `testes/test_revisao_bugs2.py`; suíte completa (385) e navegador verdes.
 
+## Depuração geral — 3ª rodada (06/10/2026) — "vamos revisar os erros antes do obsidian"
+Revisores no agente/MCP, nas contas de fundos/valuation/risco, em mercado/notícias/Terminal e conferência da 2ª rodada.
+- [x] Privacidade: telefone/CPF/e-mail que chegavam à IA na nuvem pelo histórico, ferramentas ou escriba agora saem
+  mascarados (`quiron/nucleo/privacidade.py`, aplicado em todo `cerebro`); detector com espaço e +55
+- [x] Permissões: rotina agendada não roda mais comando que altera dados (/memoria esquecer, /evento…); aprovações
+  pedidas em rotinas e no batimento ganham os botões; erro de ferramenta interna não derruba a resposta; aprovação que
+  falha avisa; `salvar_ficha` pede ✅; RASCUNHO para "meu cliente/os clientes"; rodapé de uso interno com "petr4",
+  BDR e nome da empresa; "passa 100 mil para o CDB" não vira mais "adiar tarefa"; servidor MCP travado não prende o bot
+- [x] Valuation e risco: arrendamento contado duas vezes na dívida líquida; variação com base negativa; frase do
+  cenário otimista; LTM com anos trocados; pior queda ignorava o 1º mês; estresse histórico nunca usava o próprio
+  ativo; proxy ausente derrubava o diagnóstico; conferência de números dos relatórios (sinal e "milhão")
+- [x] Mercado e notícias: bps do Tesouro comparando compra × venda (▲1362 bps falso); Bluesky/Reddit paravam após o
+  token vencer; busca de notícias só olhava as 500 mais novas; "no" como negação no sentimento; painéis voltando a
+  "carregando"; cache do YouTube que nunca valia; colunas diárias tratadas como repetidas; cotação/SGS velhos sem aviso
+- [x] Ajustes da 2ª rodada: backup não aborta com o log mudando e leva as cópias da memória; "reunião de 2h"; cota
+  diária do Groq; compliance sem falsos alarmes ("não há risco cambial", "FGC assegura até…"); .env com "\"; "às 3 e
+  meia"; LGPD com `secure_delete` e esquecimento com data
+✅ Aceite (06/10/2026): 13 testes novos em `testes/test_revisao_bugs3.py`; suíte completa (398) e navegador verdes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

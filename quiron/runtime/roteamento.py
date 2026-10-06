@@ -23,6 +23,14 @@ def _sem_acento(texto: str) -> str:
 
 
 # ---------------------------------------------------------------- 1. fala normal → função direta
+# comandos de LEITURA que uma rotina agendada pode rodar sozinha (o resto altera dados e precisa do Rickson)
+ROTINAS_DIRETAS = {"briefing", "resumo", "hoje", "tarefas", "revisao", "radar", "cartas", "metas", "notas", "pauta", "diagnostico", "flashcards"}
+
+def _parece_quando(texto: str) -> bool:
+    """O resto da frase fala de data/hora? ("amanhã", "sexta", "15h", "10:30", "daqui a 2 horas")."""
+    return bool(_DATA_HORA.search(texto) or re.search(r"\b\d{1,2}\s*(?:h|hs|horas?|min|minutos?)\b|\b\d{1,2}:\d{2}\b|\bdaqui\b", texto))
+
+
 _DATA_HORA = re.compile(r"\b(hoje|amanha|depois de amanha|segunda|terca|quarta|quinta|sexta|sabado|domingo|semana que vem|"
                         r"mes que vem|dia \d{1,2}|\d{1,2}/\d{1,2}|\d{1,2}\s*h\b|\d{1,2}:\d{2}|as \d{1,2}|meio[- ]dia|"
                         r"daqui a|em \d+ (?:minutos?|horas?|dias?))", re.I)
@@ -57,7 +65,8 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
     if ultima_tarefa:
         if m := re.match(r"^(?:na verdade,?\s*|melhor,?\s*|ah,?\s*|entao,?\s*)?(?:adia|adiar|passa|muda|joga|empurra|troca|remarca)"
                          r"(?:\s+(?:ela|isso|essa|esse|a tarefa|o lembrete))?\s+(?:para|pra|pro)\s+(.+)$", t):
-            return "adiar", f"{ultima_tarefa} {m.group(1)}"
+            if _parece_quando(m.group(1)):  # "troca para o cenário pessimista" não é remarcar a tarefa
+                return "adiar", f"{ultima_tarefa} {m.group(1)}"
         if re.match(r"^(?:pronto,?\s*)?(?:feito|fiz|conclui|terminei|ja fiz)(?:\s+(?:essa|isso|ela|a tarefa))?$", t):  # "pronto" sozinho não
             return "feito", str(ultima_tarefa)
 
@@ -75,22 +84,26 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
         # "lembre que hoje prefiro…" é preferência; "lembra que amanhã tenho dentista" é lembrete (data que não é "hoje")
         datas_ditas = [d.group(0) for d in _DATA_HORA.finditer(m.group(1))]
         afirmacao = re.match(r"^(?:lembre|lembra|lembrar)\s+que\s", t) and not re.search(r"\bas\s+\d|\b\d{1,2}\s*h\b|\d{1,2}:\d{2}", t) \
-            and all(d == "hoje" for d in datas_ditas)
+            and (all(d == "hoje" for d in datas_ditas)  # "toda segunda eu prefiro…" é preferência, não lembrete
+                 or (re.search(r"\btod[oa]s?\b", t) and re.search(r"\b(prefiro|gosto|quero|sempre)\b", t)))
         if _DATA_HORA.search(m.group(1)) and not afirmacao:  # "lembre que hoje prefiro…" é preferência, não lembrete
             return "tarefa", _do_original(original, m.group(1))
     if m := re.match(r"^(?:cria(?:r)?|adiciona(?:r)?|nova|anota(?:r)?)\s+(?:uma\s+)?tarefa:?\s+(.+)$", t):
         return "tarefa", _do_original(original, m.group(1))
     if m := re.match(r"^(?:feito|fiz|conclui|terminei|marca(?:r)? como feita)\s+(?:a\s+)?(?:tarefa\s+)?(?:n[ºo°.]?\s*)?#?(\d+)$", t):
         return "feito", m.group(1)
-    if m := re.match(r"^(?:adia|adiar|empurra|passa|joga|muda)\s+(?:a\s+)?(?:tarefa\s+)?#?(\d+)\s+(?:para|pra|pro)?\s*(.+)$", t):
-        return "adiar", f"{m.group(1)} {m.group(2)}"
+    if m := re.match(r"^(?:adia|adiar|empurra|passa|joga|muda)\s+(?:a\s+)?(?:tarefa\s+)?#?(\d+)"
+                     r"(?!\s*(?:mil|k\b|%|reais|r\$|clientes?|acoes|cotas|milh))\s+(?:para|pra|pro)?\s*(.+)$", t):
+        if _parece_quando(m.group(2)):  # "passa 100 mil para o CDB" é pergunta, não adiar a tarefa 100
+            return "adiar", f"{m.group(1)} {m.group(2)}"
     if re.match(r"^(?:o que (?:eu )?tenho (?:pra |para |de )?hoje|minha agenda(?: de hoje| do dia)?|meu dia|como (?:esta|ta) (?:o )?meu dia|"
                 r"agenda de hoje|o que tem (?:pra|para) hoje|resumo do (?:meu )?dia)$", t):
         return "hoje", ""
     if re.match(r"^(?:minhas tarefas|quais (?:sao )?(?:as )?minhas tarefas|lista de tarefas|(?:o que|que) (?:eu )?tenho pendente|"
                 r"pendencias|minhas pendencias)$", t):
         return "tarefas", ""
-    if m := re.match(r"^(?:anota|anote|nota|registra|guarda essa ideia)(?:\s+ai)?:?\s+(?:que\s+)?(.+)$", t):
+    if (m := re.match(r"^(?:anota|anote|nota|registra|guarda essa ideia)(?:\s+ai)?:?\s+(?:que\s+)?(.+)$", t)) \
+            and not re.match(r"^nota\s+\d", t):  # "nota 10 para a resposta" é avaliação, não anotação
         if not _DATA_HORA.search(m.group(1)):
             return "nota", _do_original(original, m.group(1))
         return "tarefa", _do_original(original, m.group(1))

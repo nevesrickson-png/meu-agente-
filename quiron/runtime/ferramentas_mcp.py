@@ -21,6 +21,7 @@ from mcp.client.stdio import stdio_client
 from quiron.nucleo.config import RAIZ
 
 SEPARADOR = "__"
+INICIO_MAX_S = float(os.environ.get("QUIRON_MCP_INICIO_S", "90"))  # tempo máximo para um servidor MCP subir
 
 
 def ler_mcp_json(caminho: Path | None = None) -> dict[str, dict]:
@@ -58,9 +59,11 @@ class ConexaoMCP:
             try:
                 leitura, escrita = await self._pilha.enter_async_context(stdio_client(params))
                 sessao = await self._pilha.enter_async_context(ClientSession(leitura, escrita))
-                await sessao.initialize()
+                # servidor que trava ao subir não pode prender o bot/Terminal para sempre
+                await asyncio.wait_for(sessao.initialize(), INICIO_MAX_S)
+                lista = await asyncio.wait_for(sessao.list_tools(), INICIO_MAX_S)
                 self._sessoes[nome] = sessao
-                for t in (await sessao.list_tools()).tools:
+                for t in lista.tools:
                     if permitidas.get(nome) and t.name not in permitidas[nome]:
                         continue
                     self.ferramentas.append({

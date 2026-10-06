@@ -166,6 +166,14 @@ Arquivos com DRM não são processados.
   localhost×127.0.0.1 na mesma porta); acervo publica com `os.link` (nunca sobrescreve) a partir de temporário único;
   OCR em cache por sha256; pacote offline extrai à parte e troca com desfazer; backup.sh em dois tars; Gemini PerDay
   pausa até a meia-noite do Pacífico; `.env` com aspas quando preciso, `utf-8-sig`, sem interpolação.
+- Depuração 3 (06/10/2026, `testes/test_revisao_bugs3.py`): `nucleo/privacidade.mascarar` em todo `cerebro` (modelo
+  não local) — telefone/CPF/e-mail com FORMA de dado pessoal viram [telefone]/[CPF]/[e-mail], CNPJ preservado, números
+  financeiros intactos; `roteamento.ROTINAS_DIRETAS` (leituras) é a lista que rotina agendada pode rodar sozinha
+  (`agenda_vencida` e `agendar` recusam o resto); `BotQuiron.saidas_aprovacao` em todos os caminhos (+ batimento via
+  `batimento.ultimas_pendencias`); `executar_ferramenta` devolve "ERRO…" em vez de levantar; `_parece_quando` antes de
+  rotear "adiar"; MCP sobe com `INICIO_MAX_S`; `cvm_cias` não soma arrendamento de 2.01.04/2.02.01; drawdown com pico
+  mínimo 1,0; `serie_posicao(..., historia=)`; `redacao.conferir` sem sinal e com escala; Tesouro bps só compra × compra;
+  `dados._ultimo_ok`; tokens de Bluesky/Reddit com validade; `coleta.listar(limite=None)` nas buscas por termo.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

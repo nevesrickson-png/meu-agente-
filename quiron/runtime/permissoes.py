@@ -74,9 +74,21 @@ class Aprovacoes:
 # ---------------------------------------------------------------- hooks de compliance
 
 _PEDE_TEXTO_CLIENTE = re.compile(
-    r"(mensagem|texto|e-?mail|whats(app)?|carta|comunicado|resposta)\b.{0,60}\b(para|pro|pra|ao|à)\s+(o |a )?(cliente|CLI-\d+)", re.I | re.S)
+    r"(mensagem|texto|e-?mail|whats(app)?|carta|comunicado|resposta)\b.{0,60}\b(para|pro|pra|aos?|às?|à)\s+"
+    r"(?:(?:o|a|os|as|meu|minha|meus|minhas|seu|sua|seus|suas|nosso|nossa|nossos|nossas)\s+)*(clientes?|CLI-\d+)", re.I | re.S)
 _RECOMENDA_ACAO = re.compile(r"\b(compra(r)?|vend(a|er)|recomend\w*|preço[- ]alvo|valuation|tese)\b", re.I)
-_TICKER = re.compile(r"\b[A-Z]{4}(3|4|5|6|11)\b")
+_TICKER = re.compile(r"\b[A-Za-z]{4}(?:3|4|5|6|11|3[1-5]|39)\b")  # inclui BDRs (AAPL34) e "petr4" minúsculo
+
+
+def _cita_acao(texto: str) -> bool:
+    if _TICKER.search(texto):
+        return True
+    try:  # nomes de empresa da lista das notícias ("Petrobras", "Vale" — com as exceções tipo "vale a pena")
+        from quiron.servicos.noticias.classificacao import ativos
+
+        return bool(ativos(texto))
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def aplicar_compliance(pedido: str, resposta: str) -> str:
@@ -84,7 +96,7 @@ def aplicar_compliance(pedido: str, resposta: str) -> str:
     saida = resposta.strip()
     if cfg.get("rascunho_para_cliente", True) and _PEDE_TEXTO_CLIENTE.search(pedido) and "RASCUNHO" not in saida.upper():
         saida = f"{MARCA_RASCUNHO}\n\n{saida}"
-    if cfg.get("rodape_uso_interno", True) and _TICKER.search(pedido + " " + saida) and _RECOMENDA_ACAO.search(pedido + " " + saida) \
+    if cfg.get("rodape_uso_interno", True) and _cita_acao(pedido + " " + saida) and _RECOMENDA_ACAO.search(pedido + " " + saida) \
             and "uso interno" not in saida.lower():
         # o rodapé entra ANTES das sugestões "» …" do fim (que viram botões e precisam continuar sendo as últimas linhas)
         m = re.search(r"(?:\n[ \t]*»[^\n]*)+\s*$", saida)

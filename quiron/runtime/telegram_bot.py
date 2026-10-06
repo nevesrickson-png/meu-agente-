@@ -41,7 +41,7 @@ from quiron.runtime.workspace import carregar_comandos
 # objeto se misturariam; ContextVar é separado por tarefa assíncrona).
 _ESTADO: contextvars.ContextVar[dict] = contextvars.ContextVar("estado_mensagem")
 TEMPO_MAXIMO_RESPOSTA_S = 420  # uma resposta travada não pode prender o bot (as mensagens são atendidas em fila)
-ROTINAS_DIRETAS = {"briefing", "resumo", "hoje", "tarefas", "revisao", "radar", "cartas", "metas", "notas", "pauta", "diagnostico", "flashcards"}
+from quiron.runtime.roteamento import ROTINAS_DIRETAS  # noqa: E402 — leituras que podem rodar sozinhas
 LIMITE_TELEGRAM = 4000  # o Telegram aceita até 4096 caracteres por mensagem
 INATIVIDADE_MODO_S = 3 * 3600  # treino/entrevista/pós-reunião parados há mais que isso se encerram sozinhos
 SAIR = {"/sair", "sair", "/cancelar"}
@@ -393,9 +393,13 @@ class BotQuiron:
         self._marcar("via_agente")
         reg = await self.agente.responder(texto, chat=chat, skills=skills, progresso=_ESTADO.get({}).get("progresso"))
         saidas = self.com_sugestoes([Saida(p) for p in dividir(aviso + (reg.resposta or "(sem resposta)"))])
-        for p in reg.pendencias:
-            saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
-        return saidas
+        return saidas + self.saidas_aprovacao(reg)
+
+    @staticmethod
+    def saidas_aprovacao(reg) -> list[Saida]:
+        """Botões ✅/❌ para cada ação que o agente pediu para confirmar (em qualquer caminho: conversa, rotina, batimento)."""
+        return [Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")])
+                for p in reg.pendencias]
 
     # ------------------------------------------------------------ simulador de patrimônio
     def comando_simular(self, args: str) -> list[Saida]:
@@ -583,7 +587,11 @@ class BotQuiron:
             return "Esse pedido já foi decidido ou não existe."
         if acao != "aprovar":
             return f"❌ Negado: {p.resumo}"
-        resultado = await self.agente.executar_aprovada(p)
+        try:
+            resultado = await self.agente.executar_aprovada(p)
+        except Exception as e:  # noqa: BLE001 — a aprovação já foi gasta: avisa em vez de ficar calado
+            logging.exception("aprovação #%s falhou", p.id)
+            return f"⚠️ Aprovado, mas deu erro ao fazer: {p.resumo}\n{type(e).__name__}: {str(e)[:300]}\nPeça de novo se quiser."
         return f"✅ Aprovado e feito: {p.resumo}\n{resultado[:3000]}"
 
     def skills_para(self, texto: str) -> list[str]:
@@ -634,9 +642,7 @@ class BotQuiron:
                  f"análise carteira_diagnostico; não retranscreva as posições):\n{resumo}\n\nPedido: {pedido}")
         reg = await self.agente.responder(texto, chat=chat, skills=["analise"])
         saidas += self.com_sugestoes([Saida(p) for p in dividir(reg.resposta or "(sem resposta)")])
-        for p in reg.pendencias:
-            saidas.append(Saida(f"🔐 Aprovação #{p.id}: {p.resumo}", [("✅ Aprovar", f"aprovar:{p.id}"), ("❌ Negar", f"negar:{p.id}")]))
-        return saidas
+        return saidas + self.saidas_aprovacao(reg)
 
     def garantir_rotinas_padrao(self) -> list[str]:
         """Cria as rotinas de config/agente.yaml (ex.: briefing das 7h30) se ainda não existirem."""
@@ -683,7 +689,12 @@ class BotQuiron:
                     else:
                         saidas.append(Saida(f"⏰ Lembrete: {re.sub(r'^\[T\d+\] ', '', a.texto)}"))
                 elif a.texto.startswith("/") and dono is not None:
-                    saidas += await self.tratar(dono, dono, a.texto)
+                    cmd = a.texto[1:].split(maxsplit=1)[0].split("@")[0].lower() if len(a.texto) > 1 else ""
+                    if cmd in ROTINAS_DIRETAS:  # só leituras rodam sozinhas
+                        saidas += await self.tratar(dono, dono, a.texto)
+                    else:  # comando que muda dados (/memoria esquecer, /evento…) nunca roda sem o Rickson
+                        saidas.append(Saida(f"⏰ Rotina agendada: {a.texto[:200]}\nEste comando altera dados, então não rodei "
+                                            "sozinho. Se quiser, mande-o você mesmo."))
                 elif (rota := rotear(a.texto)) and rota[0] in ROTINAS_DIRETAS and dono is not None:
                     # "Faça meu briefing." vira "/briefing" já aqui: texto livre seria capturado por um /pos, treino ou
                     # entrevista abertos (a rotina viraria transcrição de reunião). Só leituras vão direto.
@@ -691,6 +702,7 @@ class BotQuiron:
                 else:
                     reg = await self.agente.responder(a.texto, skills=self.skills_para(a.texto))
                     saidas += [Saida(p) for p in dividir(reg.resposta or "(sem resposta)")]
+                    saidas += self.saidas_aprovacao(reg)
             except Exception:  # noqa: BLE001
                 logging.exception("falha ao executar o agendamento #%s", a.id)
                 saidas.append(Saida(f"⚠️ Não consegui fazer agora: {re.sub(r'^\[T\d+\] ', '', a.texto)[:120]}. "
@@ -977,6 +989,8 @@ async def _rodar() -> None:
                         bot.registrar_proativo(dono, texto, "batimento")
                         for parte in dividir(texto):
                             await app.bot.send_message(dono, parte)
+                    for s in BotQuiron.saidas_aprovacao(type("R", (), {"pendencias": list(batimento.ultimas_pendencias)})()):
+                        await enviar(dono, s)  # aprovação pedida no batimento precisa dos botões, senão fica pendente para sempre
                 except Exception:  # noqa: BLE001
                     logging.exception("falha no batimento")
 
