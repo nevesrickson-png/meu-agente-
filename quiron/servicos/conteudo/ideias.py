@@ -72,7 +72,12 @@ def obter(ident: int) -> Ideia:
     return _de(r)
 
 
+_COLUNAS = {"titulo", "angulo", "formato", "fontes", "situacao", "arquivo", "atualizada_em"}
+
+
 def atualizar(ident: int, **campos) -> Ideia:
+    if extras := set(campos) - _COLUNAS:  # nomes de coluna entram no SQL: só os conhecidos
+        raise ValueError(f"campos inválidos: {', '.join(sorted(extras))}")
     obter(ident)
     if "situacao" in campos and campos["situacao"] not in SITUACOES:
         raise ValueError(f"situação: {', '.join(SITUACOES)}")
