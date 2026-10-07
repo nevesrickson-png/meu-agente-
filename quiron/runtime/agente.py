@@ -91,6 +91,12 @@ def prompt_sistema(agora: datetime | None = None, workspace: Workspace | None = 
     partes += [
         "## Como trabalhar\n"
         "- Use as ferramentas para qualquer dado (mercado, notícias, livros). Nunca responda número de memória.\n"
+        "- NUNCA descreva um ativo, fundo, FII, Fiagro, ETF ou empresa de memória — nem o que ele é, nem a gestora, "
+        "estratégia ou índice. Primeiro consulte: código terminado em 11 → quiron_mercado__fii_dados (FII/Fiagro) e, se não "
+        "achar, buscar_fundo; ação → buscar_empresa/cotacao. Se nenhuma ferramenta achar, diga 'não encontrei nos dados "
+        "oficiais' e pergunte — jamais adivinhe (códigos parecidos são de produtos diferentes).\n"
+        "- Análises de fundos: código XXXX11 (FII/Fiagro) usa `fii_comparativo` com {\"fiis\": [\"XXXX11\", …]} — também "
+        "para UM só fundo; fundos comuns usam `fundo_analise` {\"cnpj\": …} ou `fundos_comparativo` {\"cnpjs\": […]}.\n"
         "- Antes de responder um pedido coberto por uma skill, chame `ler_skill` e siga as instruções.\n"
         "- Você tem memória persistente: o que é durável nas conversas é guardado sozinho. Use `lembrar` quando ele pedir "
         "explicitamente ou quando algo for claramente importante; `buscar_conversas` para recuperar o que foi dito antes. "

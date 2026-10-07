@@ -330,6 +330,11 @@ class BotQuiron:
             r = await asyncio.to_thread(resumo.gerar, None, self.agente.config)
             pdf = resumo.pdf_de(r)
             return [Saida(r.texto(), arquivo=str(pdf) if pdf else "")]
+        if texto.split(" ", 1)[0].split("@")[0].lower() in {"/ativo", "/codigo"}:
+            from quiron.servicos.fundos import consulta_rapida
+
+            self._marcar("direto")  # só dados oficiais (CVM/cotação): a IA não descreve ativo de memória
+            return [Saida(await asyncio.to_thread(consulta_rapida.consultar, texto.partition(" ")[2]))]
         if texto.split(" ", 1)[0].split("@")[0].lower() in {"/simular", "/simulador", "/patrimonio"}:
             self._marcar("direto")
             return await asyncio.to_thread(self.comando_simular, texto.partition(" ")[2])

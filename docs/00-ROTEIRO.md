@@ -505,6 +505,12 @@ Revisores no agente/MCP, nas contas de fundos/valuation/risco, em mercado/notíc
   redirecionado para o comparativo de FIIs; mais nomes de campo aceitos; "RBRR11 e MCCI11" não vira ticker "E"; aviso de
   falha mostra o motivo; informe da CVM fora do ar usa o último guardado
 ✅ Aceite (07/10/2026): 3 testes novos em `testes/test_revisao_bugs3.py`; suíte completa (401) e navegador verdes.
+- [x] (07/10, prints do Telegram) Pedido de fundo com campo de nome diferente ({"fundo": …}, {"ativos": […]}) falhava com
+  "não achei o fundo “”"/"informe de 2 a 6 fundos": agora é lido, conferido ANTES de entrar na fila e FII vira
+  `fii_comparativo` (também no "Tentar de novo")
+- [x] IA descrevendo ativo de memória (XPAG11 virou "ETF de dividendos"; é o XP Crédito Agro, Fiagro): só o código na
+  mensagem vai direto aos dados oficiais (`/ativo`, CVM + cotação) e o agente tem regra de nunca descrever ativo sem
+  consultar; informe antigo da CVM vem com aviso
 
 ---
 

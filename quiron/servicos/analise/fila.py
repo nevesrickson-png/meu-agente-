@@ -141,6 +141,7 @@ class Fila:
         if nome_tipo not in tipos:
             raise ValueError(f"Tipo de análise desconhecido: {nome_tipo}. Disponíveis: {', '.join(sorted(tipos))}")
         modo = modo if modo in MODOS else "entregar"
+        nome_tipo, parametros = _ajustar_pedido(nome_tipo, parametros or {})  # erro de pedido aparece já, não depois
         with self._con() as c:
             cur = c.execute("INSERT INTO tarefas (tipo, parametros, modo, origem, chat, criada_em) VALUES (?,?,?,?,?,?)",
                             (nome_tipo, json.dumps(parametros or {}, ensure_ascii=False), modo, origem, chat, _agora()))
@@ -205,10 +206,19 @@ class Fila:
         return self.obter(t.id)
 
     def repetir(self, ident: int) -> Tarefa | None:
-        """Análise que falhou volta para a fila (mesmos parâmetros). None se não existe ou não falhou."""
+        """Análise que falhou volta para a fila (mesmos parâmetros, com o mesmo ajuste de um pedido novo — ex.: FII pedido
+        como fundo comum). None se não existe ou não falhou."""
+        t = self.obter(ident)
+        if not t or t.situacao != "erro":
+            return None
+        try:
+            tipo, params = _ajustar_pedido(t.tipo, dict(t.parametros or {}))
+        except ValueError:
+            tipo, params = t.tipo, t.parametros  # sem como ajustar: tenta como estava (o erro volta explicado)
         with self._con() as c:
             ok = c.execute("UPDATE tarefas SET situacao='na fila', erro='', entregue=0, dono='', iniciada_em=NULL, "
-                           "terminada_em=NULL WHERE id=? AND situacao='erro'", (ident,)).rowcount
+                           "terminada_em=NULL, tipo=?, parametros=? WHERE id=? AND situacao='erro'",
+                           (tipo, json.dumps(params or {}, ensure_ascii=False), ident)).rowcount
         if ok:
             self._acordar.set()
         return self.obter(ident) if ok else None
@@ -285,6 +295,21 @@ class Fila:
 
 
 _FILA: Fila | None = None
+
+
+def _ajustar_pedido(nome_tipo: str, parametros: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    """Confere o pedido de fundos ANTES de entrar na fila: FII (XXXX11) pedido como fundo comum vai para o comparativo
+    de FIIs; pedido sem nenhum fundo é recusado na hora (o agente vê o erro e corrige, em vez de falhar no Telegram)."""
+    if nome_tipo not in {"fii_comparativo", "fundos_comparativo", "fundo_analise"}:
+        return nome_tipo, parametros
+    from quiron.servicos.analise.tipos import fundos
+
+    if fiis := fundos._so_fiis(parametros):
+        return "fii_comparativo", {**{k: v for k, v in parametros.items() if k in fundos._OPCOES}, "fiis": fiis}
+    if not fundos._itens(parametros, "fiis", "cnpjs", "cnpj", "fundos", "fundo"):
+        raise ValueError("diga quais fundos: códigos de FII/Fiagro (ex.: {\"fiis\": [\"MCCI11\"]}) ou CNPJs/nomes de fundos "
+                         "(ex.: {\"cnpjs\": [\"…\"]})")
+    return nome_tipo, parametros
 
 
 _EM_ANDAMENTO: dict[str, set[int]] = {}

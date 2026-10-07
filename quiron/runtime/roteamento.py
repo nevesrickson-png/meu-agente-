@@ -70,6 +70,10 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
         if re.match(r"^(?:pronto,?\s*)?(?:feito|fiz|conclui|terminei|ja fiz)(?:\s+(?:essa|isso|ela|a tarefa))?$", t):  # "pronto" sozinho não
             return "feito", str(ultima_tarefa)
 
+    # só um código da B3 ("XPAG11", "o que é o MCCI11?"): consulta direta nos dados oficiais, nunca da memória da IA
+    if m := re.match(r"^(?:o que e (?:o |a )?|e o |e a |me fala (?:do|da|sobre o|sobre a) |sobre (?:o |a )?)?([a-z]{4}\d{1,2})$", t):
+        return "ativo", m.group(1).upper()
+
     # briefing (frase curta; "briefing do CLI-012" e afins vão para a IA)
     if re.match(r"^(?:(?:me )?(?:faz|faca|manda|mande|envia|quero|cade)(?: o| um)?(?: meu)? ?)?briefing(?: (?:de hoje|do dia|do mercado|agora))?$", t):
         return "briefing", ""

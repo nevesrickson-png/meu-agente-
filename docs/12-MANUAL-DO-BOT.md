@@ -288,3 +288,7 @@ pessoal na nuvem, sem X/Twitter).
 
 **Sugestão de próximo passo:** começar pelo item 1 (dossiê automático), que aproveita o que já existe, e pelo item 3
 (produção comercial). O item 2 depende das suas respostas sobre o CRM.
+
+## Consultar um código (07/10/2026)
+Mande só o código (ex.: `XPAG11`, `PETR4`) ou `/ativo XPAG11`: o Quíron mostra o nome oficial, segmento e números do
+informe da CVM (FII/Fiagro) ou a cotação — sempre dos dados oficiais, nunca da memória da IA.

@@ -166,22 +166,14 @@ def buscar_gestora(termo: str) -> str:
 
 @mcp.tool()
 def fii_dados(ticker: str) -> str:
-    """Último informe mensal de um FII na CVM (VP da cota, PL, cotistas, DY e rentabilidade do mês, segmento)."""
-    from quiron.servicos.fundos import cvm
+    """Último informe mensal de um FII ou Fiagro na CVM: NOME OFICIAL, segmento, VP da cota, PL, cotistas, DY e
+    rentabilidade do mês. Use SEMPRE antes de dizer o que é um código terminado em 11."""
+    from quiron.servicos.fundos import consulta_rapida, cvm
 
     try:
-        h = cvm.fii(ticker)
+        return consulta_rapida.texto_fii(ticker)
     except cvm.FundoNaoEncontrado as e:
-        return str(e)
-    u = h[-1]
-    dy12 = sum(x["dy_mes"] or 0 for x in h[-12:])
-    def br(v: float, casas: int = 2) -> str:  # só os números ganham vírgula (nomes com "S.A." ficam intactos)
-        return f"{v:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-    return (f"{u['ticker'] or ticker} — {u['nome']} · {u['segmento']} · informe {u['mes']}\n"
-            f"- VP/cota R$ {br(u['vp_cota'] or 0)} · PL R$ {br(u['pl'] or 0, 0)} · cotistas {u['cotistas']}\n"
-            f"- DY do mês {br(u['dy_mes'] or 0)}% (12m: {br(dy12)}% sobre o VP) · rentabilidade efetiva "
-            f"{br(u['rent_efetiva'] or 0)}%\n" + cvm.fonte())
+        return f"{e}. Não é FII/Fiagro no informe da CVM — não descreva o ativo sem outra consulta (buscar_fundo, cotacao)."
 
 
 @mcp.tool()

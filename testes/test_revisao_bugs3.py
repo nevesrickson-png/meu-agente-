@@ -210,3 +210,22 @@ def test_motivo_da_falha_explica_em_portugues():
 
     assert motivo_amigavel("FundoNaoEncontrado: não achei o fundo “XYZ” no cadastro da CVM").startswith("não achei o fundo")
     assert "OperationalError" in motivo_amigavel("OperationalError: database is locked")
+
+
+def test_pedido_de_fundo_com_campo_diferente_e_validado_na_hora(dados):
+    from quiron.servicos.analise import fila as mod
+
+    f = mod.Fila(dados / "a.db", dados / "rel")
+    t = f.pedir("fundo_analise", {"fundo": "MCCI11"})  # campo "fundo" e FII pedido como fundo comum
+    assert (t.tipo, t.parametros) == ("fii_comparativo", {"fiis": ["MCCI11"]})
+    t = f.pedir("fundos_comparativo", {"ativos": ["RBRR11", "MCCI11"], "anos": 3})
+    assert t.tipo == "fii_comparativo" and t.parametros["fiis"] == ["RBRR11", "MCCI11"]
+    with pytest.raises(ValueError):
+        f.pedir("fii_comparativo", {"anos": 3})
+
+
+def test_so_um_codigo_vai_direto_aos_dados_oficiais():
+    from quiron.runtime.roteamento import rotear
+
+    assert rotear("XPAG11") == ("ativo", "XPAG11") and rotear("o que é o MCCI11?") == ("ativo", "MCCI11")
+    assert rotear("PETR4 caiu hoje?") is None

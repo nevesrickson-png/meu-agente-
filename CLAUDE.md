@@ -177,7 +177,10 @@ Arquivos com DRM não são processados.
   mínimo 1,0; `serie_posicao(..., historia=)`; `redacao.conferir` sem sinal e com escala; Tesouro bps só compra × compra;
   `dados._ultimo_ok`; tokens de Bluesky/Reddit com validade; `coleta.listar(limite=None)` nas buscas por termo.
   07/10: `fundos.comparativo`/`fundo` com tickers XXXX11 (`_so_fiis`) delegam a `fii_comparativo`; `motivo_amigavel`
-  mostra a mensagem de ValueError/FundoNaoEncontrado e o tipo técnico nos demais casos.
+  mostra a mensagem de ValueError/FundoNaoEncontrado e o tipo técnico nos demais casos; `fila._ajustar_pedido` (no
+  `pedir` e no `repetir`) lê fundos de qualquer campo (`fundos._itens`), troca para `fii_comparativo` e recusa pedido
+  vazio na hora; `fundos/consulta_rapida.py` (`/ativo`, rota de código sozinho, MCP `fii_dados`) — prompt proíbe
+  descrever ativo sem consulta.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

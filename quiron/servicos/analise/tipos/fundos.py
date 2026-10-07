@@ -56,24 +56,39 @@ def preparar(anos: float, aviso=None) -> list[str]:
 RE_FII = re.compile(r"^[A-Z]{4}1[1-3]$")
 
 
-def _itens(params: dict[str, Any], *chaves: str) -> list[str]:
-    for k in chaves:
-        v = params.get(k)
-        if v:
-            return [str(x).strip() for x in (re.split(r"[,;]|\s+e\s+", v) if isinstance(v, str) else v) if str(x).strip()]
+_OPCOES = {"anos", "modo", "saldo", "aporte", "aporte_mensal", "renda_mensal_aposentadoria", "horizonte", "perfil",
+           "aprofundado", "detalhado", "periodo", "meses", "valor"}
+
+
+def _separar(v: Any) -> list[str]:
+    if isinstance(v, str):
+        return [x.strip() for x in re.split(r"[,;]|\s+e\s+|\s*\+\s*", v) if x.strip()]
+    if isinstance(v, (list, tuple)):
+        return [str(x).strip() for x in v if str(x).strip()]
     return []
+
+
+def _itens(params: dict[str, Any], *chaves: str) -> list[str]:
+    """Fundos pedidos. O agente nem sempre usa o nome de campo esperado ({"fundo": …}, {"ativos": […]}): se as chaves
+    conhecidas vierem vazias, junta o texto de qualquer outro campo que não seja opção (anos, saldo…)."""
+    for k in chaves:
+        if itens := _separar(params.get(k)):
+            return itens
+    saida: list[str] = []
+    for k, v in params.items():
+        if k.lower() not in _OPCOES:
+            saida += _separar(v)
+    return saida
 
 
 def _so_fiis(params: dict[str, Any]) -> list[str]:
     """Todos os itens pedidos têm cara de ticker de FII (XXXX11)? Então a análise certa é a de FIIs."""
-    itens = [i.upper() for i in _itens(params, "cnpjs", "fundos", "cnpj", "fiis", "tickers")]
+    itens = [i.upper() for i in _itens(params, "cnpjs", "fundos", "cnpj", "fiis", "tickers", "fundo", "ticker")]
     return itens if itens and all(RE_FII.match(i) for i in itens) else []
 
 
 def _cnpjs(params: dict[str, Any], minimo: int = 1, maximo: int = 6) -> list[str]:
-    bruto = params.get("cnpjs") or params.get("fundos") or params.get("cnpj") or []
-    if isinstance(bruto, str):
-        bruto = [x for x in bruto.replace(";", ",").split(",") if x.strip()]
+    bruto = _itens(params, "cnpjs", "fundos", "cnpj", "fundo", "nomes", "nome")
     saida = []
     for item in bruto:
         d = cvm.digitos(str(item))
@@ -306,8 +321,8 @@ def comparativo(params: dict[str, Any], modo: str = "entregar", dados_bench: pd.
       parametros={"cnpj": "CNPJ (ou nome) do fundo", "anos": "histórico em anos (padrão 3, máx. 5)"})
 def fundo(params: dict[str, Any], modo: str = "entregar", dados_bench: pd.DataFrame | None = None,
           redigir: bool = True) -> Relatorio:
-    return comparativo({**params, "cnpjs": [params.get("cnpj") or (params.get("cnpjs") or [""])[0]]}, modo, dados_bench,
-                       redigir, minimo=1)
+    itens = _itens(params, "cnpj", "cnpjs", "fundo", "fundos", "nome", "ticker", "fii")
+    return comparativo({**params, "cnpjs": itens[:1]}, modo, dados_bench, redigir, minimo=1)
 
 
 @tipo("gestora", descricao="Raio-X de uma gestora com dados da CVM: patrimônio por classificação, nº de classes, captação "
@@ -486,11 +501,12 @@ def _cotacao(ticker: str) -> float | None:
       parametros={"fiis": "lista de tickers (HGLG11, KNRI11…) de 1 a 8"})
 def fii_comparativo(params: dict[str, Any], modo: str = "entregar", precos: dict[str, float] | None = None,
                     proventos: dict[str, float] | None = None, redigir: bool = True) -> Relatorio:
-    tickers = (params.get("fiis") or params.get("tickers") or params.get("fundos") or params.get("ativos")
-               or params.get("codigos") or params.get("cnpjs") or [])
-    if isinstance(tickers, str):  # "RBRR11 e MCCI11", "HGLG11, KNRI11": só o que tem cara de ticker
-        tickers = re.findall(r"\b[A-Za-z]{4}1[1-3]\b", tickers) or [t for t in re.split(r"[\s,;]+", tickers) if len(t) >= 5]
-    tickers = list(dict.fromkeys(t.upper().strip() for t in tickers if str(t).strip()))[:8]
+    tickers = _itens(params, "fiis", "tickers", "fundos", "ativos", "codigos", "cnpjs", "fii", "ticker", "fundo")
+    # "RBRR11 e MCCI11", "MCCI11 (Mauá)", "MCCI" (sem o 11): fica só o que tem cara de código de FII
+    texto = " ".join(tickers)
+    codigos = [c.upper() for c in re.findall(r"\b[A-Za-z]{4}1[1-3]\b", texto)]
+    codigos += [c + "11" for c in re.findall(r"\b[A-Z]{4}\b", texto) if c + "11" not in codigos]  # "MCCI" em maiúsculas
+    tickers = list(dict.fromkeys(codigos if codigos else [t.upper().strip() for t in tickers]))[:8]
     if not tickers:
         raise ValueError("informe os tickers dos FIIs (ex.: HGLG11, KNRI11)")
     linhas, fatos, avisos = [], [], []
