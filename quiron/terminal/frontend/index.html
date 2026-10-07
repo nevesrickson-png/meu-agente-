@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quíron</title>
-<meta name="theme-color" content="#0b0c0e" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)">
 <script src="/tema.js"></script>
+<script src="/icones.js"></script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,13 +23,13 @@
   <a class="marca" href="/">Quíron</a>
   <nav id="abas"></nav>
   <form id="barra" class="barra" autocomplete="off">
-    <span class="prompt" aria-hidden="true"></span>
+    <span class="prompt" data-ico="buscar" aria-hidden="true"></span>
     <input id="comando" placeholder="Buscar ativo ou comando — PETR4, WEGE3 DCF, FUND, CHAT, HELP" spellcheck="false" aria-label="Barra de comando">
-    <span class="atalho" aria-hidden="true">Ctrl K</span>
+    <kbd class="atalho" aria-hidden="true">Ctrl K</kbd>
   </form>
   <div class="controles">
     <select id="layout" aria-label="Layout"></select>
-    <button id="salvar" type="button" title="Salvar o layout atual com um nome">Salvar</button>
+    <button id="salvar" type="button" title="Salvar o layout atual com um nome" aria-label="Salvar layout"><span data-ico="salvar"></span><span class="rotulo">Salvar</span></button>
     <span id="conexao" class="conexao" title="Conexão com o servidor">●</span>
     <span id="relogio" class="relogio"></span>
     <span id="nav-extra"></span>

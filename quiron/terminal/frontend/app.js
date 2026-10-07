@@ -153,8 +153,8 @@ function adicionarPainel(tipo, p = {}, pos = null, reassinar = true) {
   el.id = id;
   el.innerHTML = `
     <div class="painel-cab"><span class="painel-titulo"></span><span class="painel-sub"></span>
-      <button data-acao="atualizar" title="Atualizar agora" aria-label="Atualizar">↻</button>
-      <button data-acao="fechar" title="Fechar" aria-label="Fechar">✕</button></div>
+      <button data-acao="atualizar" title="Atualizar agora" aria-label="Atualizar">${ico("atualizar")}</button>
+      <button data-acao="fechar" title="Fechar" aria-label="Fechar">${ico("fechar")}</button></div>
     <div class="painel-corpo"><span class="carregando">carregando…</span></div>
     <div class="painel-rodape"></div><div class="alca" title="Arraste para redimensionar"></div>`;
   $("#grade").append(el);
@@ -539,7 +539,9 @@ function renderFita(lista) {
   if (!Array.isArray(lista)) return;
   $("#fita").innerHTML = lista.filter((c) => !c.erro).map((c) => `<span><b>${esc(c.nome)}</b> ${preco(c)} ${variacao(c.variacao)}</span>`).join("");
 }
-function rodape(painel, html) { $(".painel-rodape", document.getElementById(painel.id)).innerHTML = html; }
+function rodape(painel, html) {  // sem emoji de enfeite: a fonte vem em texto discreto
+  $(".painel-rodape", document.getElementById(painel.id)).innerHTML = String(html || "").replace(/^\s*📊\s*/, "");
+}
 
 // ------------------------------------------------------------------ Terminal v2 (Fase 12): análise, assessoria e chat
 // Toda ação que grava ou dispara algo leva o cabeçalho X-Quiron (o servidor recusa pedidos vindos de outros sites).

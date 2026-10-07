@@ -6,69 +6,74 @@
 <title>Quíron — TV</title>
 <link rel="icon" href="/icone.svg" type="image/svg+xml">
 <script src="/tema.js"></script>
+<script src="/icones.js"></script>
 <link rel="stylesheet" href="/tema.css">
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
-  header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; padding: 10px 16px;
-           background: var(--vidro); backdrop-filter: blur(12px); border-bottom: 1px solid var(--borda); }
-  main { max-width: 1440px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
+  header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; padding: 0 20px; height: 58px;
+           background: var(--vidro); backdrop-filter: saturate(1.4) blur(16px); border-bottom: 1px solid var(--borda); }
+  main { max-width: 1440px; margin: 0 auto; padding: 20px; display: grid; gap: 20px;
          grid-template-columns: minmax(0, 1fr) 340px; }
   @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
-  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); min-width: 0; }
+  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); min-width: 0; box-shadow: var(--sombra); animation: surgir .3s both; }
   .tela { overflow: hidden; }
   .video { position: relative; aspect-ratio: 16 / 9; background: #000; }
   .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .ajustes { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 8px 12px; border-top: 1px solid var(--borda); }
   .ajuste { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--texto-2); }
-  .ajuste input[type=range] { width: 120px; accent-color: var(--acento); }
+  .ajuste input[type=range] { width: 120px; accent-color: var(--texto); }
+  .ajuste .ico, .barra .ico { width: 15px; height: 15px; }
+  .ico-rotulo { color: var(--texto-3); display: inline-flex; }
   .ajuste .valor { font: 12px var(--mono); color: var(--texto-3); min-width: 3.2em; }
   #mudo { padding: 5px 9px; }
-  .video .vazio-tv { position: absolute; inset: 0; display: grid; place-items: center; color: #9aa3ad; text-align: center; padding: 20px; }
+  .video .vazio-tv { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.55); text-align: center; padding: 20px; }
   .barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--borda); }
   .agora { display: flex; align-items: baseline; gap: 8px; min-width: 0; margin-right: auto; }
-  .agora .num { font: 600 13px var(--mono); color: var(--acento-texto); }
-  .agora .nome { font: 650 16px var(--titulo); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agora .num { font: 600 12px var(--mono); color: var(--texto-3); }
+  .agora .nome { font: 600 16px var(--titulo); letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .agora .modo { font-size: 12px; color: var(--texto-3); }
   button, .botao { background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: var(--raio-p);
-           padding: 7px 11px; cursor: pointer; font: inherit; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+           height: 32px; padding: 0 12px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500;
+           transition: background var(--transicao), border-color var(--transicao), color var(--transicao); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
   button:hover, .botao:hover { border-color: var(--borda-forte); background: var(--painel-3); }
-  button[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); color: var(--acento-texto); }
-  button.ao-vivo[aria-pressed="true"] { border-color: var(--queda); background: var(--queda-suave); color: var(--queda); }
+  button[aria-pressed="true"] { border-color: transparent; background: var(--texto); color: var(--fundo); }
+  button.ao-vivo[aria-pressed="true"] { border-color: transparent; background: var(--queda-suave); color: var(--queda); }
   button:focus-visible, .canal:focus-visible, .botao:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
   .lado { display: flex; flex-direction: column; max-height: calc(100vh - 100px); }
   @media (max-width: 980px) { .lado { max-height: none; } }
-  .lado h2, .controle h2 { margin: 0; padding: 11px 14px; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: var(--texto-3);
+  .lado h2, .controle h2 { margin: 0; padding: 14px 16px; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: var(--texto);
              border-bottom: 1px solid var(--borda); display: flex; align-items: center; gap: 8px; }
   .lista { overflow: auto; padding: 6px; }
   .vid { display: grid; grid-template-columns: 112px 1fr; gap: 10px; padding: 6px; border-radius: var(--raio-p); cursor: pointer;
          background: none; border: 0; text-align: left; width: 100%; color: inherit; }
+  .vid { transition: background var(--transicao); }
   .vid:hover, .vid[aria-current="true"] { background: var(--painel-2); }
   .vid img { width: 112px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: var(--painel-3); }
   .vid .t { font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .vid .d { font-size: 11.5px; color: var(--texto-3); margin-top: 3px; }
   .dica { color: var(--texto-3); font-size: 12.5px; padding: 10px 12px; }
   .controle { grid-column: 1 / -1; }
-  .grupos { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px 0; }
-  .grupos button { border-radius: 99px; }
+  .grupos { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 16px 0; }
+  .grupos button { border-radius: 99px; height: 30px; background: transparent; color: var(--texto-2); }
+  .grupos button:hover { color: var(--texto); }
   .filtro { margin-left: auto; }
   .filtro input, form input { background: var(--campo); border: 1px solid var(--borda); color: var(--texto); border-radius: var(--raio-p);
-           padding: 7px 10px; font: inherit; font-size: 13px; }
+           height: 32px; padding: 0 11px; font: inherit; font-size: 13px; }
   .filtro input:focus, form input:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
-  .canais { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 8px; padding: 12px 14px 14px; }
+  .canais { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 8px; padding: 14px 16px 16px; }
   .canal { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--raio-m); cursor: pointer; text-align: left;
-           background: var(--painel-2); border: 1px solid var(--borda); color: var(--texto); font: inherit; min-width: 0; }
-  .canal:hover { border-color: var(--borda-forte); }
-  .canal[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); }
+           background: transparent; border: 1px solid var(--borda); color: var(--texto); font: inherit; min-width: 0;
+           transition: background var(--transicao), border-color var(--transicao); }
+  .canal:hover { border-color: var(--borda-forte); background: var(--painel-2); }
+  .canal[aria-pressed="true"] { border-color: var(--texto); background: var(--painel-2); }
   .canal .n { font: 600 12px var(--mono); color: var(--texto-3); min-width: 22px; }
-  .canal[aria-pressed="true"] .n { color: var(--acento-texto); }
+  .canal[aria-pressed="true"] .n { color: var(--texto); }
   .canal .c { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
   .selo-vivo { flex: none; font: 700 10px var(--sans); letter-spacing: .4px; color: #fff; background: var(--queda); border-radius: 4px; padding: 2px 5px; }
   .canal { position: relative; }
   .canal .selo-vivo { position: absolute; top: -8px; right: 8px; font-size: 9px; padding: 1px 5px; box-shadow: 0 0 0 2px var(--painel); }
   .canal.no-ar { border-color: color-mix(in srgb, var(--queda) 45%, var(--borda)); }
   .agora .modo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .rodape-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 0 14px 14px; }
+  .rodape-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 0 16px 16px; }
   .rodape-ctrl form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .rodape-ctrl form input[name=entrada] { width: min(340px, 70vw); }
   .rodape-ctrl .ajuda { margin-left: auto; color: var(--texto-3); font-size: 12px; }
@@ -91,18 +96,18 @@
     <div class="video" id="video"><div class="vazio-tv">Escolha um canal abaixo.</div></div>
     <div class="barra">
       <div class="agora"><span class="num" id="agora-num"></span><span class="nome" id="agora-nome">—</span><span class="modo" id="agora-modo"></span></div>
-      <button type="button" id="ant" title="Canal anterior (← ou PageUp)" aria-label="Canal anterior">◀</button>
-      <button type="button" id="prox" title="Próximo canal (→ ou PageDown)" aria-label="Próximo canal">▶</button>
-      <button type="button" id="vivo" class="ao-vivo" aria-pressed="true" title="Se o canal estiver transmitindo, a transmissão vem primeiro (tecla L alterna)">● Ao vivo primeiro</button>
+      <button type="button" id="ant" title="Canal anterior (← ou PageUp)" aria-label="Canal anterior"><span data-ico="anterior"></span></button>
+      <button type="button" id="prox" title="Próximo canal (→ ou PageDown)" aria-label="Próximo canal"><span data-ico="proximo"></span></button>
+      <button type="button" id="vivo" class="ao-vivo" aria-pressed="true" title="Se o canal estiver transmitindo, a transmissão vem primeiro (tecla L alterna)"><span data-ico="aovivo"></span>Ao vivo primeiro</button>
       <button type="button" id="recentes" aria-pressed="false" title="Só os vídeos gravados mais recentes do canal">Recentes</button>
-      <a class="botao" id="abrir-yt" target="_blank" rel="noopener noreferrer" title="Abrir o canal no YouTube">↗ YouTube</a>
+      <a class="botao" id="abrir-yt" target="_blank" rel="noopener noreferrer" title="Abrir o canal no YouTube"><span data-ico="externo"></span>YouTube</a>
     </div>
     <div class="ajustes" aria-label="Volume e brilho">
-      <span class="ajuste"><button type="button" id="mudo" title="Silenciar (tecla M)" aria-label="Silenciar" aria-pressed="false">🔊</button>
+      <span class="ajuste"><button type="button" id="mudo" title="Silenciar (tecla M)" aria-label="Silenciar" aria-pressed="false"></button>
         <label for="volume">Volume</label><input type="range" id="volume" min="0" max="100" step="5" value="80" title="Volume (teclas + e −)">
         <span class="valor" id="volume-valor">80%</span></span>
-      <span class="ajuste"><label for="brilho">☀ Brilho</label><input type="range" id="brilho" min="40" max="160" step="5" value="100" title="Brilho da imagem (teclas [ e ])">
-        <span class="valor" id="brilho-valor">100%</span><button type="button" id="brilho-normal" title="Voltar o brilho ao normal">↺</button></span>
+      <span class="ajuste"><span data-ico="brilho" class="ico-rotulo" aria-hidden="true"></span><label for="brilho">Brilho</label><input type="range" id="brilho" min="40" max="160" step="5" value="100" title="Brilho da imagem (teclas [ e ])">
+        <span class="valor" id="brilho-valor">100%</span><button type="button" id="brilho-normal" title="Voltar o brilho ao normal" aria-label="Brilho normal"><span data-ico="atualizar"></span></button></span>
     </div>
   </section>
 
@@ -224,7 +229,7 @@ function aplicarVolume() {
   comandoPlayer(mudo || volume === 0 ? "mute" : "unMute");
   $("#volume").value = volume;
   $("#volume-valor").textContent = mudo ? "mudo" : `${volume}%`;
-  $("#mudo").textContent = mudo || volume === 0 ? "🔇" : volume < 50 ? "🔉" : "🔊";
+  $("#mudo").innerHTML = ico(mudo || volume === 0 ? "mudo" : "volume");
   $("#mudo").setAttribute("aria-pressed", String(mudo));
 }
 function aplicarBrilho() {

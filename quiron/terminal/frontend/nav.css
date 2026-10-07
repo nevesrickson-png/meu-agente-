@@ -1,32 +1,35 @@
-/* Barra de abas comum a todas as telas do Quíron (Terminal, Acervo, Configurações): controle segmentado. */
-.abas { display: inline-flex; align-items: center; gap: 2px; padding: 3px; background: var(--painel-2); border: 1px solid var(--borda);
-  border-radius: 10px; white-space: nowrap; font: 500 13px var(--sans); }
-.abas a { color: var(--texto-2); text-decoration: none; padding: 5px 12px; border-radius: 7px; transition: background var(--transicao), color var(--transicao); }
-.abas a:hover { color: var(--texto); text-decoration: none; background: var(--painel-3); }
-.abas a[aria-current="page"] { color: var(--texto); background: var(--painel); box-shadow: 0 1px 2px rgba(0, 0, 0, .25), inset 0 0 0 1px var(--borda); }
-.nav-extra { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; }
-.selo-sistema { display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--sans); padding: 5px 10px; border-radius: 99px;
-  text-decoration: none; border: 1px solid var(--borda); color: var(--texto-2); white-space: nowrap; background: var(--painel); }
-.selo-sistema::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--texto-3); flex: none; }
+/* Barra de abas comum a todas as telas do Quíron (Terminal, TV, Acervo, Configurações): navegação discreta em pílulas. */
+.abas { display: inline-flex; align-items: center; gap: 2px; padding: 3px; background: transparent; border: 0;
+  border-radius: 10px; white-space: nowrap; font: 500 13px var(--sans); letter-spacing: -0.01em; }
+.abas a { color: var(--texto-3); text-decoration: none; padding: 6px 12px; border-radius: 8px; position: relative;
+  transition: background var(--transicao), color var(--transicao); }
+.abas a:hover { color: var(--texto); text-decoration: none; background: var(--painel-2); }
+.abas a[aria-current="page"] { color: var(--texto); background: var(--painel-2); box-shadow: inset 0 0 0 1px var(--borda); }
+.nav-extra { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; }
+.selo-sistema { display: inline-flex; align-items: center; gap: 7px; font: 500 12px var(--sans); height: 30px; padding: 0 11px; border-radius: 99px;
+  text-decoration: none; border: 1px solid var(--borda); color: var(--texto-2); white-space: nowrap; background: var(--painel);
+  transition: border-color var(--transicao), color var(--transicao); }
+.selo-sistema::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--texto-3); flex: none; }
 .selo-sistema:hover { text-decoration: none; color: var(--texto); border-color: var(--borda-forte); }
 .selo-sistema.s-ok::before { background: var(--alta); box-shadow: 0 0 0 3px var(--alta-suave); }
 .selo-sistema.s-aviso::before { background: var(--aviso-cor); box-shadow: 0 0 0 3px var(--aviso-suave); }
 .selo-sistema.s-erro::before { background: var(--queda); box-shadow: 0 0 0 3px var(--queda-suave); }
 .selo-sistema .icone { display: none; }
-.botao-tema { width: 32px; height: 32px; display: inline-grid; place-items: center; border-radius: 9px; border: 1px solid var(--borda);
-  background: var(--painel); color: var(--texto-2); cursor: pointer; font-size: 15px; line-height: 1; transition: background var(--transicao); }
-.botao-tema:hover { background: var(--painel-3); color: var(--texto); }
+.botao-tema { width: 30px; height: 30px; display: inline-grid; place-items: center; border-radius: 99px; border: 1px solid var(--borda);
+  background: var(--painel); color: var(--texto-2); cursor: pointer; padding: 0; transition: background var(--transicao), color var(--transicao); }
+.botao-tema:hover { background: var(--painel-2); color: var(--texto); border-color: var(--borda-forte); }
+.botao-tema .ico { width: 15px; height: 15px; }
 @media (max-width: 760px) {
-  .abas a { padding: 5px 9px; }
+  .abas a { padding: 6px 9px; }
   .abas .curto { display: inline; } .abas .longo { display: none; }
   .selo-sistema .texto { display: none; }
-  .selo-sistema { padding: 8px; }
+  .selo-sistema { padding: 0; width: 30px; justify-content: center; }
 }
 @media (min-width: 761px) { .abas .curto { display: none; } }
-@media (max-width: 480px) {  /* celular: 5 abas + selo + tema cabem sem rolar para o lado */
-  .abas a { padding: 5px 6px; font-size: 12.5px; }
-  .nav-extra { margin-left: 4px; gap: 4px; }
+@media (max-width: 480px) {  /* celular: abas + selo + tema cabem sem rolar para o lado */
+  .abas a { padding: 6px 7px; font-size: 12.5px; }
+  .nav-extra { margin-left: 2px; gap: 4px; }
   .marca span { display: none; }
-  header:has(> .abas) { flex-wrap: wrap; row-gap: 8px; }  /* se ainda não couber, o selo e o tema descem uma linha */
+  header:has(> .abas) { flex-wrap: wrap; row-gap: 8px; }
   header .sub { display: none; }
 }

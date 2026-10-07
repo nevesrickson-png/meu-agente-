@@ -264,6 +264,11 @@ Arquivos com DRM não são processados.
   coloca o selo do sistema (classes `s-ok/s-aviso/s-erro` — `aviso` já é o toast do Terminal) e o botão de tema em
   `#nav-extra` (ou depois das abas) e dispara `quiron:tema`; o `app.js` lê cores do tema via `COR` (getters de CSS) e
   redesenha os painéis na troca. Novo painel ocupa o primeiro espaço livre da grade (`proximaPosicao`).
+  Redesenho 07/10/2026 (minimalista): fontes Inter e JetBrains Mono embutidas em `vendor/fontes/` (OFL, sem CDN);
+  tokens grafite (escuro `#09090b`/`#111113`, claro `#f7f7f8`/branco), acento índigo só em foco/links/seleção,
+  botão primário monocromático (`--texto` sobre `--fundo`), abas em pílula, cabeçalho de 58 px; nada de emoji na
+  interface — ícones de traço em `icones.js` (`ico(nome)` devolve SVG; `data-ico="nome"` é trocado sozinho), carregado
+  logo depois do `tema.js` em todas as páginas; logo novo em `icone.svg`.
 - Preferências e revisão (05/10/2026, `testes/test_preferencias.py`): `config.ler_yaml` mescla `dados/ajustes/<nome>.yaml`
   por cima de `config/` (dicts recursivos; `com_ajustes=False` lê o padrão; ajuste corrompido é ignorado);
   `salvar_ajuste`/`escrever_ajuste`/`ler_ajuste`. `servicos/preferencias.py` (`ler`/`salvar`: watchlist validada e só o que

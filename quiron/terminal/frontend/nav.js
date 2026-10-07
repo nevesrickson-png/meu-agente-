@@ -21,14 +21,14 @@
   selo.href = "/config#visao";
   selo.textContent = "…";
   // tema: automático (segue o sistema) → claro → escuro
-  const ROTULO = { auto: ["◐", "Tema automático (segue o sistema)"], claro: ["☀", "Tema claro"], escuro: ["☾", "Tema escuro"] };
+  const ROTULO = { auto: ["auto", "Tema automático (segue o sistema)"], claro: ["sol", "Tema claro"], escuro: ["lua", "Tema escuro"] };
   const botaoTema = document.createElement("button");
   botaoTema.type = "button";
   botaoTema.className = "botao-tema";
   const lerTema = () => { try { return localStorage.getItem("quiron-tema") || "auto"; } catch (e) { return "auto"; } };
   const mostrarTema = () => {
     const [icone, rotulo] = ROTULO[lerTema()] || ROTULO.auto;
-    botaoTema.textContent = icone;
+    botaoTema.innerHTML = window.ico ? window.ico(icone) : "◐";
     botaoTema.title = rotulo + " — clique para trocar";
     botaoTema.setAttribute("aria-label", rotulo);
   };

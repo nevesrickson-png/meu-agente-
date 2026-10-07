@@ -514,6 +514,12 @@ Revisores no agente/MCP, nas contas de fundos/valuation/risco, em mercado/notíc
 
 ---
 
+## Redesenho minimalista (07/10/2026) — "quero algo bem moderno e minimalista"
+- [x] Fontes Inter/JetBrains Mono embutidas (iguais em qualquer computador, funcionam offline)
+- [x] Paleta grafite nos dois temas, acento único, botão principal monocromático, bordas quase invisíveis
+- [x] Ícones de traço (`icones.js`) no lugar de emojis/símbolos; logo novo
+- [x] Terminal, TV, Acervo, Configurações e login revisados no escuro, no claro e no celular
+
 ## Depois do roteiro — pendências do seu lado (05/10/2026)
 Todas as fases foram construídas e aprovadas no ambiente de desenvolvimento, menos a 18 (adiada). O que falta é colocar no ar:
 - [ ] 5.3/5.4 Rodar no host definitivo (mini PC): `deploy/preparar_host.sh` + `deploy/instalar.sh` (`docs/03-HOSPEDAGEM.md`)

@@ -6,11 +6,10 @@
 <title>Quíron — Acervo</title>
 <link rel="icon" href="/icone.svg" type="image/svg+xml">
 <script src="/tema.js"></script>
+<script src="/icones.js"></script>
 <link rel="stylesheet" href="/tema.css">
 <style>
   :root { --ambar: var(--aviso-cor); --ok: var(--alta); --erro: var(--queda); --azul: var(--acento); }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
   a { color: var(--texto-2); }
   header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 14px; padding: 10px 18px;
            background: var(--vidro); border-bottom: 1px solid var(--borda); }
@@ -102,13 +101,30 @@
   .cartao h3, .grupo-titulo, details.opcionais > summary, .grupo h3 { text-transform: none; letter-spacing: 0; font: 600 13px var(--sans); color: var(--texto-2); }
   button { border-radius: var(--raio-p); font-weight: 500; transition: background var(--transicao), border-color var(--transicao); }
   button:hover { background: var(--painel-3); border-color: var(--borda-forte); }
-  button.primario { background: var(--acento); border-color: transparent; color: var(--acento-contraste); font-weight: 600; }
-  button.primario:hover { background: var(--acento); filter: brightness(1.08); }
+  button.primario { background: var(--texto); border-color: transparent; color: var(--fundo); font-weight: 600; }
+  button.primario:hover { background: var(--texto); opacity: .88; }
   input[type=text], input[type=password], .busca, dialog input, dialog select { font-family: var(--sans); background: var(--campo); border-radius: var(--raio-p); }
   input[type=text]:focus, input[type=password]:focus, .busca:focus, dialog input:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
   .banner { border-radius: var(--raio-m); }
   .indice a[aria-current], .indice a:focus-visible { color: var(--texto); background: var(--painel-2); }
   dialog { border-radius: var(--raio); box-shadow: var(--sombra-flutuante); }
+  /* ---- refinamento 07/10: cabeçalho de 58 px, respiro maior, seleção neutra */
+  header { min-height: 58px; padding-top: 0; padding-bottom: 0; }
+  main { padding-top: 28px; }
+  section { animation: surgir .3s both; }
+  .corpo { padding: 16px 18px; }
+  .area { transition: background var(--transicao), border-color var(--transicao); }
+  .area:hover { border-color: var(--borda-forte); }
+  .area[aria-pressed="true"] { border-color: transparent; background: var(--texto); color: var(--fundo); }
+  .area[aria-pressed="true"] .n { color: var(--fundo); opacity: .6; }
+  .selecionada b { color: var(--texto); }
+  .zona { border: 1px dashed var(--borda-forte); border-radius: var(--raio-m); }
+  .zona:hover, .zona.sobre { border-color: var(--texto-3); background: var(--painel-2); }
+  .progresso div { background: var(--texto); }
+  .cartao { background: var(--painel-2); }
+  a:hover { color: var(--texto); }
+  button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  button.link { display: inline; }
 </style>
 <link rel="stylesheet" href="/nav.css">
 </head>
@@ -121,7 +137,7 @@
 
 <main>
   <section>
-    <h2>1 · Escolha a área <span class="acoes"><button id="nova-area" type="button">+ Nova área</button></span></h2>
+    <h2>1 · Escolha a área <span class="acoes"><button id="nova-area" type="button">Nova área</button></span></h2>
     <div class="corpo">
       <input id="busca" class="busca" type="search" placeholder="Filtrar áreas (ex.: risco, renda, CFA)" aria-label="Filtrar áreas">
       <div id="grupos"></div>

@@ -6,12 +6,11 @@
 <title>Quíron — Configurações</title>
 <link rel="icon" href="/icone.svg" type="image/svg+xml">
 <script src="/tema.js"></script>
+<script src="/icones.js"></script>
 <link rel="stylesheet" href="/tema.css">
 <style>
   :root { --ambar: var(--aviso-cor); --ok: var(--alta); --erro: var(--queda); --azul: var(--acento); }
-  * { box-sizing: border-box; }
   html { scroll-behavior: smooth; scroll-padding-top: 96px; }
-  body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.45 var(--sans); }
   a { color: var(--texto-2); }
   a:hover { color: var(--acento); }
   code { font: 12px var(--mono); background: var(--painel-2); padding: 1px 5px; border-radius: 4px; }
@@ -109,8 +108,9 @@
   .cartao h3, .grupo-titulo, details.opcionais > summary, .grupo h3 { text-transform: none; letter-spacing: 0; font: 600 13px var(--sans); color: var(--texto-2); }
   button { border-radius: var(--raio-p); font-weight: 500; transition: background var(--transicao), border-color var(--transicao); }
   button:hover { background: var(--painel-3); border-color: var(--borda-forte); }
-  button.primario { background: var(--acento); border-color: transparent; color: var(--acento-contraste); font-weight: 600; }
-  button.primario:hover { background: var(--acento); filter: brightness(1.08); }
+  button.primario { background: var(--texto); border-color: transparent; color: var(--fundo); font-weight: 600; }
+  button.primario:hover { background: var(--texto); opacity: .88; }
+  button .ico { width: 14px; height: 14px; }
   input[type=text], input[type=password], .busca, dialog input, dialog select { font-family: var(--sans); background: var(--campo); border-radius: var(--raio-p); }
   input[type=text]:focus, input[type=password]:focus, .busca:focus, dialog input:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
   .banner { border-radius: var(--raio-m); }
@@ -140,6 +140,23 @@
   .fontes-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 4px 14px; }
   .fontes-grade .chave-liga { height: 32px; font-size: 13px; }
   .fontes-grade h4 { grid-column: 1 / -1; margin: 10px 0 2px; font: 600 12px var(--sans); color: var(--texto-3); }
+  /* ---- refinamento 07/10: cabeçalho de 58 px, respiro maior, seleção neutra */
+  header { min-height: 58px; padding-top: 0; padding-bottom: 0; }
+  main { padding-top: 28px; }
+  section { animation: surgir .3s both; }
+  .corpo { padding: 16px 18px; }
+  .area { transition: background var(--transicao), border-color var(--transicao); }
+  .area:hover { border-color: var(--borda-forte); }
+  .area[aria-pressed="true"] { border-color: transparent; background: var(--texto); color: var(--fundo); }
+  .area[aria-pressed="true"] .n { color: var(--fundo); opacity: .6; }
+  .selecionada b { color: var(--texto); }
+  .zona { border: 1px dashed var(--borda-forte); border-radius: var(--raio-m); }
+  .zona:hover, .zona.sobre { border-color: var(--texto-3); background: var(--painel-2); }
+  .progresso div { background: var(--texto); }
+  .cartao { background: var(--painel-2); }
+  a:hover { color: var(--texto); }
+  button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  button.link { display: inline; }
 </style>
 <link rel="stylesheet" href="/nav.css">
 </head>
@@ -166,7 +183,7 @@
   <div id="mensagem" class="banner oculto" role="status"></div>
 
   <section id="visao" aria-labelledby="t-visao">
-    <h2 id="t-visao">Visão geral <span class="acoes"><button type="button" id="verificar-tudo" class="primario" title="Testa chaves, Telegram, IA, ferramentas, disco e memória">✔ Verificar tudo</button><button type="button" id="atualizar-visao" title="Atualizar">↻ Atualizar</button></span></h2>
+    <h2 id="t-visao">Visão geral <span class="acoes"><button type="button" id="verificar-tudo" class="primario" title="Testa chaves, Telegram, IA, ferramentas, disco e memória"><span data-ico="check"></span>Verificar tudo</button><button type="button" id="atualizar-visao" title="Atualizar"><span data-ico="atualizar"></span>Atualizar</button></span></h2>
     <div class="cartoes" id="cartoes"><div class="corpo">carregando…</div></div>
     <div class="corpo oculto" id="verificacao" aria-live="polite"></div>
   </section>
@@ -200,7 +217,7 @@
   </section>
 
   <section id="registro" aria-labelledby="t-registro">
-    <h2 id="t-registro">Registro do Telegram <span class="acoes"><button type="button" id="atualizar-log">↻ Atualizar</button></span></h2>
+    <h2 id="t-registro">Registro do Telegram <span class="acoes"><button type="button" id="atualizar-log"><span data-ico="atualizar"></span>Atualizar</button></span></h2>
     <pre class="log" id="log">—</pre>
   </section>
 </main>
