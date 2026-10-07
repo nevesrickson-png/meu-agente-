@@ -10,6 +10,9 @@ Rentabilidade = razão de cotas da CVM (líquida de taxas, antes do IR). Uso int
 
 from __future__ import annotations
 
+import logging
+import re
+
 from typing import Any
 
 import pandas as pd
@@ -48,6 +51,23 @@ def preparar(anos: float, aviso=None) -> list[str]:
     cvm.atualizar_extrato()
     baixados = cvm.garantir_meses(int(round(anos * 12)) + 1, aviso=aviso)
     return [f"Informe diário da CVM baixado agora: {len(baixados)} mês(es)."] if len(baixados) > 3 else []
+
+
+RE_FII = re.compile(r"^[A-Z]{4}1[1-3]$")
+
+
+def _itens(params: dict[str, Any], *chaves: str) -> list[str]:
+    for k in chaves:
+        v = params.get(k)
+        if v:
+            return [str(x).strip() for x in (re.split(r"[,;]|\s+e\s+", v) if isinstance(v, str) else v) if str(x).strip()]
+    return []
+
+
+def _so_fiis(params: dict[str, Any]) -> list[str]:
+    """Todos os itens pedidos têm cara de ticker de FII (XXXX11)? Então a análise certa é a de FIIs."""
+    itens = [i.upper() for i in _itens(params, "cnpjs", "fundos", "cnpj", "fiis", "tickers")]
+    return itens if itens and all(RE_FII.match(i) for i in itens) else []
 
 
 def _cnpjs(params: dict[str, Any], minimo: int = 1, maximo: int = 6) -> list[str]:
@@ -229,6 +249,8 @@ def _base(titulo: str, tipo_nome: str, subtitulo: str, avisos: list[str], fontes
       parametros={"cnpjs": "lista de CNPJs (ou nomes) dos fundos, de 2 a 6", "anos": "histórico em anos (padrão 3, máx. 5)"})
 def comparativo(params: dict[str, Any], modo: str = "entregar", dados_bench: pd.DataFrame | None = None,
                 redigir: bool = True, minimo: int = 2) -> Relatorio:
+    if fiis := _so_fiis(params):  # "RBRR11 e MCCI11" são FIIs: o comparativo certo é o de fundos imobiliários
+        return fii_comparativo({"fiis": fiis}, modo, redigir=redigir)
     anos = min(5.0, max(1.0, float(params.get("anos") or 3)))
     avisos = preparar(anos)
     cnpjs = _cnpjs(params, minimo, 6)
@@ -464,14 +486,19 @@ def _cotacao(ticker: str) -> float | None:
       parametros={"fiis": "lista de tickers (HGLG11, KNRI11…) de 1 a 8"})
 def fii_comparativo(params: dict[str, Any], modo: str = "entregar", precos: dict[str, float] | None = None,
                     proventos: dict[str, float] | None = None, redigir: bool = True) -> Relatorio:
-    tickers = params.get("fiis") or params.get("tickers") or []
-    if isinstance(tickers, str):
-        tickers = [t for t in tickers.replace(";", ",").replace(" ", ",").split(",") if t]
-    tickers = [t.upper().strip() for t in tickers][:8]
+    tickers = (params.get("fiis") or params.get("tickers") or params.get("fundos") or params.get("ativos")
+               or params.get("codigos") or params.get("cnpjs") or [])
+    if isinstance(tickers, str):  # "RBRR11 e MCCI11", "HGLG11, KNRI11": só o que tem cara de ticker
+        tickers = re.findall(r"\b[A-Za-z]{4}1[1-3]\b", tickers) or [t for t in re.split(r"[\s,;]+", tickers) if len(t) >= 5]
+    tickers = list(dict.fromkeys(t.upper().strip() for t in tickers if str(t).strip()))[:8]
     if not tickers:
         raise ValueError("informe os tickers dos FIIs (ex.: HGLG11, KNRI11)")
-    cvm.atualizar_fii()
     linhas, fatos, avisos = [], [], []
+    try:
+        cvm.atualizar_fii()
+    except Exception as e:  # noqa: BLE001 — CVM lenta/fora: segue com o informe já guardado (se houver)
+        logging.warning("informe mensal de FII não atualizado (%s: %s)", type(e).__name__, e)
+        avisos.append(f"Não consegui atualizar o informe mensal da CVM agora ({type(e).__name__}); usei o último guardado.")
     secoes_imoveis, imoveis_fatos = [], {}
     for t in tickers:
         try:

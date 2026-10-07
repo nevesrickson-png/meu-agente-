@@ -310,4 +310,7 @@ def motivo_amigavel(erro: str) -> str:
         return "não encontrei o ativo/fundo pedido nas bases (confira o código ou o nome)"
     if "No space left" in e or "Errno 28" in e:
         return "falta espaço em disco"
-    return "um erro inesperado (detalhe salvo no registro)"
+    if m := re.match(r"(?:FundoNaoEncontrado|ValueError|EmpresaNaoEncontrada|CarteiraNaoEncontrada):\s*(.+)", e, re.S):
+        return m.group(1).strip()[:200]  # já é uma frase em português escrita para o Rickson
+    tecnico = re.sub(r"\s+", " ", e).strip()[:160]
+    return f"um erro inesperado ({tecnico or 'sem detalhe'})" if tecnico else "um erro inesperado (detalhe salvo no registro)"

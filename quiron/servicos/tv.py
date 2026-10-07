@@ -217,7 +217,10 @@ def ao_vivo(canal: str, cliente: httpx.Client | None = None) -> dict:
     video = re.search(r'"currentVideoEndpoint":\{.{0,400}?"videoId":"([\w-]{11})"', html, re.S) \
         or re.search(r'<link rel="canonical" href="https://www\.youtube\.com/watch\?v=([\w-]{11})"', html) \
         or re.search(r'"watchEndpoint":\{"videoId":"([\w-]{11})"', html)
-    if principal and video:
+    # live AGENDADA (às vezes há anos, nunca começou) também aparece em /live com "isLive": não conta como no ar —
+    # aí a tela toca os vídeos mais recentes do canal
+    agendada = re.search(r'"isUpcoming":true|"status":"LIVE_STREAM_OFFLINE"|"scheduledStartTime":"\d+"', html)
+    if principal and video and not agendada:
         titulo = json.loads(f'"{principal.group(1)}"') if principal.group(1) else ""
         res.update(ao_vivo=True, video=video.group(1), titulo=titulo[:140],
                    assistindo=int(principal.group(2)) if principal.group(2) else None)

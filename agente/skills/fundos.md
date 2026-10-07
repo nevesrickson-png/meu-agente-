@@ -14,7 +14,7 @@ FIIs, `/fundo`, `/comparar_fundos`, `/gestor`, `/previdencia`, `/fii`, `/alterna
 - Gestora: `gestora {"gestora": "nome ou CNPJ"}` (use `buscar_gestora` antes se o nome for ambíguo).
 - Previdência: `previdencia_portabilidade {"cnpj_atual", "cnpj_destino", "saldo", "aporte_mensal", "anos",
   "renda_mensal_aposentadoria"}`.
-- FIIs: `fii_comparativo {"fiis": ["HGLG11", ...]}` (traz também imóveis, estados, vacância, inquilinos e CRIs do
+- FIIs (tickers terminados em 11, ex.: RBRR11, MCCI11 — NUNCA use `fundos_comparativo` para eles): `fii_comparativo {"fiis": ["HGLG11", ...]}` (traz também imóveis, estados, vacância, inquilinos e CRIs do
   informe trimestral). Consulta rápida: `quiron_mercado__fii_dados` (números do mês) + `quiron_mercado__fii_imoveis`
   (o que o fundo tem e onde). Variação de preço na semana/mês/ano: `quiron_mercado__desempenho`.
 - A 1ª análise baixa ~3 anos de cotas da CVM (alguns minutos, uma vez); avise o Rickson.

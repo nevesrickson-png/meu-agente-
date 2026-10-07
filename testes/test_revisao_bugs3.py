@@ -176,3 +176,37 @@ def test_bps_do_tesouro_so_compra_contra_compra(monkeypatch):
                                                                      ("Tesouro Prefixado", date(2029, 1, 1)): 13.50})
     texto = " ".join(briefing._juros([], []))
     assert "13,62%" in texto and "bps" not in texto  # sem taxa de compra hoje: mostra a de venda, sem "variação"
+
+
+# ---------------------------------------------------------------- correções pedidas em 07/10/2026
+def test_live_agendada_nao_conta_como_ao_vivo():
+    import httpx
+
+    from quiron.servicos import tv
+
+    base = ('"videoPrimaryInfoRenderer":{"title":{"runs":[{"text":"Live programada"}]},"viewCount":{},"isLive":true}'
+            '"currentVideoEndpoint":{"watchEndpoint":{"videoId":"bwycWD_w6Xw"}}')
+    agendada = base + '"playabilityStatus":{"status":"LIVE_STREAM_OFFLINE"},"isUpcoming":true,"scheduledStartTime":"1676408400"'
+    for html, esperado in ((agendada, False), (base, True)):
+        tv._VIVO.clear()
+        cli = httpx.Client(transport=httpx.MockTransport(lambda r, h=html: httpx.Response(200, text=h)))
+        assert tv.ao_vivo("UCayJQj7hiNhfFk-MJ8Z9H0w", cli)["ao_vivo"] is esperado
+
+
+def test_fii_pedido_como_fundo_vai_para_o_comparativo_de_fii(monkeypatch):
+    from quiron.servicos.analise.tipos import fundos
+
+    chamado = {}
+    monkeypatch.setattr(fundos, "fii_comparativo", lambda params, modo="entregar", **k: chamado.setdefault("p", params))
+    monkeypatch.setattr(fundos, "preparar", lambda anos: (_ for _ in ()).throw(AssertionError("não devia baixar o cadastro")))
+    fundos.comparativo({"fundos": ["RBRR11", "MCCI11"]}, redigir=False)
+    assert chamado["p"] == {"fiis": ["RBRR11", "MCCI11"]}
+    assert fundos._so_fiis({"cnpjs": "RBRR11 e MCCI11"}) == ["RBRR11", "MCCI11"]
+    assert not fundos._so_fiis({"cnpjs": ["Verde FIC FIM", "RBRR11"]})
+
+
+def test_motivo_da_falha_explica_em_portugues():
+    from quiron.servicos.analise.fila import motivo_amigavel
+
+    assert motivo_amigavel("FundoNaoEncontrado: não achei o fundo “XYZ” no cadastro da CVM").startswith("não achei o fundo")
+    assert "OperationalError" in motivo_amigavel("OperationalError: database is locked")

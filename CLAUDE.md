@@ -126,7 +126,9 @@ Arquivos com DRM não são processados.
   pública), `videos` (só Data API; o RSS /feeds/videos.xml é proibido no robots.txt do YouTube → sem chave a tela toca
   `videoseries?list=UU…`), `ao_vivo`/`ao_vivo_varios` (página pública /channel/<id>/live: vídeo, título, quantos
   assistem; cache 3 min); tela "ao vivo primeiro" (modo auto: conferir antes de tocar, selo AO VIVO, canais no ar no
-  topo, reconfere a cada 3 min). Rotas `/api/tv/*` (+ `/api/tv/ao_vivo`; escrita com `_proteger`).
+  topo, reconfere a cada 3 min; live agendada — `isUpcoming`/`LIVE_STREAM_OFFLINE`/`scheduledStartTime` — não conta).
+  Player com volume (postMessage com `enablejsapi=1`) e brilho (CSS `filter` no `#video`), guardados em localStorage.
+  Rotas `/api/tv/*` (+ `/api/tv/ao_vivo`; escrita com `_proteger`).
 - Resumo de mercado (06/10/2026, `quiron/servicos/mercado/resumo.py`): `coletar` (8 seções `SECOES`; `_linha` =
   `cotacoes.desempenho` sobre 1 ano do Yahoo, com `_dia_confiavel` contra os pregões do Ibovespa (o Yahoo pula/repete
   dias; câmbio do dia só pela PTAX); Tesouro com bps, Focus, agenda Copom/FOMC; manchetes por tema + `FILTRO_SECAO`)
@@ -174,6 +176,8 @@ Arquivos com DRM não são processados.
   rotear "adiar"; MCP sobe com `INICIO_MAX_S`; `cvm_cias` não soma arrendamento de 2.01.04/2.02.01; drawdown com pico
   mínimo 1,0; `serie_posicao(..., historia=)`; `redacao.conferir` sem sinal e com escala; Tesouro bps só compra × compra;
   `dados._ultimo_ok`; tokens de Bluesky/Reddit com validade; `coleta.listar(limite=None)` nas buscas por termo.
+  07/10: `fundos.comparativo`/`fundo` com tickers XXXX11 (`_so_fiis`) delegam a `fii_comparativo`; `motivo_amigavel`
+  mostra a mensagem de ValueError/FundoNaoEncontrado e o tipo técnico nos demais casos.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

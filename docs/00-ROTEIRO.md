@@ -497,6 +497,15 @@ Revisores no agente/MCP, nas contas de fundos/valuation/risco, em mercado/notíc
   meia"; LGPD com `secure_delete` e esquecimento com data
 ✅ Aceite (06/10/2026): 13 testes novos em `testes/test_revisao_bugs3.py`; suíte completa (398) e navegador verdes.
 
+## Correções pedidas em 07/10/2026
+- [x] TV: volume (com mudo; teclas M, + e −) e brilho da imagem (teclas [ e ]), guardados no navegador
+- [x] TV: live AGENDADA (ex.: Bloomberg Live com estreia de 2020, Banco do Brasil de 2023) não conta mais como "ao vivo";
+  sem transmissão no ar, toca os envios mais recentes do canal
+- [x] Análise que falhava com "erro inesperado" ao comparar FIIs (RBRR11 × MCCI11): pedido de FII feito como fundo comum é
+  redirecionado para o comparativo de FIIs; mais nomes de campo aceitos; "RBRR11 e MCCI11" não vira ticker "E"; aviso de
+  falha mostra o motivo; informe da CVM fora do ar usa o último guardado
+✅ Aceite (07/10/2026): 3 testes novos em `testes/test_revisao_bugs3.py`; suíte completa (401) e navegador verdes.
+
 ---
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)
