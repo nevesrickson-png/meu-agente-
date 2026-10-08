@@ -181,7 +181,7 @@ Arquivos com DRM não são processados.
   `pedir` e no `repetir`) lê fundos de qualquer campo (`fundos._itens`), troca para `fii_comparativo` e recusa pedido
   vazio na hora; `fundos/consulta_rapida.py` (`/ativo`, rota de código sozinho, MCP `fii_dados`) — prompt proíbe
   descrever ativo sem consulta.
-- Cérebro / Obsidian, etapa A (08/10/2026, `quiron/servicos/obsidian/`, testes `testes/test_cerebro.py`): cofre de
+- Cérebro / Obsidian, etapa A (08/10/2026, `quiron/servicos/obsidian/`, testes `testes/test_obsidian.py`): cofre de
   notas em `dados/cerebro/` (`QUIRON_CEREBRO` troca). `pasta.py` (estrutura `Minhas notas/` (do Rickson; o Quíron só CRIA
   arquivo novo em `Minhas notas/Entrada`, nunca edita) · `Quíron/` (Diário, Memória, Estudo, Mercado, Melhorias — escrita
   livre via `gravar_quiron`) · `Modelos/`; `.obsidian/` mínimo só se não existir; `caminho()` recusa sair do cofre;
