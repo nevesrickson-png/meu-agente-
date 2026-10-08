@@ -32,7 +32,6 @@ from quiron.runtime.workspace import Workspace
 
 MAX_PASSOS = 8  # limite de idas e vindas com ferramentas por pergunta
 BRT = ZoneInfo("America/Sao_Paulo")
-FERRAMENTA_SKILL = DEFINICOES[0]  # compatibilidade
 
 
 def dados_identificaveis(texto: str) -> list[str]:

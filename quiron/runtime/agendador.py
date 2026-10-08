@@ -13,12 +13,12 @@ Também controla o limite de mensagens automáticas por dia (persona: 3).
 from __future__ import annotations
 
 import re
-import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo.config import ler_yaml, pasta_dados
 
 BRT = ZoneInfo("America/Sao_Paulo")
@@ -81,7 +81,7 @@ class Agendador:
     def __init__(self, caminho: Path | None = None):
         caminho = caminho or pasta_dados() / "agenda.db"
         caminho.parent.mkdir(parents=True, exist_ok=True)
-        self.con = sqlite3.connect(caminho, check_same_thread=False)
+        self.con = conectar_banco(caminho, mesma_thread=False)
         with self.con:
             self.con.execute("CREATE TABLE IF NOT EXISTS agendamentos (id INTEGER PRIMARY KEY, texto TEXT, tipo TEXT, recorrencia TEXT, "
                              "proxima TEXT, ativo INTEGER DEFAULT 1, criado_em TEXT)")

@@ -10,7 +10,6 @@ import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from quiron.nucleo import cerebro
@@ -182,5 +181,3 @@ def conferir_texto(texto: str, tema: str = "") -> str:
     return "\n\n".join(partes)
 
 
-def caminho_rascunhos() -> Path:
-    return pasta_dados() / "conteudo"

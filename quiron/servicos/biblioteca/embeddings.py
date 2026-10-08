@@ -11,10 +11,14 @@ Escolha por QUIRON_EMBEDDINGS=fastembed|lexico no `.env`.
 
 from __future__ import annotations
 
+import gc
 import hashlib
 import math
 import os
 import re
+import sys
+import threading
+import time
 from functools import lru_cache
 from typing import Protocol
 
@@ -32,11 +36,49 @@ class Embeddings(Protocol):
     def vetor_consulta(self, texto: str) -> list[float]: ...
 
 
+OCIOSO_S = float(os.environ.get("QUIRON_EMBEDDINGS_OCIOSO_S", "600"))
+
+
+def _devolver_memoria() -> None:
+    gc.collect()
+    if sys.platform.startswith("linux"):  # devolve ao sistema a memória que o Python liberou (no Windows já é assim)
+        try:
+            import ctypes
+
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except (OSError, AttributeError):
+            pass
+
+
 class FastEmbed:
+    """O modelo ocupa ~640 MB (ONNX + tokenizador). Fica carregado enquanto é usado e sai da memória depois de
+    `OCIOSO_S` segundos parado (o próximo uso recarrega em 1–3 s). Num PC de 8 GB com bot, Terminal e servidores MCP,
+    isso evita 2 a 4 cópias paradas para sempre."""
+
     def __init__(self, modelo: str = MODELO_PADRAO):
         self.modelo = modelo
         self.nome = "fe-" + re.sub(r"[^a-z0-9]+", "-", modelo.split("/")[-1].lower())[:40]
         self._motor = None
+        self._trava = threading.RLock()  # o escriba da memória usa em segundo plano, junto com a conversa
+        self._uso = 0.0
+        self._timer: threading.Timer | None = None
+
+    def _agendar_descarga(self, espera: float) -> None:
+        self._timer = threading.Timer(espera, self._descarregar)
+        self._timer.daemon = True
+        self._timer.start()
+
+    def _descarregar(self) -> None:
+        with self._trava:
+            self._timer = None
+            parado = time.monotonic() - self._uso
+            if self._motor is None:
+                return
+            if parado < OCIOSO_S:  # foi usado nesse meio-tempo: confere de novo mais tarde
+                self._agendar_descarga(OCIOSO_S - parado + 1)
+                return
+            self._motor = None
+        _devolver_memoria()
 
     def _carregar(self):
         if self._motor is None:
@@ -48,7 +90,12 @@ class FastEmbed:
         return self._motor
 
     def vetores(self, textos: list[str]) -> list[list[float]]:
-        return [v.tolist() for v in self._carregar().embed(textos, batch_size=16)]
+        with self._trava:
+            saida = [v.tolist() for v in self._carregar().embed(textos, batch_size=16)]
+            self._uso = time.monotonic()
+            if self._timer is None and OCIOSO_S > 0:
+                self._agendar_descarga(OCIOSO_S)
+        return saida
 
     def vetor_consulta(self, texto: str) -> list[float]:
         return self.vetores([texto])[0]

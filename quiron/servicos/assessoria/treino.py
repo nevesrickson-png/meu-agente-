@@ -20,6 +20,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo import cerebro
 from quiron.nucleo.config import ler_yaml, pasta_dados
 from quiron.servicos.assessoria import compliance
@@ -52,7 +53,7 @@ class Sessao:
 def _banco() -> sqlite3.Connection:
     caminho = pasta_dados() / "treino.db"
     caminho.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(caminho)
+    con = conectar_banco(caminho)
     con.execute("CREATE TABLE IF NOT EXISTS sessoes (id INTEGER PRIMARY KEY, personagem TEXT, cenario TEXT, dificuldade TEXT, "
                 "iniciada_em TEXT, encerrada_em TEXT DEFAULT '', mensagens TEXT DEFAULT '[]', feedback TEXT)")
     return con

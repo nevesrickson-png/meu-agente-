@@ -6,6 +6,7 @@ seguindo `agente/skills/noticias.md`.
 
 from __future__ import annotations
 
+import threading
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -19,14 +20,19 @@ MAX_IDADE_COLETA = timedelta(minutes=15)
 _ultima_coleta: datetime | None = None
 
 
+_trava_coleta = threading.Lock()
+
+
 def _garantir_coleta(forcar: bool = False) -> list[coleta.ResultadoFonte]:
-    """Coleta se a última rodada tiver mais de 15 min (os feeds têm cache próprio de 10 min)."""
+    """Coleta se a última rodada tiver mais de 15 min (os feeds têm cache próprio de 10 min). Uma coleta por vez: os
+    painéis do Terminal pedem notícias juntos (antes eram três coletas simultâneas de todos os feeds)."""
     global _ultima_coleta
-    agora = datetime.now(timezone.utc)
-    if forcar or _ultima_coleta is None or agora - _ultima_coleta > MAX_IDADE_COLETA:
-        resultados = coleta.coletar()
-        _ultima_coleta = agora
-        return resultados
+    with _trava_coleta:
+        agora = datetime.now(timezone.utc)
+        if forcar or _ultima_coleta is None or agora - _ultima_coleta > MAX_IDADE_COLETA:
+            resultados = coleta.coletar()
+            _ultima_coleta = agora
+            return resultados
     return []
 
 

@@ -211,10 +211,12 @@ function mostrarCanais() {  // desenha já e acende os selos AO VIVO assim que a
 // a cada 3 min: atualiza os selos; se o canal atual entrou no ar, a transmissão passa a tocar
 setInterval(async () => {
   const antes = atual && vivos[atual.id]?.ao_vivo;
-  await conferirVivos([...canaisVisiveis(), ...(atual ? [atual] : [])]);
+  // aba escondida: confere só o canal que está tocando (cada canal são ~1 MB baixados do YouTube)
+  await conferirVivos(document.hidden ? (atual ? [atual] : []) : [...canaisVisiveis(), ...(atual ? [atual] : [])]);
   desenharCanais();
   if (atual && modo === "auto" && !videoAtual && !antes && vivos[atual.id]?.ao_vivo) { tocar(); aviso(`${atual.nome} entrou ao vivo.`); }
 }, 180000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) mostrarCanais(); });
 
 // ---- volume (API de mensagens do player do YouTube) e brilho (filtro da imagem); ficam guardados neste navegador
 let volume = Math.min(100, Math.max(0, Number(lerGuardado("volume") ?? 80)));

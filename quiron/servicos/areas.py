@@ -13,6 +13,7 @@ from pathlib import Path
 
 import yaml
 
+from quiron.nucleo.config import ler_yaml_arquivo
 from quiron.nucleo.config import PASTA_CONFIG, pasta_dados
 
 
@@ -36,7 +37,7 @@ def _arquivo_personalizadas() -> Path:
 
 
 def _ler(arq: Path) -> dict:
-    return (yaml.safe_load(arq.read_text(encoding="utf-8")) or {}) if arq.exists() else {}
+    return (ler_yaml_arquivo(arq) or {}) if arq.exists() else {}
 
 
 def listar() -> list[Area]:

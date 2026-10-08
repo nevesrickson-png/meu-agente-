@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo.config import pasta_dados
 
 ESQUEMA = """
@@ -25,7 +26,7 @@ CREATE TABLE IF NOT EXISTS competencias (id INTEGER PRIMARY KEY, nome TEXT, nota
 def conectar() -> sqlite3.Connection:
     caminho = pasta_dados() / "carreira.db"
     caminho.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(caminho)
+    con = conectar_banco(caminho)
     con.row_factory = sqlite3.Row
     con.executescript(ESQUEMA)
     return con

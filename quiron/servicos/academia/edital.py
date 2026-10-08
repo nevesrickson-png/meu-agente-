@@ -11,8 +11,8 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Any
 
-import yaml
 
+from quiron.nucleo.config import ler_yaml_arquivo
 from quiron.nucleo.config import PASTA_CONFIG
 
 PASTA_EDITAIS = PASTA_CONFIG / "editais"
@@ -95,7 +95,7 @@ def carregar(cert: str = "CFP") -> dict[str, Any]:
     """Programa da área (edital oficial ou programa do campo). Área sem programa ganha um provisório de 1 tópico."""
     arq = PASTA_EDITAIS / f"{cert.upper()}.yaml"
     if arq.exists():
-        return yaml.safe_load(arq.read_text(encoding="utf-8"))
+        return ler_yaml_arquivo(arq)
     from quiron.servicos import areas
 
     a = areas.obter(cert)

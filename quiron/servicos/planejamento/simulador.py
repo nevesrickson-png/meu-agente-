@@ -144,10 +144,6 @@ class Simulacao:
         return asdict(self)
 
 
-def _anos_ate_meta(e: Entrada, retorno: float, horizonte: int) -> int | None:
-    m = meses_ate(e.meta, e.patrimonio, e.aporte_mensal, retorno, e.crescimento_aporte_aa, horizonte)
-    return None if m is None else m
-
 
 def simular(e: Entrada, n_simulacoes: int | None = None) -> Simulacao:
     p, cfg = _premissas()

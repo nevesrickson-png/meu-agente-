@@ -3,6 +3,7 @@
 import json
 import os
 from datetime import date, datetime
+from pathlib import Path
 
 import pytest
 
@@ -75,3 +76,119 @@ def test_google_agenda_reaproveita_um_cliente_http():
     from quiron.servicos.organizacao import google_agenda as ga
 
     assert ga._cliente_compartilhado() is ga._cliente_compartilhado()
+
+
+# ---------------------------------------------------------------- otimizações (08/10/2026)
+def test_yaml_em_cache_relido_quando_o_arquivo_muda(tmp_path):
+    from quiron.nucleo import config
+
+    arq = tmp_path / "x.yaml"
+    arq.write_text("a: 1\nlista: [1, 2]\n", encoding="utf-8")
+    primeiro = config.ler_yaml_arquivo(arq)
+    primeiro["lista"].append(99)  # quem mexe no resultado não estraga o cache
+    assert config.ler_yaml_arquivo(arq) == {"a": 1, "lista": [1, 2]}
+    novo = tmp_path / "x.tmp"
+    novo.write_text("a: 2\n", encoding="utf-8")
+    os.replace(novo, arq)  # troca atômica (como as gravações do Quíron)
+    assert config.ler_yaml_arquivo(arq) == {"a": 2}
+
+
+def test_banco_padrao_em_wal_com_espera(tmp_path):
+    from quiron.nucleo.banco import conectar
+
+    con = conectar(tmp_path / "b.db")
+    assert con.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
+
+
+def test_uma_coleta_de_noticias_por_vez(monkeypatch):
+    import threading
+    import time as _t
+
+    from quiron.servicos.noticias import coleta, consultas
+
+    chamadas = []
+    monkeypatch.setattr(coleta, "coletar", lambda: (chamadas.append(1), _t.sleep(0.3), [])[2])
+    monkeypatch.setattr(consultas, "_ultima_coleta", None)
+    ts = [threading.Thread(target=consultas._garantir_coleta) for _ in range(3)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert len(chamadas) == 1  # três painéis pedindo juntos = uma coleta
+
+
+def test_noticias_antigas_saem_do_banco():
+    from datetime import timedelta, timezone
+
+    from quiron.servicos.noticias import coleta
+
+    agora = datetime.now(timezone.utc)
+    with coleta._banco() as con:
+        for i, dias in enumerate((1, 200)):
+            con.execute("INSERT INTO noticias(id, titulo, publicado_em) VALUES (?,?,?)",
+                        (f"n{i}", f"t{i}", (agora - timedelta(days=dias)).isoformat()))
+    assert coleta.limpar_antigas() == 1
+    with coleta._banco() as con:
+        assert [r[0] for r in con.execute("SELECT id FROM noticias")] == ["n0"]
+
+
+def test_memo_do_terminal_carimba_o_inicio_da_consulta(monkeypatch):
+    import asyncio
+    import time as _t
+
+    from quiron.terminal.backend import app as terminal
+    from quiron.terminal.backend import dados as d
+
+    monkeypatch.setitem(d.TOPICOS, "lento", (lambda: _t.sleep(0.3) or {"ok": 1}, 1))
+    monkeypatch.setattr(terminal, "_memo", {})
+    antes = _t.time()
+    asyncio.run(terminal.obter_topico("lento", {}))
+    carimbo = next(v for k, v in terminal._memo.items() if "lento" in k)[0]
+    assert carimbo - antes < 0.1  # início, não fim (consulta lenta não faz a próxima atualização cair no memo)
+
+
+def test_modelo_de_embeddings_sai_da_memoria_quando_parado(monkeypatch):
+    import time as _t
+
+    from quiron.servicos.biblioteca import embeddings as emb
+
+    class Motor:
+        def embed(self, textos, batch_size=16):
+            import numpy as np
+
+            return [np.zeros(3) for _ in textos]
+
+    monkeypatch.setattr(emb, "OCIOSO_S", 0.2)
+    fe = emb.FastEmbed()
+    monkeypatch.setattr(fe, "_carregar", lambda: fe._motor or setattr(fe, "_motor", Motor()) or fe._motor)
+    assert fe.vetores(["a", "b"]) == [[0.0] * 3] * 2 and fe._motor is not None
+    _t.sleep(0.6)
+    assert fe._motor is None  # descarregado depois de parado
+    assert fe.vetor_consulta("c") == [0.0] * 3  # e volta sozinho no próximo uso
+
+
+def test_mcp_sobe_os_servidores_em_paralelo_sem_uv(monkeypatch, tmp_path):
+    import sys
+
+    from quiron.runtime import ferramentas_mcp as f
+
+    assert f._comando({"command": "python", "args": ["-c", "1"]})[1] == ["-c", "1"]
+    script = Path(sys.executable).parent / "quiron-mcp-sistema"
+    cmd, args = f._comando({"command": "uv", "args": ["run", "--quiet", "quiron-mcp-sistema"]})
+    if script.exists() or script.with_suffix(".exe").exists():
+        assert Path(cmd).name.startswith("quiron-mcp-sistema") and args == []
+    monkeypatch.setenv("QUIRON_MCP_VIA_UV", "1")
+    assert f._comando({"command": "uv", "args": ["run", "x"]})[1] == ["run", "x"]
+
+
+def test_websocket_ignora_mensagem_que_nao_e_json(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from quiron.terminal.backend.app import app
+
+    monkeypatch.setitem(__import__("quiron.terminal.backend.dados", fromlist=["x"]).TOPICOS, "eco", (lambda: {"ok": True}, 60))
+    with TestClient(app).websocket_connect("/ws", headers={"origin": "http://testserver"}) as ws:
+        ws.send_text("isto não é json")
+        ws.send_text(json.dumps({"tipo": "assinar", "paineis": [{"id": "p1", "topico": "eco", "params": {}}]}))
+        msg = json.loads(ws.receive_text())
+        assert msg["id"] == "p1" and msg["dados"] == {"ok": True}

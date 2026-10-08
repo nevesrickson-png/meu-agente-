@@ -21,11 +21,6 @@ def _sem_acento(texto: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", texto.lower()) if unicodedata.category(c) != "Mn")
 
 
-def dia_util(d: date) -> date:
-    while d.weekday() >= 5:
-        d += timedelta(days=1)
-    return d
-
 
 def somar_dias_uteis(d: date, n: int) -> date:
     while n > 0:

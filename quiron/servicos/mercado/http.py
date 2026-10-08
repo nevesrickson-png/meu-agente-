@@ -17,6 +17,7 @@ from typing import Any
 
 import httpx
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo.config import pasta_dados
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # sem uma linha de log por consulta
@@ -52,8 +53,7 @@ class Resposta:
 
 def _banco() -> sqlite3.Connection:
     caminho: Path = pasta_dados() / "quiron.db"
-    caminho.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(caminho)
+    con = conectar_banco(caminho)
     con.execute(
         "CREATE TABLE IF NOT EXISTS cache (chave TEXT PRIMARY KEY, conteudo BLOB, formato TEXT, fonte TEXT, obtido_em REAL)"
     )
@@ -107,8 +107,11 @@ def obter(
             return Resposta(_decodificar(linha[0], formato, codificacao), fonte, datetime.fromtimestamp(linha[1]), True)
         raise FonteIndisponivel(f"falha ao consultar {fonte}: {type(e).__name__}: {str(e)[:150]}") from e
     agora = time.time()
-    with _banco() as con:
-        con.execute("INSERT OR REPLACE INTO cache VALUES (?, ?, ?, ?, ?)", (chave, bruto, formato, fonte, agora))
+    try:
+        with _banco() as con:
+            con.execute("INSERT OR REPLACE INTO cache VALUES (?, ?, ?, ?, ?)", (chave, bruto, formato, fonte, agora))
+    except sqlite3.OperationalError as e:  # banco ocupado demais: o dado novo vale mesmo sem ir para o cache
+        logging.warning("cache não gravado (%s): %s", fonte, e)
     return Resposta(conteudo, fonte, datetime.fromtimestamp(agora))
 
 

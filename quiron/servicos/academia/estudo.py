@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Any
 
+from quiron.nucleo.config import ler_yaml_arquivo
 from quiron.nucleo import cerebro
 from quiron.servicos import areas
 from quiron.servicos.academia import diagnostico, edital, gerador
@@ -237,12 +238,11 @@ def texto_resultado_simulado(banco: Banco, sid: int) -> str:
 
 # ---------------------------------------------------------------- geração automática (madrugada)
 def config_geracao() -> dict[str, Any]:
-    import yaml
 
     from quiron.nucleo.config import PASTA_CONFIG
 
     arq = PASTA_CONFIG / "academia" / "geracao.yaml"
-    return (yaml.safe_load(arq.read_text(encoding="utf-8")) or {}).get("noturna", {}) if arq.exists() else {}
+    return (ler_yaml_arquivo(arq) or {}).get("noturna", {}) if arq.exists() else {}
 
 
 def areas_em_estudo(banco: Banco, dias: int = 30) -> list[str]:

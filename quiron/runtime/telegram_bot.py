@@ -988,8 +988,12 @@ async def _rodar() -> None:
 
         async def laco_batimento() -> None:
             while True:
-                cfg = batimento.ConfigBatimento.ler()
-                await asyncio.sleep(max(15, cfg.intervalo_min) * 60)
+                try:  # configuração com erro de digitação não pode matar o laço para sempre
+                    minutos = max(15, int(batimento.ConfigBatimento.ler().intervalo_min))
+                except Exception:  # noqa: BLE001
+                    logging.exception("configuração do batimento inválida; usando 120 min")
+                    minutos = 120
+                await asyncio.sleep(minutos * 60)
                 try:
                     texto = await batimento.bater(bot.agente, datetime.now(BRT))
                     if texto:
@@ -1097,14 +1101,16 @@ async def _rodar() -> None:
             from quiron.servicos.academia import estudo
 
             while True:
-                cfg = estudo.config_geracao()
+                minutos = 12
                 try:
+                    cfg = estudo.config_geracao()
+                    minutos = max(5, int(cfg.get("intervalo_min", 12)))
                     novas = await asyncio.to_thread(estudo.lote_noturno, bot.academia.banco, datetime.now(BRT).strftime("%H:%M"), cfg)
                     if novas:
                         logging.info("academia: +%d questões no banco", len(novas))
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: BLE001 — o laço nunca morre
                     logging.exception("falha na geração noturna de questões")
-                await asyncio.sleep(max(5, int(cfg.get("intervalo_min", 12))) * 60)
+                await asyncio.sleep(minutos * 60)
 
         for criada in bot.garantir_rotinas_padrao():
             logging.info("rotina padrão criada: %s", criada)
@@ -1130,6 +1136,13 @@ async def _rodar() -> None:
                        asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises()),
                        asyncio.create_task(laco_alertas()), asyncio.create_task(laco_memoria()), asyncio.create_task(laco_cartas()),
                        asyncio.create_task(laco_cerebro())]
+
+            def _laco_parou(t: asyncio.Task) -> None:  # um laço que morrer fica no registro (antes sumia em silêncio)
+                if not t.cancelled() and t.exception():
+                    logging.error("laço de fundo parou: %s", t.get_coro().__name__, exc_info=t.exception())
+
+            for t in tarefas:
+                t.add_done_callback(_laco_parou)
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

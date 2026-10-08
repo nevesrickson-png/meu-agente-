@@ -70,6 +70,7 @@
     }
   }
   atualizar();
-  setInterval(atualizar, 15000);
+  setInterval(() => { if (!document.hidden) atualizar(); }, 15000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) atualizar(); });
   window.quironAtualizarSelo = atualizar;
 })();

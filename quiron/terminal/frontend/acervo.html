@@ -302,7 +302,7 @@ async function carregar() {
 function agendar() {
   clearTimeout(timer);
   const ocupado = dados.arquivos.some((r) => r.situacao === "na fila" || r.situacao === "processando");
-  timer = setTimeout(carregar, ocupado ? 3000 : 20000);
+  timer = setTimeout(carregar, document.hidden ? 60000 : (ocupado ? 3000 : 20000));
 }
 
 function enviar(arquivos) {

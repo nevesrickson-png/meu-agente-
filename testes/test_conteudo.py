@@ -32,7 +32,14 @@ def _cerebro(respostas):
     return lambda p, **k: SimpleNamespace(texto=json.dumps(next(fila), ensure_ascii=False))
 
 
-def test_regras_viram_insumos_com_contas_em_python():
+def test_regras_viram_insumos_com_contas_em_python(monkeypatch):
+    from quiron.servicos.mercado import bcb
+    from quiron.servicos.mercado.http import FonteIndisponivel
+
+    def sem_rede(*a, **k):  # teste rápido não vai à internet (antes consultava o Banco Central de verdade: até 30 s)
+        raise FonteIndisponivel("sem rede no teste")
+
+    monkeypatch.setattr(bcb, "sgs", sem_rede)
     texto = dict(insumos.regras("Tesouro Selic ou poupança"))
     regra = next(t for t in texto if t.startswith("Regra da poupança"))
     assert "0,5% ao mês + TR (≈ 6,17% ao ano + TR)" in regra  # (1,005^12 − 1) = 6,17%

@@ -109,12 +109,6 @@ def contribuicao_por_classe(carteira: Carteira, df: pd.DataFrame, meses: int = 6
     return contrib
 
 
-def correlacao_classes(df: pd.DataFrame, classes: list[str], meses: int = 60) -> pd.DataFrame:
-    proxies = {c: CLASSES[c]["proxy"] for c in classes if CLASSES[c]["proxy"] in df}
-    sub = df.tail(meses)[[v for v in proxies.values()]]
-    sub.columns = [CLASSES[c]["nome"] for c in proxies]
-    return sub.corr()
-
 
 def betas(carteira: Carteira, df: pd.DataFrame, meses: int = 60) -> dict[int, float]:
     """Beta de cada posição de ações em relação ao Ibovespa (1,0 se não houver histórico)."""

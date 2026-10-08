@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from datetime import date
 
 import pandas as pd
-import yaml
 
+from quiron.nucleo.config import ler_yaml_arquivo
 from quiron.nucleo.config import PASTA_CONFIG
 from quiron.servicos.carteira import risco
 from quiron.servicos.carteira.modelo import Carteira
@@ -18,7 +18,7 @@ def _n(v: float, casas: int = 2, sinal: bool = False) -> str:
 
 
 def cenarios() -> dict:
-    return yaml.safe_load((PASTA_CONFIG / "cenarios_stress.yaml").read_text(encoding="utf-8"))
+    return ler_yaml_arquivo((PASTA_CONFIG / "cenarios_stress.yaml"))
 
 
 @dataclass

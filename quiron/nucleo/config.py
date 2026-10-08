@@ -6,6 +6,8 @@ Nenhum outro módulo deve ler variáveis de ambiente diretamente: tudo passa por
 
 from __future__ import annotations
 
+import copy
+import threading
 import os
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -117,15 +119,43 @@ def arquivo_ajuste(nome: str) -> Path:
     return pasta_dados() / "ajustes" / (nome if nome.endswith(".yaml") else f"{nome}.yaml")
 
 
+_LEITOR_YAML = getattr(yaml, "CSafeLoader", yaml.SafeLoader)  # libyaml (C): 5–10× mais rápido, mesmo resultado
+_CACHE_YAML: dict[str, tuple[tuple, Any]] = {}
+_trava_yaml = threading.Lock()
+
+
+def _carimbo(arq: Path) -> tuple | None:
+    try:
+        st = arq.stat()
+    except OSError:
+        return None
+    return (st.st_mtime_ns, st.st_size, st.st_ino)
+
+
+def ler_yaml_arquivo(arq: Path) -> Any:
+    """Conteúdo de um YAML, lido uma vez por versão do arquivo (data, tamanho e inode: editou → relê na hora).
+    Devolve uma cópia: quem altera o resultado não estraga o cache. Antes, regras_mercado.yaml era relido a cada mês
+    simulado — um comparativo de renda fixa levava ~9 s só nisso."""
+    carimbo = _carimbo(arq)
+    chave = str(arq)
+    with _trava_yaml:
+        guardado = _CACHE_YAML.get(chave)
+    if guardado is None or guardado[0] != carimbo:
+        with arq.open(encoding="utf-8") as f:
+            conteudo = yaml.load(f, Loader=_LEITOR_YAML)  # noqa: S506 — CSafeLoader/SafeLoader (seguro)
+        with _trava_yaml:
+            _CACHE_YAML[chave] = guardado = (carimbo, conteudo)
+    return copy.deepcopy(guardado[1])
+
+
 def ler_yaml(nome: str, *, com_ajustes: bool = True) -> Any:
     """Lê `config/<nome>` (com ou sem a extensão .yaml), com os ajustes da tela por cima."""
     caminho = PASTA_CONFIG / (nome if nome.endswith(".yaml") else f"{nome}.yaml")
-    with caminho.open(encoding="utf-8") as f:
-        base = yaml.safe_load(f)
+    base = ler_yaml_arquivo(caminho)
     ajuste = arquivo_ajuste(nome) if com_ajustes else None
     if ajuste is not None and ajuste.exists():
         try:
-            return _mesclar(base, yaml.safe_load(ajuste.read_text(encoding="utf-8")) or {})
+            return _mesclar(base, ler_yaml_arquivo(ajuste) or {})
         except (OSError, yaml.YAMLError):
             return base  # ajuste corrompido nunca derruba o Quíron
     return base

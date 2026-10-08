@@ -29,7 +29,6 @@ from quiron.servicos import areas
 
 FORMATOS = {".pdf", ".epub"}
 LIMITE_BYTES = 300 * 1024 * 1024  # 300 MB por arquivo
-FINAIS = {"pronto", "já estava", "área atualizada", "erro", "precisa de OCR", "pulado (DRM)", "removido"}
 
 ESQUEMA = """
 CREATE TABLE IF NOT EXISTS arquivos (

@@ -10,6 +10,7 @@ import asyncio
 import json
 import os
 import shutil
+import sys
 from contextlib import AsyncExitStack
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -36,6 +37,18 @@ def _enxuto(esquema: dict[str, Any] | None) -> dict[str, Any]:
     return {"type": "object", "properties": props, "required": obrig}
 
 
+def _comando(s: dict[str, Any]) -> tuple[str, list[str]]:
+    """Comando do servidor. `uv run <script>` vira o script direto da mesma .venv: o lançador (`uv run quiron`) já
+    sincronizou o ambiente, e cada `uv run` deixava um processo `uv` parado na memória (~10 MB × 10) e somava 0,1–0,6 s
+    por servidor. Sem o script (ou com QUIRON_MCP_VIA_UV=1), continua pelo uv."""
+    cmd, args = s["command"], list(s.get("args", []))
+    if Path(cmd).stem.lower() == "uv" and args[:1] == ["run"] and os.environ.get("QUIRON_MCP_VIA_UV") != "1":
+        direto = shutil.which(args[-1], path=str(Path(sys.executable).parent))  # .venv/bin ou .venv\Scripts (.exe)
+        if direto:
+            return direto, []
+    return shutil.which(cmd) or cmd, args
+
+
 @dataclass
 class ConexaoMCP:
     servidores: list[str] | None = None  # None = todos do .mcp.json
@@ -49,33 +62,43 @@ class ConexaoMCP:
 
         cfg = ler_mcp_json()
         permitidas = offline.servidores() if offline.ativo() else {}  # offline: servidores leves e poucas ferramentas
+        sessoes: dict[str, ClientSession] = {}
         for nome, s in cfg.items():
             if self.servidores and nome not in self.servidores:
                 continue
             if offline.ativo() and nome not in permitidas:
                 continue
-            params = StdioServerParameters(command=shutil.which(s["command"]) or s["command"], args=s.get("args", []),
-                                           cwd=str(RAIZ), env={**os.environ, **s.get("env", {})})
-            try:
+            comando, args = _comando(s)
+            params = StdioServerParameters(command=comando, args=args, cwd=str(RAIZ), env={**os.environ, **s.get("env", {})})
+            try:  # só abre os processos aqui (rápido); a apresentação de cada um corre em paralelo logo abaixo
                 leitura, escrita = await self._pilha.enter_async_context(stdio_client(params))
-                sessao = await self._pilha.enter_async_context(ClientSession(leitura, escrita))
-                # servidor que trava ao subir não pode prender o bot/Terminal para sempre
-                await asyncio.wait_for(sessao.initialize(), INICIO_MAX_S)
-                lista = await asyncio.wait_for(sessao.list_tools(), INICIO_MAX_S)
-                self._sessoes[nome] = sessao
-                for t in lista.tools:
-                    if permitidas.get(nome) and t.name not in permitidas[nome]:
-                        continue
-                    self.ferramentas.append({
-                        "type": "function",
-                        "function": {
-                            "name": f"{nome}{SEPARADOR}{t.name}".replace("-", "_"),
-                            "description": (t.description or "")[:1000],
-                            "parameters": _enxuto(t.input_schema) if permitidas else (t.input_schema or {"type": "object", "properties": {}}),
-                        },
-                    })
+                sessoes[nome] = await self._pilha.enter_async_context(ClientSession(leitura, escrita))
             except Exception as e:  # noqa: BLE001 — um servidor com problema não impede os outros
                 self.falhas[nome] = f"{type(e).__name__}: {e}"
+
+        async def subir(sessao: ClientSession):
+            # servidor que trava ao subir não pode prender o bot/Terminal para sempre
+            await asyncio.wait_for(sessao.initialize(), INICIO_MAX_S)
+            return (await asyncio.wait_for(sessao.list_tools(), INICIO_MAX_S)).tools
+
+        # 10 servidores um depois do outro levavam ~12 s; juntos, ~3 s (a ordem das ferramentas é a do .mcp.json)
+        respostas = await asyncio.gather(*(subir(sessao) for sessao in sessoes.values()), return_exceptions=True)
+        for (nome, sessao), resposta in zip(sessoes.items(), respostas):
+            if isinstance(resposta, BaseException):
+                self.falhas[nome] = f"{type(resposta).__name__}: {resposta}"
+                continue
+            self._sessoes[nome] = sessao
+            for t in resposta:
+                if permitidas.get(nome) and t.name not in permitidas[nome]:
+                    continue
+                self.ferramentas.append({
+                    "type": "function",
+                    "function": {
+                        "name": f"{nome}{SEPARADOR}{t.name}".replace("-", "_"),
+                        "description": (t.description or "")[:1000],
+                        "parameters": _enxuto(t.input_schema) if permitidas else (t.input_schema or {"type": "object", "properties": {}}),
+                    },
+                })
         return self
 
     async def __aexit__(self, *exc) -> None:

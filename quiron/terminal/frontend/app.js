@@ -241,6 +241,7 @@ function conectar() {
 }
 function enviar(msg) { if (socket && socket.readyState === 1) socket.send(JSON.stringify(msg)); }
 function assinar() {
+  if (document.hidden) { enviar({ tipo: "assinar", paineis: [] }); return; } // aba escondida: o servidor para de empurrar
   const lista = paineis.filter((p) => TIPOS[p.tipo].topico).map((p) => {
     const def = TIPOS[p.tipo];
     return { id: p.id, topico: typeof def.topico === "function" ? def.topico(p.p) : def.topico, params: def.params ? def.params(p.p) : {} };
@@ -1289,6 +1290,7 @@ fetch("/api/modo").then((r) => r.json()).then((m) => {
 }).catch(() => {});
 relogio();
 setInterval(relogio, 1000);
+document.addEventListener("visibilitychange", assinar); // voltou à aba: assina de novo e recebe o dado guardado na hora
 carregarLayouts();
 aplicarLayout(carregarLocal() || PRESETS["Manhã"]);
 conectar();

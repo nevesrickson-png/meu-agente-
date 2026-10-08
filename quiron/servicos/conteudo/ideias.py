@@ -8,6 +8,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo.config import pasta_dados
 
 SITUACOES = ("ideia", "rascunho", "publicado", "descartada")
@@ -16,7 +17,7 @@ SITUACOES = ("ideia", "rascunho", "publicado", "descartada")
 def _con() -> sqlite3.Connection:
     caminho = pasta_dados() / "conteudo.db"
     caminho.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(caminho)
+    con = conectar_banco(caminho)
     con.row_factory = sqlite3.Row
     con.executescript("""
     CREATE TABLE IF NOT EXISTS ideias (id INTEGER PRIMARY KEY, titulo TEXT NOT NULL, angulo TEXT DEFAULT '', formato TEXT DEFAULT '',

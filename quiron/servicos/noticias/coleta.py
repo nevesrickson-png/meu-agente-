@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo.config import ler_yaml, pasta_dados
 from quiron.servicos.biblioteca.trechos import chave
 from quiron.servicos.mercado.http import FonteIndisponivel, obter
@@ -47,8 +48,7 @@ class ResultadoFonte:
 
 def _banco() -> sqlite3.Connection:
     caminho = pasta_dados() / "quiron.db"
-    caminho.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(caminho)
+    con = conectar_banco(caminho)
     con.execute(
         """CREATE TABLE IF NOT EXISTS noticias (
             id TEXT PRIMARY KEY, chave_titulo TEXT, titulo TEXT, link TEXT, fonte TEXT, grupo TEXT,
@@ -159,12 +159,18 @@ def _classificar(n: Noticia) -> Noticia:
     return n
 
 
+RETENCAO_DIAS = 180  # a leitura mais longa do Quíron é de 30 dias: o resto só fazia o banco crescer para sempre
+
+
 def _gravar(noticias: list[Noticia]) -> int:
     """Grava as novas; a mesma manchete de outra fonte vira 'outras_fontes' da primeira. Devolve quantas eram novas."""
     novas = 0
     agora = datetime.now(timezone.utc).isoformat()
+    corte = datetime.now(timezone.utc) - timedelta(days=RETENCAO_DIAS)
     with _banco() as con:
         for n in noticias:
+            if n.publicado_em < corte:  # item velho do feed: seria apagado na limpeza e regravado na próxima coleta
+                continue
             if con.execute("SELECT 1 FROM noticias WHERE id = ?", (n.id,)).fetchone():
                 continue
             ct = chave_titulo(n.titulo)
@@ -208,4 +214,15 @@ def coletar(fontes: list[dict] | None = None) -> list[ResultadoFonte]:
             resultados.append(ResultadoFonte(f["nome"], True, len(itens), f"{novas} novas"))
         except Exception as e:  # noqa: BLE001 — uma fonte com problema não derruba as outras
             resultados.append(ResultadoFonte(f["nome"], False, 0, f"{type(e).__name__}: {str(e)[:120]}"))
+    if fontes is None:
+        limpar_antigas()
     return resultados
+
+
+def limpar_antigas(dias: int = RETENCAO_DIAS) -> int:
+    corte = (datetime.now(timezone.utc) - timedelta(days=dias)).isoformat()
+    try:
+        with _banco() as con:
+            return con.execute("DELETE FROM noticias WHERE publicado_em < ?", (corte,)).rowcount
+    except sqlite3.OperationalError:  # banco ocupado: limpa na próxima coleta
+        return 0

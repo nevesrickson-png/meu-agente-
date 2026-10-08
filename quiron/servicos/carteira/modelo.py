@@ -11,8 +11,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import date
 from typing import Any
 
-import yaml
 
+from quiron.nucleo.config import ler_yaml_arquivo
 from quiron.nucleo.config import PASTA_CONFIG
 
 # id → (nome, proxy de risco, duration padrão em anos para renda fixa)
@@ -150,8 +150,8 @@ def classe_por_ticker(ticker: str) -> str | None:
 
 
 def perfis() -> dict[str, Any]:
-    return yaml.safe_load((PASTA_CONFIG / "alocacao_perfis.yaml").read_text(encoding="utf-8"))["perfis"]
+    return ler_yaml_arquivo((PASTA_CONFIG / "alocacao_perfis.yaml"))["perfis"]
 
 
 def premissas() -> dict[str, Any]:
-    return yaml.safe_load((PASTA_CONFIG / "premissas_carteira.yaml").read_text(encoding="utf-8"))
+    return ler_yaml_arquivo((PASTA_CONFIG / "premissas_carteira.yaml"))

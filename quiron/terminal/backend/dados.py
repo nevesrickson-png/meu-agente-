@@ -95,21 +95,25 @@ def watchlist() -> list[dict]:
 
     w = ler_yaml("watchlist") or {}
     ativos = [*w.get("indices", []), *w.get("moedas", []), *w.get("acoes", []), *w.get("fiis", []), *w.get("etfs", []), *w.get("commodities", [])]
-    saida = []
-    for a in ativos:
-        item = cotacao(str(a))
-        saida.append(item if "erro" not in item else {"ativo": str(a), **item})
-    return saida
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=4) as ex:  # 12 ativos: 6,6 s um por um → ~1,5 s (a ordem é mantida)
+        itens = list(ex.map(lambda a: cotacao(str(a)), ativos))
+    return [item if "erro" not in item else {"ativo": str(a), **item} for a, item in zip(ativos, itens)]
 
 
 def grupo(nome: str) -> list[dict]:
-    saida = []
-    for simbolo, rotulo in GRUPOS[nome]:
+    from concurrent.futures import ThreadPoolExecutor
+
+    def um(par: tuple[str, str]) -> dict:
+        simbolo, rotulo = par
         try:
-            saida.append(_cot(cotacoes.yahoo(simbolo), rotulo))
+            return _cot(cotacoes.yahoo(simbolo), rotulo)
         except FonteIndisponivel as e:
-            saida.append({"ativo": simbolo, "nome": rotulo, "erro": str(e)[:150]})
-    return saida
+            return {"ativo": simbolo, "nome": rotulo, "erro": str(e)[:150]}
+
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        return list(ex.map(um, GRUPOS[nome]))
 
 
 def historico(ativo: str, periodo: str = "6mo", comparar: str | None = None) -> dict:
@@ -136,11 +140,19 @@ def historico(ativo: str, periodo: str = "6mo", comparar: str | None = None) -> 
     return dados
 
 
+_NOTICIAS_ATIVO: dict[str, tuple[float, Any]] = {}
+
+
 def ativo(ticker: str) -> dict:
     """Visão do ativo: cotação, gráfico de 3 meses e notícias relacionadas."""
     t = _normalizar(ticker)
     hist = _seguro(lambda: historico(t, "3mo"))
-    noticias_rel = _seguro(lambda: noticias(t, 72, 8))
+    guardado = _NOTICIAS_ATIVO.get(t)
+    if not guardado or time.monotonic() - guardado[0] > 300:  # notícias mudam a cada 5 min, não a cada 60 s da cotação
+        guardado = _NOTICIAS_ATIVO[t] = (time.monotonic(), _seguro(lambda: noticias(t, 72, 8)))
+        if len(_NOTICIAS_ATIVO) > 100:
+            _NOTICIAS_ATIVO.pop(next(iter(_NOTICIAS_ATIVO)))
+    noticias_rel = guardado[1]
     return {"cotacao": cotacao(t), "historico": hist, "noticias": noticias_rel}
 
 

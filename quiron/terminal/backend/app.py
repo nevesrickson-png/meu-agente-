@@ -12,6 +12,7 @@ import asyncio
 import hashlib
 import hmac
 import json
+import logging
 import os
 import re
 import time
@@ -132,9 +133,15 @@ async def obter_topico(topico: str, params: dict[str, Any], forcar: bool = False
         # vale um pouco menos que o intervalo: a atualização agendada sempre encontra o dado vencido e busca de novo
         if guardado and not forcar and time.time() - guardado[0] < intervalo * 0.8:
             return guardado[1]
+        inicio = time.time()  # carimbo do INÍCIO: consulta lenta não faz a atualização seguinte cair no memo
         valor = await asyncio.to_thread(func, **params)
         if not (isinstance(valor, dict) and valor.get("parcial")):  # resultado parcial não fica guardado
-            _memo[chave] = (time.time(), valor)
+            _memo[chave] = (inicio, valor)
+        if len(_memo) > 200:  # sessão de dias: cada ticker/busca nova deixava uma entrada para sempre
+            for k in [k for k, (t, _) in list(_memo.items()) if inicio - t > 7200]:
+                _memo.pop(k, None)
+                if k in _travas and not _travas[k].locked():
+                    _travas.pop(k, None)
         return valor
 
 
@@ -224,6 +231,12 @@ async def ws(socket: WebSocket):
         return
     await socket.accept()
     assinaturas: dict[str, dict] = {}  # id do painel → {topico, params, proximo}
+    pendentes: set[asyncio.Task] = set()  # referência às tarefas (sem ela o coletor de lixo pode largá-las no meio)
+
+    def disparar(coro) -> None:
+        t = asyncio.create_task(coro)
+        pendentes.add(t)
+        t.add_done_callback(pendentes.discard)
 
     async def enviar(pid: str, a: dict, forcar: bool = False) -> None:
         try:
@@ -234,11 +247,19 @@ async def ws(socket: WebSocket):
         except Exception as e:  # noqa: BLE001 — erro de um painel não derruba a conexão
             msg = {"id": pid, "topico": a["topico"], "erro": f"{type(e).__name__}: {str(e)[:200]}"}
         msg["enviado_em"] = datetime.now(timezone.utc).isoformat()
-        await socket.send_text(json.dumps(msg, ensure_ascii=False, default=str))
+        try:
+            await socket.send_text(json.dumps(msg, ensure_ascii=False, default=str))
+        except Exception:  # noqa: BLE001 — a tela fechou no meio da consulta: nada a enviar
+            pass
 
     async def receber() -> None:
         while True:
-            msg = json.loads(await socket.receive_text())
+            try:
+                msg = json.loads(await socket.receive_text())
+            except (json.JSONDecodeError, TypeError):
+                continue  # mensagem que não é JSON: ignora, não derruba a conexão
+            if not isinstance(msg, dict):
+                continue
             if msg.get("tipo") == "assinar":
                 novas = {}
                 for item in msg.get("paineis", []):
@@ -255,7 +276,7 @@ async def ws(socket: WebSocket):
             elif msg.get("tipo") == "atualizar" and msg.get("id") in assinaturas:
                 a = assinaturas[msg["id"]]
                 a["proximo"] = time.time() + dados.TOPICOS[a["topico"]][1]
-                asyncio.create_task(enviar(msg["id"], a, forcar=True))
+                disparar(enviar(msg["id"], a, forcar=True))
 
     async def empurrar() -> None:
         while True:
@@ -263,16 +284,17 @@ async def ws(socket: WebSocket):
             for pid, a in list(assinaturas.items()):
                 if agora >= a["proximo"]:
                     a["proximo"] = agora + dados.TOPICOS[a["topico"]][1]
-                    asyncio.create_task(enviar(pid, a))
+                    disparar(enviar(pid, a))
             await asyncio.sleep(1)
 
     tarefas = [asyncio.create_task(receber()), asyncio.create_task(empurrar())]
     try:
-        await asyncio.wait(tarefas, return_when=asyncio.FIRST_EXCEPTION)
-    except WebSocketDisconnect:
-        pass
+        feitas, _ = await asyncio.wait(tarefas, return_when=asyncio.FIRST_EXCEPTION)
+        for t in feitas:  # recolhe o erro (desconexão é o normal; o resto vai para o registro)
+            if not t.cancelled() and (e := t.exception()) and not isinstance(e, WebSocketDisconnect):
+                logging.warning("conexão do Terminal encerrada: %s: %s", type(e).__name__, e)
     finally:
-        for t in tarefas:
+        for t in [*tarefas, *pendentes]:
             t.cancel()
 
 
@@ -841,26 +863,64 @@ CHAT_TERMINAL = -12  # conversa do Terminal na memória do agente (o Telegram us
 
 
 class _Chat:
-    """Agente do Quíron dentro do Terminal: sobe os servidores MCP na primeira mensagem e os mantém ligados."""
+    """Agente do Quíron dentro do Terminal. Sobe os servidores MCP na primeira mensagem e os desliga depois de
+    `OCIOSO_S` sem uso (eram ~500 MB parados para sempre; a conversa fica no disco e nada se perde — a próxima
+    mensagem religa em ~3 s). Os servidores vivem numa tarefa própria: quem abre o contexto do MCP é quem fecha."""
+
+    OCIOSO_S = float(os.environ.get("QUIRON_CHAT_OCIOSO_S", "900"))
 
     def __init__(self) -> None:
         self.agente = None
-        self._pilha = None
         self._trava = asyncio.Lock()
+        self._tarefa: asyncio.Task | None = None
+        self._uso = 0.0
+        self._ocupado = 0
+
+    async def _viver(self, pronto: asyncio.Future) -> None:
+        from contextlib import AsyncExitStack
+
+        from quiron.runtime.agente import Agente
+        from quiron.runtime.ferramentas_mcp import ConexaoMCP
+
+        try:
+            async with AsyncExitStack() as pilha:
+                conexao = await pilha.enter_async_context(ConexaoMCP())
+                self.agente = Agente(conexao)
+                pronto.set_result(self.agente)
+                while self._ocupado or time.monotonic() - self._uso < self.OCIOSO_S:
+                    await asyncio.sleep(min(60.0, max(1.0, self.OCIOSO_S / 4)))
+                self.agente = None  # a partir daqui, a próxima mensagem cria outro
+        except Exception as e:  # noqa: BLE001
+            self.agente = None
+            if not pronto.done():
+                pronto.set_exception(e)
+            else:
+                logging.warning("chat do Terminal: servidores encerrados com erro: %s", e)
 
     async def obter(self):
         async with self._trava:
+            self._uso = time.monotonic()
             if self.agente is None:
-                from contextlib import AsyncExitStack
-
-                from quiron.runtime.agente import Agente
-                from quiron.runtime.ferramentas_mcp import ConexaoMCP
-
                 os.environ.setdefault("QUIRON_ORIGEM", "terminal")
-                self._pilha = AsyncExitStack()
-                conexao = await self._pilha.enter_async_context(ConexaoMCP())
-                self.agente = Agente(conexao)
+                pronto: asyncio.Future = asyncio.get_running_loop().create_future()
+                self._tarefa = asyncio.create_task(self._viver(pronto))
+                await pronto
             return self.agente
+
+    def usando(self):
+        """`async with _chat.usando():` — enquanto uma resposta é escrita, os servidores não são desligados."""
+        chat = self
+
+        class _Uso:
+            async def __aenter__(self):
+                chat._ocupado += 1
+                return await chat.obter()
+
+            async def __aexit__(self, *exc):
+                chat._ocupado -= 1
+                chat._uso = time.monotonic()
+
+        return _Uso()
 
 
 _chat = _Chat()
@@ -877,11 +937,11 @@ async def api_chat(request: Request, corpo: dict = Body(...)) -> dict:
     if not texto:
         raise HTTPException(400, "mensagem vazia")
     try:
-        agente = await _chat.obter()
-        if texto == "/novo":
-            agente.memoria.reiniciar(CHAT_TERMINAL)
-            return {"resposta": "Conversa reiniciada.", "pendencias": [], "ferramentas": []}
-        reg = await agente.responder(texto, chat=CHAT_TERMINAL)
+        async with _chat.usando() as agente:
+            if texto == "/novo":
+                agente.memoria.reiniciar(CHAT_TERMINAL)
+                return {"resposta": "Conversa reiniciada.", "pendencias": [], "ferramentas": []}
+            reg = await agente.responder(texto, chat=CHAT_TERMINAL)
     except Exception as e:  # noqa: BLE001
         return {"resposta": f"⚠️ O agente não respondeu ({type(e).__name__}: {str(e)[:200]}).", "pendencias": [], "ferramentas": []}
     return {"resposta": reg.resposta or "(sem resposta)", "pendencias": _pendencias(reg), "ferramentas": reg.ferramentas,
@@ -889,7 +949,7 @@ async def api_chat(request: Request, corpo: dict = Body(...)) -> dict:
 
 
 @app.get("/api/chat/historico")
-async def api_chat_historico() -> dict:
+def api_chat_historico() -> dict:  # síncrona: o FastAPI roda numa thread (abrir o banco não trava as outras telas)
     from quiron.runtime.memoria import Memoria
 
     return {"mensagens": [{"papel": m["role"], "texto": m["content"]} for m in Memoria().historico(CHAT_TERMINAL)
@@ -899,17 +959,17 @@ async def api_chat_historico() -> dict:
 @app.post("/api/chat/decidir")
 async def api_chat_decidir(request: Request, corpo: dict = Body(...)) -> dict:
     _proteger(request)
-    agente = await _chat.obter()
     try:
         ident = int(corpo.get("id", 0))
     except (TypeError, ValueError) as e:
         raise HTTPException(400, "id inválido") from e
-    p = agente.aprovacoes.decidir(ident, bool(corpo.get("aprovar")))
-    if not p:
-        return {"resposta": "Esse pedido já foi decidido ou não existe."}
-    if not corpo.get("aprovar"):
-        return {"resposta": f"❌ Negado: {p.resumo}"}
-    return {"resposta": f"✅ Aprovado e feito: {p.resumo}\n{(await agente.executar_aprovada(p))[:3000]}"}
+    async with _chat.usando() as agente:
+        p = agente.aprovacoes.decidir(ident, bool(corpo.get("aprovar")))
+        if not p:
+            return {"resposta": "Esse pedido já foi decidido ou não existe."}
+        if not corpo.get("aprovar"):
+            return {"resposta": f"❌ Negado: {p.resumo}"}
+        return {"resposta": f"✅ Aprovado e feito: {p.resumo}\n{(await agente.executar_aprovada(p))[:3000]}"}
 
 
 # ---------------------------------------------------------------- central (aba CONFIGURAÇÕES)

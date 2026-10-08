@@ -46,8 +46,10 @@ CREATE TABLE IF NOT EXISTS classes (
   anbima TEXT, tributacao_lp TEXT, classe_cotas TEXT, publico TEXT, exclusivo TEXT, condominio TEXT, inicio TEXT,
   pl REAL, data_pl TEXT);
 CREATE INDEX IF NOT EXISTS classes_cnpj ON classes(cnpj);
+CREATE INDEX IF NOT EXISTS classes_anbima ON classes(anbima);
 CREATE TABLE IF NOT EXISTS fundos (id_fundo TEXT PRIMARY KEY, cnpj TEXT, nome TEXT, tipo TEXT, gestor TEXT,
   cnpj_gestor TEXT, administrador TEXT, busca_gestor TEXT);
+CREATE INDEX IF NOT EXISTS fundos_gestor ON fundos(cnpj_gestor);
 CREATE TABLE IF NOT EXISTS subclasses (id_classe TEXT, id_sub TEXT PRIMARY KEY, nome TEXT, situacao TEXT, publico TEXT,
   previdenciario TEXT);
 CREATE TABLE IF NOT EXISTS extrato (cnpj TEXT PRIMARY KEY, data TEXT, anbima TEXT, publico TEXT, aplic_min REAL,
@@ -432,10 +434,6 @@ def retornos_mes(mes_ini: str, mes_fim: str) -> dict[tuple[str, str], tuple[floa
     return {(r["cnpj"], r["sub"]): (r["cota"] / a[(r["cnpj"], r["sub"])] - 1, r["pl"]) for r in b
             if a.get((r["cnpj"], r["sub"])) and r["cota"]}
 
-
-def ultimo_mes() -> str | None:
-    with banco() as con:
-        return con.execute("SELECT MAX(mes) FROM mensal").fetchone()[0]
 
 
 def pares(anbima: str, excluir: str = "") -> list[tuple[str, str]]:

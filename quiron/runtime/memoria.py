@@ -5,12 +5,12 @@ memória recente por conversa e compactação automática das trocas antigas em 
 from __future__ import annotations
 
 import json
-import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo.config import pasta_dados
 
 
@@ -29,7 +29,7 @@ class Memoria:
     def __init__(self, caminho: Path | None = None):
         caminho = caminho or pasta_dados() / "conversas.db"
         caminho.parent.mkdir(parents=True, exist_ok=True)
-        self.con = sqlite3.connect(caminho, check_same_thread=False)
+        self.con = conectar_banco(caminho, mesma_thread=False)
         with self.con:
             self.con.execute("CREATE TABLE IF NOT EXISTS mensagens (id INTEGER PRIMARY KEY, chat INTEGER, quando TEXT, papel TEXT, texto TEXT)")
             self.con.execute("CREATE INDEX IF NOT EXISTS mensagens_chat ON mensagens(chat, id)")

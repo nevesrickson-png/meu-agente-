@@ -206,7 +206,3 @@ def acumulado_comum(analises: list[AnaliseFundo]) -> tuple[list[str], dict[str, 
     return rot, saida
 
 
-def anualizar(ret: float | None, meses: int) -> float | None:
-    if ret is None:
-        return None
-    return (1 + ret) ** (12 / meses) - 1

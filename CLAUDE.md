@@ -181,6 +181,23 @@ Arquivos com DRM não são processados.
   `pedir` e no `repetir`) lê fundos de qualquer campo (`fundos._itens`), troca para `fii_comparativo` e recusa pedido
   vazio na hora; `fundos/consulta_rapida.py` (`/ativo`, rota de código sozinho, MCP `fii_dados`) — prompt proíbe
   descrever ativo sem consulta.
+- Depuração 4 / otimização (08/10/2026, `testes/test_revisao_bugs4.py`): `nucleo/banco.conectar` (WAL + espera 30 s;
+  usado em quiron.db (cache HTTP, notícias), organizacao, carreira, academia, agenda, conversas, conteúdo, treino; gravação
+  do cache que falha por trava só avisa); `config.ler_yaml_arquivo` (cache por mtime/tamanho/inode + CSafeLoader +
+  deepcopy; `ler_yaml` e os YAML de config/ passam por ele — comparativo de renda fixa 9,5 s → 0,01 s); notícias: uma
+  coleta por vez (`_trava_coleta`), `RETENCAO_DIAS = 180` (`limpar_antigas`); Terminal: memo carimbado no início da
+  consulta e podado (> 200 entradas, > 2 h), watchlist/grupos em 4 threads, notícias do painel `ativo` guardadas 5 min,
+  `/ws` guarda as tarefas (`pendentes`), ignora mensagem não-JSON e recolhe erros, `/api/chat/historico` síncrona, chat
+  com servidores MCP numa tarefa própria desligada após `QUIRON_CHAT_OCIOSO_S` (900 s); frontend não consulta com a aba
+  escondida (assinatura vazia no `/ws`, TV confere só o canal atual, selo e acervo pausam); MCP: servidores abertos e
+  apresentados em paralelo (`asyncio.gather`, ~12 s → ~4 s) e `_comando` troca `uv run <script>` pelo script da mesma
+  .venv (`QUIRON_MCP_VIA_UV=1` volta ao uv); embeddings FastEmbed saem da memória após `QUIRON_EMBEDDINGS_OCIOSO_S`
+  (600 s; ~640 MB por processo); Tesouro com csv.reader + `_data` em cache (2,4 s → ~0,7 s); laços do bot com
+  configuração dentro do try e `_laco_parou`; LiteLLM com `LITELLM_LOCAL_MODEL_COST_MAP`; datas com mês por extenso,
+  limite de 10 anos e "fim do mês" no fim de semana; lista LGPD com trava + gravação atômica (corrompida = erro, nunca
+  regravada vazia); ajustes, ficha e token do Google atômicos; Google Agenda com um cliente HTTP por processo; índices
+  `classes(anbima)` e `fundos(cnpj_gestor)`; código morto removido. Não feito (precisa do Rickson): trocar o LiteLLM por
+  chamadas HTTP diretas no `perguntar` (~165 MB por processo).
 - Cérebro / Obsidian, etapa A (08/10/2026, `quiron/servicos/obsidian/`, testes `testes/test_obsidian.py`): cofre de
   notas em `dados/cerebro/` (`QUIRON_CEREBRO` troca). `pasta.py` (estrutura `Minhas notas/` (do Rickson; o Quíron só CRIA
   arquivo novo em `Minhas notas/Entrada`, nunca edita) · `Quíron/` (Diário, Memória, Estudo, Mercado, Melhorias — escrita

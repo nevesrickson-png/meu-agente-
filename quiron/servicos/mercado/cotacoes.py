@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 
 from quiron.servicos.mercado.http import FonteIndisponivel, obter
 
@@ -46,12 +46,6 @@ class Cotacao:
     fonte: str
     obtido_em: datetime
     atraso: str = ""
-
-    @property
-    def minutos_desde_dado(self) -> float | None:
-        if not self.horario:
-            return None
-        return (datetime.now(timezone.utc) - self.horario.astimezone(timezone.utc)).total_seconds() / 60
 
 
 def brapi(ticker: str) -> Cotacao:

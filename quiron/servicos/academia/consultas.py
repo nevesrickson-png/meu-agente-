@@ -6,8 +6,8 @@ import re
 from datetime import date, datetime
 from typing import Any
 
-import yaml
 
+from quiron.nucleo.config import ler_yaml_arquivo
 from quiron.nucleo.config import PASTA_CONFIG
 from quiron.servicos import areas
 from quiron.servicos.academia import diagnostico, edital, estudo
@@ -17,7 +17,7 @@ from quiron.servicos.academia.estudo import Filtro
 
 def trilha(banco: Banco | None = None) -> str:
     banco = banco or Banco()
-    dados = yaml.safe_load((PASTA_CONFIG / "trilha_certificacoes.yaml").read_text(encoding="utf-8"))
+    dados = ler_yaml_arquivo((PASTA_CONFIG / "trilha_certificacoes.yaml"))
     linhas = [f"🎓 Trilha de certificações (ritmo: {dados.get('ritmo_semanal_horas')} h/semana)"]
     for i, c in enumerate(dados["trilha"], 1):
         marca = "▶" if i == 1 else " "
@@ -186,7 +186,7 @@ def materiais(cert: str | None = None) -> str:
     arq = PASTA_CONFIG / "materiais_gratuitos.yaml"
     if not arq.exists():
         return "Catálogo de materiais gratuitos ainda não montado."
-    dados: dict[str, Any] = yaml.safe_load(arq.read_text(encoding="utf-8"))
+    dados: dict[str, Any] = ler_yaml_arquivo(arq)
     itens = [i for i in dados["itens"] if not cert or cert.upper() in [c.upper() for c in i.get("certificacoes", [])]]
     linhas = [f"Materiais gratuitos (verificados em {dados.get('verificado_em')}):"]
     for i in itens:

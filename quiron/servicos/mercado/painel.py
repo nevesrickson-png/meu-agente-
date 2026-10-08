@@ -11,8 +11,8 @@ from datetime import date, datetime, timedelta
 from typing import Callable
 from zoneinfo import ZoneInfo
 
-import yaml
 
+from quiron.nucleo.config import ler_yaml_arquivo
 from quiron.nucleo.config import PASTA_CONFIG, ler_yaml
 from quiron.servicos.mercado import abertos, bcb, cotacoes, curva, tesouro
 from quiron.servicos.mercado.http import FonteIndisponivel
@@ -181,7 +181,7 @@ DIAS = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
 
 
 def eventos_fixos() -> list[Evento]:
-    dados = yaml.safe_load((PASTA_CONFIG / "agenda_fixa.yaml").read_text(encoding="utf-8")) or {}
+    dados = ler_yaml_arquivo((PASTA_CONFIG / "agenda_fixa.yaml")) or {}
     saida = []
     for e in dados.get("eventos") or []:
         d = e["data"] if isinstance(e["data"], date) else date.fromisoformat(str(e["data"]))

@@ -14,6 +14,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterator
 
+from quiron.nucleo.banco import conectar as conectar_banco
 from quiron.nucleo.config import pasta_dados
 
 LETRAS = "ABCD"
@@ -115,7 +116,7 @@ class Banco:
 
     @contextmanager
     def _con(self) -> Iterator[sqlite3.Connection]:
-        con = sqlite3.connect(self.caminho)
+        con = conectar_banco(self.caminho)
         con.row_factory = sqlite3.Row
         try:
             yield con
