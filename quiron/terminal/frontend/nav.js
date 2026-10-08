@@ -3,7 +3,7 @@
 (function () {
   const alvo = document.getElementById("abas");
   if (!alvo) return;
-  const abas = [["/", "Terminal", "Terminal"], ["/tv", "TV", "TV"], ["/acervo", "Acervo", "Acervo"], ["/config", "Configurações", "Ajustes"]];
+  const abas = [["/", "Terminal", "Terminal"], ["/tv", "TV", "TV"], ["/cartas", "Cartas", "Cartas"], ["/acervo", "Acervo", "Acervo"], ["/config", "Configurações", "Ajustes"]];
   const aqui = location.pathname.replace(/\/+$/, "") || "/";
   alvo.classList.add("abas");
   alvo.setAttribute("aria-label", "Telas do Quíron");

@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quíron — Cartas</title>
+<link rel="icon" href="/icone.svg" type="image/svg+xml">
+<script src="/tema.js"></script>
+<script src="/icones.js"></script>
+<link rel="stylesheet" href="/tema.css">
+<style>
+  [hidden] { display: none !important; }
+  header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; padding: 0 20px; height: 58px;
+           background: var(--vidro); backdrop-filter: saturate(1.4) blur(16px); border-bottom: 1px solid var(--borda); }
+  main { max-width: 1440px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; grid-template-columns: 320px minmax(0, 1fr); }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 14px; } }
+  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); min-width: 0; box-shadow: var(--sombra); }
+  .lado { display: flex; flex-direction: column; max-height: calc(100vh - 98px); position: sticky; top: 78px; }
+  @media (max-width: 900px) { .lado { position: static; max-height: 60vh; } }
+  .lado-topo { padding: 14px; border-bottom: 1px solid var(--borda); display: grid; gap: 10px; }
+  .lado-topo h2 { margin: 0; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .lado-topo h2 .n { color: var(--texto-3); font-weight: 450; margin-left: auto; font-size: 12px; }
+  input[type=search] { width: 100%; height: 34px; padding: 0 11px; background: var(--campo); border: 1px solid var(--borda); border-radius: var(--raio-p);
+           color: var(--texto); font: inherit; font-size: 13px; }
+  input[type=search]:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { height: 28px; padding: 0 10px; border-radius: 99px; border: 1px solid var(--borda); background: transparent; color: var(--texto-2);
+          font: 500 12px var(--sans); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background var(--transicao), color var(--transicao); }
+  .chip:hover { color: var(--texto); background: var(--painel-2); }
+  .chip[aria-pressed="true"] { background: var(--texto); color: var(--fundo); border-color: transparent; }
+  .chip .c { opacity: .6; font-variant-numeric: tabular-nums; }
+  .lista-g { overflow: auto; padding: 6px; }
+  .g { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; background: none;
+       color: var(--texto); text-align: left; border-radius: var(--raio-p); cursor: pointer; font: inherit; }
+  .g:hover, .g[aria-current="true"] { background: var(--painel-2); }
+  .g > span:nth-child(2) { min-width: 0; }
+  .g .nome, .g .sub { display: block; }
+  .g .nome { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .g .sub { font-size: 11.5px; color: var(--texto-3); }
+  .g .qt { font: 12px var(--sans); color: var(--texto-3); font-variant-numeric: tabular-nums; }
+  .ponto { width: 8px; height: 8px; border-radius: 50%; background: var(--texto-3); }
+  .ponto.ativa { background: var(--alta); } .ponto.esporadica { background: var(--aviso-cor); }
+  .ponto.parada, .ponto.encerrada { background: var(--queda); opacity: .7; } .ponto.sem_leitura { background: transparent; border: 1px solid var(--texto-3); }
+  .conteudo { display: flex; flex-direction: column; min-height: 60vh; }
+  .cab { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--borda); }
+  .cab h1 { margin: 0; font: 600 18px var(--titulo); letter-spacing: -0.02em; }
+  .cab .meta { color: var(--texto-3); font-size: 12.5px; }
+  .cab .acoes { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  button.b, a.b { height: 32px; padding: 0 12px; border-radius: var(--raio-p); border: 1px solid var(--borda); background: var(--painel-2); color: var(--texto);
+       font: 500 13px var(--sans); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+  button.b:hover, a.b:hover { background: var(--painel-3); border-color: var(--borda-forte); text-decoration: none; }
+  .b .ico { width: 14px; height: 14px; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 18px; border-bottom: 1px solid var(--borda); align-items: center; }
+  .filtros .busca { flex: 1 1 220px; max-width: 360px; }
+  .feed { padding: 6px 10px 16px; }
+  .mes { position: sticky; top: 58px; z-index: 1; background: var(--painel); padding: 14px 8px 6px; font: 600 12px var(--sans); color: var(--texto-3);
+         letter-spacing: .02em; }
+  .carta { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 10px 8px; border-radius: var(--raio-p); }
+  .carta:hover { background: var(--painel-2); }
+  .carta .data { font: 12px var(--sans); color: var(--texto-3); font-variant-numeric: tabular-nums; }
+  .carta .t { font-size: 13.5px; line-height: 1.35; min-width: 0; }
+  .carta .t a { color: var(--texto); }
+  .carta .t a:hover { color: var(--acento-texto); }
+  .carta .fonte { font-size: 12px; color: var(--texto-2); }
+  .carta .fonte button { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+  .carta .fonte button:hover { color: var(--texto); text-decoration: underline; }
+  .carta .acs { display: flex; gap: 6px; }
+  .mini { height: 28px; padding: 0 10px; border-radius: var(--raio-p); border: 1px solid var(--borda); background: transparent; color: var(--texto-2);
+          font: 500 12px var(--sans); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+  .mini:hover { color: var(--texto); background: var(--painel-3); text-decoration: none; }
+  .mini .ico { width: 13px; height: 13px; }
+  .mini.feito { color: var(--acento-texto); }
+  .resumo { grid-column: 2 / -1; font-size: 13px; line-height: 1.55; color: var(--texto); background: var(--painel-2); border-radius: var(--raio-m);
+            padding: 12px 14px; white-space: pre-wrap; }
+  .resumo .aviso-ia { display: block; margin-top: 8px; color: var(--texto-3); font-size: 11.5px; }
+  .vazio, .carregando { color: var(--texto-3); padding: 28px 18px; text-align: center; font-size: 13px; }
+  .mais { display: flex; justify-content: center; padding: 10px 0 4px; }
+  .situacao { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--texto-2); padding: 3px 9px; border-radius: 99px; background: var(--painel-2); }
+  .detalhe-sit { padding: 10px 18px 0; color: var(--texto-3); font-size: 12.5px; }
+  @media (max-width: 640px) {
+    header { height: auto; min-height: 58px; flex-wrap: wrap; padding: 8px 14px; row-gap: 4px; }
+    .carta { grid-template-columns: 1fr auto; } .carta .data { grid-column: 1 / -1; }
+    .resumo { grid-column: 1 / -1; } .cab .acoes { margin-left: 0; } .mes { top: 0; }
+  }
+</style>
+<link rel="stylesheet" href="/nav.css">
+</head>
+<body>
+<header>
+  <a class="marca" href="/">Quíron<span>Cartas</span></a>
+  <nav id="abas" style="margin-left:auto"></nav>
+</header>
+
+<main>
+  <aside class="cartao lado" aria-label="Gestoras">
+    <div class="lado-topo">
+      <h2>Gestoras <span class="n" id="n-gestoras"></span></h2>
+      <input type="search" id="filtro-g" placeholder="procurar gestora…" aria-label="Procurar gestora">
+      <div class="chips" id="cats" role="toolbar" aria-label="Situação das gestoras"></div>
+    </div>
+    <div class="lista-g" id="gestoras"><div class="carregando">carregando…</div></div>
+  </aside>
+
+  <section class="cartao conteudo" aria-live="polite">
+    <div class="cab">
+      <div><h1 id="titulo">Cartas mais recentes</h1><div class="meta" id="meta">—</div></div>
+      <div class="acoes">
+        <a class="b" id="site" target="_blank" rel="noopener noreferrer" hidden><span data-ico="externo"></span>Site da gestora</a>
+        <button class="b" id="voltar" type="button" hidden><span data-ico="lista"></span>Todas as gestoras</button>
+        <button class="b" id="atualizar" type="button" title="Confere agora o site de todas as gestoras (leva ~1–2 min)"><span data-ico="atualizar"></span>Conferir agora</button>
+      </div>
+    </div>
+    <div class="detalhe-sit" id="detalhe-sit" hidden></div>
+    <div class="filtros" id="filtros">
+      <input type="search" class="busca" id="busca" placeholder="procurar no título ou na gestora…" aria-label="Procurar carta">
+      <div class="chips" id="tipos" role="toolbar" aria-label="Tipo"></div>
+      <div class="chips" id="periodos" role="toolbar" aria-label="Período"></div>
+    </div>
+    <div class="feed" id="feed"><div class="carregando">carregando…</div></div>
+  </section>
+</main>
+
+<script src="/nav.js"></script>
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const linkSeguro = (u) => (/^https?:\/\//i.test(u || "") ? esc(u) : "#");
+const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+const CATS = [["ativa", "Ativas", "carta nos últimos 4 meses"], ["esporadica", "Publicam pouco", "última carta entre 4 e 13 meses"],
+  ["parada", "Paradas", "nada há mais de 13 meses"], ["sem_leitura", "Sem leitura", "site bloqueia robôs, fora do ar ou cartas sem data"],
+  ["encerrada", "Encerradas", "fecharam ou foram incorporadas"], ["", "Todas", ""]];
+const TIPOS = [["", "Todas"], ["gestora", "Brasil"], ["global", "Globais"], ["family_office", "Family offices"]];
+const PERIODOS = [[60, "2 meses"], [180, "6 meses"], [365, "1 ano"], [0, "Tudo"]];
+const SIT = { ativa: "ativa", esporadica: "publica pouco", parada: "parada", sem_leitura: "sem leitura automática", encerrada: "encerrada" };
+let gestoras = [], estado = { cat: "ativa", gestora: null, tipo: "", dias: 180, q: "" };
+try { Object.assign(estado, JSON.parse(localStorage.getItem("quiron-cartas") || "{}"), { gestora: null }); } catch (e) { /* sem armazenamento */ }
+const guardar = () => { try { localStorage.setItem("quiron-cartas", JSON.stringify({ cat: estado.cat, tipo: estado.tipo, dias: estado.dias })); } catch (e) { /* ok */ } };
+
+function dataBR(iso) {
+  if (!iso) return "s/ data";
+  const [a, m, d] = iso.split("-");
+  return d === "01" ? `${m}/${a}` : `${d}/${m}/${a}`;
+}
+function quando(iso) { if (!iso) return "nunca"; const d = new Date(iso); return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); }
+async function api(url, opc) {
+  const r = await fetch(url, opc);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || `erro ${r.status}`);
+  return d;
+}
+
+// ---------------------------------------------------------------- gestoras (coluna da esquerda)
+function chips(alvo, itens, atual, ao) {
+  alvo.innerHTML = itens.map(([v, rot, dica, c]) => `<button type="button" class="chip" data-v="${esc(v)}" aria-pressed="${String(v) === String(atual)}"
+    ${dica ? `title="${esc(dica)}"` : ""}>${esc(rot)}${c !== undefined ? ` <span class="c">${c}</span>` : ""}</button>`).join("");
+  alvo.querySelectorAll(".chip").forEach((b) => (b.onclick = () => ao(b.dataset.v)));
+}
+function desenharGestoras() {
+  const cont = {};
+  gestoras.forEach((g) => (cont[g.categoria] = (cont[g.categoria] || 0) + 1));
+  chips($("#cats"), CATS.map(([v, r, d]) => [v, r, d, v ? cont[v] || 0 : gestoras.length]), estado.cat, (v) => {
+    estado.cat = v; guardar(); desenharGestoras(); if (!estado.gestora) carregarFeed();
+  });
+  const f = $("#filtro-g").value.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const lista = gestoras.filter((g) => (!estado.cat || g.categoria === estado.cat) &&
+    (!f || g.fonte.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes(f)))
+    .sort((a, b) => (b.ultima_carta || "").localeCompare(a.ultima_carta || "") || a.fonte.localeCompare(b.fonte));
+  $("#n-gestoras").textContent = `${lista.length} de ${gestoras.length}`;
+  $("#gestoras").innerHTML = lista.length ? lista.map((g) => `<button type="button" class="g" data-g="${esc(g.fonte)}" aria-current="${g.fonte === estado.gestora}">
+      <span class="ponto ${esc(g.categoria)}" title="${esc(SIT[g.categoria] || g.categoria)}"></span>
+      <span><span class="nome">${esc(g.fonte)}</span><span class="sub">${g.ultima_carta ? "última: " + dataBR(g.ultima_carta) : esc(SIT[g.categoria] || "")}</span></span>
+      <span class="qt" title="cartas guardadas">${g.total || ""}</span></button>`).join("")
+    : '<div class="vazio">Nenhuma gestora nesse filtro.</div>';
+  $("#gestoras").querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => abrirGestora(b.dataset.g)));
+}
+async function carregarGestoras() {
+  try { gestoras = (await api("/api/cartas/gestoras")).gestoras; desenharGestoras(); }
+  catch (e) { $("#gestoras").innerHTML = `<div class="vazio">${esc(e.message)}</div>`; }
+}
+
+// ---------------------------------------------------------------- cartas
+function linhaCarta(c, comFonte) {
+  return `<div class="carta" data-link="${esc(c.link)}">
+    <span class="data">${dataBR(c.data)}</span>
+    <div class="t"><a href="${linkSeguro(c.link)}" target="_blank" rel="noopener noreferrer">${esc(c.titulo)}</a>
+      ${comFonte ? `<div class="fonte"><button type="button" data-g="${esc(c.fonte)}">${esc(c.fonte)}</button></div>` : ""}</div>
+    <div class="acs"><button type="button" class="mini ${c.tem_resumo ? "feito" : ""}" data-resumir title="O Quíron lê a carta e resume (fica guardado)">${c.tem_resumo ? "Ver resumo" : "Resumir"}</button>
+      <a class="mini" href="${linkSeguro(c.link)}" target="_blank" rel="noopener noreferrer" title="Abrir no site da gestora">${window.ico ? ico("externo") : ""}Abrir</a></div>
+  </div>`;
+}
+function porMes(itens, comFonte) {
+  let mesAtual = "", html = "";
+  for (const c of itens) {
+    const m = c.data ? c.data.slice(0, 7) : "sem";
+    if (m !== mesAtual) {
+      mesAtual = m;
+      html += `<div class="mes">${m === "sem" ? "Sem data" : (() => { const n = MESES[Number(m.slice(5, 7)) - 1]; return `${n[0].toUpperCase()}${n.slice(1)} de ${m.slice(0, 4)}`; })()}</div>`;
+    }
+    html += linhaCarta(c, comFonte);
+  }
+  return html;
+}
+function ligarAcoes(raiz) {
+  raiz.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => abrirGestora(b.dataset.g)));
+  raiz.querySelectorAll("[data-resumir]").forEach((b) => (b.onclick = () => resumir(b.closest(".carta"), b)));
+}
+async function resumir(linha, botao) {
+  const aberto = linha.nextElementSibling;
+  if (aberto && aberto.classList.contains("resumo")) { aberto.remove(); return; }
+  const caixa = document.createElement("div");
+  caixa.className = "resumo";
+  caixa.textContent = "Lendo a carta e resumindo… (pode levar uns 20 s)";
+  linha.after(caixa);
+  botao.disabled = true;
+  try {
+    const d = await api("/api/cartas/resumo", { method: "POST", headers: { "Content-Type": "application/json", "X-Quiron": "terminal" },
+      body: JSON.stringify({ link: linha.dataset.link }) });
+    if (d.erro) { caixa.textContent = "Não deu: " + d.erro; return; }
+    caixa.textContent = d.resumo;
+    const aviso = document.createElement("span");
+    aviso.className = "aviso-ia";
+    aviso.textContent = "Resumo feito por IA a partir do texto público da carta — confira na fonte antes de citar.";
+    caixa.append(aviso);
+    botao.textContent = "Ver resumo"; botao.classList.add("feito");
+  } catch (e) { caixa.textContent = "Não consegui resumir: " + e.message; }
+  finally { botao.disabled = false; }
+}
+
+let ultimoFeed = [];
+async function carregarFeed(mais = false) {
+  const feed = $("#feed");
+  if (!mais) { feed.innerHTML = '<div class="carregando">carregando…</div>'; ultimoFeed = []; }
+  const antes = mais && ultimoFeed.length ? ultimoFeed[ultimoFeed.length - 1].data : "";
+  const p = new URLSearchParams({ dias: estado.dias, tipo: estado.tipo, q: estado.q, categoria: estado.cat, limite: 80, antes });
+  try {
+    const d = await api("/api/cartas?" + p);
+    ultimoFeed = ultimoFeed.concat(d.itens);
+    const tot = d.total_gestoras, ativas = d.categorias.ativa || 0;
+    $("#meta").textContent = `${ativas} gestoras ativas de ${tot} do seu guia · última conferência ${quando(d.conferido_em)}${d.atualizando ? " · conferindo agora…" : ""}`;
+    feed.innerHTML = ultimoFeed.length ? porMes(ultimoFeed, true) + (d.itens.length === 80 ? '<div class="mais"><button class="b" id="mais" type="button">Mostrar mais antigas</button></div>' : "")
+      : '<div class="vazio">Nenhuma carta nesse filtro. Mude o período ou a situação das gestoras.</div>';
+    ligarAcoes(feed);
+    const bm = $("#mais"); if (bm) bm.onclick = () => carregarFeed(true);
+    if (d.atualizando) setTimeout(() => { if (!estado.gestora && !document.hidden) { carregarFeed(); carregarGestoras(); } }, 15000);
+  } catch (e) { feed.innerHTML = `<div class="vazio">${esc(e.message)}</div>`; }
+}
+
+async function abrirGestora(nome) {
+  estado.gestora = nome;
+  desenharGestoras();
+  $("#filtros").hidden = true; $("#voltar").hidden = false;
+  $("#titulo").textContent = nome;
+  $("#feed").innerHTML = '<div class="carregando">carregando o histórico…</div>';
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  try {
+    const d = await api("/api/cartas/gestora?nome=" + encodeURIComponent(nome));
+    const g = d.gestora;
+    $("#site").hidden = false; $("#site").href = linkSeguro(g.url);
+    $("#meta").innerHTML = `<span class="situacao"><span class="ponto ${esc(g.categoria)}"></span>${esc(SIT[g.categoria] || g.categoria)}</span>
+      &nbsp;${d.cartas.length} cartas guardadas${g.ultima_carta ? " · última " + dataBR(g.ultima_carta) : ""} · conferida ${quando(g.conferido_em)}`;
+    const det = $("#detalhe-sit");
+    det.hidden = !g.detalhe; det.textContent = g.detalhe || "";
+    $("#feed").innerHTML = d.cartas.length ? porMes(d.cartas, false)
+      : `<div class="vazio">Ainda não consegui ler cartas desse site automaticamente.<br>Abra pelo botão “Site da gestora”.</div>`;
+    ligarAcoes($("#feed"));
+  } catch (e) { $("#feed").innerHTML = `<div class="vazio">${esc(e.message)}</div>`; }
+}
+function voltar() {
+  estado.gestora = null;
+  $("#filtros").hidden = false; $("#voltar").hidden = true; $("#site").hidden = true; $("#detalhe-sit").hidden = true;
+  $("#titulo").textContent = "Cartas mais recentes";
+  desenharGestoras(); carregarFeed();
+}
+
+// ---------------------------------------------------------------- início
+function chipsTipos() { chips($("#tipos"), TIPOS, estado.tipo, (v) => { estado.tipo = v; guardar(); chipsTipos(); carregarFeed(); }); }
+function chipsPeriodos() { chips($("#periodos"), PERIODOS, estado.dias, (v) => { estado.dias = Number(v); guardar(); chipsPeriodos(); carregarFeed(); }); }
+chipsTipos(); chipsPeriodos();
+let tempo;
+$("#busca").oninput = (e) => { clearTimeout(tempo); tempo = setTimeout(() => { estado.q = e.target.value.trim(); carregarFeed(); }, 300); };
+$("#filtro-g").oninput = desenharGestoras;
+$("#voltar").onclick = voltar;
+$("#atualizar").onclick = async () => {
+  try {
+    await api("/api/cartas/atualizar", { method: "POST", headers: { "X-Quiron": "terminal" } });
+    $("#meta").textContent = "Conferindo o site de todas as gestoras… a lista se atualiza sozinha.";
+    setTimeout(() => { carregarGestoras(); if (!estado.gestora) carregarFeed(); }, 15000);
+  } catch (e) { $("#meta").textContent = "Não consegui começar: " + e.message; }
+};
+const pedida = new URLSearchParams(location.search).get("gestora");
+carregarGestoras().then(() => (pedida ? abrirGestora(pedida) : carregarFeed()));
+</script>
+</body>
+</html>

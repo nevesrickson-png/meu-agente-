@@ -500,6 +500,62 @@ def api_simulador(request: Request, corpo: dict = Body(...)) -> dict:
     return {**sim.como_dict(), "texto": simulador.texto(sim)}
 
 
+@app.get("/cartas")
+def pagina_cartas() -> FileResponse:
+    return FileResponse(FRONTEND / "cartas.html")
+
+
+@app.get("/api/cartas")
+def api_cartas(dias: int = 120, tipo: str = "", q: str = "", antes: str = "", limite: int = 60, categoria: str = "") -> dict:
+    """Aba Cartas: as mais recentes de todas as gestoras (em páginas: `antes` = data da última mostrada)."""
+    from quiron.servicos.cartas import coleta as cartas
+
+    cartas.atualizar_em_segundo_plano()  # confere as vencidas por trás (no máximo ~1 vez por dia cada uma)
+    if antes and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", antes):
+        raise HTTPException(400, "data inválida")
+    gs = cartas.gestoras()
+    nomes = [g["fonte"] for g in gs if g["categoria"] == categoria] if categoria else None
+    itens = cartas.feed(max(0, min(dias, 36500)), tipo or None, q.strip()[:80] or None, antes or None,
+                        max(1, min(limite, 200)), nomes)
+    from collections import Counter
+
+    return {"itens": itens, "categorias": dict(Counter(g["categoria"] for g in gs)), "total_gestoras": len(gs),
+            "atualizando": cartas.em_andamento(),
+            "conferido_em": max((g["conferido_em"] for g in gs if g["conferido_em"]), default=None)}
+
+
+@app.get("/api/cartas/gestoras")
+def api_cartas_gestoras() -> dict:
+    from quiron.servicos.cartas import coleta as cartas
+
+    return {"gestoras": cartas.gestoras(), "atualizando": cartas.em_andamento()}
+
+
+@app.get("/api/cartas/gestora")
+def api_cartas_gestora(nome: str) -> dict:
+    from quiron.servicos.cartas import coleta as cartas
+
+    d = cartas.historico(nome)
+    if not d:
+        raise HTTPException(404, "gestora não está no guia")
+    return d
+
+
+@app.post("/api/cartas/resumo")
+def api_cartas_resumo(request: Request, corpo: dict = Body(...)) -> dict:
+    """Resumo da carta pela IA (guardado depois da primeira vez). Só cartas das gestoras cadastradas."""
+    _proteger(request)
+    from quiron.servicos.cartas import coleta as cartas
+
+    link = str(corpo.get("link", "")).strip()
+    if not link or not cartas.link_conhecido(link):
+        raise HTTPException(400, "carta desconhecida")
+    try:
+        return cartas.resumir(link)
+    except Exception as e:  # noqa: BLE001 — IA fora / cota esgotada: a tela mostra o motivo
+        return {"erro": f"não consegui resumir agora ({type(e).__name__}: {str(e)[:160]})"}
+
+
 @app.post("/api/cartas/atualizar")
 def api_cartas_atualizar(request: Request) -> dict:
     """Confere todas as gestoras agora (em segundo plano; leva ~1 minuto)."""

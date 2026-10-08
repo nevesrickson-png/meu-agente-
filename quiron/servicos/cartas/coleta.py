@@ -29,6 +29,10 @@ from quiron.nucleo.config import ler_yaml, pasta_dados
 UA = "Mozilla/5.0 (compatible; Quiron/1.0; leitor pessoal de cartas de gestores)"
 INTERVALO_S = 20 * 3600       # cada fonte é conferida no máximo ~1 vez por dia
 DIAS_ATIVA = 120
+DIAS_HISTORICO = 7            # as páginas antigas (paginação, arquivo por ano) são percorridas 1 vez por semana
+MAX_PAGINAS_HIST = 12         # por gestora, em cada passada pelo histórico
+_PAGINACAO = re.compile(r"(?:[?&](?:page|paged|pagina|pg|p)=\d+|/page/\d+/?$|/pagina/\d+/?$)", re.I)
+_PROXIMA = re.compile(r"pr[oó]xim|anterior|older|next|mais antigas|ver mais|›|»|&raquo;", re.I)
 MESES = {"jan": 1, "fev": 2, "feb": 2, "mar": 3, "abr": 4, "apr": 4, "mai": 5, "may": 5, "jun": 6, "jul": 7, "ago": 8, "aug": 8,
          "set": 9, "sep": 9, "out": 10, "oct": 10, "nov": 11, "dez": 12, "dec": 12}
 _PALAVRAS = re.compile(r"carta|letter|relat[oó]rio|report|coment[aá]rio|mensal|monthly|gestor|gest[aã]o|insight|outlook|"
@@ -41,6 +45,7 @@ _NAO_CARTA = re.compile(r"carta[\s_-]*consulta|emiss[aã]o[\s_-]*de[\s_-]*cotas|
                         r"comunicado[\s_-]*ao[\s_-]*mercado|aviso[\s_-]*aos[\s_-]*cotistas|informe[\s_-]*de[\s_-]*rendimentos|"
                         r"proposta[\s_-]*da[\s_-]*administra|ata[\s_-]+d[ae]|one[\s_-]?page|l[aâ]mina", re.I)
 _GENERICO = re.compile(r"^(baixar|download|pdf|leia mais|saiba mais|clique\b.*|visualizar.*|ver|acesse|acessar|abrir|read more|"
+                       r"acessar documento|ver documento|baixar documento|baixar pdf|download pdf|documento|arquivo|"
                        r"carta do gestor|carta mensal|carta|relat[oó]rio( mensal)?|coment[aá]rio( mensal)?)$", re.I)
 # mês por extenso ou abreviado, nunca dentro de outra palavra ("novidades" não é novembro, "setor" não é setembro)
 _MES = (r"(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|"
@@ -68,6 +73,8 @@ class Situacao:
     metodo: str = ""         # feed · pagina
     ultima_carta: str = ""
     conferido_em: str = ""
+    historico_em: str = ""   # última vez que as páginas antigas (paginação/arquivo) foram percorridas
+    descoberta: str = ""     # página de cartas achada pelo Quíron no site da gestora (endereço mudou etc.)
 
 
 def conectar() -> sqlite3.Connection:
@@ -81,7 +88,13 @@ def conectar() -> sqlite3.Connection:
         CREATE INDEX IF NOT EXISTS cartas_data ON cartas(data);
         CREATE TABLE IF NOT EXISTS situacao (fonte TEXT PRIMARY KEY, tipo TEXT, url TEXT, situacao TEXT, detalhe TEXT,
                                              metodo TEXT, ultima_carta TEXT, conferido_em TEXT);
+        CREATE INDEX IF NOT EXISTS cartas_fonte ON cartas(fonte, data);
+        CREATE TABLE IF NOT EXISTS resumos (link TEXT PRIMARY KEY, texto TEXT, modelo TEXT, feito_em TEXT);
+        CREATE TABLE IF NOT EXISTS descobertas (fonte TEXT PRIMARY KEY, url TEXT, achada_em TEXT);
     """)
+    colunas = {r[1] for r in con.execute("PRAGMA table_info(situacao)")}
+    if "historico_em" not in colunas:  # bancos antigos: coluna nova sem perder nada
+        con.execute("ALTER TABLE situacao ADD COLUMN historico_em TEXT DEFAULT ''")
     return con
 
 
@@ -207,14 +220,76 @@ def _itens_feed(cliente: httpx.Client, feed: str, fonte: dict) -> list[Carta]:
     return saida
 
 
+_LIXO_FIM = re.compile(r"[\s.…|–-]*(ler mais|leia mais|saiba mais|read more|ver mais|acessar|download|baixar)[\s.…]*$", re.I)
+_DATA_INICIO = re.compile(r"^\s*(\d{1,2}[/.]\d{1,2}[/.]\d{2,4}|\d{1,2} de [a-zç]+ de \d{4})\s*[–|:-]?\s+", re.I)
+
+
 def _encurtar(titulo: str, limite: int = 140) -> str:
-    """Link com o resumo junto no texto ("Título | By Fulano  Texto…"): fica só o título."""
+    """Link com o resumo junto no texto ("Título | By Fulano  Texto…"): fica só o título, sem "LER MAIS" no fim e sem
+    a data repetida no começo (a data já aparece ao lado)."""
     titulo = re.split(r"\s+\|\s+by\s+|\s{2,}", titulo, maxsplit=1, flags=re.I)[0].strip()
+    titulo = _LIXO_FIM.sub("", titulo).strip()
+    titulo = re.sub(r"\s+\d{1,2}[/.]\d{1,2}[/.]\d{4}$", "", titulo)  # "Relatório de Setembro 2026 07.10.2026"
+    sem_data = _DATA_INICIO.sub("", titulo).strip()
+    titulo = sem_data if len(sem_data) >= 8 else titulo
     return titulo if len(titulo) <= limite else titulo[: limite - 1].rsplit(" ", 1)[0] + "…"
 
 
-def _itens_pagina(texto: str, url: str, fonte: dict) -> list[Carta]:
+def _paginas_seguintes(texto: str, url: str) -> list[str]:
+    """Links de paginação da lista (rel=next, /page/2/, ?page=2, "Próxima", "Anteriores") no mesmo site."""
+    host = urlsplit(url).netloc
+    achados = []
+    for m in re.finditer(r"<(?:a|link)\b[^>]*href=[\"']([^\"'#]+)[\"'][^>]*>(.*?)(?:</a>|$)", texto, re.I | re.S):
+        tag = m.group(0)[:300]
+        link = urljoin(url, _html.unescape(m.group(1)).strip())
+        if urlsplit(link).netloc != host or link.rstrip("/") == url.rstrip("/"):
+            continue
+        rotulo = re.sub(r"<[^>]+>", " ", m.group(2) or "")
+        if re.search(r"rel=[\"']?next", tag, re.I) or (_PAGINACAO.search(link) and (_PROXIMA.search(rotulo) or re.fullmatch(r"\s*\d{1,3}\s*", rotulo))):
+            if link not in achados:
+                achados.append(link)
+    return achados
+
+
+def _itens_api(cliente: httpx.Client, api: str, fonte: dict) -> list[Carta]:
+    """Lista pública em JSON que a própria página da gestora usa (ex.: WordPress /wp-json/wp/v2/posts?categories=…).
+    Aceita uma lista de objetos com título/data/link em nomes comuns (title.rendered, titulo, date, data, link, url…)."""
+    r = cliente.get(api)
+    if r.status_code >= 400:
+        return []
+    try:
+        dados = r.json()
+    except ValueError:
+        return []
+    if isinstance(dados, dict):
+        dados = next((v for v in dados.values() if isinstance(v, list)), [])
+    saida = []
+
+    def campo(item: dict, *nomes: str) -> str:
+        for n in nomes:
+            v = item.get(n)
+            if isinstance(v, dict):
+                v = v.get("rendered") or v.get("url") or ""
+            if v:
+                return str(v)
+        return ""
+
+    for item in dados[:200] if isinstance(dados, list) else []:
+        if not isinstance(item, dict):
+            continue
+        titulo = _html.unescape(re.sub(r"<[^>]+>", "", campo(item, "title", "titulo", "nome", "name"))).strip()
+        link = urljoin(api, campo(item, "link", "url", "arquivo", "file", "pdf", "href"))
+        if not titulo or not link.startswith("http") or _NAO_CARTA.search(f"{titulo} {link}"):
+            continue
+        bruto = campo(item, "date", "data", "published", "publicado_em", "created_at")
+        data = bruto[:10] if re.match(r"20\d\d-\d\d-\d\d", bruto) else extrair_data(f"{bruto} {titulo} {link}")
+        saida.append(Carta(fonte["nome"], _encurtar(titulo), link, data, fonte.get("tipo", "")))
+    return saida
+
+
+def _itens_pagina(texto: str, url: str, fonte: dict, limite: int = 200) -> list[Carta]:
     saida, vistos = [], set()
+    filtro = re.compile(fonte["link_inclui"], re.I) if fonte.get("link_inclui") else None
     for m in re.finditer(r"<a\b[^>]*href=[\"']([^\"'#][^\"']*)[\"'][^>]*>(.*?)</a>", texto, re.I | re.S):
         href = _html.unescape(m.group(1)).strip().replace("\\#", "#")
         rotulo = re.sub(r"\s+", " ", _html.unescape(re.sub(r"<[^>]+>", " ", m.group(2)))).strip()
@@ -223,71 +298,226 @@ def _itens_pagina(texto: str, url: str, fonte: dict) -> list[Carta]:
             continue
         pdf = link.lower().split("?")[0].endswith(".pdf")
         alvo = f"{rotulo} {link}"
-        if not (pdf or _PALAVRAS.search(alvo)) or _NAO_CARTA.search(alvo):
+        if filtro is not None:  # a gestora tem um padrão de link de carta conhecido: só ele vale
+            if not filtro.search(link) or _NAO_CARTA.search(alvo):
+                continue
+        elif not (pdf or _PALAVRAS.search(alvo)) or _NAO_CARTA.search(alvo):
             continue
         data = extrair_data(alvo)
-        if not (pdf or data):  # link comum de menu ("Relatórios") sem data e sem PDF: não é carta
+        if not (pdf or data or filtro is not None):  # link comum de menu ("Relatórios") sem data e sem PDF: não é carta
             continue
         vistos.add(link)
         arquivo = re.sub(r"\.pdf$", "", urlsplit(link).path.rsplit("/", 1)[-1], flags=re.I)
         arquivo = re.sub(r"[\s_-]+", " ", _html.unescape(arquivo)).strip()[:120]
         titulo = rotulo if len(rotulo) >= 4 and not _GENERICO.fullmatch(rotulo) else (arquivo or rotulo)
+        if (_GENERICO.fullmatch(titulo) or not re.search(r"[A-Za-zÀ-ÿ]{3}", titulo) or re.fullmatch(r"[\w-]{20,}", titulo)) and data:
+            a, m, _ = data.split("-")
+            titulo = f"Carta de {m}/{a}"  # "Acessar documento" ou arquivo com nome de código: diz pelo menos o mês
         saida.append(Carta(fonte["nome"], _encurtar(titulo), link, data, fonte.get("tipo", "")))
-    return saida[:60]
+    return saida[:limite]
 
 
-def conferir(fonte: dict, cliente: httpx.Client | None = None, hoje: date | None = None) -> tuple[Situacao, list[Carta]]:
+def _ler_lista(cliente: httpx.Client, url: str, fonte: dict, com_feed: bool) -> tuple[str, list[Carta], str, str]:
+    """(situação provisória, cartas, método, texto da página) de UMA página de lista. Situação vazia = leu."""
+    if not permitido(url, cliente):
+        return "bloqueada", [], "", ""
+    r = cliente.get(url)
+    if r.status_code in (401, 403, 429):
+        return f"bloqueada {r.status_code}", [], "", ""
+    if r.status_code >= 400:
+        return f"fora_do_ar {r.status_code}", [], "", ""
+    final = str(r.url)
+    if com_feed:
+        feeds = [fonte["feed"]] if fonte.get("feed") else _feeds_da_pagina(r.text, final)
+        for f in feeds[:2]:
+            try:
+                itens = _itens_feed(cliente, f, fonte)
+            except httpx.HTTPError:
+                itens = []
+            if itens:
+                return "", itens, "feed", r.text
+    return "", _itens_pagina(r.text, final, fonte), "pagina", r.text
+
+
+def _historico_feed(cliente: httpx.Client, feed: str, fonte: dict, conhecidos: set[str]) -> list[Carta]:
+    """Feeds do WordPress aceitam ?paged=2, 3…: cada página traz cartas mais antigas."""
+    saida = []
+    for n in range(2, MAX_PAGINAS_HIST + 2):
+        url = f"{feed}{'&' if '?' in feed else '?'}paged={n}"
+        if not permitido(url, cliente):
+            break
+        try:
+            itens = _itens_feed(cliente, url, fonte)
+        except httpx.HTTPError:
+            break
+        novos = [c for c in itens if c.link not in conhecidos]
+        if not novos:
+            break
+        conhecidos.update(c.link for c in novos)
+        saida += novos
+    return saida
+
+
+_CAMINHOS_COMUNS = ("cartas", "cartas-mensais", "carta-do-gestor", "carta-mensal", "cartas-de-gestao", "cartas-do-gestor",
+                    "relatorios", "relatorios-de-gestao", "conteudos", "conteudo", "publicacoes", "documentos", "insights")
+_LINK_CARTAS = re.compile(r"cart|relat[oó]ri|coment[aá]ri|publica|conte[uú]d|insight|letter|report|document|gest[aã]o", re.I)
+
+
+def _dominio_base(host: str) -> str:
+    partes = host.lower().removeprefix("www.").split(".")
+    return ".".join(partes[-3:]) if partes[-1] == "br" and len(partes) >= 3 else ".".join(partes[-2:])
+
+
+def descobrir(fonte: dict, cliente: httpx.Client, atual: str = "") -> tuple[str, list[Carta]] | None:
+    """Procura no próprio site da gestora a página de cartas que rende mais (página mudou de endereço, lista em outro
+    lugar…). Lê a página inicial, os links do mesmo site com cara de "cartas/relatórios" e alguns caminhos comuns —
+    no máximo 14 páginas, sempre respeitando robots.txt. Devolve (url, cartas) só se achar cartas datadas mais novas que
+    `atual` (e pelo menos 2)."""
+    p = urlsplit(fonte["url"])
+    raiz = f"{p.scheme}://{p.netloc}/"
+    base = _dominio_base(p.netloc)
+    candidatos: list[str] = []
+    try:
+        if permitido(raiz, cliente):
+            r = cliente.get(raiz)
+            if r.status_code < 400:
+                final = str(r.url)
+                base = _dominio_base(urlsplit(final).netloc)  # site que mudou de domínio: segue o novo
+                for m in re.finditer(r"<a\b[^>]*href=[\"']([^\"'#]+)[\"'][^>]*>(.*?)</a>", r.text, re.I | re.S):
+                    link = urljoin(final, _html.unescape(m.group(1)).strip())
+                    rotulo = re.sub(r"<[^>]+>", " ", m.group(2))
+                    if (_dominio_base(urlsplit(link).netloc) == base and link.startswith("http") and not _NAO.search(link)
+                            and _LINK_CARTAS.search(f"{rotulo} {urlsplit(link).path}") and not link.lower().endswith(".pdf")):
+                        if link not in candidatos:
+                            candidatos.append(link)
+                raiz = f"{urlsplit(final).scheme}://{urlsplit(final).netloc}/"
+    except httpx.HTTPError:
+        pass
+    candidatos = candidatos[:10] + [raiz + c + "/" for c in _CAMINHOS_COMUNS if raiz + c + "/" not in candidatos]
+    melhor: tuple[str, list[Carta]] | None = None
+    melhor_chave = (atual or "", 1)
+    for url in candidatos[:14]:
+        if url.rstrip("/") == fonte["url"].rstrip("/"):
+            continue
+        try:
+            estado, itens, _, _ = _ler_lista(cliente, url, fonte, com_feed=True)
+        except httpx.HTTPError:
+            continue
+        datas = [c.data for c in itens if c.data]
+        if estado or len(datas) < 2:
+            continue
+        chave = (max(datas), len(datas))
+        if chave > melhor_chave:
+            melhor, melhor_chave = (url, itens), chave
+    return melhor
+
+
+def conferir(fonte: dict, cliente: httpx.Client | None = None, hoje: date | None = None,
+             historico: bool = False) -> tuple[Situacao, list[Carta]]:
+    """Lê as páginas de cartas da gestora (principal + `paginas` + `api` do cadastro). Com `historico`, segue também a
+    paginação (e o `?paged=` do feed) para trás, até MAX_PAGINAS_HIST páginas."""
     hoje = hoje or date.today()
     agora = datetime.now(timezone.utc).isoformat(timespec="seconds")
     proprio = cliente is None
     cliente = cliente or _cliente()
     url = fonte["url"]
     sit = Situacao(fonte["nome"], fonte.get("tipo", ""), url, "fora_do_ar", conferido_em=agora)
-    cartas: list[Carta] = []
-    try:
-        if not permitido(url, cliente):
-            sit.situacao, sit.detalhe = "bloqueada", "o site pede (robots.txt) que robôs não leiam esta página"
-            return sit, []
-        r = cliente.get(url)
-        if r.status_code in (401, 403, 429):
-            sit.situacao, sit.detalhe = "bloqueada", f"o site recusou a leitura automática (HTTP {r.status_code}) — abra no navegador"
-            return sit, []
-        if r.status_code >= 400:
-            sit.detalhe = f"página não encontrada (HTTP {r.status_code}) — a gestora pode ter mudado o site ou encerrado"
-            return sit, []
-        final = str(r.url)
-        if urlsplit(final).netloc.replace("www.", "") != urlsplit(url).netloc.replace("www.", ""):
-            sit.detalhe = f"redireciona para {urlsplit(final).netloc}"
-        feeds = [fonte["feed"]] if fonte.get("feed") else _feeds_da_pagina(r.text, final)
-        for f in feeds[:2]:
-            try:
-                cartas = _itens_feed(cliente, f, fonte)
-            except httpx.HTTPError:
-                cartas = []
-            if cartas:
-                sit.metodo = "feed"
-                break
-        if not cartas:
-            cartas = _itens_pagina(r.text, final, fonte)
-            sit.metodo = "pagina"
-    except httpx.HTTPError as e:
-        sit.detalhe = f"não respondeu ({type(e).__name__})"
+    if fonte.get("encerrada"):
+        sit.situacao, sit.detalhe = "encerrada", str(fonte.get("motivo") or "a gestora encerrou ou foi incorporada")
+        if proprio:
+            cliente.close()
         return sit, []
+    cartas: list[Carta] = []
+    vistos: set[str] = set()
+
+    def juntar(itens: list[Carta]) -> None:
+        for c in itens:
+            if c.link not in vistos:
+                vistos.add(c.link)
+                cartas.append(c)
+
+    try:
+        estado, itens, metodo, texto = _ler_lista(cliente, url, fonte, com_feed=True)
+        codigo = estado.partition(" ")[2]
+        if estado == "bloqueada":
+            sit.situacao, sit.detalhe = "bloqueada", "o site pede (robots.txt) que robôs não leiam esta página — abra no navegador"
+        elif estado.startswith("bloqueada"):
+            sit.situacao, sit.detalhe = "bloqueada", f"o site recusou a leitura automática (HTTP {codigo}) — abra no navegador"
+        elif estado.startswith("fora_do_ar"):
+            sit.detalhe = f"página não encontrada (HTTP {codigo}) — a gestora pode ter mudado o site ou encerrado"
+        sit.metodo = metodo
+        juntar(itens)
+        fila_hist = _paginas_seguintes(texto, url) if historico and texto and metodo == "pagina" else []
+        if historico and metodo == "feed":
+            feed = fonte.get("feed") or (_feeds_da_pagina(texto, url) or [""])[0]
+            if feed:
+                juntar(_historico_feed(cliente, feed, fonte, set(vistos)))
+        if fonte.get("api"):
+            try:
+                juntar(_itens_api(cliente, fonte["api"], fonte))
+                sit.metodo = sit.metodo or "api"
+            except httpx.HTTPError:
+                pass
+        extras = list(fonte.get("paginas") or [])
+        if fonte.get("descoberta") and fonte["descoberta"] not in extras:
+            extras.append(fonte["descoberta"])
+        for extra in extras:  # outras páginas da mesma gestora (outro fundo, arquivo por ano, a que o Quíron descobriu…)
+            try:
+                e_estado, e_itens, _, e_texto = _ler_lista(cliente, extra, fonte, com_feed=False)
+            except httpx.HTTPError:
+                continue
+            if not e_estado:
+                juntar(e_itens)
+                if historico:
+                    fila_hist += _paginas_seguintes(e_texto, extra)
+        lidas = set()
+        while fila_hist and len(lidas) < MAX_PAGINAS_HIST:  # histórico: segue a paginação para trás
+            prox = fila_hist.pop(0)
+            if prox in lidas:
+                continue
+            lidas.add(prox)
+            try:
+                h_estado, h_itens, _, h_texto = _ler_lista(cliente, prox, fonte, com_feed=False)
+            except httpx.HTTPError:
+                continue
+            if h_estado:
+                continue
+            antes = len(cartas)
+            juntar(h_itens)
+            if len(cartas) > antes:  # página que não trouxe nada novo não abre mais paginação
+                fila_hist += [p for p in _paginas_seguintes(h_texto, prox) if p not in lidas]
+        if historico:
+            sit.historico_em = agora
+            datas_ate_aqui = [c.data for c in cartas if c.data]
+            recente = max(datas_ate_aqui) if datas_ate_aqui else ""
+            velha = not recente or (hoje - date.fromisoformat(recente)).days > DIAS_ATIVA
+            if velha and sit.situacao != "bloqueada" and not fonte.get("descoberta_fixa"):
+                achado = descobrir(fonte, cliente, recente)
+                if achado:
+                    sit.descoberta = achado[0]
+                    juntar(achado[1])
+    except httpx.HTTPError as e:
+        if not cartas:
+            sit.detalhe = f"não respondeu ({type(e).__name__})"
+            return sit, []
     finally:
         if proprio:
             cliente.close()
+    if sit.situacao == "bloqueada" and not cartas:
+        return sit, []
     datas = sorted((c.data for c in cartas if c.data), reverse=True)
     sit.ultima_carta = datas[0] if datas else ""
     if not cartas:
-        sit.situacao = "sem_cartas"
-        sit.detalhe = sit.detalhe or "página no ar, mas não reconheci cartas (pode carregar por script ou exigir clique)"
+        if sit.situacao != "fora_do_ar" or not sit.detalhe:
+            sit.situacao = "sem_cartas"
+            sit.detalhe = sit.detalhe or "página no ar, mas não reconheci cartas (pode carregar por script ou exigir clique)"
     elif not datas:
-        sit.situacao = "sem_data"
+        sit.situacao, sit.detalhe = "sem_data", ""
     elif (hoje - date.fromisoformat(datas[0])).days <= DIAS_ATIVA:
-        sit.situacao = "ativa"
+        sit.situacao, sit.detalhe = "ativa", ""
     else:
         sit.situacao = "desatualizada"
-        sit.detalhe = sit.detalhe or f"última carta encontrada em {date.fromisoformat(datas[0]):%m/%Y}"
+        sit.detalhe = f"última carta encontrada em {date.fromisoformat(datas[0]):%m/%Y}"
     return sit, cartas
 
 
@@ -295,8 +525,15 @@ def _gravar(sit: Situacao, cartas: list[Carta]) -> int:
     novas = 0
     agora = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with _TRAVA, conectar() as con:
-        con.execute("INSERT OR REPLACE INTO situacao VALUES (?,?,?,?,?,?,?,?)",
-                    (sit.fonte, sit.tipo, sit.url, sit.situacao, sit.detalhe, sit.metodo, sit.ultima_carta, sit.conferido_em))
+        if not sit.historico_em:
+            antiga = con.execute("SELECT historico_em FROM situacao WHERE fonte = ?", (sit.fonte,)).fetchone()
+            sit.historico_em = (antiga[0] or "") if antiga else ""
+        con.execute("INSERT OR REPLACE INTO situacao(fonte, tipo, url, situacao, detalhe, metodo, ultima_carta, conferido_em, "
+                    "historico_em) VALUES (?,?,?,?,?,?,?,?,?)",
+                    (sit.fonte, sit.tipo, sit.url, sit.situacao, sit.detalhe, sit.metodo, sit.ultima_carta, sit.conferido_em,
+                     sit.historico_em))
+        if sit.descoberta:
+            con.execute("INSERT OR REPLACE INTO descobertas VALUES (?,?,?)", (sit.fonte, sit.descoberta, agora))
         for c in cartas:
             ident = hashlib.sha1(c.link.encode()).hexdigest()[:16]
             if con.execute("SELECT 1 FROM cartas WHERE id = ?", (ident,)).fetchone():
@@ -333,8 +570,18 @@ def atualizar(forcar: bool = False, nomes: list[str] | None = None, paralelo: in
     resumo = {"conferidas": 0, "novas": 0}
     if not lista:
         return resumo
+    with conectar() as con:
+        hist = {r["fonte"]: r["historico_em"] or "" for r in con.execute("SELECT fonte, historico_em FROM situacao")}
+
+    def precisa_historico(f: dict) -> bool:
+        h = hist.get(f["nome"])
+        return not h or (agora - datetime.fromisoformat(h)).days >= DIAS_HISTORICO
+
+    with conectar() as con:
+        achadas = {r["fonte"]: r["url"] for r in con.execute("SELECT fonte, url FROM descobertas")}
+    lista = [{**f, "descoberta": achadas[f["nome"]]} if f["nome"] in achadas else f for f in lista]
     with _cliente() as cliente, ThreadPoolExecutor(max_workers=paralelo) as ex:
-        for sit, cartas in ex.map(lambda f: conferir(f, cliente), lista):
+        for sit, cartas in ex.map(lambda f: conferir(f, cliente, historico=precisa_historico(f)), lista):
             resumo["novas"] += _gravar(sit, cartas)
             resumo["conferidas"] += 1
     return resumo
@@ -493,3 +740,108 @@ def ler_carta(link: str, max_caracteres: int = 14000) -> str:
         texto = _html.unescape(re.sub(r"<[^>]+>", " ", bruto))
     texto = re.sub(r"[ \t]+", " ", re.sub(r"\n\s*\n+", "\n\n", texto)).strip()
     return texto[:max_caracteres] + ("\n\n[… texto cortado]" if len(texto) > max_caracteres else "")
+
+
+# ---------------------------------------------------------------- tela de Cartas (aba própria)
+DIAS_ESPORADICA = 400  # publica pouco (trimestral/semestral/anual) mas segue viva
+
+
+def categoria(sit: dict, ultima: str, hoje: date | None = None) -> str:
+    """ativa (carta em até 120 dias) · esporadica (até ~13 meses: trimestrais/semestrais) · parada (mais que isso) ·
+    encerrada (cadastro diz que fechou) · sem_leitura (site bloqueia, fora do ar ou cartas sem data)."""
+    hoje = hoje or date.today()
+    if sit.get("situacao") == "encerrada":
+        return "encerrada"
+    if not ultima:
+        return "sem_leitura"
+    dias = (hoje - date.fromisoformat(ultima)).days
+    return "ativa" if dias <= DIAS_ATIVA else "esporadica" if dias <= DIAS_ESPORADICA else "parada"
+
+
+def gestoras() -> list[dict]:
+    """Todas as gestoras do guia com situação, total de cartas guardadas, última carta e categoria."""
+    with conectar() as con:
+        cont = {r["fonte"]: (r["n"], r["ultima"] or "", r["sem_data"])
+                for r in con.execute("SELECT fonte, COUNT(*) n, MAX(NULLIF(data, '')) ultima, "
+                                     "SUM(CASE WHEN data = '' OR data IS NULL THEN 1 ELSE 0 END) sem_data FROM cartas GROUP BY fonte")}
+    saida = []
+    hoje = date.today()
+    for s in situacoes():
+        n, ultima, sem_data = cont.get(s["fonte"], (0, "", 0))
+        ultima = min(ultima, (hoje + timedelta(days=5)).isoformat()) if ultima else ""
+        saida.append({**s, "total": n, "sem_data": sem_data, "ultima_carta": ultima or s.get("ultima_carta") or "",
+                      "categoria": categoria(s, ultima or s.get("ultima_carta") or "", hoje)})
+    return saida
+
+
+def feed(dias: int = 120, tipo: str | None = None, termo: str | None = None, antes: str | None = None,
+         limite: int = 60, gestoras_nomes: list[str] | None = None) -> list[dict]:
+    """Cartas de todas as gestoras, mais novas primeiro, em páginas (`antes` = data da última já mostrada)."""
+    teto = (date.today() + timedelta(days=5)).isoformat()
+    sql = "SELECT c.*, r.texto IS NOT NULL AS tem_resumo FROM cartas c LEFT JOIN resumos r ON r.link = c.link WHERE c.data != '' AND c.data <= ?"
+    params: list = [teto]
+    if dias:
+        sql += " AND c.data >= ?"
+        params.append((date.today() - timedelta(days=dias)).isoformat())
+    if antes:
+        sql += " AND c.data < ?"
+        params.append(antes)
+    if tipo:
+        sql += " AND c.tipo = ?"
+        params.append(tipo)
+    if termo:
+        sql += " AND (c.fonte LIKE ? OR c.titulo LIKE ?)"
+        params += [f"%{termo}%", f"%{termo}%"]
+    if gestoras_nomes is not None:
+        if not gestoras_nomes:
+            return []
+        sql += f" AND c.fonte IN ({','.join('?' * len(gestoras_nomes))})"
+        params += gestoras_nomes
+    with conectar() as con:
+        linhas = con.execute(sql + " ORDER BY c.data DESC, c.descoberta_em DESC LIMIT ?", (*params, limite)).fetchall()
+    return [dict(l) for l in linhas]
+
+
+def historico(nome: str) -> dict | None:
+    """Todas as cartas guardadas de uma gestora (nome exato do guia), da mais nova à mais antiga; sem data no fim."""
+    sit = next((g for g in gestoras() if g["fonte"] == nome), None)
+    if not sit:
+        return None
+    with conectar() as con:
+        cartas = [dict(l) for l in con.execute(
+            "SELECT c.*, r.texto IS NOT NULL AS tem_resumo FROM cartas c LEFT JOIN resumos r ON r.link = c.link WHERE c.fonte = ? "
+            "ORDER BY c.data = '', c.data DESC, c.descoberta_em DESC", (nome,))]
+    return {"gestora": sit, "cartas": cartas}
+
+
+SISTEMA_RESUMO = (
+    "Você resume cartas de gestores de investimento para um assessor de investimentos brasileiro. Escreva em português, "
+    "em tópicos curtos: 1) Cenário (macro Brasil e mundo) na visão do gestor; 2) Como a carteira está posicionada e o que "
+    "mudou; 3) Principais teses e ativos/setores citados; 4) Riscos e o que o gestor vigia; 5) Uma frase-chave da carta, "
+    "entre aspas. Use só o que está no texto: não invente números nem opiniões; se o texto não trouxer algo, omita o "
+    "tópico. No máximo 250 palavras.")
+
+
+def resumo_guardado(link: str) -> str | None:
+    with conectar() as con:
+        r = con.execute("SELECT texto FROM resumos WHERE link = ?", (link,)).fetchone()
+    return r[0] if r else None
+
+
+def resumir(link: str) -> dict:
+    """Resumo da carta pela IA (guardado: a mesma carta nunca é resumida duas vezes)."""
+    if guardado := resumo_guardado(link):
+        return {"resumo": guardado, "guardado": True}
+    texto = ler_carta(link)
+    if len(texto) < 400 or texto.startswith(("Só leio", "O site pede", "Não consegui", "Arquivo grande", "A carta redireciona")):
+        return {"erro": texto if len(texto) < 400 else "texto curto demais para resumir"}
+    from quiron.nucleo import cerebro
+
+    r = cerebro.perguntar(f"Carta (texto extraído do site da gestora):\n\n{texto}", sistema=SISTEMA_RESUMO, max_tokens=4000)
+    resumo = (r.texto or "").strip()
+    if not resumo:
+        return {"erro": "a IA não devolveu o resumo; tente de novo"}
+    with _TRAVA, conectar() as con:
+        con.execute("INSERT OR REPLACE INTO resumos VALUES (?,?,?,?)",
+                    (link, resumo, getattr(r, "modelo", ""), datetime.now(timezone.utc).isoformat(timespec="seconds")))
+    return {"resumo": resumo, "guardado": False}

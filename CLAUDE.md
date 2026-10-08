@@ -121,6 +121,18 @@ Arquivos com DRM não são processados.
   link já listado, ≤ 15 MB) e `consultas.py` (textos). MCP `quiron-noticias` (`cartas_gestores`, `situacao_gestoras`,
   `ler_carta`); Terminal tópico `cartas` + `POST /api/cartas/atualizar` + painel CARTAS; bot `/cartas` (em
   `carreira_bot`) e `laco_cartas` de hora em hora. Guardamos só título/data/link.
+  Aba Cartas (08/10/2026, `terminal/frontend/cartas.html`, rota `/cartas`, aba no `nav.js`; testes
+  `testes/test_cartas_aba.py`): cadastro aceita `paginas` (outras listas da gestora), `api` (JSON público, ex.: WordPress
+  `/wp-json/wp/v2/posts`, `_itens_api`), `link_inclui` (regex do link de carta), `encerrada: true` + `motivo`; uma vez por
+  semana (`DIAS_HISTORICO`, coluna `situacao.historico_em`) `conferir(historico=True)` segue a paginação
+  (`_paginas_seguintes`: rel=next, /page/N, ?page=N, "Próxima"; até `MAX_PAGINAS_HIST`) e o `?paged=N` do feed
+  (`_historico_feed`); fonte sem carta recente roda `descobrir` (página inicial + links do mesmo domínio com cara de
+  cartas + `_CAMINHOS_COMUNS`, ≤ 14 páginas, robots.txt) e guarda em `descobertas` (usada como página extra depois).
+  Títulos limpos em `_encurtar` (sem "LER MAIS", sem data repetida; "Acessar documento" → "Carta de mm/aaaa").
+  `gestoras()` com `categoria` (ativa ≤ 120 d · esporadica ≤ 400 d · parada · sem_leitura · encerrada), `feed()` em
+  páginas (`antes`), `historico(nome)`, `resumir(link)` (IA, `SISTEMA_RESUMO`, guardado na tabela `resumos`). Rotas
+  `GET /api/cartas`, `/api/cartas/gestoras`, `/api/cartas/gestora`, `POST /api/cartas/resumo` (`_proteger`, só link
+  conhecido).
 - TV (06/10/2026, `quiron/servicos/tv.py` + `terminal/frontend/tv.html`, rota `/tv`): canais em `config/tv_canais.yaml`,
   os do Rickson em `dados/ajustes/tv_canais.yaml` (`meus`, `ocultos`); `resolver` (link/@/UC… pela Data API ou página
   pública), `videos` (só Data API; o RSS /feeds/videos.xml é proibido no robots.txt do YouTube → sem chave a tela toca

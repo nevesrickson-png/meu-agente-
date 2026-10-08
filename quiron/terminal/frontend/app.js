@@ -1065,7 +1065,7 @@ function renderCartas(corpo, d, painel) {
     try { await acao("/api/cartas/atualizar"); aviso("Conferindo as gestoras; a lista se atualiza sozinha em instantes."); setTimeout(() => atualizarPainel(painel), 60000); } catch (err) { aviso(err.message); }
   };
   corpo.querySelectorAll("[data-resumir]").forEach((b) => (b.onclick = () => perguntarNoChat(`Leia e resuma a carta da ${b.dataset.fonte} — “${b.dataset.titulo}”: ${b.dataset.resumir}`)));
-  rodape(painel, `${d.conferido_em ? "conferido " + hora(d.conferido_em) + " · " : ""}sites públicos das gestoras, 1 vez por dia, respeitando robots.txt · lista em config/cartas_gestores.yaml`);
+  rodape(painel, `${d.conferido_em ? "conferido " + hora(d.conferido_em) + " · " : ""}sites públicos das gestoras, 1 vez por dia, respeitando robots.txt · <a href="/cartas">histórico completo na aba Cartas</a>`);
 }
 Object.assign(TIPOS, {
   cartas: { titulo: "Cartas de gestores — CARTAS", topico: "cartas", params: (p) => ({ termo: p.termo || "", tipo: p.tipo || "", aba: p.aba || "recentes", dias: 90 }), w: 6, h: 12, render: renderCartas },

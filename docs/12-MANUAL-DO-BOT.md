@@ -204,13 +204,15 @@ com **Leitura prática** (o que muda na conversa com os clientes). Os números s
 citadas; a IA só escreve o texto, e frase com número que não veio das fontes é cortada. Junto vai o PDF (com as
 tabelas de cada seção). Para receber todo dia: “todo dia útil às 8h15 me manda o resumo de mercado”.
 
-### 📬 Cartas de gestores (Terminal: `CARTAS` · Telegram: `/cartas`)
-~140 gestoras do compilado “Insights do Mercado” (Brasil, globais e family offices). Uma vez por dia o Quíron confere o site
-público de cada uma (respeitando o robots.txt, sem login) e guarda título, data e link das cartas. No Terminal, o painel
-**CARTAS** mostra as mais recentes (filtro por Brasil/Globais/Family offices e por nome) e a aba **Gestoras** diz quem
-segue ativa, quem parou (“desatualizada” = última carta antiga: pode ter encerrado ou mudado de site), quem bloqueia
-leitura automática e quem saiu do ar. O botão **resumir** manda a carta para o chat do Quíron. Lista em
-`config/cartas_gestores.yaml` (para incluir uma gestora: nome, link da página de cartas e tipo).
+### 📬 Cartas de gestores (aba **Cartas** no topo · Terminal: `CARTAS` · Telegram: `/cartas`)
+- A aba **Cartas** junta as cartas das ~140 gestoras do seu guia: à esquerda as gestoras (Ativas, Publicam pouco,
+  Paradas, Sem leitura, Encerradas), à direita as mais recentes por mês, com filtro de período, tipo (Brasil, Globais,
+  Family offices) e busca. Clique numa gestora para ver o **histórico inteiro** dela.
+- **Resumir**: o Quíron lê a carta e resume (cenário, posicionamento, teses, riscos e uma frase-chave). O resumo fica
+  guardado — abrir de novo não gasta IA.
+- Uma vez por dia ele confere os sites; uma vez por semana volta às páginas antigas (histórico) e, se a página de uma
+  gestora mudou de endereço, procura sozinho a nova no próprio site. Sempre respeitando o robots.txt e sem login.
+- Telegram: `/cartas`, `/cartas Verde`, `/cartas gestoras`, ou “resuma a carta da Dynamo”.
 
 ### 📺 TV (aba **TV** no topo, ou `TV` na busca do Terminal)
 Canais do YouTube como uma TV: botões por grupo (Notícias Brasil, Notícias globais, Gestoras e bancos, Gestoras globais e
