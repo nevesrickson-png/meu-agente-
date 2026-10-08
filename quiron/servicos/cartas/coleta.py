@@ -143,6 +143,20 @@ def _extrair_data(texto: str, hoje: date | None = None) -> str:
         candidatos.append((int(a), MESES[nome[:3]], int(d)))
     t = re.sub(r"\b(?:" + _MES + r")\.?\s+\d{1,2},?\s+20\d\d\b", " ", t)
     t = re.sub(r"\b\d{1,2}\s+(?:de\s+)?(?:" + _MES + r")\.?,?\s+(?:de\s+)?20\d\d\b", " ", t)
+    # carta anual: "Carta Anual 2023", "Annual Letter 2025" → dezembro daquele ano
+    for a in re.findall(r"(?:anual|annual)[\s_-]*(?:de[\s_-]+)?(20\d\d)(?!\d)|(20\d\d)[\s_-]*(?:anual|annual)", t):
+        ano = next(x for x in a if x)
+        candidatos.append((int(ano), 12, 1))
+    # trimestre/semestre: "1º semestre 2026", "4o-trimestre-2025", "2T26", "1S26", "3Q2026" → último mês do período
+    for n, tipo, a in re.findall(r"(?<![\d])([1-4])\s*[oº°ª]?[\s_-]*(semestre|trimestre)[\s_-]*(?:de[\s_-]+)?(20\d\d)(?!\d)", t):
+        meses = 6 if tipo == "semestre" else 3
+        if tipo == "trimestre" or int(n) <= 2:
+            candidatos.append((int(a), int(n) * meses, 1))
+    for n, tipo, a in re.findall(r"(?<![a-z\d])([1-4])([tqs])[\s_-]?(20\d\d|\d\d)(?![\d])", t):
+        if tipo == "s" and int(n) > 2:
+            continue
+        ano = int(a) if len(a) == 4 else 2000 + int(a)
+        candidatos.append((ano, int(n) * (6 if tipo == "s" else 3), 1))
     for d, m, a in re.findall(r"\b(\d{1,2})[/.-](\d{1,2})[/.-](20\d\d)\b", t):
         candidatos.append((int(a), int(m), int(d)))
     for a, m in re.findall(r"(?<!\d)(20\d\d)[-/_.]?(0[1-9]|1[0-2])(?!\d)", t):
@@ -234,7 +248,7 @@ def _itens_feed(cliente: httpx.Client, feed: str, fonte: dict) -> list[Carta]:
     return saida
 
 
-_LIXO_FIM = re.compile(r"[\s.…|–-]*(ler mais|leia mais|saiba mais|read more|ver mais|acessar|download|baixar)[\s.…]*$", re.I)
+_LIXO_FIM = re.compile(r"[\s.…|–-]*(ler mais|leia mais|leia|saiba mais|read more|ver mais|acessar|download|baixar)[\s.…»›>]*$", re.I)
 _DATA_INICIO = re.compile(r"^\s*(\d{1,2}[/.]\d{1,2}[/.]\d{2,4}|\d{1,2} de [a-zç]+ de \d{4})\s*[–|:-]?\s+", re.I)
 
 
@@ -246,6 +260,10 @@ def _encurtar(titulo: str, limite: int = 140) -> str:
     titulo = re.sub(r"\s+\d{1,2}[/.]\d{1,2}[/.]\d{4}$", "", titulo)  # "Relatório de Setembro 2026 07.10.2026"
     sem_data = _DATA_INICIO.sub("", titulo).strip()
     titulo = sem_data if len(sem_data) >= 8 else titulo
+    if len(titulo) > 90:  # "Carta Mensal Setembro 2026 Em setembro os dados…": título + começo do texto → só o título
+        m = re.match(r"^(.{8,90}?\b20\d\d)\s+[A-ZÀ-Ú][a-zà-ú]", titulo)
+        if m:
+            titulo = m.group(1)
     return titulo if len(titulo) <= limite else titulo[: limite - 1].rsplit(" ", 1)[0] + "…"
 
 
@@ -275,8 +293,18 @@ def _itens_api(cliente: httpx.Client, api: str, fonte: dict) -> list[Carta]:
         dados = r.json()
     except ValueError:
         return []
-    if isinstance(dados, dict):
-        dados = next((v for v in dados.values() if isinstance(v, list)), [])
+    def primeira_lista(v, nivel=0):
+        """A lista de itens pode vir solta ou dentro de um objeto ({"data": [...]}, {"fundos": [...]})."""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, dict) and nivel < 3:
+            for filho in v.values():
+                achada = primeira_lista(filho, nivel + 1)
+                if achada and isinstance(achada[0], dict):
+                    return achada
+        return []
+
+    dados = primeira_lista(dados)
     saida = []
 
     def valor(v):
@@ -302,7 +330,8 @@ def _itens_api(cliente: httpx.Client, api: str, fonte: dict) -> list[Carta]:
         if isinstance(item.get("attributes"), dict):  # Strapi: os campos ficam dentro de "attributes"
             item = {**item, **item["attributes"]}
         titulo = _html.unescape(re.sub(r"<[^>]+>", "", campo(item, "title", "titulo", "nome", "name"))).strip()
-        link = urljoin(api, campo(item, "link", "url", "arquivo", "file", "pdf", "href", "document", "documento", "anexo"))
+        link = urljoin(api, campo(item, "source_url", "pdfUrl", "report_mes", "link", "url", "arquivo", "file", "pdf", "href",
+                                  "document", "documento", "anexo"))
         if not titulo or not link.startswith("http") or _NAO_CARTA.search(f"{titulo} {link}"):
             continue
         bruto = campo(item, "date", "data", "published", "publishDate", "publicado_em", "dataPublicacao", "created_at",
@@ -382,6 +411,27 @@ def _itens_lista_txt(cliente: httpx.Client, cfg: dict, fonte: dict) -> list[Cart
         data = extrair_data(linha.replace("_", "-"))
         titulo = f"Carta do gestor {data[5:7]}/{data[:4]}" if data else linha
         saida.append(Carta(fonte["nome"], titulo, cfg["modelo_link"].replace("{linha}", linha), data, fonte.get("tipo", "")))
+    return saida
+
+
+def _itens_embutidos(texto: str, url: str, fonte: dict) -> list[Carta]:
+    """Lista de cartas escrita dentro do HTML como dados de script (ex.: `const cartas=[{date, title, pdfUrl}]`)."""
+    saida = []
+    for obj in re.findall(r"\{[^{}]{10,800}\}", texto):
+        def chave(*nomes: str) -> str:
+            for n in nomes:
+                m = re.search(r"[\"']?" + n + r"[\"']?\s*:\s*[\"']([^\"']+)[\"']", obj)
+                if m:
+                    return _html.unescape(m.group(1).replace("\\/", "/"))
+            return ""
+        link = chave("pdfUrl", "pdf", "url", "link", "arquivo", "file", "href")
+        titulo = chave("title", "titulo", "nome", "name")
+        if not link or not titulo or not re.search(r"\.pdf|/carta|/relat", link, re.I):
+            continue
+        link = urljoin(url, link)
+        data = extrair_data(f"{chave('date', 'data', 'publicado')} {titulo} {link}")
+        if not _NAO_CARTA.search(f"{titulo} {link}"):
+            saida.append(Carta(fonte["nome"], _encurtar(titulo), link, data, fonte.get("tipo", "")))
     return saida
 
 
@@ -553,6 +603,8 @@ def conferir(fonte: dict, cliente: httpx.Client | None = None, hoje: date | None
             sit.detalhe = f"página não encontrada (HTTP {codigo}) — a gestora pode ter mudado o site ou encerrado"
         sit.metodo = metodo
         juntar(itens)
+        if fonte.get("embutido") and texto:
+            juntar(_itens_embutidos(texto, url, fonte), confiavel=True)
         fila_hist = _paginas_seguintes(texto, url) if historico and texto and metodo == "pagina" else []
         if historico and metodo == "feed":
             feed = fonte.get("feed") or (_feeds_da_pagina(texto, url) or [""])[0]

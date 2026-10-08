@@ -58,8 +58,9 @@ def test_conferir_pagina_ativa_e_grava():
     cli = _transporte({"https://gestora.com.br/cartas": httpx.Response(200, text=PAGINA)})
     sit, cartas = coleta.conferir({"nome": "Gestora X", "url": "https://gestora.com.br/cartas", "tipo": "gestora"}, cli, hoje=HOJE)
     assert sit.situacao == "ativa" and sit.metodo == "pagina" and sit.ultima_carta == "2026-09-01"
-    assert [c.data for c in cartas] == ["2026-09-01", "2026-08-01"]  # privacidade e o menu "Cartas" ficam de fora
-    assert coleta._gravar(sit, cartas) == 2 and coleta._gravar(sit, cartas) == 0  # sem repetir
+    # privacidade e o menu "Cartas" ficam de fora; "Relatório de gestão 2T26" vale (2º trimestre = junho)
+    assert [c.data for c in cartas] == ["2026-09-01", "2026-08-01", "2026-06-01"]
+    assert coleta._gravar(sit, cartas) == 3 and coleta._gravar(sit, cartas) == 0  # sem repetir
     assert coleta.da_fonte("gestora x")[0]["titulo"].startswith("Carta Mensal — Setembro")
 
 
@@ -73,7 +74,7 @@ def test_conferir_situacoes_de_falha():
     sit = coleta.conferir(fonte, _transporte({}), HOJE)[0]
     assert sit.situacao == "fora_do_ar" and "404" in sit.detalhe
     coleta._ROBOTS.clear()
-    antiga = PAGINA.replace("2026", "2024")
+    antiga = PAGINA.replace("2026", "2024").replace("2t26", "2t24").replace("2T26", "2T24")
     sit = coleta.conferir(fonte, _transporte({"https://g.com/cartas": httpx.Response(200, text=antiga)}), HOJE)[0]
     assert sit.situacao == "desatualizada" and "09/2024" in sit.detalhe
 

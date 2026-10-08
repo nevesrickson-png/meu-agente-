@@ -528,6 +528,12 @@ Revisores no agente/MCP, nas contas de fundos/valuation/risco, em mercado/notíc
 - [ ] Etapa C: 👍/👎, notas trazidas de volta, lacunas e contradições, reflexão semanal, propostas de melhoria
 - [x] Três revisões (memória/início, caminhos quentes/SQLite, análise estática) e correções com teste (`test_revisao_bugs4.py`)
 
+## Aba Cartas (08/10/2026) — "um local com todas as cartas de gestor, as mais recentes e o histórico"
+- [x] Aba própria no topo (/cartas): gestoras por situação, cartas recentes por mês, histórico por gestora, resumo pela IA
+- [x] Histórico semanal (paginação, feed, APIs públicas) e autodescoberta da página quando o endereço muda
+- [x] Cadastro das 140 fontes conferido uma a uma: 84 ativas + 15 publicam pouco; encerradas/paradas marcadas
+- [ ] Aceite do Rickson na aba Cartas (conferir se faltou alguma gestora importante do guia)
+
 ## Depois do roteiro — pendências do seu lado (05/10/2026)
 Todas as fases foram construídas e aprovadas no ambiente de desenvolvimento, menos a 18 (adiada). O que falta é colocar no ar:
 - [ ] 5.3/5.4 Rodar no host definitivo (mini PC): `deploy/preparar_host.sh` + `deploy/instalar.sh` (`docs/03-HOSPEDAGEM.md`)

@@ -226,3 +226,25 @@ def test_gestora_que_parou_de_publicar_vira_parada():
     sit, _ = coleta.conferir({"nome": "V", "url": "https://v.com.br", "sem_publicacao": True, "motivo": "última carta em 2024"},
                              _cliente({}), HOJE)
     assert sit.situacao == "sem_publicacao" and coleta.categoria({"situacao": "sem_publicacao"}, "2024-04-01") == "parada"
+
+
+def test_trimestre_semestre_e_carta_anual():
+    e = lambda t: coleta.extrair_data(t, HOJE)  # noqa: E731
+    assert e("carta-de-gestao-sfa-1o-semestre-2026.pdf") == "2026-06-01" and e("4o-trimestre-2025") == "2025-12-01"
+    assert e("Carta 2T26") == "2026-06-01" and e("3Q2026") == "2026-09-01" and e("4T26") == ""  # futuro não vale
+    assert e("Carta Anual 2023") == "2023-12-01" and e("Outlook 2027") == ""
+
+
+def test_lista_embutida_na_pagina_e_json_aninhado():
+    pagina = ('<script>const cartas=[{date:"2026-09-30",title:"Setembro 2026",pdfUrl:"/wp-content/uploads/2026/10/CARTAMENSAL_26_SETEMBRO.pdf"},'
+              '{date:"2026-08-31",title:"Agosto 2026",pdfUrl:"/wp-content/uploads/2026/09/CARTAMENSAL_26_AGOSTO.pdf"}]</script>')
+    c = coleta._itens_embutidos(pagina, "https://s.com.br/carta-do-gestor/", {"nome": "S"})
+    assert [(x.titulo, x.data) for x in c] == [("Setembro 2026", "2026-09-30"), ("Agosto 2026", "2026-08-31")]
+    verde = httpx.Response(200, json={"fundos": [{"nome": "Verde FIC", "report_mes": "/public/files/rel/1/Verde-REL-2026_08.pdf"}]})
+    v = coleta._itens_api(_cliente({"https://v.com.br/lista.json": verde}), "https://v.com.br/lista.json", {"nome": "V"})
+    assert [(x.titulo, x.link, x.data) for x in v] == [("Verde FIC", "https://v.com.br/public/files/rel/1/Verde-REL-2026_08.pdf", "2026-08-01")]
+
+
+def test_titulo_com_comeco_do_texto_fica_so_o_titulo():
+    t = "Carta Mensal Setembro 2026 Em setembro os dados da economia americana aceleraram de forma brusca. O PMI… Leia mais »"
+    assert coleta._encurtar(t) == "Carta Mensal Setembro 2026"

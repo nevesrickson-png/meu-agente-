@@ -132,7 +132,14 @@ Arquivos com DRM não são processados.
   `gestoras()` com `categoria` (ativa ≤ 120 d · esporadica ≤ 400 d · parada · sem_leitura · encerrada), `feed()` em
   páginas (`antes`), `historico(nome)`, `resumir(link)` (IA, `SISTEMA_RESUMO`, guardado na tabela `resumos`). Rotas
   `GET /api/cartas`, `/api/cartas/gestoras`, `/api/cartas/gestora`, `POST /api/cartas/resumo` (`_proteger`, só link
-  conhecido).
+  conhecido). Leitores extras no cadastro: `sitemap` (`_itens_sitemap`, exige `link_inclui`), `mziq` (POST público da
+  plataforma MZ: empresa + categorias, ano atual e anterior; 6 anos no histórico), `lista_txt` (url + `modelo_link`
+  com `{linha}`), `embutido` (lista `{title, date, pdfUrl}` dentro do HTML, `_itens_embutidos`), `sem_publicacao` +
+  `motivo` (vira categoria parada). `_itens_api` acha a lista aninhada (`data`, `fundos`…), Strapi `attributes`,
+  carimbo em segundos/ms. Data de API/feed/sitemap/lista vale mais que a lida no texto (`juntar(confiavel=True)`).
+  `extrair_data`: pasta `/uploads/AAAA/MM/` só vale sem outra data; "_Ago26"; trimestre/semestre ("2T26", "1º semestre
+  2026" → último mês); "Carta Anual 2023" → dezembro. Cadastro conferido fonte a fonte em 08/10/2026 (84 ativas + 15
+  esporádicas de 140; as que bloqueiam robôs ficam só com o link).
 - TV (06/10/2026, `quiron/servicos/tv.py` + `terminal/frontend/tv.html`, rota `/tv`): canais em `config/tv_canais.yaml`,
   os do Rickson em `dados/ajustes/tv_canais.yaml` (`meus`, `ocultos`); `resolver` (link/@/UC… pela Data API ou página
   pública), `videos` (só Data API; o RSS /feeds/videos.xml é proibido no robots.txt do YouTube → sem chave a tela toca
