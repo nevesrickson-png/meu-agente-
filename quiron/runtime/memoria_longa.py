@@ -178,10 +178,17 @@ class _Vetorizador:
 # ---------------------------------------------------------------- banco
 class MemoriaLonga:
     def __init__(self, caminho: Path | None = None, vetorizador: _Vetorizador | None = None,
-                 arquivo_md: Path | None = None) -> None:
+                 arquivo_md: Path | None = None, arquivo_cerebro: Path | None = None) -> None:
+        padrao = caminho is None
         self.caminho = caminho or pasta_dados() / "memoria.db"
         self.caminho.parent.mkdir(parents=True, exist_ok=True)
         self.arquivo_md = arquivo_md or pasta_dados() / "workspace" / "MEMORIA.md"
+        # segundo espelho editável, no Cérebro (cofre do Obsidian) — só para a memória de verdade, nunca para cópias
+        if arquivo_cerebro is None and padrao:
+            from quiron.servicos.obsidian import pasta as cerebro
+
+            arquivo_cerebro = cerebro.pasta() / cerebro.ARQ_MEMORIA
+        self.arquivo_cerebro = arquivo_cerebro
         self.vet = vetorizador or _Vetorizador()
         self._trava = threading.RLock()
         self.con = sqlite3.connect(self.caminho, check_same_thread=False, timeout=15)
@@ -527,31 +534,55 @@ class MemoriaLonga:
         return "\n".join(linhas)
 
     # ------------------------------------------------------------ MEMORIA.md (leitura e edição pelo Rickson)
-    def _exportar_md(self) -> None:
-        try:
+    def _texto_md(self, cerebro: bool = False) -> str:
+        if cerebro:
+            linhas = ["---", "tipo: memória", "tags: [memoria, quiron]", "---", "# Memória do Quíron", "",
+                      "Tudo o que o Quíron sabe de você. **Pode editar**: mude o texto de um item, apague uma linha para ele",
+                      "esquecer, ou acrescente `- novo fato` numa seção. O número entre colchetes é o código do fato — não mexa nele.",
+                      "A mudança vale na próxima conversa.", ""]
+        else:
             linhas = ["# Memória do Quíron", "",
                       "Gerado automaticamente a partir de `dados/memoria.db`. Você PODE editar: mude o texto de um item, apague uma",
                       "linha para o Quíron esquecer, ou acrescente `- novo fato` numa seção (o número entre colchetes é o código do fato).", ""]
-            for cat, titulo in CATEGORIAS.items():
-                itens = self.fatos(categoria=cat)
-                if itens:
-                    linhas.append(f"## {titulo}")
-                    linhas += [f"- {f.linha()}" for f in itens]
-                    linhas.append("")
-            texto = "\n".join(linhas)
-            self.arquivo_md.parent.mkdir(parents=True, exist_ok=True)
-            self.arquivo_md.write_text(texto, encoding="utf-8")
-            self._gravar_estado("md_hash", hashlib.sha256(texto.encode()).hexdigest())
-        except OSError as e:
-            logging.warning("não consegui escrever MEMORIA.md: %s", e)
+        for cat, titulo in CATEGORIAS.items():
+            itens = self.fatos(categoria=cat)
+            if itens:
+                linhas.append(f"## {titulo}")
+                linhas += [f"- {f.linha()}" for f in itens]
+                linhas.append("")
+        return "\n".join(linhas)
+
+    def _espelhos(self) -> list[tuple[Path, str, bool]]:
+        """(arquivo, chave do hash no estado, é o do Cérebro?) — o do Cérebro primeiro."""
+        saida = [(self.arquivo_cerebro, "md_hash_cerebro", True)] if self.arquivo_cerebro else []
+        return saida + [(self.arquivo_md, "md_hash", False)]
+
+    def _exportar_md(self) -> None:
+        from quiron.nucleo.trava import gravar_atomico
+
+        for arq, chave, cerebro in self._espelhos():
+            try:
+                texto = self._texto_md(cerebro)
+                gravar_atomico(arq, texto)
+                self._gravar_estado(chave, hashlib.sha256(texto.encode()).hexdigest())
+            except OSError as e:
+                logging.warning("não consegui escrever %s: %s", arq.name, e)
 
     def importar_edicoes_md(self) -> list[str]:
-        """Se o Rickson editou o MEMORIA.md à mão, aplica: texto mudado, linha apagada (esquece) e linha nova (guarda)."""
-        if not self.arquivo_md.exists():
-            return []
-        texto = self.arquivo_md.read_text(encoding="utf-8")
-        if hashlib.sha256(texto.encode()).hexdigest() == self._estado("md_hash"):
-            return []
+        """Se o Rickson editou a memória à mão (no Cérebro/Obsidian ou no MEMORIA.md), aplica: texto mudado, linha
+        apagada (esquece) e linha nova (guarda). Vale a primeira edição encontrada; os dois espelhos são regravados."""
+        for arq, chave, _ in self._espelhos():
+            if not arq.exists():
+                continue
+            try:
+                texto = arq.read_text(encoding="utf-8-sig")
+            except OSError:
+                continue
+            if hashlib.sha256(texto.encode()).hexdigest() != self._estado(chave):
+                return self._importar_texto(texto, arq.name)
+        return []
+
+    def _importar_texto(self, texto: str, nome: str) -> list[str]:
         mudancas, vistos = [], set()
         categoria = "geral"
         titulo_para_cat = {t: c for c, t in CATEGORIAS.items()}
@@ -571,6 +602,8 @@ class MemoriaLonga:
                     vistos.add(self.con.execute("SELECT substituido_por FROM fatos WHERE id = ?", (ident,)).fetchone()[0])
             else:
                 novo = re.sub(r"\s*_\(desde [^)]*\)_\s*$", "", linha[2:]).strip()
+                if not novo:
+                    continue
                 msg, f = self.adicionar(novo, categoria, 4, "editado")
                 if f:
                     vistos.add(f.id)
@@ -579,7 +612,7 @@ class MemoriaLonga:
         if apagados:
             with self.con:
                 self.con.executemany("UPDATE fatos SET ativo = 0, atualizado_em = ? WHERE id = ?", [(_iso(), i) for i in apagados])
-            mudancas.append(f"Esquecidos pela edição do MEMORIA.md: {len(apagados)}")
+            mudancas.append(f"Esquecidos pela edição do {nome}: {len(apagados)}")
         self._exportar_md()
         return mudancas
 

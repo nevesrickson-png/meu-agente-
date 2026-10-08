@@ -55,7 +55,7 @@ const COMANDOS = [
     ["ACAD", "Domínio estimado por módulo na Academia"], ["TASK", "Tarefas e lembretes (os mesmos do Telegram)"],
     ["ALRT", "Alertas de preço, variação e notícia"], ["CHAT [pergunta]", "Conversa com o Quíron dentro do Terminal"],
     ["RESUMO", "Resumo de mercado escrito: bolsa, EUA, renda fixa, juros, moedas, cripto, agro e FIIs (+ PDF)"], ["CARTAS", "Cartas de gestores publicadas recentemente (e quais gestoras seguem ativas)"], ["TV", "Canais do YouTube: notícias, gestoras e os seus — igual uma TV"],
-    ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
+    ["BIB <tema>", "Procura nos seus livros (funciona sem internet)"], ["NOTAS [busca]", "Cérebro: suas notas do Obsidian, diário e memória do Quíron, com ligações"], ["CLI", "Clientes reais — só na versão offline, com a senha do cofre"],
 ];
 
 // ------------------------------------------------------------------ tipos de painel
@@ -1093,9 +1093,64 @@ function renderResumo(corpo, _d, painel) {
 }
 Object.assign(TIPOS, { resumo: { titulo: "Resumo de mercado — RESUMO", topico: null, w: 6, h: 14, render: renderResumo } });
 
+// NOTAS — Cérebro (cofre de notas do Obsidian): busca, leitura, ligações e "abrir no Obsidian"
+function notaHtml(texto) { // Markdown da nota → HTML seguro; [[links]] viram botões que abrem a nota no painel
+  return textoChat(String(texto ?? "").replace(/<!--[\s\S]*?-->\n?/g, "")).replace(/\[\[([^\]|#^]+)(?:[#^][^\]|]*)?(?:\|([^\]]+))?\]\]/g,
+    (_, alvo, rotulo) => `<a href="#" class="link-nota" data-nota="${alvo.trim()}">${(rotulo || alvo).trim()}</a>`);
+}
+function renderNotas(corpo, _d, painel) {
+  corpo.classList.add("coluna");
+  corpo.innerHTML = `<form class="form-v2 linha-form notas-busca"><label style="flex:3 1 200px">Procurar no Cérebro
+      <input name="q" value="${esc(painel.p.q || "")}" placeholder="palavras ou #tag (vazio = recentes)"></label>
+      <label style="flex:1 1 130px">Pasta<select name="pasta">${[["", "Todas"], ["Minhas notas", "Minhas notas"], ["Quíron/Diário", "Diário"], ["Quíron/Memória", "Memória"], ["Quíron", "Quíron"]]
+        .map(([v, t]) => `<option value="${esc(v)}" ${v === (painel.p.pasta || "") ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <button type="submit">Buscar</button></form>
+    <div class="notas-area"><div class="notas-lista" data-lista></div><div class="notas-leitura" data-nota-ver><div class="dica">Escolha uma nota.</div></div></div>`;
+  const lista = $("[data-lista]", corpo), ver = $("[data-nota-ver]", corpo);
+  const abrir = async (c) => {
+    ver.innerHTML = '<span class="carregando">abrindo…</span>';
+    try {
+      const r = await fetch(`/api/cerebro/nota?c=${encodeURIComponent(c)}`);
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || "erro");
+      painel.p.nota = d.caminho; salvarLocal();
+      const liga = (itens) => itens.map((x) => `<a href="#" class="link-nota" data-nota="${esc(x.caminho)}">${esc(x.titulo)}</a>`).join(" · ");
+      ver.innerHTML = `<div class="nota-cab"><div><div class="nota-titulo">${esc(d.titulo)}</div>
+          <div class="dica">${esc(d.pasta || "raiz")} · alterada em ${esc(d.alterada)}${d.tags.length ? " · " + d.tags.map((t) => "#" + esc(t)).join(" ") : ""}</div></div>
+          <a class="botao fantasma" href="${esc(d.obsidian)}" title="Abre esta nota no Obsidian (o cofre precisa ter sido aberto uma vez)">${ico("externo")}<span class="rotulo">Obsidian</span></a></div>
+        <div class="nota-corpo">${notaHtml(d.texto)}</div>
+        ${d.cita.length ? `<div class="nota-ligacoes"><b>Cita</b> ${liga(d.cita)}</div>` : ""}
+        ${d.citada_por.length ? `<div class="nota-ligacoes"><b>Citada por</b> ${liga(d.citada_por)}</div>` : ""}`;
+    } catch (e) { ver.innerHTML = `<div class="erro">${esc(e.message)}</div>`; }
+  };
+  corpo.onclick = (e) => { const a = e.target.closest("[data-nota]"); if (a) { e.preventDefault(); abrir(a.dataset.nota); } };
+  const buscar = async () => {
+    lista.innerHTML = '<span class="carregando">procurando…</span>';
+    try {
+      const r = await fetch(`/api/cerebro?q=${encodeURIComponent(painel.p.q || "")}&pasta=${encodeURIComponent(painel.p.pasta || "")}`);
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || "erro");
+      lista.innerHTML = d.notas.length ? d.notas.map((n) => `<button type="button" class="nota-item" data-nota="${esc(n.caminho)}">
+          <span class="nota-item-t">${esc(n.titulo)}</span><span class="dica">${esc(n.pasta || "raiz")} · ${esc(n.alterada)}</span>
+          ${n.trecho ? `<span class="nota-trecho">${esc(n.trecho)}</span>` : ""}</button>`).join("")
+        : `<div class="dica">Nada encontrado${painel.p.q ? " para “" + esc(painel.p.q) + "”" : ""}.</div>`;
+      const s = d.situacao;
+      rodape(painel, `${s.notas} notas · ${s.minhas} suas · ${s.links} ligações · pasta ${esc(s.pasta)}`);
+    } catch (e) { lista.innerHTML = `<div class="erro">${esc(e.message)}</div>`; }
+  };
+  $("form", corpo).onsubmit = (e) => {
+    e.preventDefault(); const f = new FormData(e.target);
+    painel.p.q = f.get("q"); painel.p.pasta = f.get("pasta"); salvarLocal(); titular(painel); buscar();
+  };
+  buscar();
+  if (painel.p.nota) abrir(painel.p.nota);
+}
+Object.assign(TIPOS, { notas: { titulo: (p) => (p.q ? `Notas: ${p.q}` : "Cérebro — NOTAS"), topico: null, w: 7, h: 14, render: renderNotas } });
+
 // comandos da v2; devolve true se tratou
 function executarV2(original, a, b, resto) {
   const unico = { RESUMO: "resumo", CARTAS: "cartas", CARTA: "cartas", PORT: "port", ACAD: "acad", TASK: "task", ALRT: "alrt", CMPF: "cmpf", CHAT: "chat", IA: "chat", CLI: "cli", BIB: "bib" };
+  if ((a === "NOTAS" || a === "NOTA" || a === "CEREBRO" || a === "OBSIDIAN") ) { adicionarPainel("notas", b ? { q: original.trim().split(/\s+/).slice(1).join(" ") } : {}); return true; }
   if (a === "BIB" && b) { adicionarPainel("bib", { q: original.trim().split(/\s+/).slice(1).join(" ") }); return true; }
   if (unico[a] && !b) { adicionarPainel(unico[a]); return true; }
   if (a === "CHAT" || a === "IA") { // CHAT <pergunta>: abre o chat já com a pergunta

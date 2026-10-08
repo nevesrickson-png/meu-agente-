@@ -137,10 +137,10 @@ def escrever_ajuste(nome: str, dados: dict) -> Path:
     if not dados:
         arq.unlink(missing_ok=True)
         return arq
-    arq.parent.mkdir(parents=True, exist_ok=True)
-    tmp = arq.with_suffix(".tmp")
-    tmp.write_text(yaml.safe_dump(dados, allow_unicode=True, sort_keys=False), encoding="utf-8")
-    tmp.replace(arq)
+    from quiron.nucleo.trava import gravar_atomico, trava_arquivo
+
+    with trava_arquivo(arq):
+        gravar_atomico(arq, yaml.safe_dump(dados, allow_unicode=True, sort_keys=False))
     return arq
 
 
@@ -154,15 +154,16 @@ def ler_ajuste(nome: str) -> dict:
 
 def salvar_ajuste(nome: str, parcial: dict) -> Path:
     """Mescla `parcial` no arquivo de ajustes (troca atômica)."""
+    from quiron.nucleo.trava import gravar_atomico, trava_arquivo
+
     arq = arquivo_ajuste(nome)
     arq.parent.mkdir(parents=True, exist_ok=True)
-    atual = {}
-    if arq.exists():
-        try:
-            atual = yaml.safe_load(arq.read_text(encoding="utf-8")) or {}
-        except yaml.YAMLError:
-            atual = {}
-    tmp = arq.with_suffix(".tmp")
-    tmp.write_text(yaml.safe_dump(_mesclar(atual, parcial), allow_unicode=True, sort_keys=False), encoding="utf-8")
-    tmp.replace(arq)
+    with trava_arquivo(arq):  # ler-mesclar-gravar inteiro sob trava: duas telas salvando juntas não perdem nada
+        atual = {}
+        if arq.exists():
+            try:
+                atual = yaml.safe_load(arq.read_text(encoding="utf-8")) or {}
+            except yaml.YAMLError:
+                atual = {}
+        gravar_atomico(arq, yaml.safe_dump(_mesclar(atual, parcial), allow_unicode=True, sort_keys=False))
     return arq

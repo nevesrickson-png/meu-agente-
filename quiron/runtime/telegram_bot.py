@@ -376,6 +376,8 @@ class BotQuiron:
                 direto = [self._saida(t) for t in await self.carreira.comando(n, args)]
                 if n == "portfolio" and self.carreira.ultimo_pdf:
                     direto[-1].arquivo = str(self.carreira.ultimo_pdf)
+            elif n == "cerebro" and not args.strip():
+                direto = [self._saida(t) for t in await self.organizacao.comando(n, "")]
             elif n in COMANDOS_ORGANIZACAO:
                 direto = [self._saida(t) for t in await self.organizacao.comando(n, args)]
             elif n in COMANDOS_ASSESSORIA:
@@ -1076,6 +1078,20 @@ async def _rodar() -> None:
                 except Exception:  # noqa: BLE001 — o laço nunca morre
                     logging.exception("falha no laço da memória")
 
+        async def laco_cerebro() -> None:
+            """A cada 15 min: índice do Cérebro, edições da nota de Memória e a nota diária (tudo local, sem IA)."""
+            from quiron.servicos.obsidian import rotina
+
+            await asyncio.sleep(20)
+            while True:
+                try:
+                    r = await asyncio.to_thread(rotina.ciclo, bot.agente.longa)
+                    if r["memoria"]:
+                        logging.info("Cérebro: memória editada pelo Obsidian: %s", r["memoria"])
+                except Exception:  # noqa: BLE001 — o laço nunca morre
+                    logging.exception("falha no laço do Cérebro")
+                await asyncio.sleep(900)
+
         async def laco_academia() -> None:
             """De madrugada, aumenta o banco de questões aos poucos (dentro dos limites grátis)."""
             from quiron.servicos.academia import estudo
@@ -1112,7 +1128,8 @@ async def _rodar() -> None:
             await app.updater.start_polling(drop_pending_updates=False)
             tarefas = [asyncio.create_task(laco_agenda()), asyncio.create_task(laco_batimento()), asyncio.create_task(laco_preaquecer()),
                        asyncio.create_task(laco_academia()), asyncio.create_task(laco_analises()),
-                       asyncio.create_task(laco_alertas()), asyncio.create_task(laco_memoria()), asyncio.create_task(laco_cartas())]
+                       asyncio.create_task(laco_alertas()), asyncio.create_task(laco_memoria()), asyncio.create_task(laco_cartas()),
+                       asyncio.create_task(laco_cerebro())]
             print(f"Quíron no Telegram. Ferramentas MCP: {len(conexao.ferramentas)}. Ctrl+C para parar.")
             try:
                 await asyncio.Event().wait()

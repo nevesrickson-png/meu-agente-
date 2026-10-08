@@ -12,6 +12,9 @@ from datetime import date, datetime, timedelta
 DIAS = {"segunda": 0, "terca": 1, "quarta": 2, "quinta": 3, "sexta": 4, "sabado": 5, "domingo": 6}
 NUMEROS = {"um": 1, "uma": 1, "dois": 2, "duas": 2, "tres": 3, "quatro": 4, "cinco": 5, "seis": 6, "sete": 7, "oito": 8,
            "nove": 9, "dez": 10, "quinze": 15, "trinta": 30}
+MESES = {"janeiro": 1, "fevereiro": 2, "marco": 3, "abril": 4, "maio": 5, "junho": 6, "julho": 7, "agosto": 8,
+         "setembro": 9, "outubro": 10, "novembro": 11, "dezembro": 12}
+LIMITE_DIAS = 3650  # "daqui a 999999999 dias" não quebra: passa de 10 anos, não é data de tarefa
 
 
 def _sem_acento(texto: str) -> str:
@@ -54,6 +57,13 @@ def interpretar(expressao: str | None, hoje: date) -> date | None:
             return None
         if not m[3] and d < hoje:
             d = d.replace(year=d.year + 1)
+    elif m := re.search(r"\b(\d{1,2}) de (" + "|".join(MESES) + r")(?: de (\d{4}))?\b", t):
+        try:
+            d = date(int(m[3]) if m[3] else hoje.year, MESES[m[2]], int(m[1]))
+        except ValueError:
+            return None
+        if not m[3] and d < hoje:
+            d = d.replace(year=d.year + 1)
     elif re.search(r"\bdepois de amanha\b", t):
         d = hoje + timedelta(days=2)
     elif re.search(r"\bamanha\b", t):
@@ -62,7 +72,7 @@ def interpretar(expressao: str | None, hoje: date) -> date | None:
         d = hoje
     elif m := re.search(r"\b(?:em|daqui a|dentro de)\s+(\d+|\w+)\s+(dias? uteis|dias?|semanas?|mes(?:es)?)\b", t):
         n = _num(m[1])
-        if n is None:
+        if n is None or n > LIMITE_DIAS:
             return None
         unidade = m[2]
         if unidade.startswith("dias u") or unidade.startswith("dia u"):
@@ -92,7 +102,7 @@ def interpretar(expressao: str | None, hoje: date) -> date | None:
         fim = date(hoje.year, hoje.month, monthrange(hoje.year, hoje.month)[1])
         while fim.weekday() >= 5:
             fim -= timedelta(days=1)
-        d = fim
+        d = max(fim, hoje)  # no último fim de semana do mês, o "fim do mês" é hoje (e não some)
     elif re.search(r"(mes que vem|proximo mes)", t):
         ano, mes = (hoje.year + 1, 1) if hoje.month == 12 else (hoje.year, hoje.month + 1)
         if m := re.search(r"\bdia (\d{1,2})\b", t):
@@ -130,6 +140,8 @@ def relativo(texto: str, agora: datetime) -> tuple[str, datetime | None]:
     if not m:
         return texto, None
     n = {"uma": 1, "um": 1, "duas": 2, "dois": 2, "tres": 3, "três": 3, "meia": 0.5}.get(m["n"].lower()) or int(m["n"])
+    if n > 24 * LIMITE_DIAS:
+        return texto, None
     if m.group(0).lower().startswith("em") and m["u"].lower() == "h" and n > 6:
         return texto, None  # "reunião em 15h" é horário (15h), não "daqui a 15 horas"
     delta = timedelta(hours=n) if m["u"].lower().startswith("h") else timedelta(minutes=n)
@@ -143,7 +155,9 @@ def relativo(texto: str, agora: datetime) -> tuple[str, datetime | None]:
 RE_DATA = re.compile(
     r"\b(depois de amanh[ãa]|amanh[ãa]|hoje|(?:na |nesta |nessa |esta |essa |(?:n[ao] )?próxim[ao] |(?:n[ao] )?proxim[ao] )?(?:segunda|terça|terca|quarta|quinta|"
     r"sexta|sábado|sabado|domingo)(?:-feira)?(?: que vem| da semana que vem| da próxima semana| passada)?|semana que vem|próxima semana|"
-    r"proxima semana|(?:no )?(?:fim|final) do mês|m[êe]s que vem(?: dia \d{1,2})?|(?:no )?dia \d{1,2}(?:/\d{1,2}(?:/\d{2,4})?)?|"
+    r"proxima semana|(?:no )?(?:fim|final) do mês|m[êe]s que vem(?: dia \d{1,2})?|"
+    r"(?:(?:no )?dia )?\d{1,2} de (?:janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)(?: de \d{4})?|"
+    r"(?:no )?dia \d{1,2}(?:/\d{1,2}(?:/\d{2,4})?)?|"
     r"\d{1,2}/\d{1,2}(?:/\d{2,4})?|(?:daqui a|em|dentro de) \w+ (?:dias? úteis|dias? uteis|dias?|semanas?|m[eê]s(?:es)?))\b", re.I)
 _PERIODO = r"(?:\s*(?:da\s+)?(?P<{}>manhã|manha|tarde|noite))"
 RE_HORA = re.compile(r"(?:\b(?:às|as|a partir das|lá pelas|umas)\s*)?\b(?P<h>\d{1,2})\s*(?:h|:)\s*(?P<m>\d{2})?\b(?:min)?"

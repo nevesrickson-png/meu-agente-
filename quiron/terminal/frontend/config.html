@@ -168,7 +168,7 @@
 </header>
 <div class="indice" role="navigation" aria-label="Seções">
   <a href="#visao">Visão geral</a><a href="#preferencias">Preferências</a><a href="#chaves">Chaves e contas</a><a href="#google">Google Agenda</a>
-  <a href="#offline">Versão offline</a><a href="#registro">Registro do Telegram</a>
+  <a href="#cerebro">Cérebro (Obsidian)</a><a href="#offline">Versão offline</a><a href="#registro">Registro do Telegram</a>
 </div>
 </div>
 
@@ -209,6 +209,11 @@
   <section id="google" aria-labelledby="t-google">
     <h2 id="t-google">Google Agenda</h2>
     <div class="corpo" id="google-corpo">carregando…</div>
+  </section>
+
+  <section id="cerebro" aria-labelledby="t-cerebro">
+    <h2 id="t-cerebro">Cérebro (Obsidian)</h2>
+    <div class="corpo" id="cerebro-corpo">carregando…</div>
   </section>
 
   <section id="offline" aria-labelledby="t-offline">
@@ -597,6 +602,28 @@ $("#pref-salvar").addEventListener("click", (ev) => acao(ev.currentTarget, async
   mensagem("");
   await carregarPreferencias();
 }));
+async function carregarCerebro() {
+  const alvo = document.getElementById("cerebro-corpo");
+  try {
+    const r = await fetch("/api/cerebro?n=1");
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || "erro");
+    const s = d.situacao;
+    alvo.innerHTML = `<p class="ajuda">Suas notas, a nota do dia e o que o Quíron sabe de você, numa pasta que o Obsidian (gratuito) abre como cofre.
+        O Quíron escreve só na pasta <code>Quíron/</code>; <code>Minhas notas/</code> é sua.</p>
+      <div class="linha"><input type="text" readonly value="${s.pasta.replace(/"/g, "&quot;")}" aria-label="Pasta do Cérebro">
+        <button type="button" id="copiar-cerebro"><span data-ico="check"></span>Copiar caminho</button></div>
+      <ol class="passos"><li>Instale o Obsidian em obsidian.md (grátis).</li><li>Abra o Obsidian → <b>Abrir pasta como cofre</b> → cole o caminho acima.</li>
+        <li>Pronto: no Telegram, <code>/nota</code> guarda, <code>/notas</code> procura e <code>/cerebro &lt;pergunta&gt;</code> responde citando as notas. No Terminal, digite <code>NOTAS</code>.</li></ol>
+      <p class="resultado">${s.notas} notas · ${s.minhas} suas · ${s.links} ligações</p>`;
+    window.icoTrocar && window.icoTrocar(alvo);
+    document.getElementById("copiar-cerebro").onclick = async () => {
+      try { await navigator.clipboard.writeText(s.pasta); document.getElementById("copiar-cerebro").lastChild.textContent = "Copiado"; }
+      catch { alvo.querySelector("input").select(); }
+    };
+  } catch (e) { alvo.textContent = "Não consegui ler o Cérebro: " + e.message; }
+}
+carregarCerebro();
 carregarPreferencias();
 carregar().then(() => { if (location.hash.length > 1) { const alvo = document.querySelector(location.hash); alvo && alvo.scrollIntoView(); } });
 carregarLog();

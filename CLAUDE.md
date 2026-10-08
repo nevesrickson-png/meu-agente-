@@ -181,6 +181,23 @@ Arquivos com DRM não são processados.
   `pedir` e no `repetir`) lê fundos de qualquer campo (`fundos._itens`), troca para `fii_comparativo` e recusa pedido
   vazio na hora; `fundos/consulta_rapida.py` (`/ativo`, rota de código sozinho, MCP `fii_dados`) — prompt proíbe
   descrever ativo sem consulta.
+- Cérebro / Obsidian, etapa A (08/10/2026, `quiron/servicos/obsidian/`, testes `testes/test_cerebro.py`): cofre de
+  notas em `dados/cerebro/` (`QUIRON_CEREBRO` troca). `pasta.py` (estrutura `Minhas notas/` (do Rickson; o Quíron só CRIA
+  arquivo novo em `Minhas notas/Entrada`, nunca edita) · `Quíron/` (Diário, Memória, Estudo, Mercado, Melhorias — escrita
+  livre via `gravar_quiron`) · `Modelos/`; `.obsidian/` mínimo só se não existir; `caminho()` recusa sair do cofre;
+  `nome_arquivo` seguro no Windows), `indice.py` (`dados/cerebro.db`: FTS5 do corpo sem frontmatter, tags (frontmatter +
+  #inline fora de código), links [[ ]] casados pelo nome do arquivo, `quem_cita`, `ligacoes`; varredura por mtime/tamanho,
+  no máximo 1 a cada 20 s por processo; `secure_delete`), `diario.py` (`Quíron/Diário/AAAA-MM-DD.md`: só o bloco entre
+  `<!-- quiron:inicio/fim -->`; tarefas, estudo, briefing do dia (registros proativos), episódios, notas mexidas; CLI-XXX
+  só como contagem; regrava só se mudou), `consultas.py`, `rotina.py` (`preparar` uma vez por processo: estrutura +
+  `notas.migrar_antigas`; `ciclo` = memória + índice + diário, `laco_cerebro` do bot a cada 15 min). `/nota` grava arquivo
+  (`organizacao/notas.py` virou adaptador; ids = ids do índice). Memória: `MemoriaLonga.arquivo_cerebro` =
+  `Quíron/Memória/Memória do Quíron.md` (segundo espelho editável, só para a memória padrão; cópias não escrevem).
+  MCP `quiron-organizacao.buscar_no_cerebro`/`ler_nota`; `/cerebro` (sem args direto; com pergunta → `agente/comandos/
+  cerebro.md`), rota "o que eu já estudei/anotei sobre X"; Terminal `GET /api/cerebro`, `/api/cerebro/nota`, painel
+  `NOTAS` e seção em Configurações; LGPD `_apagar_cerebro` (linhas que citam o código, inclusive nas notas dele). Etapas
+  B (notas automáticas de estudo/mercado, ligações) e C (👍/👎, revisão espaçada, lacunas, reflexão semanal, propostas
+  de melhoria) aguardam o aceite da A.
 - Agente (Fase 5, código em `quiron/runtime/`): `workspace.py` (cérebro em Markdown: modelos em `agente/workspace/`,
   cópia viva em `dados/workspace/` — SOUL gerado da persona, USUARIO, MEMORIA, ROTINAS, diario/; comandos de barra em
   `agente/comandos/*.md`), `memoria.py` (conversas em `dados/conversas.db` com FTS5, resumo/compactação), `agendador.py`

@@ -52,6 +52,7 @@ perguntar da Selic é entendido. `/novo` começa outro assunto (o anterior fica 
 | Quando fica pronta | Entrega a análise pedida (resumo + PDF + planilha) |
 | De 2 em 2 h (7h–22h) | Confere suas rotinas e só fala se valer a pena |
 | Toda noite, 3h | Organiza a memória e faz cópia de segurança |
+| A cada 15 min | Atualiza o Cérebro (Obsidian): índice das notas, a nota do dia e as suas correções na nota de Memória (sem mensagem) |
 
 Ele manda no máximo 3 mensagens automáticas por dia além dos lembretes que você pediu. `/agenda` mostra e cancela rotinas.
 
@@ -160,8 +161,27 @@ região — do cadastro e do Formulário de Referência da CVM + perfil do Yahoo
 Os números são sempre calculados em Python, com fonte; a IA só interpreta e escreve.
 
 ### 🗂️ Organização
-`/tarefa` · `/tarefas` · `/feito 3` · `/adiar 3 sexta` · `/hoje` · `/nota texto #tag` · `/notas busca` ·
+`/tarefa` · `/tarefas` · `/feito 3` · `/adiar 3 sexta` (também “dia 31 de dezembro”) · `/hoje` · `/nota texto #tag` · `/notas busca` ·
 `/meta estudar 5 horas por semana` · `/metas` · `/revisao` · `/evento quinta às 15h reunião` (Google Agenda)
+
+### 🧠 Cérebro — suas notas no Obsidian (`/cerebro` · Terminal: `NOTAS`)
+Uma pasta de notas em Markdown (`dados/cerebro`) que o **Obsidian** (gratuito) abre como cofre: *Abrir pasta como
+cofre* → escolha a pasta (o caminho aparece em `/cerebro` e em Configurações → Cérebro).
+- **Minhas notas/** é sua: o Quíron lê, mas nunca muda o seu texto. O `/nota` grava em *Minhas notas/Entrada*.
+- **Quíron/Diário**: uma nota por dia, sozinha — tarefas, estudo da Academia, o briefing, conversas resumidas e as notas
+  que você mexeu. Escreva à vontade em "Minhas anotações": o Quíron só mexe no bloco dele.
+- **Quíron/Memória**: tudo o que ele sabe de você. Corrija um item, apague uma linha (ele esquece) ou escreva
+  `- novo fato` — vale na próxima conversa.
+- **Modelos/**: livro, conceito, tese e reflexão.
+
+| Para… | Comando | Exemplo |
+|---|---|---|
+| Onde fica e como abrir | `/cerebro` | `/cerebro` |
+| Perguntar às suas notas (cita cada nota) | `/cerebro <pergunta>` | `/cerebro o que já estudei sobre duration?` · “o que eu anotei sobre previdência” |
+| Anotar / procurar | `/nota` · `/notas` | `/nota convexidade = curvatura #estudo` · `/notas #estudo` |
+
+Clientes ficam de fora: tarefas e conversas com CLI-XXX não entram na nota do dia, e `/esquecer CLI-XXX` também limpa o
+Cérebro. Ao perguntar às notas, o trecho relevante vai para a IA gratuita (telefone/CPF/e-mail mascarados).
 
 ### 🧭 Carreira
 `/carreira` (plano e certificações) · `/diario <tese>` (diário de teses com revisão e calibração) · `/portfolio`

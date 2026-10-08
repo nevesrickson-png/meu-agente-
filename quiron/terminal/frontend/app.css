@@ -238,3 +238,25 @@ details summary { cursor: pointer; margin: 6px 0; color: var(--texto-2); }
   .painel:has(.chat-msgs) { min-height: 75vh; }
   .msg { max-width: 94%; }
 }
+
+/* ---------- NOTAS (Cérebro / Obsidian) */
+.notas-busca { flex: none; }
+.notas-area { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(180px, 38%) 1fr; gap: 14px; margin-top: 10px; }
+.notas-lista { overflow: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; padding-right: 4px; }
+.nota-item { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 8px 10px; border-radius: var(--raio-p);
+  background: transparent; border: 0; color: var(--texto); cursor: pointer; transition: background var(--transicao); }
+.nota-item:hover, .nota-item:focus-visible { background: var(--painel-2); }
+.nota-item-t { font-weight: 550; font-size: 13px; line-height: 1.35; }
+.nota-trecho { font-size: 12px; color: var(--texto-2); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.notas-leitura { overflow: auto; min-height: 0; border-left: 1px solid var(--borda); padding-left: 14px; }
+.nota-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.nota-titulo { font: 600 16px var(--titulo); letter-spacing: -0.02em; }
+.nota-corpo { font-size: 13.5px; line-height: 1.6; color: var(--texto); }
+.nota-ligacoes { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--borda); font-size: 12.5px; color: var(--texto-2); }
+.nota-ligacoes b { color: var(--texto-3); font-weight: 600; margin-right: 6px; }
+.link-nota { color: var(--acento-texto); text-decoration: none; border-bottom: 1px dashed color-mix(in srgb, var(--acento-texto) 45%, transparent); }
+.link-nota:hover { text-decoration: none; border-bottom-style: solid; }
+@media (max-width: 760px) {
+  .notas-area { grid-template-columns: 1fr; }
+  .notas-leitura { border-left: 0; padding-left: 0; border-top: 1px solid var(--borda); padding-top: 10px; }
+}

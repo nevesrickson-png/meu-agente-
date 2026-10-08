@@ -12,6 +12,18 @@ from quiron.servicos.organizacao import google_agenda, hoje, metas, notas, taref
 COMANDOS = {"tarefa", "tarefas", "feito", "adiar", "hoje", "nota", "notas", "meta", "metas", "revisao", "evento"}
 
 
+def situacao_cerebro() -> str:
+    from quiron.servicos.obsidian import rotina
+
+    s = rotina.situacao()
+    return (f"🧠 Cérebro: {s['notas']} notas ({s['minhas']} suas) e {s['links']} ligações.\n"
+            f"Pasta: {s['pasta']}\n"
+            "Para abrir no Obsidian (grátis): Abrir pasta como cofre → escolha essa pasta.\n\n"
+            "• /nota <texto> guarda em Minhas notas/Entrada · /notas <palavra ou #tag> procura\n"
+            "• /cerebro <pergunta> responde citando as suas notas (ex.: /cerebro o que já estudei sobre duration?)\n"
+            "• A nota do dia fica em Quíron/Diário e o que eu sei de você em Quíron/Memória — pode corrigir lá.")
+
+
 def botoes_tarefa(t: tarefas.Tarefa) -> list[list[tuple[str, str]]]:
     return [[("✅ Feito", f"or:feito:{t.id}"), ("⏰ +1h", f"or:adiar:{t.id}:1h"), ("📅 Amanhã", f"or:adiar:{t.id}:amanha")]]
 
@@ -58,6 +70,8 @@ class OrganizacaoBot:
             return [Tela("🗒️ Anotado (#" + str(notas.criar(args).id) + ").")]
         if nome == "notas":
             return [Tela(notas.descrever(notas.buscar(args), args))]
+        if nome == "cerebro":  # sem pergunta: onde fica e como abrir (com pergunta, vai para o agente)
+            return [Tela(situacao_cerebro())]
         if nome == "meta":
             if m := re.fullmatch(r"#?(\d+)\s*\+\s*(\d+(?:[.,]\d+)?)\s*(.*)", args):
                 return [Tela(metas.descrever(metas.registrar(int(m[1]), float(m[2].replace(",", ".")), m[3])))]

@@ -10,6 +10,7 @@ cópia antiga da memória apaga de novo. Não há mapa código → nome aqui (el
 from __future__ import annotations
 
 import json
+import logging
 import re
 import shutil
 import sqlite3
@@ -95,11 +96,46 @@ def esquecer_cliente(cliente: str) -> Apagado:
             n += len(linhas) - len(restantes)
             arq.write_text("\n".join(restantes) + "\n", encoding="utf-8")
     r.itens["linhas de memória/diário"] = n
+    r.itens["linhas no Cérebro (notas do Obsidian)"] = _apagar_cerebro(cod)
     from quiron.servicos.offline import cofre
 
     if cofre.existe():
         r.aviso = f"o nome real fica no cofre da versão offline (criptografado): no PC, rode `uv run quiron-offline cofre remover {cod}`."
     return r
+
+
+def _apagar_cerebro(cod: str) -> int:
+    """Tira do Cérebro toda linha que cita o cliente (em qualquer nota, inclusive as do Rickson: a LGPD vale acima da regra
+    de não mexer nas notas dele). Nota que fica sem conteúdo é apagada. O índice de busca é refeito."""
+    from quiron.nucleo.trava import gravar_atomico
+    from quiron.servicos.obsidian import indice
+    from quiron.servicos.obsidian import pasta as cerebro
+
+    raiz = cerebro.pasta()
+    if not raiz.exists():
+        return 0
+    n = 0
+    for arq in raiz.rglob("*.md"):
+        try:
+            texto = arq.read_text(encoding="utf-8-sig")
+        except OSError:
+            continue
+        if not _cita(texto, cod):
+            continue
+        linhas = texto.splitlines()
+        restantes = [l for l in linhas if not _cita(l, cod)]
+        n += len(linhas) - len(restantes)
+        _, corpo = cerebro.ler_frontmatter("\n".join(restantes))
+        if not corpo.strip() or (arq.parent.name == "Entrada" and not re.sub(r"#[\wÀ-ÿ-]+", "", corpo).strip()):
+            arq.unlink()
+        else:
+            gravar_atomico(arq, "\n".join(restantes) + "\n")
+    with indice.conectar() as con:  # o índice guarda o texto: refaz do zero o que mudou (e apaga o que citava o código)
+        for (ident, texto) in con.execute("SELECT id, texto FROM notas").fetchall():
+            if _cita(texto, cod):
+                con.execute("DELETE FROM notas WHERE id = ?", (ident,))
+    indice.atualizar(forcar=True)
+    return n
 
 
 def _conectar(banco: Path) -> sqlite3.Connection:
@@ -276,11 +312,19 @@ def _apagar_exportacoes(raiz: Path, cod: str) -> int:
     return n
 
 
-def _ler_esquecidos(arq: Path) -> dict[str, str]:
-    """{código: data em que foi esquecido}. Formato antigo (lista) vale como esquecido hoje."""
+class ListaEsquecidosIlegivel(RuntimeError):
+    """O arquivo de clientes esquecidos está corrompido: nunca regravar por cima (perderia esquecimentos antigos)."""
+
+
+def _ler_esquecidos(arq: Path, estrito: bool = False) -> dict[str, str]:
+    """{código: data em que foi esquecido}. Formato antigo (lista) vale como esquecido hoje.
+    `estrito`: arquivo corrompido levanta erro em vez de virar lista vazia (usado antes de gravar)."""
     try:
         dados = json.loads(arq.read_text(encoding="utf-8")) if arq.exists() else {}
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError) as e:
+        if estrito:
+            raise ListaEsquecidosIlegivel(f"{arq} ilegível ({e}); conserte ou restaure do backup antes de esquecer outro cliente") from e
+        logging.error("lista LGPD ilegível (%s): %s", arq, e)
         return {}
     if isinstance(dados, list):
         return {c: date.today().isoformat() for c in dados}
@@ -288,10 +332,13 @@ def _ler_esquecidos(arq: Path) -> dict[str, str]:
 
 
 def _anotar_esquecido(raiz: Path, cod: str) -> None:
+    from quiron.nucleo.trava import gravar_atomico, trava_arquivo
+
     arq = raiz / "lgpd_esquecidos.json"
-    dados = _ler_esquecidos(arq)
-    dados[cod] = date.today().isoformat()
-    arq.write_text(json.dumps(dados, sort_keys=True), encoding="utf-8")
+    with trava_arquivo(arq):  # dois /esquecer ao mesmo tempo não se apagam; queda no meio não corrompe
+        dados = _ler_esquecidos(arq, estrito=True)
+        dados[cod] = date.today().isoformat()
+        gravar_atomico(arq, json.dumps(dados, sort_keys=True))
 
 
 def esquecidos(copia_de: str | None = None) -> list[str]:

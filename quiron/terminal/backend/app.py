@@ -685,6 +685,33 @@ def api_biblioteca(q: str = "", n: int = 6) -> dict:
     return {"texto": consultas.buscar(q.strip(), max(1, min(n, 12)))}
 
 
+@app.get("/api/cerebro")
+def api_cerebro(q: str = "", pasta: str = "", n: int = 30) -> dict:
+    """NOTAS: busca no Cérebro (cofre de notas do Obsidian). Sem `q`, as mais recentes."""
+    from quiron.servicos.obsidian import indice, rotina
+
+    rotina.preparar()
+    achadas = indice.buscar(q.strip()[:200], max(1, min(n, 60)), pasta=pasta.strip() or None)
+    return {"situacao": rotina.situacao(),
+            "notas": [{"caminho": x.caminho, "titulo": x.titulo, "pasta": x.pasta, "tags": x.tags, "alterada": x.alterada,
+                       "trecho": x.trecho} for x in achadas]}
+
+
+@app.get("/api/cerebro/nota")
+def api_cerebro_nota(c: str) -> dict:
+    """Uma nota do Cérebro (pelo caminho ou nome) com o que ela cita e quem a cita."""
+    from quiron.servicos.obsidian import consultas
+    from quiron.servicos.obsidian.pasta import EscritaRecusada
+
+    try:
+        d = consultas.detalhe(c)
+    except EscritaRecusada as e:
+        raise HTTPException(400, str(e)) from e
+    if not d:
+        raise HTTPException(404, "nota não encontrada")
+    return d
+
+
 class _CofreSessao:
     """Cofre aberto na memória do Terminal local; fecha sozinho após 15 minutos sem uso."""
 

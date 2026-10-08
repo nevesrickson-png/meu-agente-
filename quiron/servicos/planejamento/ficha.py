@@ -245,7 +245,9 @@ def salvar(dados: dict[str, Any], substituir: bool = False) -> Ficha:
     novo = {**base, **{k: v for k, v in dados.items() if v is not None}, "cliente": cod,
             "atualizado_em": datetime.now().isoformat(timespec="seconds")}
     f = Ficha.de_dict(novo)  # valida tipos antes de gravar
-    arq.write_text(json.dumps(f.como_dict(), ensure_ascii=False, indent=1), encoding="utf-8")
+    from quiron.nucleo.trava import gravar_atomico
+
+    gravar_atomico(arq, json.dumps(f.como_dict(), ensure_ascii=False, indent=1))  # ficha nunca fica pela metade
     return f
 
 

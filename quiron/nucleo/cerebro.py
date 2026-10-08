@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import os
+
 import re
 import sys
 import time
@@ -30,6 +32,8 @@ class Resposta:
 
 
 def _litellm():
+    # sem isto o LiteLLM baixa a tabela de preços do GitHub a cada processo (até 5 s, e vai à rede até no modo offline)
+    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
     import litellm
 
     litellm.suppress_debug_info = True

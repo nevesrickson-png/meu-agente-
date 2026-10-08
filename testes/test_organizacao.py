@@ -76,12 +76,13 @@ def test_tarefa_com_lembrete_adiar_concluir():
 
 
 def test_notas_e_metas():
-    notas.criar("Ideia de pauta: duration explicada com gangorra #conteudo")
-    notas.criar("CLI-012 gosta de explicações com números #cliente")
-    assert [n.id for n in notas.buscar("gangorra")] == [1]
-    assert [n.id for n in notas.buscar("explicacoes")] == [2]  # sem acento acha com acento
-    assert [n.id for n in notas.buscar("#cliente")] == [2] and notas.buscar("")[0].id == 2
-    assert notas.remover(1) and notas.buscar("gangorra") == []
+    n1 = notas.criar("Ideia de pauta: duration explicada com gangorra #conteudo").id
+    time.sleep(0.02)
+    n2 = notas.criar("CLI-012 gosta de explicações com números #cliente").id
+    assert [n.id for n in notas.buscar("gangorra")] == [n1]
+    assert [n.id for n in notas.buscar("explicacoes")] == [n2]  # sem acento acha com acento
+    assert [n.id for n in notas.buscar("#cliente")] == [n2] and notas.buscar("")[0].id == n2
+    assert notas.remover(n1) and notas.buscar("gangorra") == []
 
     h = date(2026, 10, 7)  # quarta
     assert metas.interpretar("captar 2 milhões até dezembro", h)[1:] == (2_000_000, "R$", "total", "2026-12-31")
@@ -250,7 +251,8 @@ def test_esquecer_apaga_tarefas_e_notas_do_cliente():
     tarefas.criar("ligar para o CLI-0120", SEGUNDA)
     notas.criar("CLI-012 prefere WhatsApp")
     r = lgpd.esquecer_cliente("CLI-012")
-    assert r.itens["tarefas/notas/metas"] == 2 and r.itens["lembretes"] == 1
+    assert r.itens["tarefas/notas/metas"] == 1 and r.itens["lembretes"] == 1  # a nota agora mora no Cérebro
+    assert r.itens["linhas no Cérebro (notas do Obsidian)"] == 1
     assert [t.texto for t in tarefas.listar()] == ["Ligar para o CLI-0120"] and notas.buscar("WhatsApp") == []
 
 

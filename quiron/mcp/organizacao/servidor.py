@@ -12,7 +12,9 @@ mcp = MCPServer(
         "Organização do Rickson. Quando ele pedir para lembrar/anotar uma tarefa (\"amanhã às 10h ligar para o CLI-012\"), "
         "use `criar_tarefa` com a frase EXATAMENTE como veio: a data e a hora são calculadas pela ferramenta e o lembrete é "
         "criado. Não use para rotinas recorrentes (essas vão no agendador interno). `hoje` monta o dia; `revisao_semanal` a "
-        "semana. Notas com `anotar`/`buscar_notas`; metas com `criar_meta`/`registrar_meta`. Google Agenda: `agenda` e "
+        "semana. Notas com `anotar`/`buscar_notas`. Cérebro (cofre de notas do Obsidian do Rickson): quando ele perguntar o que "
+        "já anotou/estudou/pensou sobre algo, use `buscar_no_cerebro` e `ler_nota` e responda só com o que está nas notas, "
+        "citando [[nome da nota]]; nunca invente conteúdo de nota. Metas com `criar_meta`/`registrar_meta`. Google Agenda: `agenda` e "
         "`criar_evento` (só se configurado). Cliente só como CLI-XXX."
     ),
 )
@@ -85,6 +87,29 @@ def anotar(texto: str) -> str:
 def buscar_notas(termo: str = "") -> str:
     """Procura nas notas por palavra ou #tag (vazio = últimas)."""
     return notas.descrever(notas.buscar(termo), termo)
+
+
+@mcp.tool()
+def buscar_no_cerebro(consulta: str, pasta: str = "") -> str:
+    """Procura nas notas do Cérebro (Obsidian): palavras ou #tag. `pasta` opcional: "Minhas notas", "Quíron/Diário",
+    "Quíron/Memória"… Devolve as notas com trecho; abra as relevantes com `ler_nota`."""
+    from quiron.servicos.obsidian import indice
+
+    from quiron.servicos.organizacao.notas import _preparar
+
+    _preparar()
+    achadas = indice.buscar(consulta, 8, pasta=pasta or None)
+    if not achadas:
+        return f"Nada no Cérebro sobre “{consulta}”."
+    return "\n".join(n.linha() for n in achadas)
+
+
+@mcp.tool()
+def ler_nota(nota: str) -> str:
+    """Lê uma nota do Cérebro pelo nome ([[nome]]) ou caminho, com as notas que ela cita e as que a citam."""
+    from quiron.servicos.obsidian import consultas
+
+    return consultas.texto_nota(nota)
 
 
 @mcp.tool()

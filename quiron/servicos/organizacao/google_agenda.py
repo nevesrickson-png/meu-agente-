@@ -93,9 +93,20 @@ def link_autorizacao(porta: int, estado: str, desafio: str) -> str:
         "access_type": "offline", "prompt": "consent", "state": estado, "code_challenge": desafio, "code_challenge_method": "S256"})
 
 
+_COMPARTILHADO: httpx.Client | None = None
+
+
+def _cliente_compartilhado() -> httpx.Client:
+    """Um cliente HTTP só por processo (antes cada chamada abria um e nunca fechava: conexões penduradas)."""
+    global _COMPARTILHADO
+    if _COMPARTILHADO is None or _COMPARTILHADO.is_closed:
+        _COMPARTILHADO = httpx.Client(timeout=30)
+    return _COMPARTILHADO
+
+
 def trocar_codigo(codigo: str, porta: int, verificador: str, cliente_http: httpx.Client | None = None) -> dict[str, Any]:
     c = _cliente_oauth()
-    http = cliente_http or httpx.Client(timeout=30)
+    http = cliente_http or _cliente_compartilhado()
     r = http.post(URL_TOKEN, data={"code": codigo, "client_id": c["client_id"], "client_secret": c["client_secret"],
                                    "redirect_uri": f"http://127.0.0.1:{porta}/", "grant_type": "authorization_code",
                                    "code_verifier": verificador})
@@ -111,8 +122,9 @@ def trocar_codigo(codigo: str, porta: int, verificador: str, cliente_http: httpx
 
 def _gravar_token(token: dict[str, Any]) -> None:
     arq = arquivo_token()
-    arq.parent.mkdir(parents=True, exist_ok=True)
-    arq.write_text(json.dumps(token), encoding="utf-8")
+    from quiron.nucleo.trava import gravar_atomico
+
+    gravar_atomico(arq, json.dumps(token))  # queda no meio não deixa o token pela metade (perderia a autorização)
     try:
         os.chmod(arq, 0o600)
     except OSError:
@@ -175,7 +187,7 @@ def _token(cliente_http: httpx.Client | None = None) -> str:
     if tok.get("access_token") and tok.get("expira_em", 0) > time.time():
         return tok["access_token"]
     c = _cliente_oauth()
-    http = cliente_http or httpx.Client(timeout=30)
+    http = cliente_http or _cliente_compartilhado()
     r = http.post(URL_TOKEN, data={"client_id": c["client_id"], "client_secret": c["client_secret"],
                                    "refresh_token": tok["refresh_token"], "grant_type": "refresh_token"})
     if r.status_code != 200:
@@ -192,7 +204,7 @@ def _http(cliente_http: httpx.Client | None = None) -> httpx.Client:
 
     if cliente_http is None and offline.ativo():  # versão offline: nunca sai para a internet
         raise AgendaIndisponivel("Google Agenda indisponível na versão offline (sem internet).")
-    return cliente_http or httpx.Client(timeout=30)
+    return cliente_http or _cliente_compartilhado()
 
 
 @dataclass

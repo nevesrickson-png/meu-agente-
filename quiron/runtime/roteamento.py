@@ -113,6 +113,12 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
         return "tarefa", _do_original(original, m.group(1))
     if re.match(r"^(?:minhas notas|minhas anotacoes)$", t):
         return "notas", ""
+    if re.match(r"^(?:meu )?(?:cerebro|obsidian)$", t):
+        return "cerebro", ""
+    # "o que eu já estudei/anotei sobre duration?" → pergunta às notas do Cérebro (com a IA, citando as notas)
+    if m := re.match(r"^(?:o )?que (?:eu )?(?:ja )?(?:estudei|anotei|escrevi|pensei|tenho anotado|tenho nas (?:minhas )?notas|"
+                     r"sei|aprendi) (?:sobre|de|a respeito de) (.{2,120}?)\??$", t):
+        return "cerebro", _do_original(original, m.group(1))
     if re.match(r"^(?:minhas metas|como (?:estao|tao) (?:as )?minhas metas)$", t):
         return "metas", ""
     if re.match(r"^(?:revisao (?:da|semanal)|como foi (?:a|minha) semana|revisa(?:r)? (?:a|minha) semana)$", t):
@@ -186,7 +192,7 @@ AREAS = {
                        r"carta|gestora|gestor|letter",
     "quiron_biblioteca": r"livro|autor|biblioteca|explica|conceito|estudar|teoria|graham|buffett|marks|debate|citac",
     "quiron_academia": r"questao|questoes|simulado|prova|cfp|cnpi|cea|cfa|flashcard|estudo|edital|modulo|academia|aula|diagnostic",
-    "quiron_organizacao": r"tarefa|lembr|agenda|reuniao|compromisso|evento|nota|anot|meta|pendenc|revisao semanal|lembrete|remarc|adia",
+    "quiron_organizacao": r"tarefa|lembr|agenda|reuniao|compromisso|evento|nota|anot|meta|pendenc|revisao semanal|lembrete|remarc|adia|cerebro|obsidian|estudei|aprendi",
     "quiron_assessoria": r"cliente|cli-\d|ficha|planejament|aposentad|sucess|heranc|itcmd|seguro|protecao|pgbl|vgbl|imposto|"
                          r"empresari|parar de trabalhar|patrimonio|simul|imovel|objec|dossie|pos-reuniao|treino|compliance|vencimento|"
                          r"mensagem para|rascunho",
