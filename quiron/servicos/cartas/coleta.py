@@ -43,7 +43,8 @@ _NAO = re.compile(r"politica|privacidade|cookie|termos|contato|login|cadastr|tra
 # documentos que não são carta de gestão (avisos de FII, assembleias, editais…)
 _NAO_CARTA = re.compile(r"carta[\s_-]*consulta|emiss[aã]o[\s_-]*de[\s_-]*cotas|assembleia|edital|convoca[cç][aã]o|fato[\s_-]*relevante|"
                         r"comunicado[\s_-]*ao[\s_-]*mercado|aviso[\s_-]*aos[\s_-]*cotistas|informe[\s_-]*de[\s_-]*rendimentos|"
-                        r"proposta[\s_-]*da[\s_-]*administra|ata[\s_-]+d[ae]|one[\s_-]?page|l[aâ]mina", re.I)
+                        r"proposta[\s_-]*da[\s_-]*administra|ata[\s_-]+d[ae]|one[\s_-]?page|l[aâ]mina|\blgpd\b|esclarecimento|"
+                        r"pol[ií]tica[\s_-]*de[\s_-]*(privacidade|voto|investimento)", re.I)
 _GENERICO = re.compile(r"^(baixar|download|pdf|leia mais|saiba mais|clique\b.*|visualizar.*|ver|acesse|acessar|abrir|read more|"
                        r"acessar documento|ver documento|baixar documento|baixar pdf|download pdf|documento|arquivo|"
                        r"carta do gestor|carta mensal|carta|relat[oó]rio( mensal)?|coment[aá]rio( mensal)?)$", re.I)
@@ -117,8 +118,20 @@ def casar_gestoras(nome: str) -> list[str]:
 
 
 # ---------------------------------------------------------------- datas
+_PASTA_UPLOAD = re.compile(r"/(?:wp-content/)?uploads?/20\d\d/\d\d/", re.I)
+
+
 def extrair_data(texto: str, hoje: date | None = None) -> str:
-    """Data no título/link: 2025-09, 09/2025, 15/09/2025, "setembro de 2025", "set/25", "carta-setembro-2025"…"""
+    """Data no título/link: 2025-09, 09/2025, 15/09/2025, "setembro de 2025", "set/25", "carta-setembro-2025"…
+    A pasta de upload do site (/uploads/2025/06/) é o dia em que o arquivo subiu, não o mês da carta: só vale se o
+    título/nome do arquivo não trouxer data nenhuma (sites que mudaram de servidor resubiram tudo num mês só)."""
+    if _PASTA_UPLOAD.search(texto or ""):
+        sem_pasta = _extrair_data(_PASTA_UPLOAD.sub("/", texto), hoje)
+        return sem_pasta or _extrair_data(texto, hoje)
+    return _extrair_data(texto, hoje)
+
+
+def _extrair_data(texto: str, hoje: date | None = None) -> str:
     hoje = hoje or date.today()
     t = _html.unescape(texto or "").lower()
     candidatos: list[date] = []
@@ -136,8 +149,9 @@ def extrair_data(texto: str, hoje: date | None = None) -> str:
         candidatos.append((int(a), int(m), 1))
     for m, a in re.findall(r"(?<!\d)(0[1-9]|1[0-2])[-/_.](20\d\d)(?!\d)", t):
         candidatos.append((int(a), int(m), 1))
-    for nome, a in re.findall(r"\b(?:" + _MES + r")"
-                              r"[\s/._-]*(?:de[\s_-]+)?(20\d\d|\d\d)\b", t):
+    # "(?<![a-zç])" em vez de "\b": "CartaMensal_Ago26.pdf" (mês logo depois de "_") também vale
+    for nome, a in re.findall(r"(?<![a-zç])(?:" + _MES + r")"
+                              r"[\s/._-]*(?:de[\s_-]+)?(20\d\d|\d\d)(?!\d)", t):
         ano = int(a) if len(a) == 4 else 2000 + int(a)
         candidatos.append((ano, MESES[nome[:3]], 1))
     validas = []
@@ -265,25 +279,109 @@ def _itens_api(cliente: httpx.Client, api: str, fonte: dict) -> list[Carta]:
         dados = next((v for v in dados.values() if isinstance(v, list)), [])
     saida = []
 
+    def valor(v):
+        """Desembrulha formatos comuns: WordPress {"rendered": …}, Strapi {"data": {"attributes": {"url": …}}}."""
+        for _ in range(4):
+            if isinstance(v, list):
+                v = v[0] if v else ""
+            if not isinstance(v, dict):
+                break
+            v = v.get("rendered") or v.get("url") or v.get("data") or v.get("attributes") or ""
+        return v if isinstance(v, (str, int, float)) else ""
+
     def campo(item: dict, *nomes: str) -> str:
         for n in nomes:
-            v = item.get(n)
-            if isinstance(v, dict):
-                v = v.get("rendered") or v.get("url") or ""
+            v = valor(item.get(n))
             if v:
                 return str(v)
         return ""
 
-    for item in dados[:200] if isinstance(dados, list) else []:
+    for item in dados[:300] if isinstance(dados, list) else []:
         if not isinstance(item, dict):
             continue
+        if isinstance(item.get("attributes"), dict):  # Strapi: os campos ficam dentro de "attributes"
+            item = {**item, **item["attributes"]}
         titulo = _html.unescape(re.sub(r"<[^>]+>", "", campo(item, "title", "titulo", "nome", "name"))).strip()
-        link = urljoin(api, campo(item, "link", "url", "arquivo", "file", "pdf", "href"))
+        link = urljoin(api, campo(item, "link", "url", "arquivo", "file", "pdf", "href", "document", "documento", "anexo"))
         if not titulo or not link.startswith("http") or _NAO_CARTA.search(f"{titulo} {link}"):
             continue
-        bruto = campo(item, "date", "data", "published", "publicado_em", "created_at")
-        data = bruto[:10] if re.match(r"20\d\d-\d\d-\d\d", bruto) else extrair_data(f"{bruto} {titulo} {link}")
+        bruto = campo(item, "date", "data", "published", "publishDate", "publicado_em", "dataPublicacao", "created_at",
+                      "createdArticleTimeStamp", "timeInfo", "timestamp")
+        if re.fullmatch(r"1\d{9}(\d{3})?", bruto.strip()):  # carimbo em segundos ou milissegundos
+            seg = int(bruto.strip()[:10])
+            data = datetime.fromtimestamp(seg, timezone.utc).date().isoformat()
+        else:
+            data = bruto[:10] if re.match(r"20\d\d-\d\d-\d\d", bruto) else extrair_data(f"{bruto} {titulo} {link}")
         saida.append(Carta(fonte["nome"], _encurtar(titulo), link, data, fonte.get("tipo", "")))
+    return saida
+
+
+def _itens_sitemap(cliente: httpx.Client, mapa: str, fonte: dict) -> list[Carta]:
+    """sitemap.xml oficial do site (lista pública de páginas com data): só os endereços que casam com `link_inclui`."""
+    if not fonte.get("link_inclui") or not permitido(mapa, cliente):
+        return []
+    r = cliente.get(mapa)
+    if r.status_code >= 400:
+        return []
+    filtro = re.compile(fonte["link_inclui"], re.I)
+    saida = []
+    for bloco in re.findall(r"<url>(.*?)</url>", r.text, re.S | re.I)[:5000]:
+        loc = re.search(r"<loc>\s*(.*?)\s*</loc>", bloco, re.S)
+        if not loc or not filtro.search(loc.group(1)):
+            continue
+        link = _html.unescape(loc.group(1))
+        mod = re.search(r"<lastmod>\s*(20\d\d-\d\d-\d\d)", bloco)
+        lesma = urlsplit(link).path.rstrip("/").rsplit("/", 1)[-1]
+        titulo = re.sub(r"[-_]+", " ", re.sub(r"\.\w+$", "", lesma)).strip().capitalize()
+        if not titulo or _NAO_CARTA.search(f"{titulo} {link}"):
+            continue
+        data = extrair_data(f"{titulo} {link}") or (mod.group(1) if mod else "")
+        saida.append(Carta(fonte["nome"], _encurtar(titulo), link, data, fonte.get("tipo", "")))
+    saida.sort(key=lambda c: c.data, reverse=True)
+    return saida[:300]
+
+
+def _itens_mziq(cliente: httpx.Client, cfg: dict, fonte: dict, anos: list[int]) -> list[Carta]:
+    """Sites na plataforma MZ: a lista de documentos vem da API pública que a própria página chama (POST com o ano e as
+    categorias de cartas, cadastrados em `mziq: {empresa, categorias}`)."""
+    url = f"https://apicatalog.mziq.com/filemanager/company/{cfg['empresa']}/filter/categories/year/meta"
+    if not permitido(url, cliente):
+        return []
+    saida = []
+    for ano in anos:
+        r = cliente.post(url, json={"year": str(ano), "categories": list(cfg.get("categorias") or []), "language": "pt_BR",
+                                    "published": True})
+        if r.status_code >= 400:
+            continue
+        try:
+            metas = ((r.json() or {}).get("data") or {}).get("document_metas") or []
+        except ValueError:
+            continue
+        for m in metas:
+            titulo, link = str(m.get("file_title") or "").strip(), str(m.get("file_url") or "")
+            if not titulo or not link.startswith("http") or _NAO_CARTA.search(titulo):
+                continue
+            pub = str(m.get("file_published_date") or "")
+            data = extrair_data(titulo) or (pub[:10] if re.match(r"20\d\d-\d\d-\d\d", pub) else "")
+            saida.append(Carta(fonte["nome"], _encurtar(titulo), link, data, fonte.get("tipo", "")))
+    return saida
+
+
+def _itens_lista_txt(cliente: httpx.Client, cfg: dict, fonte: dict) -> list[Carta]:
+    """Lista pública em texto (uma carta por linha, ex.: "2026_09") + modelo do endereço do PDF ("…/{linha}.pdf")."""
+    if not permitido(cfg["url"], cliente):
+        return []
+    r = cliente.get(cfg["url"])
+    if r.status_code >= 400:
+        return []
+    saida = []
+    for linha in r.text.splitlines():
+        linha = linha.strip()
+        if not re.fullmatch(r"[\w.-]{4,40}", linha):
+            continue
+        data = extrair_data(linha.replace("_", "-"))
+        titulo = f"Carta do gestor {data[5:7]}/{data[:4]}" if data else linha
+        saida.append(Carta(fonte["nome"], titulo, cfg["modelo_link"].replace("{linha}", linha), data, fonte.get("tipo", "")))
     return saida
 
 
@@ -422,19 +520,27 @@ def conferir(fonte: dict, cliente: httpx.Client | None = None, hoje: date | None
     cliente = cliente or _cliente()
     url = fonte["url"]
     sit = Situacao(fonte["nome"], fonte.get("tipo", ""), url, "fora_do_ar", conferido_em=agora)
-    if fonte.get("encerrada"):
-        sit.situacao, sit.detalhe = "encerrada", str(fonte.get("motivo") or "a gestora encerrou ou foi incorporada")
+    if fonte.get("encerrada") or fonte.get("sem_publicacao"):  # conferido à mão: nem vai ao site
+        sit.situacao = "encerrada" if fonte.get("encerrada") else "sem_publicacao"
+        sit.detalhe = str(fonte.get("motivo") or ("a gestora encerrou ou foi incorporada" if fonte.get("encerrada")
+                                                  else "não publica mais cartas abertas ao público"))
         if proprio:
             cliente.close()
         return sit, []
     cartas: list[Carta] = []
     vistos: set[str] = set()
 
-    def juntar(itens: list[Carta]) -> None:
+    def juntar(itens: list[Carta], confiavel: bool = False) -> None:
+        """`confiavel`: data vinda de API/feed/sitemap (campo de data do próprio site) vale mais que a lida no texto."""
         for c in itens:
             if c.link not in vistos:
                 vistos.add(c.link)
                 cartas.append(c)
+            elif confiavel and c.data:
+                for i, antiga in enumerate(cartas):
+                    if antiga.link == c.link:
+                        cartas[i] = c
+                        break
 
     try:
         estado, itens, metodo, texto = _ler_lista(cliente, url, fonte, com_feed=True)
@@ -452,10 +558,30 @@ def conferir(fonte: dict, cliente: httpx.Client | None = None, hoje: date | None
             feed = fonte.get("feed") or (_feeds_da_pagina(texto, url) or [""])[0]
             if feed:
                 juntar(_historico_feed(cliente, feed, fonte, set(vistos)))
-        if fonte.get("api"):
+        for api in ([fonte["api"]] if isinstance(fonte.get("api"), str) else fonte.get("api") or []):
             try:
-                juntar(_itens_api(cliente, fonte["api"], fonte))
+                juntar(_itens_api(cliente, api, fonte), confiavel=True)
                 sit.metodo = sit.metodo or "api"
+            except httpx.HTTPError:
+                pass
+        if fonte.get("mziq"):
+            try:
+                ano = hoje.year
+                juntar(_itens_mziq(cliente, fonte["mziq"], fonte, list(range(ano, ano - 6, -1)) if historico else [ano, ano - 1]),
+                       confiavel=True)
+                sit.metodo = sit.metodo or "api"
+            except httpx.HTTPError:
+                pass
+        if fonte.get("lista_txt"):
+            try:
+                juntar(_itens_lista_txt(cliente, fonte["lista_txt"], fonte), confiavel=True)
+                sit.metodo = sit.metodo or "api"
+            except httpx.HTTPError:
+                pass
+        if fonte.get("sitemap"):
+            try:
+                juntar(_itens_sitemap(cliente, fonte["sitemap"], fonte), confiavel=True)
+                sit.metodo = sit.metodo or "sitemap"
             except httpx.HTTPError:
                 pass
         extras = list(fonte.get("paginas") or [])
@@ -752,6 +878,8 @@ def categoria(sit: dict, ultima: str, hoje: date | None = None) -> str:
     hoje = hoje or date.today()
     if sit.get("situacao") == "encerrada":
         return "encerrada"
+    if sit.get("situacao") == "sem_publicacao":
+        return "parada"
     if not ultima:
         return "sem_leitura"
     dias = (hoje - date.fromisoformat(ultima)).days

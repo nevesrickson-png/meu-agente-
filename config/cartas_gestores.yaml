@@ -25,6 +25,7 @@ fontes:
 - nome: Apex Capital
   url: https://apexcapital.com.br/cartas
   tipo: gestora
+  api: https://site-admin-2wp0.onrender.com/api/letters?populate=document&sort=date:desc
 - nome: Armor Capital
   url: https://armorcapital.com.br/carta-do-gestor/
   tipo: gestora
@@ -34,6 +35,8 @@ fontes:
 - nome: Ártica Asset
   url: https://artica.capital/asset-cartas/
   tipo: gestora
+  api: https://artica.capital/wp-json/wp/v2/cartas?per_page=30
+  link_inclui: artica\.capital/asset-cartas/[a-z0-9-]+/$
 - nome: ARX Investimentos
   url: https://www.arxinvestimentos.com.br/pt/communication.html
   tipo: gestora
@@ -46,6 +49,7 @@ fontes:
 - nome: Augme Capital
   url: https://www.augme.com.br/cartas-gestao
   tipo: gestora
+  link_inclui: augme\.com\.br/_files/ugd/.*\.pdf
 - nome: AZ Quest
   url: https://azquest.com.br/comunicacao-gestor.php
   tipo: gestora
@@ -62,7 +66,7 @@ fontes:
   url: https://www.bnpparibas-am.com/pt-br/pessoa-juridica/insights/carta-do-gestor/
   tipo: gestora
 - nome: Bocaína Capital
-  url: https://bocainacapital.com/bodb11/resultados/
+  url: https://www.bocainacapital.com/fundos/bodb11/
   tipo: gestora
 - nome: BOCOM BBM Asset
   url: https://www.bocombbm.com.br/nosso-negocio/asset-management/
@@ -91,15 +95,23 @@ fontes:
 - nome: Canuma Capital
   url: https://canumacapital.com.br/relatorios/
   tipo: gestora
+  api: https://canumacapital.com.br/wp-json/wp/v2/relatorio-canuma?per_page=30
 - nome: Canvas Capital
   url: https://www.canvascapital.com.br/conteudo/comunicacoes/
   tipo: gestora
 - nome: Constância Investimentos
   url: https://www.constanciainvest.com.br/publicacoes/
   tipo: gestora
+  mziq:
+    empresa: 1bd2279c-938d-473c-9b93-6dedd228cdd6
+    categorias:
+    - relatorios_de_gestao
+    - constancia_global
 - nome: Dahlia Capital
   url: https://www.dahliacapital.com.br/nossas-cartas
   tipo: gestora
+  feed: https://www.dahliacapital.com.br/blog-feed.xml
+  link_inclui: dahliacapital\.com\.br/post/
 - nome: DAO Capital
   url: https://www.daocapital.com.br/cartas
   tipo: gestora
@@ -116,8 +128,9 @@ fontes:
   url: https://www.exploritas.com.br/cartas-mensais/
   tipo: gestora
 - nome: Forpus Capital
-  url: https://www.forpuscapital.com.br/arquivos/fundos
+  url: https://www.forpuscapital.com.br/relatorios-mensais
   tipo: gestora
+  link_inclui: Download\.aspx\?Arquivo=.*IdCanal=
 - nome: Franklin Templeton
   url: https://www.franklintempleton.com.br/articles
   tipo: gestora
@@ -130,6 +143,7 @@ fontes:
 - nome: Genoa Capital
   url: https://www.genoacapital.com.br/relatorios.html
   tipo: gestora
+  link_inclui: /docs/CartaMensalGenoaCapital_
 - nome: Giant Steps Capital
   url: https://gscap.com.br/artigos/
   tipo: gestora
@@ -154,6 +168,10 @@ fontes:
 - nome: Itaú Asset
   url: https://blog.itau.com.br/itauasset
   tipo: gestora
+  paginas:
+  - https://www.itauassetmanagement.com.br/insights/economia/
+  sitemap: https://blog.itau.com.br/sitemap.xml
+  link_inclui: blog\.itau\.com\.br/itauasset/cenario-macro
 - nome: JGP
   url: https://www.jgp.com.br/comunicacoes/relatorios/
   tipo: gestora
@@ -161,8 +179,13 @@ fontes:
   url: https://www.journeycapital.com.br/relatorios/
   tipo: gestora
 - nome: Kapitalo
-  url: https://www.kapitalo.com.br/cartas-do-gestor
+  url: https://www.kapitalo.com.br/carta-do-gestor/k10
   tipo: gestora
+  paginas:
+  - https://www.kapitalo.com.br/carta-do-gestor/kapa-e-zeta
+  - https://www.kapitalo.com.br/carta-do-gestor/nw3
+  - https://www.kapitalo.com.br/carta-do-gestor/tarkus
+  link_inclui: Carta-do-Gestor
 - nome: Kinea
   url: https://www.kinea.com.br/atualizacoes/
   tipo: gestora
@@ -172,12 +195,16 @@ fontes:
 - nome: Legacy Capital
   url: https://www.legacycapital.com.br/cartas-e-calls-mensais/
   tipo: gestora
+  api:
+  - https://www.legacycapital.com.br/wp-json/wp/v2/carta-mensal?per_page=20
+  - https://www.legacycapital.com.br/wp-json/wp/v2/carta-de-credito?per_page=20
 - nome: MAG Investimentos
   url: https://maginvestimentos.com.br/carta-economica-mensal/
   tipo: gestora
 - nome: Mar Asset
   url: https://www.marasset.com.br/conteudo-mar/
   tipo: gestora
+  link_inclui: marasset\.com\.br/document/(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)-(20)?\d\d-
 - nome: Meraki Capital
   url: https://www.merakicapital.com.br/mensagemdagestao
   tipo: gestora
@@ -185,8 +212,10 @@ fontes:
   url: https://metaasset.com.br/cartas-mensais/
   tipo: gestora
 - nome: Moat Capital
-  url: https://www.moat.com.br/news/
+  url: https://www.moat.com.br/category/publicacao/
   tipo: gestora
+  feed: https://www.moat.com.br/category/publicacao/feed/
+  api: https://www.moat.com.br/wp-json/wp/v2/posts?categories=4&per_page=30
 - nome: Neo Investimentos
   url: https://neo.com.br/cartas-de-gestao/
   tipo: gestora
@@ -211,12 +240,20 @@ fontes:
 - nome: Porto Asset
   url: https://www.portoasset.com.br/relatorios-economicos/
   tipo: gestora
+  sem_publicacao: true
+  motivo: A página responde 200 mas está vazia (só o título "Relatórios Econômicos", sem widget de arquivos do MZ nem links); o WP REST responde 403 (Incapsula). Nada datado publicado hoje.
 - nome: Principal Asset
   url: https://principalam.com.br/nossos-fundos/
   tipo: gestora
 - nome: Quantitas
   url: https://www.quantitas.com.br/cartas/
   tipo: gestora
+  mziq:
+    empresa: 5023f058-8d22-4b82-8371-19a164d09540
+    categorias:
+    - multimercados
+    - acoes
+    - credito_privado
 - nome: Quatá Investimentos
   url: https://quatainvestimentos.com.br/fundos
   tipo: gestora
@@ -230,8 +267,11 @@ fontes:
   url: https://www.trxf11.com.br/list.aspx?idCanal=YxuLv1rWnYVtrab1vVY7AA==&linguagem=pt
   tipo: gestora
 - nome: Renova Gestora
-  url: https://renovagestora.com.br/cartamensal/
+  url: https://renovagestora.com.br/carta-mensal-2026/
   tipo: gestora
+  paginas:
+  - https://renovagestora.com.br/carta-mensal-2025/
+  link_inclui: renovagestora\.com\.br/wp-content/uploads/.*Carta-Mensal.*\.pdf
 - nome: Rio Bravo
   url: https://www.riobravo.com.br/dados-e-analises-carta-estrategicas
   tipo: gestora
@@ -257,14 +297,16 @@ fontes:
   url: https://www.squadrainvest.com.br/cartas/
   tipo: gestora
 - nome: SulAmérica Investimentos
-  url: https://www.sulamericainvestimentos.com.br/produtos/palavra-do-gestor/
+  url: https://www.sulamericainvestimentos.com.br/fique-por-dentro/palavra-do-gestor/
   tipo: gestora
+  link_inclui: api\.mziq\.com/mzfilemanager/v2/d/b739156f
 - nome: TAG Investimentos
   url: https://taginvest.com.br/cartas-mensais/
   tipo: gestora
 - nome: TC Pandhora
   url: https://www.pandhora.com/cartas-mensais
   tipo: gestora
+  link_inclui: pandhora\.com/Download\.aspx\?Arquivo=
 - nome: Tenax Capital
   url: https://www.tenax.capital/conteudos
   tipo: gestora
@@ -283,12 +325,16 @@ fontes:
 - nome: V8 Capital
   url: https://www.v8capital.com.br/conteudo/
   tipo: gestora
+  link_inclui: /wp-content/uploads/.*Relatorio_Mensal
 - nome: Valora Investimentos
   url: https://valorainvest.com.br/
   tipo: gestora
 - nome: Venice RC
-  url: https://asset.venicerc.com.br/categoria/carta-do-gestor/
+  url: https://asset.venicerc.com.br/carta-do-gestor
   tipo: gestora
+  lista_txt:
+    url: https://blobvenicepartnership.blob.core.windows.net/public-filestorage/site_gestora/carta_do_gestor/cartas.txt
+    modelo_link: https://blobvenicepartnership.blob.core.windows.net/public-filestorage/site_gestora/carta_do_gestor/{linha}.pdf
 - nome: Verde Asset
   url: https://www.verdeasset.com.br/
   tipo: gestora
@@ -296,17 +342,24 @@ fontes:
   url: https://versaasset.com.br/categoria/cartas/
   tipo: gestora
 - nome: Vinci Compass
-  url: https://cgcompass.com/pt/publicacoes/portugues/
+  url: https://vincicompass.com/news/index/3
   tipo: gestora
+  link_inclui: vinciinstitucionalprd\.blob\.core\.windows\.net/doc/
 - nome: Vista Capital
   url: https://vistacapital.com.br/relatorios/
   tipo: gestora
+  sem_publicacao: true
+  motivo: A página lê sem JS (88 PDFs), mas a carta mais recente é 'Carta-do-Gestor-Vista-Macro-Abril-2024'; tudo foi reenviado em /uploads/2025/06/ na migração do site, por isso o coletor datava 06/2025.
+    wp-js
 - nome: Vokin Investimentos
   url: https://www.vokin.com.br/cartas-mensais/
   tipo: gestora
 - nome: Western Asset
   url: https://www.westernasset.com.br/pt/research/Newsletters.cfm
   tipo: gestora
+  encerrada: true
+  motivo: O site redireciona para um termo de uso (formulário POST) que avisa "A Western Asset Management Company Limitada agora é Franklin Templeton Brasil Ltda." e que o conteúdo está sendo transferido
+    para f
 - nome: WHG
   url: https://www.whg.com.br/conteudo/
   tipo: gestora
@@ -347,7 +400,7 @@ fontes:
   url: https://business.bofa.com/en-us/content/market-strategies-insights.html
   tipo: global
 - nome: BNY
-  url: https://www.bny.com/corporate/global/en/insights.html
+  url: https://www.bny.com/wealth/global/en/insights.html
   tipo: global
 - nome: Barclays
   url: https://www.ib.barclays/our-insights.html
@@ -355,6 +408,7 @@ fontes:
 - nome: BCG
   url: https://www.bcg.com/industries/financial-institutions/insights
   tipo: global
+  link_inclui: bcg\.com/publications/20\d\d/
 - nome: BlackRock
   url: https://www.blackrock.com/us/individual/insights
   tipo: global
@@ -380,11 +434,15 @@ fontes:
   url: https://hl.com/insights/
   tipo: global
 - nome: HSBC Global Private Banking
-  url: https://www.privatebanking.hsbc.com/wih/investments-Insights/
+  url: https://www.privatebanking.hsbc.com/wih/investments-Insights/House-views/
   tipo: global
+  paginas:
+  - https://www.privatebanking.hsbc.com/content/privatebanking/gpb/en/wih/investments-Insights/market-update.wih-category-articles.with-video.json
+  api: https://www.privatebanking.hsbc.com/content/privatebanking/gpb/en/wih/investments-Insights/House-views.wih-category-articles.with-video.json
 - nome: J.P. Morgan
-  url: https://www.jpmorgan.com/insights/banking/investment-banking
+  url: https://privatebank.jpmorgan.com/nam/en/insights/markets-and-investing
   tipo: global
+  link_inclui: privatebank\.jpmorgan\.com/nam/en/insights/(markets-and-investing|latest-and-featured)/
 - nome: Jefferies
   url: https://www.jefferies.com/insights/
   tipo: global
@@ -403,6 +461,9 @@ fontes:
 - nome: Merrill
   url: https://www.ml.com/financial-research-and-insights/todays-markets.html
   tipo: global
+  paginas:
+  - https://www.ml.com/capital-market-outlook.html
+  link_inclui: ml\.com/(content/ml/en/)?articles/
 - nome: Morgan Stanley
   url: https://www.morganstanley.com/ideas
   tipo: global

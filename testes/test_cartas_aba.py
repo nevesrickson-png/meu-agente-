@@ -168,3 +168,61 @@ def test_rotas_da_aba_cartas(monkeypatch):
     assert c.post("/api/cartas/resumo", json={"link": "https://ativa.com.br/a.pdf"}).status_code == 403  # sem o cabeçalho da tela
     r = c.post("/api/cartas/resumo", json={"link": "https://estranho.com/a.pdf"}, headers={"X-Quiron": "terminal"})
     assert r.status_code == 400  # só cartas das gestoras cadastradas
+
+
+# ---------------------------------------------------------------- leitores novos (investigação das fontes, 08/10/2026)
+def test_datas_do_nome_do_arquivo_vencem_a_pasta_de_upload():
+    assert coleta.extrair_data("/docs/CartaMensalGenoaCapital_Ago26.pdf", HOJE) == "2026-08-01"
+    assert coleta.extrair_data("https://v.com/wp-content/uploads/2025/06/Carta-Abril-2024.pdf", HOJE) == "2024-04-01"
+    assert coleta.extrair_data("https://v.com/wp-content/uploads/2026/08/carta.pdf", HOJE) == "2026-08-01"
+    assert coleta.extrair_data("junior-2026 setor 2026", HOJE) == ""
+
+
+def test_api_strapi_e_carimbo_em_milissegundos():
+    strapi = httpx.Response(200, json={"data": [{"id": 1, "attributes": {"title": "Carta 2T26", "date": "2026-07-10",
+                                                  "document": {"data": {"attributes": {"url": "https://cdn.x.com/2t26.pdf"}}}}}]})
+    hsbc = httpx.Response(200, json=[{"title": "Monthly View", "link": "https://h.com/mv",
+                                      "createdArticleTimeStamp": "1790000000000"}])
+    cli = _cliente({"https://api.g.com/letters": strapi, "https://h.com/lista.json": hsbc})
+    c = coleta._itens_api(cli, "https://api.g.com/letters", {"nome": "G"})[0]
+    assert (c.titulo, c.link, c.data) == ("Carta 2T26", "https://cdn.x.com/2t26.pdf", "2026-07-10")
+    assert coleta._itens_api(cli, "https://h.com/lista.json", {"nome": "H"})[0].data == "2026-09-21"
+
+
+def test_sitemap_lista_txt_e_mziq():
+    mapa = ("<urlset><url><loc>https://blog.x.com/asset/cenario-macro-setembro</loc><lastmod>2026-09-25</lastmod></url>"
+            "<url><loc>https://blog.x.com/outro/receita</loc><lastmod>2026-09-26</lastmod></url></urlset>")
+    def roteador(req: httpx.Request) -> httpx.Response:
+        u = str(req.url)
+        if u == "https://blog.x.com/sitemap.xml":
+            return httpx.Response(200, text=mapa)
+        if u.endswith("/cartas.txt"):
+            return httpx.Response(200, text="2026_08\n2026_09\n")
+        if "apicatalog.mziq.com" in u and req.method == "POST":
+            ano = __import__("json").loads(req.content)["year"]
+            metas = [{"file_title": f"Carta mensal - SET/{ano[2:]}", "file_url": f"https://api.mziq.com/d/{ano}.pdf",
+                      "file_published_date": f"{ano}-10-02T10:00:00"}] if ano == "2026" else []
+            return httpx.Response(200, json={"data": {"document_metas": metas}})
+        return httpx.Response(404)
+    cli = httpx.Client(transport=httpx.MockTransport(roteador))
+    s = coleta._itens_sitemap(cli, "https://blog.x.com/sitemap.xml", {"nome": "I", "link_inclui": r"/asset/"})
+    assert [(c.titulo, c.data) for c in s] == [("Cenario macro setembro", "2026-09-25")]
+    t = coleta._itens_lista_txt(cli, {"url": "https://b.x/cartas.txt", "modelo_link": "https://b.x/{linha}.pdf"}, {"nome": "V"})
+    assert [(c.titulo, c.link) for c in t] == [("Carta do gestor 08/2026", "https://b.x/2026_08.pdf"),
+                                               ("Carta do gestor 09/2026", "https://b.x/2026_09.pdf")]
+    m = coleta._itens_mziq(cli, {"empresa": "abc", "categorias": ["cartas"]}, {"nome": "Q"}, [2026, 2025])
+    assert [(c.titulo, c.data) for c in m] == [("Carta mensal - SET/26", "2026-09-01")]
+
+
+def test_data_da_api_vence_a_lida_na_pagina():
+    pagina = '<html><a href="https://g.com.br/cartas/historia-2026-01">Carta 01/2026</a></html>'
+    api = httpx.Response(200, json=[{"title": "História", "date": "2026-10-05T10:00:00", "link": "https://g.com.br/cartas/historia-2026-01"}])
+    cli = _cliente({"https://g.com.br/cartas": pagina, "https://g.com.br/wp-json/wp/v2/cartas": api})
+    _, cartas = coleta.conferir({"nome": "G", "url": "https://g.com.br/cartas", "api": "https://g.com.br/wp-json/wp/v2/cartas"}, cli, HOJE)
+    assert [(c.link.rsplit("/", 1)[-1], c.data) for c in cartas] == [("historia-2026-01", "2026-10-05")]
+
+
+def test_gestora_que_parou_de_publicar_vira_parada():
+    sit, _ = coleta.conferir({"nome": "V", "url": "https://v.com.br", "sem_publicacao": True, "motivo": "última carta em 2024"},
+                             _cliente({}), HOJE)
+    assert sit.situacao == "sem_publicacao" and coleta.categoria({"situacao": "sem_publicacao"}, "2024-04-01") == "parada"

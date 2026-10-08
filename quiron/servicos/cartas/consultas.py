@@ -8,7 +8,8 @@ from quiron.servicos.cartas import coleta
 
 ROTULOS = {"ativa": "ativas", "desatualizada": "desatualizadas (podem ter encerrado ou mudado de site)", "sem_data": "sem data",
            "sem_cartas": "sem cartas reconhecidas", "bloqueada": "bloqueiam leitura automática", "fora_do_ar": "fora do ar",
-           "nao_conferida": "ainda não conferidas"}
+           "nao_conferida": "ainda não conferidas", "encerrada": "encerradas ou incorporadas",
+           "sem_publicacao": "não publicam mais cartas abertas"}
 
 
 def _data(iso: str) -> str:
