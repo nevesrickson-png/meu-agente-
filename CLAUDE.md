@@ -140,6 +140,17 @@ Arquivos com DRM não são processados.
   `extrair_data`: pasta `/uploads/AAAA/MM/` só vale sem outra data; "_Ago26"; trimestre/semestre ("2T26", "1º semestre
   2026" → último mês); "Carta Anual 2023" → dezembro. Cadastro conferido fonte a fonte em 08/10/2026 (84 ativas + 15
   esporádicas de 140; as que bloqueiam robôs ficam só com o link).
+  Aprimoramento 09/10/2026 (testes no fim de `testes/test_cartas_aba.py`): `limpar_banco` (faxina em toda conferência
+  geral: `_NAO_CARTA` ampliado — aviso ao mercado, regulamento, podcast, vídeo, webinar —, repetidas por `_link_canonico`
+  (www/http/barra/utm) ou título ≥ 12 + data, títulos regravados, `descobertas` de não-carta); `_gravar` não grava
+  repetida; `_titulo_fraco` (genérico/só mês/código) → "Carta de mm/aaaa" ("Carta anual AAAA" para anual/AAAAltr);
+  `_encurtar` desfaz %XX e tira .xhtml/.pdf; `_datas_vizinhas` prefere `<time datetime>` e ignora `title=`; o lado
+  (antes/depois do link) é escolhido pela maioria da página; `link_inclui` vale também no feed; datas "Q2 26",
+  "AAAA/q3", "1H25", "AAAAltr". Favoritas em `dados/ajustes/cartas_favoritas.yaml` (`favoritas`, `marcar_favorita`,
+  `POST /api/cartas/favorita`, `categoria=favoritas`); `novas(horas)` + `consultas.novidades` (`/cartas novas`, rota
+  "tem carta nova?"); feed com cursor `antes=AAAA-MM-DD|id`. Tela: estrela "Favoritar", chip Favoritas, selo "nova"
+  (descoberta depois da última visita e carta ≤ 45 dias), busca ignora o período. Guia ampliado em 09/10/2026 com
+  gestoras novas encontradas por investigação (cada uma conferida com `conferir`; rejeitadas e motivos ficaram fora).
 - TV (06/10/2026, `quiron/servicos/tv.py` + `terminal/frontend/tv.html`, rota `/tv`): canais em `config/tv_canais.yaml`,
   os do Rickson em `dados/ajustes/tv_canais.yaml` (`meus`, `ocultos`); `resolver` (link/@/UC… pela Data API ou página
   pública), `videos` (só Data API; o RSS /feeds/videos.xml é proibido no robots.txt do YouTube → sem chave a tela toca

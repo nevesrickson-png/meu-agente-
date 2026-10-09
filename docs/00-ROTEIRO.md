@@ -532,6 +532,10 @@ Revisores no agente/MCP, nas contas de fundos/valuation/risco, em mercado/notíc
 - [x] Aba própria no topo (/cartas): gestoras por situação, cartas recentes por mês, histórico por gestora, resumo pela IA
 - [x] Histórico semanal (paginação, feed, APIs públicas) e autodescoberta da página quando o endereço muda
 - [x] Cadastro das 140 fontes conferido uma a uma: 84 ativas + 15 publicam pouco; encerradas/paradas marcadas
+- [x] Aprimoramento 09/10/2026: faxina de repetidas e não-cartas, títulos e datas melhores, favoritas (estrela),
+  selo "nova", busca em todo o histórico, `/cartas novas` no Telegram
+- [x] Gestoras novas fora do guia: investigadas ~85 candidatas (macro, ações, crédito/FII, globais); entram só as que
+  publicam carta pública com data recente, conferidas com o coletor
 - [ ] Aceite do Rickson na aba Cartas (conferir se faltou alguma gestora importante do guia)
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)
