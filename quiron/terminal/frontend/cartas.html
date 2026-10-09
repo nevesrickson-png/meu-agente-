@@ -16,7 +16,7 @@
   @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 14px; } }
   .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); min-width: 0; box-shadow: var(--sombra); }
   .lado { display: flex; flex-direction: column; max-height: calc(100vh - 98px); position: sticky; top: 78px; }
-  @media (max-width: 900px) { .lado { position: static; max-height: 60vh; } }
+  @media (max-width: 900px) { .lado { position: static; max-height: 46vh; } .conteudo { order: -1; } }  /* celular: cartas primeiro */
   .lado-topo { padding: 14px; border-bottom: 1px solid var(--borda); display: grid; gap: 10px; }
   .lado-topo h2 { margin: 0; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .lado-topo h2 .n { color: var(--texto-3); font-weight: 450; margin-left: auto; font-size: 12px; }

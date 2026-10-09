@@ -355,8 +355,12 @@ function campo(c) {
   if (!c.segredo) input.value = c.valor || "";
   const caixa = el("div", { class: "resultado", "aria-live": "polite" });
   const botoes = [];
-  if (c.segredo) botoes.push(el("button", { type: "button", title: "mostrar/ocultar", "aria-label": "mostrar ou ocultar",
-    onclick: () => { input.type = input.type === "password" ? "text" : "password"; } }, "👁"));
+  if (c.segredo) {
+    const olho = el("button", { type: "button", class: "so-icone", title: "mostrar/ocultar", "aria-label": "mostrar ou ocultar",
+      onclick: () => { input.type = input.type === "password" ? "text" : "password"; } });
+    olho.innerHTML = window.ico ? ico("olho") : "ver";
+    botoes.push(olho);
+  }
   if (c.teste) botoes.push(el("button", { type: "button", onclick: async (ev) => {
     ev.target.disabled = true; caixa.className = "resultado"; caixa.textContent = "testando…";
     try { resultado(caixa, await api("/api/sistema/config/testar", { corpo: { chave: c.chave, valor: input.value } })); }

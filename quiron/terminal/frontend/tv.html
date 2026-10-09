@@ -27,8 +27,14 @@
   .ajuste .valor { font: 12px var(--mono); color: var(--texto-3); min-width: 3.2em; }
   #mudo { padding: 5px 9px; }
   .video .vazio-tv { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.55); text-align: center; padding: 20px; }
+  .vazio-tv > div { display: grid; justify-items: center; gap: 6px; max-width: 340px; font-size: 13px; line-height: 1.45; }
+  .vazio-tv b { color: rgba(255,255,255,.88); font-size: 15px; font-weight: 600; }
+  .vazio-tv .vazio-ico .ico { width: 34px; height: 34px; stroke-width: 1.4; opacity: .7; margin-bottom: 6px; }
   .barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--borda); }
-  .agora { display: flex; align-items: baseline; gap: 8px; min-width: 0; margin-right: auto; }
+  .agora { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 1 1 240px; overflow: hidden; }
+  .agora .modo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 0; }
+  .agora .nome, .agora .num { flex: 0 0 auto; max-width: 70%; }
+  .botoes-tv { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .agora .num { font: 600 12px var(--mono); color: var(--texto-3); }
   .agora .nome { font: 600 16px var(--titulo); letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .agora .modo { font-size: 12px; color: var(--texto-3); }
@@ -94,14 +100,16 @@
 
 <main>
   <section class="cartao tela" aria-label="Player">
-    <div class="video" id="video"><div class="vazio-tv">Escolha um canal abaixo.</div></div>
+    <div class="video" id="video"><div class="vazio-tv"><div><span class="vazio-ico" data-ico="tv"></span><b>Nenhum canal tocando</b><span>Escolha um canal na lista abaixo — os que estão ao vivo aparecem primeiro.</span></div></div></div>
     <div class="barra">
-      <div class="agora"><span class="num" id="agora-num"></span><span class="nome" id="agora-nome">—</span><span class="modo" id="agora-modo"></span></div>
+      <div class="agora"><span class="num" id="agora-num"></span><span class="nome" id="agora-nome">Nenhum canal</span><span class="modo" id="agora-modo"></span></div>
+      <div class="botoes-tv">
       <button type="button" id="ant" title="Canal anterior (← ou PageUp)" aria-label="Canal anterior"><span data-ico="anterior"></span></button>
       <button type="button" id="prox" title="Próximo canal (→ ou PageDown)" aria-label="Próximo canal"><span data-ico="proximo"></span></button>
       <button type="button" id="vivo" class="ao-vivo" aria-pressed="true" title="Se o canal estiver transmitindo, a transmissão vem primeiro (tecla L alterna)"><span data-ico="aovivo"></span>Ao vivo primeiro</button>
       <button type="button" id="recentes" aria-pressed="false" title="Só os vídeos gravados mais recentes do canal">Recentes</button>
       <a class="botao" id="abrir-yt" target="_blank" rel="noopener noreferrer" title="Abrir o canal no YouTube"><span data-ico="externo"></span>YouTube</a>
+      </div>
     </div>
     <div class="ajustes" aria-label="Volume e brilho">
       <span class="ajuste"><button type="button" id="mudo" title="Silenciar (tecla M)" aria-label="Silenciar" aria-pressed="false"></button>
@@ -114,7 +122,7 @@
 
   <section class="cartao lado" aria-label="Vídeos do canal">
     <h2>Últimos vídeos <span id="fonte-videos" style="margin-left:auto;text-transform:none;letter-spacing:0"></span></h2>
-    <div class="lista" id="videos"><div class="dica">—</div></div>
+    <div class="lista" id="videos"><div class="dica">Os vídeos do canal aparecem aqui.</div></div>
   </section>
 
   <section class="cartao controle" aria-label="Canais">
@@ -287,7 +295,7 @@ async function carregarVideos(canal) {
     const d = await api(`/api/tv/videos/${encodeURIComponent(canal.id)}`, undefined, "GET");
     if (!atual || atual.id !== canal.id) return;
     if (!d.itens.length) {
-      alvo.innerHTML = '<div class="dica">A lista de vídeos aparece com a chave do YouTube (Configurações → Opcionais). Sem ela, o player toca a transmissão ao vivo (quando houver) ou os envios mais recentes do canal — use ⏭ dentro do vídeo para avançar.</div>';
+      alvo.innerHTML = '<div class="dica">A lista de vídeos aparece com a chave do YouTube (Configurações → Opcionais). Sem ela, o player toca a transmissão ao vivo (quando houver) ou os envios mais recentes do canal — use o botão de avançar dentro do vídeo.</div>';
       return;
     }
     $("#fonte-videos").textContent = d.fonte === "api" ? "YouTube API" : "feed do canal";

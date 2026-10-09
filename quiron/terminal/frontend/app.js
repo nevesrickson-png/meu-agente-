@@ -155,7 +155,7 @@ function adicionarPainel(tipo, p = {}, pos = null, reassinar = true) {
     <div class="painel-cab"><span class="painel-titulo"></span><span class="painel-sub"></span>
       <button data-acao="atualizar" title="Atualizar agora" aria-label="Atualizar">${ico("atualizar")}</button>
       <button data-acao="fechar" title="Fechar" aria-label="Fechar">${ico("fechar")}</button></div>
-    <div class="painel-corpo"><span class="carregando">carregando…</span></div>
+    <div class="painel-corpo"><div class="esqueleto" role="status" aria-label="carregando"><i></i><i></i><i></i><i></i><i></i></div></div>
     <div class="painel-rodape"></div><div class="alca" title="Arraste para redimensionar"></div>`;
   $("#grade").append(el);
   posicionar(painel);
@@ -309,7 +309,7 @@ function renderGrafico(corpo, d, painel) {
   desenharLinhas(painel.id, $("[data-g]", corpo), d, false, $("[data-leg]", corpo));
   rodape(painel, `${fonte(d.fonte, d.obtido_em)} · ${d.modo === "comparacao" ? "base 100 no início do período" : "fechamento diário + médias de 20 e 50 dias"}`);
 }
-function reabrir(painel) { titular(painel); assinar(); salvarLocal(); $(".painel-corpo", document.getElementById(painel.id)).innerHTML = '<span class="carregando">carregando…</span>'; }
+function reabrir(painel) { titular(painel); assinar(); salvarLocal(); $(".painel-corpo", document.getElementById(painel.id)).innerHTML = '<div class="esqueleto" role="status" aria-label="carregando"><i></i><i></i><i></i><i></i><i></i></div>'; }
 
 function tabelaSerie(corpo, d) {
   corpo.classList.remove("coluna");
@@ -405,7 +405,7 @@ function renderCurva(corpo, d, painel) {
       `<tr><td>${fmt(v.anos, 1)} anos (${v.du} du)</td><td class="n">${fmt(v.pre)}%</td><td class="n">${fmt(v.real)}%</td><td class="n">${fmt(v.implicita)}%</td></tr>`).join("")}</tbody></table>`;
   };
   requestAnimationFrame(() => svgCurva($("[data-g]", corpo), vs)); // mede depois do layout pronto
-  rodape(painel, `${fonte(d.fonte + " (curva de " + dia(d.data) + ")", d.obtido_em)}${d.desatualizado ? " ⚠️ desatualizado" : ""}`);
+  rodape(painel, `${fonte(d.fonte + " (curva de " + dia(d.data) + ")", d.obtido_em)}${d.desatualizado ? " · desatualizado" : ""}`);
 }
 
 function svgCurva(alvo, vs) {
@@ -468,12 +468,12 @@ function renderAgenda(corpo, d, painel) {
 }
 
 function renderStatus(corpo, d, painel) {
-  const redes = Object.entries(d.redes).map(([n, ok]) => `${esc(n)} ${ok ? "✓" : "—"}`).join(" · ");
+  const redes = Object.entries(d.redes).map(([n, ok]) => `<span class="rede${ok ? " ok" : ""}" title="${ok ? "conectada" : "sem chave"}">${esc(n)}</span>`).join("");
   corpo.innerHTML = `<div class="kpis"><div class="kpi"><div class="kpi-r">Memória do Terminal</div><div class="kpi-v">${fmt(d.memoria_mb, 0)} MB</div><div class="kpi-d">PC: ${fmt(d.memoria_sistema_pct, 0)}% em uso</div></div></div>
-    <table class="t" style="margin-top:6px"><thead><tr><th>Fonte</th><th class="n">Última consulta</th></tr></thead><tbody>${d.fontes.map((f) => `<tr><td class="nome">${esc(f.fonte)}</td><td class="n">${hora(f.atualizado_em)}</td></tr>`).join("")}</tbody></table>
-    <div class="dica" style="margin-top:4px">Redes: ${redes}</div>
+    <table class="t" style="margin-top:6px"><thead><tr><th>Fonte</th><th class="n">Última consulta</th></tr></thead><tbody>${d.fontes.map((f) => `<tr><td class="nome" title="${esc(f.fonte)}">${esc(f.fonte)}</td><td class="n" title="${hora(f.atualizado_em)}">${hora(f.atualizado_em).slice(-5)}</td></tr>`).join("")}</tbody></table>
+    <div class="dica redes" style="margin-top:8px">Redes ${redes}</div>
     ${d.analises && d.analises.ultima !== undefined ? `<div class="dica">Análises: ${d.analises.na_fila} na fila, ${d.analises.rodando} rodando${d.analises.ultima ? " · última " + esc(d.analises.ultima) : ""} — RPT</div>` : ""}
-    ${d.regras_pendentes.length ? `<div class="erro" style="margin-top:4px">⚠ ${d.regras_pendentes.length} bloco(s) de regras de mercado sem verificação</div>` : ""}`;
+    ${d.regras_pendentes.length ? `<div class="aviso-linha" style="margin-top:6px">${ico("alerta")} ${d.regras_pendentes.length} bloco(s) de regras de mercado sem conferência há mais de 90 dias</div>` : ""}`;
   rodape(painel, "no ar desde " + hora(d.no_ar_desde));
 }
 
@@ -705,7 +705,7 @@ function renderTask(corpo, d, painel) {
     ${tarefas.length ? `<table class="t">${tarefas.map((t) => `<tr><td class="nome" title="${esc(t.texto)}">${esc(t.descricao)}</td>
       <td><button type="button" class="mini" data-org="${t.id}:feito" aria-label="Concluir">✓</button> <button type="button" class="mini" data-org="${t.id}:amanha" title="Adiar para amanhã">→</button></td></tr>`).join("")}</table>` : '<div class="dica">Nenhuma tarefa pendente.</div>'}
     <div class="painel-titulo" style="margin:8px 0 2px">Rotinas e lembretes</div>
-    ${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="n" style="text-align:left">${hora(a.proxima)}</td><td class="nome" title="${esc(a.texto)}">${a.tipo === "lembrete" ? "⏰" : "⚙️"} ${esc(a.texto)}</td><td class="dica">${esc(a.recorrencia)}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Cancelar">✕</button></td></tr>`).join("")}</tbody></table>`
+    ${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="n" style="text-align:left">${hora(a.proxima)}</td><td class="nome" title="${esc(a.texto)}">${ico(a.tipo === "lembrete" ? "relogio" : "engrenagem")} ${esc(a.texto)}</td><td class="dica">${esc(a.recorrencia)}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Cancelar">✕</button></td></tr>`).join("")}</tbody></table>`
     : '<div class="dica">Nenhum agendamento.</div>'}
     <form class="form-v2 linha-form" style="margin-top:6px"><label style="flex:2 1 180px">Texto<input name="texto" required placeholder="Ligar para CLI-004"></label>
       <label>Tipo<select name="tipo"><option value="lembrete">lembrete</option><option value="tarefa">tarefa do agente</option></select></label>
@@ -742,7 +742,7 @@ function renderTask(corpo, d, painel) {
 
 // ALRT — alertas de preço, variação e notícia
 function renderAlrt(corpo, d, painel) {
-  corpo.innerHTML = `${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="nome" title="${esc(a.descricao)}">${a.ativo_agora ? "🔔" : "·"} ${esc(a.descricao.replace(/^#\d+ /, "").replace(" 🔔 DISPARADO", ""))}</td><td class="dica">${a.disparado_em ? "último: " + hora(a.disparado_em) : ""}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Remover">✕</button></td></tr>`).join("")}</tbody></table>`
+  corpo.innerHTML = `${d.itens.length ? `<table class="t"><tbody>${d.itens.map((a) => `<tr><td class="nome" title="${esc(a.descricao)}">${a.ativo_agora ? ico("sino", "ico ico-alerta") : "·"} ${esc(a.descricao.replace(/^#\d+ /, "").replace(/\s*🔔\s*DISPARADO/, ""))}</td><td class="dica">${a.disparado_em ? "último: " + hora(a.disparado_em) : ""}</td><td><button type="button" class="mini" data-del="${a.id}" aria-label="Remover">✕</button></td></tr>`).join("")}</tbody></table>`
     : '<div class="dica">Nenhum alerta. Crie abaixo (ex.: PETR4 abaixo de 30, IBOV variar 2%, notícia “Copom”).</div>'}
     <form class="form-v2 linha-form" style="margin-top:6px"><label>Tipo<select name="tipo">${Object.entries(d.tipos).map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join("")}</select></label>
       <label>Ativo ou palavra<input name="alvo" required placeholder="PETR4"></label><label>Valor<input name="valor" inputmode="decimal" placeholder="30,50"></label>
@@ -755,7 +755,7 @@ function renderAlrt(corpo, d, painel) {
     try { const r = await acao("/api/alertas", Object.fromEntries(new FormData(e.target))); aviso("Criado: " + r.descricao); atualizarPainel(painel); } catch (err) { aviso(err.message, 6000); }
   };
   $("[data-avaliar]", corpo).onclick = async () => {
-    try { const r = await acao("/api/alertas/avaliar"); aviso(r.disparados.length ? "🔔 " + r.disparados.join(" · ") : "Nenhum alerta disparou agora."); atualizarPainel(painel); } catch (err) { aviso(err.message); }
+    try { const r = await acao("/api/alertas/avaliar"); aviso(r.disparados.length ? "Disparou: " + r.disparados.join(" · ") : "Nenhum alerta disparou agora."); atualizarPainel(painel); } catch (err) { aviso(err.message); }
   };
   rodape(painel, "o bot do Telegram confere a cada 5 minutos e avisa uma vez por disparo");
 }
@@ -803,7 +803,7 @@ async function renderChat(corpo, _d, painel) {
   const msgs = $("[data-msgs]", corpo), form = $("form", corpo), caixa = $("textarea", corpo);
   const balao = (papel, html) => { const el = document.createElement("div"); el.className = "msg " + papel; el.innerHTML = html; msgs.append(el); msgs.scrollTop = msgs.scrollHeight; return el; };
   const pendencias = (lista) => lista.forEach((p) => {
-    const el = balao("sistema", `🔐 Aprovar? ${esc(p.resumo)} <button type="button" class="mini" data-s>✅ aprovar</button> <button type="button" class="mini" data-n>❌ negar</button>`);
+    const el = balao("sistema", `${ico("cadeado")} Aprovar? ${esc(p.resumo)} <button type="button" class="mini" data-s>${ico("check")}Aprovar</button> <button type="button" class="mini" data-n>${ico("fechar")}Negar</button>`);
     const decidir = async (aprovar) => {
       el.querySelectorAll("button").forEach((b) => (b.disabled = true));
       try { const r = await acao("/api/chat/decidir", { id: p.id, aprovar }); balao("quiron", textoChat(r.resposta)); } catch (e) { balao("sistema", esc(e.message)); }
@@ -875,7 +875,7 @@ function renderBib(corpo, _d, painel) {
   };
   $("form", corpo).onsubmit = (e) => { e.preventDefault(); painel.p.q = new FormData(e.target).get("q"); salvarLocal(); titular(painel); buscar(); };
   buscar();
-  rodape(painel, "📚 índice local da biblioteca · cite livro e capítulo");
+  rodape(painel, "Índice local da biblioteca · cite livro e capítulo");
 }
 
 // CLI — clientes reais (só na versão offline, só neste PC; cofre criptografado)
@@ -894,7 +894,7 @@ async function renderCli(corpo, _d, painel) {
     return;
   }
   const lista = await (await fetch(`/api/cofre/clientes?q=${encodeURIComponent(painel.p.q || "")}`, { headers: { "X-Quiron": "terminal" } })).json();
-  corpo.innerHTML = `<form class="form-v2 linha-form" data-busca><label style="flex:3 1 160px">Nome, código ou telefone<input name="q" value="${esc(painel.p.q || "")}"></label><button type="submit">Filtrar</button><button type="button" data-fechar>🔒 Fechar</button></form>
+  corpo.innerHTML = `<form class="form-v2 linha-form" data-busca><label style="flex:3 1 160px">Nome, código ou telefone<input name="q" value="${esc(painel.p.q || "")}"></label><button type="submit">Filtrar</button><button type="button" data-fechar>${ico("cadeado")}Fechar</button></form>
     <table class="t">${(lista.itens || []).map((c) => `<tr class="clicavel" data-cod="${esc(c.codigo)}"><td>${esc(c.codigo)}</td><td class="nome">${esc(c.nome)}</td><td class="dica">${esc(c.cidade || "")}</td></tr>`).join("") || '<tr><td class="dica">Nenhum cliente no cofre.</td></tr>'}</table>
     <details><summary class="dica">+ cadastrar / editar cliente</summary><form class="form-v2" data-novo>
       <div class="linha-form"><label>Código<input name="codigo" required placeholder="CLI-012"></label><label style="flex:2 1 160px">Nome<input name="nome" required></label></div>
@@ -986,7 +986,7 @@ function renderSim(corpo, _d, painel) {
         <details><summary class="dica">Premissas e tabela ano a ano</summary><ul class="dica">${r.premissas.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
           <table class="t"><thead><tr><th>Idade</th><th class="n">Pessimista</th><th class="n">Base</th><th class="n">Otimista</th><th class="n">10%</th><th class="n">90%</th></tr></thead><tbody>${
             r.anos.map((a, i) => `<tr><td>${a}</td><td class="n">${brl(r.series.pessimista[i])}</td><td class="n">${brl(r.series.base[i])}</td><td class="n">${brl(r.series.otimista[i])}</td><td class="n">${brl(r.faixa.p10[i])}</td><td class="n">${brl(r.faixa.p90[i])}</td></tr>`).join("")}</tbody></table></details>
-        <div class="dica">⚠️ ${esc(r.aviso)}</div>`;
+        <div class="dica">${ico("alerta")} ${esc(r.aviso)}</div>`;
       graficoPatrimonio($("[data-g]", res), r);
     } catch (err) { res.innerHTML = `<div class="erro">${esc(err.message)}</div>`; }
   };

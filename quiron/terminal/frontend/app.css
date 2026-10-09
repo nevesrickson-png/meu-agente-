@@ -132,6 +132,12 @@ svg text { fill: var(--texto-3); font: 10.5px var(--sans); font-variant-numeric:
 .calc-form input:focus, .calc-form select:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
 .memoria { color: var(--texto-3); font-size: 11.5px; margin-top: 6px; }
 
+.redes { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.rede { display: inline-flex; align-items: center; gap: 5px; color: var(--texto-2); }
+.rede::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--texto-3); opacity: .6; }
+.rede.ok::before { background: var(--alta); opacity: 1; }
+.aviso-linha { color: var(--aviso-cor); font-size: 12px; line-height: 1.45; }
+
 /* ---------- fita de cotações */
 .fita { position: fixed; left: 0; right: 0; bottom: 0; height: var(--fita); background: var(--vidro); border-top: 1px solid var(--borda);
         -webkit-backdrop-filter: saturate(160%) blur(14px); backdrop-filter: saturate(160%) blur(14px); overflow: hidden; z-index: 20; }

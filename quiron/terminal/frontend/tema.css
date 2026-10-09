@@ -119,6 +119,18 @@ code, kbd { font: 12px var(--mono); background: var(--painel-2); padding: 1px 6p
 .ico { width: 16px; height: 16px; flex: none; display: inline-block; vertical-align: -3px; stroke: currentColor; fill: none;
   stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 
+.ico-alerta { color: var(--aviso-cor); }
+button .ico, .mini .ico { margin-right: 4px; vertical-align: -3px; }
+button.so-icone .ico { margin: 0; }
+
+/* esqueleto de carregamento (no lugar do "carregando…" quando o painel abre) */
+.esqueleto { display: grid; gap: 10px; padding-top: 4px; }
+.esqueleto i { display: block; height: 11px; border-radius: 6px; background: linear-gradient(90deg, var(--painel-2) 0%, var(--painel-3) 50%, var(--painel-2) 100%);
+  background-size: 200% 100%; animation: brilho-esq 1.4s ease-in-out infinite; }
+.esqueleto i:nth-child(3n+1) { width: 92%; } .esqueleto i:nth-child(3n+2) { width: 74%; } .esqueleto i:nth-child(3n) { width: 58%; }
+@keyframes brilho-esq { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .esqueleto i { animation: none; } }
+
 /* ---------- componentes base */
 .botao, button.botao { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 34px; padding: 0 14px;
   background: var(--painel-2); color: var(--texto); border: 1px solid var(--borda); border-radius: var(--raio-p);
