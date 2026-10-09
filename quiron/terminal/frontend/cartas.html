@@ -149,7 +149,8 @@ try {  // a visita anterior vale na aba inteira (recarregar a página não apaga
   localStorage.setItem("quiron-cartas-visita", new Date().toISOString());
 } catch (e) { /* sem armazenamento: sem selos */ }
 const tVisita = visitaAnterior ? Date.parse(visitaAnterior) : NaN;
-const eNova = (c) => !Number.isNaN(tVisita) && !!c.descoberta_em && Date.parse(c.descoberta_em) > tVisita;
+const limiteNova = new Date(Date.now() - 45 * 86400e3).toISOString().slice(0, 10);  // carta antiga achada no histórico não é "nova"
+const eNova = (c) => !Number.isNaN(tVisita) && !!c.descoberta_em && !!c.data && c.data >= limiteNova && Date.parse(c.descoberta_em) > tVisita;
 const guardar = () => { try { localStorage.setItem("quiron-cartas", JSON.stringify({ cat: estado.cat, tipo: estado.tipo, dias: estado.dias })); } catch (e) { /* ok */ } };
 
 function dataBR(iso) {
@@ -248,7 +249,8 @@ async function carregarFeed(mais = false) {
   if (!mais) { feed.innerHTML = '<div class="carregando">carregando…</div>'; ultimoFeed = []; }
   const ult = ultimoFeed[ultimoFeed.length - 1];
   const antes = mais && ult ? `${ult.data}|${ult.id}` : "";  // data + id: não pula cartas com a mesma data
-  const p = new URLSearchParams({ dias: estado.q ? 0 : estado.dias,  // procurando: em todo o histórico tipo: estado.tipo, q: estado.q, categoria: estado.cat, limite: 80, antes });
+  // procurando uma palavra: em todo o histórico (ignora o período)
+  const p = new URLSearchParams({ dias: estado.q ? 0 : estado.dias, tipo: estado.tipo, q: estado.q, categoria: estado.cat, limite: 80, antes });
   try {
     const d = await api("/api/cartas?" + p);
     ultimoFeed = ultimoFeed.concat(d.itens);

@@ -343,3 +343,19 @@ def test_favoritas_novas_rota_e_telegram(monkeypatch):
     from quiron.runtime.roteamento import rotear
 
     assert rotear("tem carta nova?", None) == ("cartas", "novas")
+
+
+def test_datas_e_titulos_das_gestoras_globais():
+    hoje = date(2026, 10, 9)
+    assert coleta.extrair_data("Q2 26 Brookfield Letter to Shareholders", hoje) == "2026-06-01"
+    assert coleta.extrair_data("https://x.com/articles/2026/q3/slug", hoje) == "2026-09-01"
+    assert coleta.extrair_data("Atmos Carta 1H25.pdf", hoje) == "2025-06-01"
+    assert coleta._encurtar("This Month in Geopolitics%3A October 2026") == "This Month in Geopolitics: October 2026"
+    assert coleta._encurtar("France and Oil in Q4 and beyond.xhtml") == "France and Oil in Q4 and beyond"
+    berk = coleta._itens_pagina('<a href="/letters/2025ltr.pdf">2025</a>', "https://b.com/letters/letters.html", {"nome": "B"})
+    assert (berk[0].titulo, berk[0].data) == ("Carta anual 2025", "2025-12-01")
+    # Oaktree: <time datetime> antes do link; o title="4/9/2026" (americano) com ">" dentro não pode virar 4 de setembro
+    html = "".join(f'<div><time datetime=">{d}T07:00:00Z" title="Time posted: >{t}">{x}</time><a href="/insights/memo/{s}">{s}</a></div>'
+                   for d, t, x, s in [("2026-09-22", "9/22/2026", "Sep 22, 2026", "repeal"), ("2026-04-09", "4/9/2026", "Apr 9, 2026", "credit")])
+    memos = coleta._itens_pagina(html, "https://o.com/insights/memos", {"nome": "O", "link_inclui": "/insights/memo/"})
+    assert [c.data for c in memos] == ["2026-09-22", "2026-04-09"]

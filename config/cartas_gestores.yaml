@@ -520,3 +520,152 @@ fontes:
 - nome: William Blair
   url: https://www.williamblair.com/Investment-Banking/Insights
   tipo: global
+- nome: Alaska Asset
+  url: https://www.alaska-asset.com.br/cartas/
+  tipo: gestora
+  # verificado: 110 cartas, última 2026-09-01 — PDFs mensais em /pdf/cartas/Mensais/AAAA/
+- nome: Encore
+  url: https://encore.am/
+  tipo: gestora
+  link_inclui: encore\.am/midias/(comentario|carta)
+  # verificado: 7 cartas, última 2026-05-01 — comentários mensais listados na página inicial (/midias/ carrega por script)
+- nome: Organon Capital
+  url: https://organoncapital.com.br/cartas/
+  tipo: gestora
+  # verificado: 11 cartas, última 2026-06-01 — cartas semestrais (Carta_NN_1S26), título = tema/empresa da carta
+- nome: Mantaro Capital
+  url: https://mantarocapital.com.br/relatorios/
+  tipo: gestora
+  link_inclui: wp-content/uploads/\d{4}/\d{2}/Mantaro[_-]
+  # verificado: 43 cartas, última 2026-09-01 — Mantaro Mensal + cartas temáticas semestrais (filtro tira as políticas)
+- nome: Charles River Capital
+  url: https://charlesriver.com.br/conteudo/
+  tipo: gestora
+  link_inclui: wp-content/uploads/Carta-
+  # verificado: 3 cartas, última 2025-12-03 — cartas esporádicas (2018, 2022, 2025); filtro tira as matérias de imprensa
+- nome: Drys Capital (ex-Equitas)
+  url: https://dryscapital.com.br/insights
+  tipo: gestora
+  link_inclui: dryscapital\.com\.br/insights/[a-z0-9-]+$
+  # verificado: 72 cartas, última 2026-09-01 — equitas.com.br redireciona para dryscapital.com.br; relatórios mensais (INFB11), cartas e textos do gestor
+- nome: Fama Re.Capital
+  url: https://famarecapital.com/conteudos/
+  tipo: gestora
+  api: https://famarecapital.com/wp-json/wp/v2/project?per_page=40&search=gestao
+  link_inclui: famarecapital\.com/project/[a-z0-9-]*(relatorio-(de-)?gestao|tri-?20\d\d)
+  # verificado: 28 cartas, última 2026-08-14 — ex-Fama Investimentos (famarecapital.com); relatórios de gestão trimestrais por fundo; a API dá a data
+# --- Rejeitadas (conferidas em 09/10/2026) ---
+# Atmos Capital — stale since 2025-06: cartas semestrais em atmoscapital.com.br/cartas.php, a mais nova é a 33 (1H25); o formato "1H25" não é datado pelo coletor
+# Velt Partners — sem cartas públicas: velt.com (Nuxt) só oferece cadastro por e-mail para receber cartas/relatórios
+# Tarpon Investimentos — sem cartas públicas datadas: tarpon.com.br/laminas-e-outros só tem relatórios de performance sobrescritos, sem data
+# Navi Capital — sem cartas públicas: navi.com.br só publica o relatório mensal (factsheet de 1 página) do mês corrente
+# Real Investor — sem cartas públicas: só o relatório de gestão do mês por fundo (factsheet de 1 página, sem comentário)
+# Oceana Investimentos — blocked: oceanainvestimentos.com.br responde HTTP 403 ao robô
+# Bogari Capital — stale since 2021-04: bogaricapital.com.br/biblioteca/cartas/ (última Carta Bogari 35)
+# Constellation Investimentos — sem cartas públicas: constellation.com.br/documentos-relevantes/ só tem factsheets mensais
+# Perfin Investimentos — sem cartas públicas: perfin.com.br/equities/ só tem relatórios mensais em formato factsheet
+# Núcleo Capital — sem cartas públicas: nucleocapital.com.br só tem políticas e páginas de fundo sem documentos
+# Leblon Equities — stale since 2018-01: leblonequities.com.br/cartas/ (Carta Leblon 22); os "relatórios" mensais são factsheets
+# Kiron Capital — sem cartas públicas: kironcapital.com.br só tem lâminas (até 2018) e políticas
+# Studio Investimentos — stale since 2024-03: studioinvestimentos.com.br/cartas-anuais/ (Carta 2023)
+# Ventor Investimentos — sem cartas públicas: ventor.com.br mostra "Site em Construção"
+# Tork Capital — fora do ar: torkcapital.com.br não responde (a gestora anunciou o encerramento em 2026)
+# Arton Advisors — blocked: artonadvisors.com responde HTTP 403 ao robô
+# Plural Investimentos — blocked: plural.com.br responde HTTP 403 ao robô
+- nome: Capitânia
+  url: https://capitaniainvestimentos.com.br/relatorios/
+  tipo: gestora
+  link_inclui: relatorio-mensal
+  # verificado: 6 cartas, última 2026-08-01 — relatório mensal com comentário do gestor (crédito/FII), PDFs relatorio-mensal-AAAAMM
+- nome: Iridium
+  url: https://iridiumgestao.com.br/irim11/
+  tipo: gestora
+  paginas:
+  - https://iridiumgestao.com.br/infra/
+  link_inclui: Relatorio-(Mensal|Gerencial)
+  # verificado: 37 cartas, última 2026-08-01 — relatórios mensais dos FIIs IRIM11 e IRIF11 (cartas dos fundos de crédito só saem no portal Acionista)
+- nome: Hedge Investments
+  url: https://www.hedgeinvest.com.br/fundos/hgbs/
+  tipo: gestora
+  paginas:
+  - https://www.hedgeinvest.com.br/fundos/hfof/
+  - https://www.hedgeinvest.com.br/fundos/hgbl/
+  link_inclui: /Relatorio_Gestao/
+  # verificado: 227 cartas, última 2026-08-01 — relatórios de gestão mensais dos FIIs HGBS11, HFOF11 e HGBL11 (títulos "Relatório MM/AAAA"; ticker no link)
+- nome: Monte Bravo Asset (Kilima)
+  url: https://www.montebravoasset.com.br/fundosmb/relatorios/
+  tipo: gestora
+  mziq:
+    empresa: ff832db0-70b8-45f9-bf18-6a46cc2dcf0a
+    categorias:
+    - trafalgar-relatorios
+    - kisu11_relatorios
+    - kivo11_relatorios
+  # verificado: 35 cartas, última 2026-08-01 — kilima.com.br redireciona para a Monte Bravo Asset; relatórios gerenciais KISU11/KIVO11 + cartas mensais (diferente da "Monte Bravo" já cadastrada, que é a corretora)
+- nome: Pátria Real Estate (HGCR11)
+  url: https://realestate.patria.com/papel/hgcr11/documentos/
+  tipo: gestora
+  mziq:
+    empresa: 8700340f-de5f-46d7-bbc7-83b2105cdd34
+    categorias:
+    - hgcr_cshg_recebiveis_imobiliarios_fii_relatorios_ao_investidor
+  # verificado: 20 cartas, última 2026-09-11 — relatórios gerenciais mensais do FII HGCR11 (cada FII da Pátria/VBI tem empresa própria no MZ; dá para cadastrar outros, ex.: HGLG11 8888cd4d-511c-49d0-95ed-5401b6e4cf44)
+- nome: Vectis
+  url: https://vectiscs.com.br/fundos/vcra11/
+  tipo: gestora
+  link_inclui: Carta[_-]?Gestor|Relatorio[_-]?(Mensal|Gerencial)
+  # verificado: 39 cartas, última 2026-09-01 — carta do gestor mensal do FII VCRA11 (Vectis Datagro); atenção: Vectis Gestão entrou em recuperação em 09/2026
+- nome: GMO
+  url: https://www.gmo.com/americas/research-library/
+  tipo: global
+  sitemap: https://www.gmo.com/sitemap.xml
+  link_inclui: gmo\.com/americas/research-library/[a-z0-9-]+_(gmoquarterlyletter|viewpoints)/
+  # verificado: 52 itens, último 2026-09-30 — GMO Quarterly Letter + Viewpoints pelo sitemap oficial (data = lastmod; a lista da página carrega por script)
+- nome: Bridgewater
+  url: https://www.bridgewater.com/research-and-insights
+  tipo: global
+  feed: https://www.bridgewater.com/research-and-insights.rss
+  # verificado: 3 itens, último 2026-09-24 — RSS oficial de Research & Insights (traz só os 3 mais recentes; ok para acompanhar dali em diante)
+- nome: Baillie Gifford
+  url: https://www.bailliegifford.com/en/uk/individual-investors/insights/
+  tipo: global
+  # verificado: 200 itens, último 2026-10-01 — artigos e comentários trimestrais dos gestores (data pelo trimestre no link, ex.: 2026-q4-…)
+- nome: Amundi Investment Institute
+  url: https://research-center.amundi.com/
+  tipo: global
+  feed: https://research-center.amundi.com/rss.xml
+  # verificado: 10 itens, último 2026-10-08 — RSS oficial do Research Center (Global Investment Views mensal + notas macro)
+- nome: PIMCO
+  url: https://www.pimco.com/us/en/insights
+  tipo: global
+  sitemap: https://www.pimco.com/us/en/sitemap.xml
+  link_inclui: pimco\.com/us/en/insights/[a-z0-9-]+$
+  # verificado: 238 itens, último 2026-10-08 — sitemap oficial (EUA), sem podcasts/vídeos; data = lastmod (algumas páginas antigas reaparecem com data nova quando a PIMCO as revisa)
+- nome: Vanguard
+  url: https://corporate.vanguard.com/content/corporatesite/us/en/corp/what-we-think/investing-insights/perspectives-and-commentary.html
+  tipo: global
+  paginas:
+  - https://corporate.vanguard.com/content/corporatesite/us/en/corp/vemo/vemo-return-forecasts.html
+  # verificado: 22 itens, último 2026-08-03 — Perspectives & commentary + página do Economic and Market Outlook (outlook anual 2026 em PDF); publicação espaçada
+- nome: Apollo
+  url: https://www.apollo.com/insights-news/insights
+  tipo: global
+  sitemap: https://www.apollo.com/sitemap.xml
+  link_inclui: apollo\.com/insights-news/insights/20\d\d/\d\d/
+  # verificado: 132 itens, último 2026-09-01 — Insights (outlooks, artigos dos sócios) pelo sitemap oficial; data = mês no link; o Daily Spark (Torsten Slok) não tem lista pública lida pelo coletor
+- nome: Oaktree (Howard Marks)
+  url: https://www.oaktreecapital.com/insights/memos
+  tipo: global
+  link_inclui: /insights/memo/
+  # verificado 09/10/2026: 36 memos datados pelo <time datetime> ao lado do link, último 2026-09-22
+- nome: Berkshire Hathaway
+  url: https://www.berkshirehathaway.com/letters/letters.html
+  tipo: global
+  paginas:
+  - https://www.berkshirehathaway.com/letters/gealetters.html?lista=1
+  # verificado 09/10/2026: cartas anuais AAAAltr.pdf (Buffett e, desde 2025, Greg Abel); o "?lista=1" evita uma cópia em cache
+  # que o servidor devolve comprimida num formato que o coletor não lê
+- nome: Brookfield Corporation
+  url: https://bn.brookfield.com/reports-filings/letters-to-shareholders
+  tipo: global
+  # verificado 09/10/2026: cartas trimestrais aos acionistas ("Q2 26 Brookfield Letter…"), 89 datadas, última 06/2026

@@ -20,7 +20,7 @@ import time
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from urllib import robotparser
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
 import httpx
 
@@ -163,6 +163,15 @@ def _extrair_data(texto: str, hoje: date | None = None) -> str:
             continue
         ano = int(a) if len(a) == 4 else 2000 + int(a)
         candidatos.append((ano, int(n) * (6 if tipo == "s" else 3), 1))
+    # "Q2 26 Brookfield Letter", "q3-2025", "/articles/2026/q3/…" (letra antes do número) → último mês do trimestre
+    for n, a in re.findall(r"(?<![a-z\d])q([1-4])[\s_-]+(20\d\d|\d\d)(?!\d)", t):
+        candidatos.append((int(a) if len(a) == 4 else 2000 + int(a), int(n) * 3, 1))
+    for a, n in re.findall(r"(?<!\d)(20\d\d)/q([1-4])(?![\d])", t):
+        candidatos.append((int(a), int(n) * 3, 1))
+    for n, a in re.findall(r"(?<![a-z\d])([12])h[\s_-]?(20\d\d|\d\d)(?!\d)", t):  # "1H25" / "2h-2026" = semestre
+        candidatos.append((int(a) if len(a) == 4 else 2000 + int(a), int(n) * 6, 1))
+    for a in re.findall(r"(?<!\d)(20\d\d)ltr\b", t):  # Berkshire: 2025ltr.pdf = carta anual (sai em fevereiro do ano seguinte)
+        candidatos.append((int(a), 12, 1))
     for d, m, a in re.findall(r"\b(\d{1,2})[/.-](\d{1,2})[/.-](20\d\d)\b", t):
         candidatos.append((int(a), int(m), int(d)))
     for a, m in re.findall(r"(?<!\d)(20\d\d)[-/_.]?(0[1-9]|1[0-2])(?!\d)", t):
@@ -262,6 +271,9 @@ _DATA_INICIO = re.compile(r"^\s*(\d{1,2}[/.]\d{1,2}[/.]\d{2,4}|\d{1,2} de [a-zç
 def _encurtar(titulo: str, limite: int = 140) -> str:
     """Link com o resumo junto no texto ("Título | By Fulano  Texto…"): fica só o título, sem "LER MAIS" no fim e sem
     a data repetida no começo (a data já aparece ao lado)."""
+    if re.search(r"%[0-9A-Fa-f]{2}", titulo):  # "Geopolitics%3A October", "Q3%27s" (nome tirado do endereço)
+        titulo = unquote(titulo)
+    titulo = re.sub(r"\.(?:x?html?|aspx?|php|pdf)$", "", titulo.strip(), flags=re.I)
     titulo = re.split(r"\s+\|\s+by\s+|\s{2,}", titulo, maxsplit=1, flags=re.I)[0].strip()
     titulo = _LIXO_FIM.sub("", titulo).strip()
     titulo = re.sub(r"^(?:[0-9a-f]{4,12}\s+){3,}", "", titulo, flags=re.I)  # "d0f697c5 115c 4dab …" (nome de arquivo com código)
@@ -460,7 +472,15 @@ def _datas_vizinhas(texto: str, inicio: int, fim: int) -> tuple[str, str]:
     (`_itens_pagina`): sites põem a data sempre do mesmo lado, e escolher por link pegaria a data da carta vizinha."""
     depois = texto[fim:fim + 400].split("<a ", 1)[0]
     antes = texto[max(0, inicio - 400):inicio].rsplit("</a>", 1)[-1]
-    return tuple(extrair_data(_html.unescape(re.sub(r"<[^>]+>", " ", t))) for t in (depois, antes))
+
+    def ler(t: str, ultimo: bool) -> str:
+        # <time datetime="2026-09-22T07:00"> é a data de máquina: vale mais que o texto (title="9/22/2026" é americano)
+        iso = re.findall(r"datetime=[\"'][^\"'\d]{0,3}(20\d\d-\d\d-\d\d)", t)
+        if iso:
+            return iso[-1 if ultimo else 0]
+        return extrair_data(_html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"\btitle=[\"'][^\"']*[\"']", " ", t))))
+
+    return ler(depois, False), ler(antes, True)
 
 
 def _itens_pagina(texto: str, url: str, fonte: dict, limite: int = 200) -> list[Carta]:
@@ -493,6 +513,8 @@ def _itens_pagina(texto: str, url: str, fonte: dict, limite: int = 200) -> list[
         if _titulo_fraco(titulo) and data:
             a, m, _ = data.split("-")
             titulo = f"Carta de {m}/{a}"  # "Acessar documento" ou arquivo com nome de código: diz pelo menos o mês
+            if m == "12" and re.search(r"anual|annual|\d{4}ltr\b", alvo, re.I):
+                titulo = f"Carta anual {a}"  # Berkshire "2025" → 2025ltr.pdf
         titulo = _encurtar(titulo)
         if data and _titulo_fraco(titulo):  # sobrou só "Carta" (ou só o mês) depois da limpeza
             titulo = f"Carta de {data[5:7]}/{data[:4]}"
