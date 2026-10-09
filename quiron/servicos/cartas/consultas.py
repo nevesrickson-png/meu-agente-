@@ -65,3 +65,18 @@ def situacao() -> str:
 def ler(link: str) -> str:
     texto = coleta.ler_carta(link)
     return f"{texto}\n\n📄 Fonte: {link}"
+
+
+def novidades(horas: int = 48) -> str:
+    """/cartas novas: o que saiu nas últimas 48 h — favoritas primeiro."""
+    favs = set(coleta.favoritas())
+    itens = coleta.novas(horas, limite=60)
+    if not itens:
+        return f"📬 Nenhuma carta nova nas últimas {horas} h."
+    itens.sort(key=lambda c: c["data"], reverse=True)  # mais novas primeiro…
+    itens.sort(key=lambda c: c["fonte"] not in favs)  # …e favoritas antes (sort estável)
+    linhas = [f"📬 **Cartas novas — últimas {horas} h** ({len(itens)})"]
+    linhas += [f"{'⭐ ' if c['fonte'] in favs else '• '}{_data(c['data'])} — {c['fonte']}: {c['titulo']}\n  {c['link']}" for c in itens[:25]]
+    if not favs:
+        linhas.append("Dica: marque gestoras favoritas com a estrela na aba Cartas — elas aparecem primeiro aqui.")
+    return "\n".join(linhas)

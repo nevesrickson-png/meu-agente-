@@ -65,6 +65,12 @@
   .carta .fonte button { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
   .carta .fonte button:hover { color: var(--texto); text-decoration: underline; }
   .carta .acs { display: flex; gap: 6px; }
+  .nova { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
+    letter-spacing: .02em; color: var(--acento-texto); background: var(--acento-suave); vertical-align: 1px; }
+  .g .fav { color: var(--aviso-cor); display: inline-flex; vertical-align: -2px; margin-left: 4px; }
+  .g .fav svg { width: 12px; height: 12px; fill: currentColor; }
+  #favorita[aria-pressed="true"] { color: var(--aviso-cor); }
+  #favorita[aria-pressed="true"] svg { fill: currentColor; }
   .mini { height: 28px; padding: 0 10px; border-radius: var(--raio-p); border: 1px solid var(--borda); background: transparent; color: var(--texto-2);
           font: 500 12px var(--sans); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
   .mini:hover { color: var(--texto); background: var(--painel-3); text-decoration: none; }
@@ -105,6 +111,7 @@
     <div class="cab">
       <div><h1 id="titulo">Cartas mais recentes</h1><div class="meta" id="meta">—</div></div>
       <div class="acoes">
+        <button class="b" id="favorita" type="button" hidden aria-pressed="false" title="Favoritas aparecem primeiro no /cartas novas do Telegram"><span data-ico="estrela"></span><span class="rot">Favoritar</span></button>
         <a class="b" id="site" target="_blank" rel="noopener noreferrer" hidden><span data-ico="externo"></span>Site da gestora</a>
         <button class="b" id="voltar" type="button" hidden><span data-ico="lista"></span>Todas as gestoras</button>
         <button class="b" id="atualizar" type="button" title="Confere agora o site de todas as gestoras (leva ~1–2 min)"><span data-ico="atualizar"></span>Conferir agora</button>
@@ -129,12 +136,20 @@ const linkSeguro = (u) => (/^https?:\/\//i.test(u || "") ? esc(u) : "#");
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const CATS = [["ativa", "Ativas", "carta nos últimos 4 meses"], ["esporadica", "Publicam pouco", "última carta entre 4 e 13 meses"],
   ["parada", "Paradas", "nada há mais de 13 meses"], ["sem_leitura", "Sem leitura", "site bloqueia robôs, fora do ar ou cartas sem data"],
-  ["encerrada", "Encerradas", "fecharam ou foram incorporadas"], ["", "Todas", ""]];
+  ["encerrada", "Encerradas", "fecharam ou foram incorporadas"], ["favoritas", "Favoritas", "as que você marcou com estrela"], ["", "Todas", ""]];
 const TIPOS = [["", "Todas"], ["gestora", "Brasil"], ["global", "Globais"], ["family_office", "Family offices"]];
 const PERIODOS = [[60, "2 meses"], [180, "6 meses"], [365, "1 ano"], [0, "Tudo"]];
 const SIT = { ativa: "ativa", esporadica: "publica pouco", parada: "parada", sem_leitura: "sem leitura automática", encerrada: "encerrada" };
 let gestoras = [], estado = { cat: "ativa", gestora: null, tipo: "", dias: 180, q: "" };
 try { Object.assign(estado, JSON.parse(localStorage.getItem("quiron-cartas") || "{}"), { gestora: null }); } catch (e) { /* sem armazenamento */ }
+let visitaAnterior = "";
+try {  // a visita anterior vale na aba inteira (recarregar a página não apaga os selos "nova")
+  visitaAnterior = sessionStorage.getItem("quiron-cartas-visita-ant") ?? (localStorage.getItem("quiron-cartas-visita") || "");
+  sessionStorage.setItem("quiron-cartas-visita-ant", visitaAnterior);
+  localStorage.setItem("quiron-cartas-visita", new Date().toISOString());
+} catch (e) { /* sem armazenamento: sem selos */ }
+const tVisita = visitaAnterior ? Date.parse(visitaAnterior) : NaN;
+const eNova = (c) => !Number.isNaN(tVisita) && !!c.descoberta_em && Date.parse(c.descoberta_em) > tVisita;
 const guardar = () => { try { localStorage.setItem("quiron-cartas", JSON.stringify({ cat: estado.cat, tipo: estado.tipo, dias: estado.dias })); } catch (e) { /* ok */ } };
 
 function dataBR(iso) {
@@ -158,18 +173,18 @@ function chips(alvo, itens, atual, ao) {
 }
 function desenharGestoras() {
   const cont = {};
-  gestoras.forEach((g) => (cont[g.categoria] = (cont[g.categoria] || 0) + 1));
+  gestoras.forEach((g) => { cont[g.categoria] = (cont[g.categoria] || 0) + 1; if (g.favorita) cont.favoritas = (cont.favoritas || 0) + 1; });
   chips($("#cats"), CATS.map(([v, r, d]) => [v, r, d, v ? cont[v] || 0 : gestoras.length]), estado.cat, (v) => {
     estado.cat = v; guardar(); desenharGestoras(); if (!estado.gestora) carregarFeed();
   });
   const f = $("#filtro-g").value.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const lista = gestoras.filter((g) => (!estado.cat || g.categoria === estado.cat) &&
+  const lista = gestoras.filter((g) => (!estado.cat || (estado.cat === "favoritas" ? g.favorita : g.categoria === estado.cat)) &&
     (!f || g.fonte.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes(f)))
     .sort((a, b) => (b.ultima_carta || "").localeCompare(a.ultima_carta || "") || a.fonte.localeCompare(b.fonte));
   $("#n-gestoras").textContent = `${lista.length} de ${gestoras.length}`;
   $("#gestoras").innerHTML = lista.length ? lista.map((g) => `<button type="button" class="g" data-g="${esc(g.fonte)}" aria-current="${g.fonte === estado.gestora}">
       <span class="ponto ${esc(g.categoria)}" title="${esc(SIT[g.categoria] || g.categoria)}"></span>
-      <span><span class="nome">${esc(g.fonte)}</span><span class="sub">${g.ultima_carta ? "última: " + dataBR(g.ultima_carta) : esc(SIT[g.categoria] || "")}</span></span>
+      <span><span class="nome">${esc(g.fonte)}${g.favorita ? `<span class="fav" title="favorita">${window.ico ? ico("estrela") : "★"}</span>` : ""}</span><span class="sub">${g.ultima_carta ? "última: " + dataBR(g.ultima_carta) : esc(SIT[g.categoria] || "")}</span></span>
       <span class="qt" title="cartas guardadas">${g.total || ""}</span></button>`).join("")
     : '<div class="vazio">Nenhuma gestora nesse filtro.</div>';
   $("#gestoras").querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => abrirGestora(b.dataset.g)));
@@ -183,7 +198,7 @@ async function carregarGestoras() {
 function linhaCarta(c, comFonte) {
   return `<div class="carta" data-link="${esc(c.link)}">
     <span class="data">${dataBR(c.data)}</span>
-    <div class="t"><a href="${linkSeguro(c.link)}" target="_blank" rel="noopener noreferrer">${esc(c.titulo)}</a>
+    <div class="t"><a href="${linkSeguro(c.link)}" target="_blank" rel="noopener noreferrer">${esc(c.titulo)}</a>${eNova(c) ? '<span class="nova" title="encontrada depois da sua última visita">nova</span>' : ""}
       ${comFonte ? `<div class="fonte"><button type="button" data-g="${esc(c.fonte)}">${esc(c.fonte)}</button></div>` : ""}</div>
     <div class="acs"><button type="button" class="mini ${c.tem_resumo ? "feito" : ""}" data-resumir title="O Quíron lê a carta e resume (fica guardado)">${c.tem_resumo ? "Ver resumo" : "Resumir"}</button>
       <a class="mini" href="${linkSeguro(c.link)}" target="_blank" rel="noopener noreferrer" title="Abrir no site da gestora">${window.ico ? ico("externo") : ""}Abrir</a></div>
@@ -231,15 +246,20 @@ let ultimoFeed = [];
 async function carregarFeed(mais = false) {
   const feed = $("#feed");
   if (!mais) { feed.innerHTML = '<div class="carregando">carregando…</div>'; ultimoFeed = []; }
-  const antes = mais && ultimoFeed.length ? ultimoFeed[ultimoFeed.length - 1].data : "";
-  const p = new URLSearchParams({ dias: estado.dias, tipo: estado.tipo, q: estado.q, categoria: estado.cat, limite: 80, antes });
+  const ult = ultimoFeed[ultimoFeed.length - 1];
+  const antes = mais && ult ? `${ult.data}|${ult.id}` : "";  // data + id: não pula cartas com a mesma data
+  const p = new URLSearchParams({ dias: estado.q ? 0 : estado.dias,  // procurando: em todo o histórico tipo: estado.tipo, q: estado.q, categoria: estado.cat, limite: 80, antes });
   try {
     const d = await api("/api/cartas?" + p);
     ultimoFeed = ultimoFeed.concat(d.itens);
     const tot = d.total_gestoras, ativas = d.categorias.ativa || 0;
-    $("#meta").textContent = `${ativas} gestoras ativas de ${tot} do seu guia · última conferência ${quando(d.conferido_em)}${d.atualizando ? " · conferindo agora…" : ""}`;
+    const nNovas = ultimoFeed.filter(eNova).length;
+    $("#meta").textContent = `${ativas} gestoras ativas de ${tot} do seu guia · última conferência ${quando(d.conferido_em)}`
+      + (nNovas ? ` · ${nNovas} nova${nNovas > 1 ? "s" : ""} desde a última visita` : "") + (estado.q ? " · procurando em todo o histórico" : "")
+      + (d.atualizando ? " · conferindo agora…" : "");
     feed.innerHTML = ultimoFeed.length ? porMes(ultimoFeed, true) + (d.itens.length === 80 ? '<div class="mais"><button class="b" id="mais" type="button">Mostrar mais antigas</button></div>' : "")
-      : '<div class="vazio">Nenhuma carta nesse filtro. Mude o período ou a situação das gestoras.</div>';
+      : `<div class="vazio">${estado.cat === "favoritas" && !gestoras.some((g) => g.favorita)
+        ? "Você ainda não tem favoritas. Abra uma gestora e clique em “Favoritar”." : "Nenhuma carta nesse filtro. Mude o período ou a situação das gestoras."}</div>`;
     ligarAcoes(feed);
     const bm = $("#mais"); if (bm) bm.onclick = () => carregarFeed(true);
     if (d.atualizando) setTimeout(() => { if (!estado.gestora && !document.hidden) { carregarFeed(); carregarGestoras(); } }, 15000);
@@ -257,6 +277,7 @@ async function abrirGestora(nome) {
     const d = await api("/api/cartas/gestora?nome=" + encodeURIComponent(nome));
     const g = d.gestora;
     $("#site").hidden = false; $("#site").href = linkSeguro(g.url);
+    desenharFavorita(!!g.favorita);
     $("#meta").innerHTML = `<span class="situacao"><span class="ponto ${esc(g.categoria)}"></span>${esc(SIT[g.categoria] || g.categoria)}</span>
       &nbsp;${d.cartas.length} cartas guardadas${g.ultima_carta ? " · última " + dataBR(g.ultima_carta) : ""} · conferida ${quando(g.conferido_em)}`;
     const det = $("#detalhe-sit");
@@ -268,10 +289,27 @@ async function abrirGestora(nome) {
 }
 function voltar() {
   estado.gestora = null;
-  $("#filtros").hidden = false; $("#voltar").hidden = true; $("#site").hidden = true; $("#detalhe-sit").hidden = true;
+  $("#filtros").hidden = false; $("#voltar").hidden = true; $("#site").hidden = true; $("#favorita").hidden = true; $("#detalhe-sit").hidden = true;
   $("#titulo").textContent = "Cartas mais recentes";
   desenharGestoras(); carregarFeed();
 }
+
+function desenharFavorita(sim) {
+  const b = $("#favorita");
+  b.hidden = false; b.setAttribute("aria-pressed", String(sim));
+  b.querySelector(".rot").textContent = sim ? "Favorita" : "Favoritar";
+}
+$("#favorita").onclick = async () => {
+  const nome = estado.gestora, sim = $("#favorita").getAttribute("aria-pressed") !== "true";
+  if (!nome) return;
+  try {
+    await api("/api/cartas/favorita", { method: "POST", headers: { "Content-Type": "application/json", "X-Quiron": "terminal" },
+      body: JSON.stringify({ nome, favorita: sim }) });
+    desenharFavorita(sim);
+    const g = gestoras.find((x) => x.fonte === nome); if (g) g.favorita = sim;
+    desenharGestoras();
+  } catch (e) { $("#detalhe-sit").hidden = false; $("#detalhe-sit").textContent = "Não consegui marcar: " + e.message; }
+};
 
 // ---------------------------------------------------------------- início
 function chipsTipos() { chips($("#tipos"), TIPOS, estado.tipo, (v) => { estado.tipo = v; guardar(); chipsTipos(); carregarFeed(); }); }

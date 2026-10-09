@@ -230,7 +230,7 @@ class BotQuiron:
                    "/evento quinta às 15h reunião (Google Agenda)", "",
                    "🧭 Carreira: /carreira (plano) · /diario <tese> · /diario revisar · /portfolio · /entrevista [cargo] · "
                    "/radar [dias] (normas da CVM, Receita, BC e Câmara)",
-                   "", "📬 Cartas de gestores: /cartas (recentes) · /cartas Verde · /cartas 30 · /cartas gestoras (quem segue ativo)", "",
+                   "", "📬 Cartas de gestores: /cartas (recentes) · /cartas Verde · /cartas 30 · /cartas gestoras (quem segue ativo) · /cartas novas (últimas 48 h, favoritas primeiro)", "",
                    "✍️ Conteúdo: /pauta [tema] · /roteiro reels|youtube|carrossel|fio|artigo <tema> · /fio <tema> · /ideia · /ideias · "
                    "/conferir <seu texto> (sai como RASCUNHO, com disclaimer e fontes)", "",
                    "📈 Patrimônio: /simular <sua situação em palavras> ou /simular CLI-012 — quanto investir por mês, quando dá para "

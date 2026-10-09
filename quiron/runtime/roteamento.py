@@ -156,6 +156,9 @@ def rotear(texto: str, ultima_tarefa: int | None = None) -> tuple[str, str] | No
     # carreira e conteúdo
     if re.match(r"^(?:tem |teve |alguma )?(?:norma|normas|regulacao|regra) nova(?:s)?(?: da cvm| do bc| da receita)?$|^novidades (?:da cvm|regulatorias)$", t):
         return "radar", "novidades"
+    if re.match(r"^(?:tem |teve |saiu |sairam |chegou |chegaram )?(?:alguma(?:s)? )?(?:cartas? nova(?:s)?|nova(?:s)? cartas?)"
+                r"(?: (?:de|dos|das) gestor(?:es|as)?)?(?: hoje| ontem)?$", t):
+        return "cartas", "novas"
     if m := re.match(r"^(?:(?:quais|tem|teve|saiu|sairam|me (?:da|mostra|manda)|mostra|ver)\s+)?(?:as |alguma(?:s)? )?(?:ultimas |novas )?"
                      r"cartas?(?: (?:de|dos|das) gestor(?:es|as)?)?(?: (?:recentes|novas|do mes|da semana))?(?: (?:da|do|de) (.{2,40}))?$", t):
         if not m.group(1):

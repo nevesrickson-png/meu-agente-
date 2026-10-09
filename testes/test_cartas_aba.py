@@ -248,3 +248,98 @@ def test_lista_embutida_na_pagina_e_json_aninhado():
 def test_titulo_com_comeco_do_texto_fica_so_o_titulo():
     t = "Carta Mensal Setembro 2026 Em setembro os dados da economia americana aceleraram de forma brusca. O PMI… Leia mais »"
     assert coleta._encurtar(t) == "Carta Mensal Setembro 2026"
+
+
+# ---------------------------------------------------------------- auditoria de 09/10/2026
+def test_nao_cartas_ficam_de_fora():
+    pagina = "".join(f'<a href="/docs/{n}.pdf">{t}</a>' for n, t in [
+        ("a", "Carta Mensal Setembro 2026"), ("b", "Aviso ao Mercado 09/2026"), ("c", "Regulamento 2026-09"),
+        ("d", "ASA | Demonstrações Financeiras | Jun-2026"), ("e", "Prospecto definitivo 2026-08"),
+        ("f", "Podcast | Sep 23, 2026")])
+    cartas = coleta._itens_pagina(pagina, "https://g.com.br/cartas", {"nome": "G"})
+    assert [c.titulo for c in cartas] == ["Carta Mensal Setembro 2026"]
+
+
+def test_titulos_da_auditoria():
+    cli = _cliente({"https://a.com.br/cartas": (
+        '<a href="/cartas/carta-do-gestor-08-2026-artesanal-cp-fidc/">Continue Lendo</a>'
+        '<a href="/up/carta-1788873890239-2026-07.pdf">carta 1788873890239</a>'
+        '<a href="/up/x.pdf">Janeiro</a><span>15/01/2026</span>')})
+    _, cartas = coleta.conferir({"nome": "A", "url": "https://a.com.br/cartas"}, cli, HOJE)
+    titulos = {c.titulo for c in cartas}
+    assert "Carta do gestor 08 2026 artesanal cp fidc" in titulos  # "Continue lendo" → nome do endereço
+    assert "Carta de 07/2026" in titulos and "Carta de 01/2026" in titulos  # código e só o mês → mês/ano
+    assert coleta._encurtar("18:42 Talks about markets Video | Sep 21, 2026") == "Talks about markets"
+    assert coleta._encurtar("d0f697c5 115c 4dab 952e b53646acb107 carta junho 2022") == "carta junho 2022"
+
+
+def test_data_ao_lado_do_link_nao_pega_a_da_vizinha():
+    pagina = ('<div><a href="https://j.com/i/a">Market Thoughts: A</a> <time>Oct 9, 2026</time></div>'
+              '<div><a href="https://j.com/i/b">Market Thoughts: B</a></div>')
+    cartas = coleta._itens_pagina(pagina, "https://j.com/i", {"nome": "J", "link_inclui": r"/i/"})
+    assert [(c.link[-1], c.data) for c in cartas] == [("a", "2026-10-09"), ("b", "")]
+
+
+def test_repetidas_e_faxina(monkeypatch):
+    s = coleta.Situacao("G", "gestora", "https://g.com.br", "ativa", conferido_em="2026-10-09T10:00:00+00:00")
+    c1 = coleta.Carta("G", "Carta Mensal Setembro 2026", "https://www.g.com.br/c/set.pdf", "2026-09-01")
+    assert coleta._gravar(s, [c1]) == 1
+    mesmo_pdf = coleta.Carta("G", "Carta Mensal Setembro 2026", "http://g.com.br/c/set.pdf?ver=2", "2026-09-01")
+    mesmo_titulo = coleta.Carta("G", "Carta Mensal Setembro 2026", "https://g.com.br/outro/set-2026", "2026-09-01")
+    assert coleta._gravar(s, [mesmo_pdf, mesmo_titulo]) == 0
+    with coleta.conectar() as con:  # sujeira de antes da correção: repetida + aviso
+        con.execute("INSERT INTO cartas VALUES ('x1','G','gestora','Carta Mensal Setembro 2026','https://g.com.br/c/set.pdf?utm_source=a','2026-09-01','2026-10-09')")
+        con.execute("INSERT INTO cartas VALUES ('x2','G','gestora','Aviso ao Mercado','https://g.com.br/aviso.pdf','2026-09-02','2026-10-09')")
+    r = coleta.limpar_banco()
+    assert r["repetidas"] == 1 and r["nao_cartas"] == 1
+    with coleta.conectar() as con:
+        assert con.execute("SELECT COUNT(*) FROM cartas").fetchone()[0] == 1
+
+
+def test_paginacao_com_muitas_cartas_na_mesma_data():
+    s = coleta.Situacao("G", "gestora", "https://g.com.br", "ativa", conferido_em="2026-10-09T10:00:00+00:00")
+    d = date.today().isoformat()
+    coleta._gravar(s, [coleta.Carta("G", f"Carta do fundo número {i:02d}", f"https://g.com.br/{i}.pdf", d) for i in range(7)])
+    vistos, antes = [], ""
+    while True:
+        pagina = coleta.feed(dias=0, limite=3, antes=antes)
+        if not pagina:
+            break
+        vistos += [c["id"] for c in pagina]
+        antes = f"{pagina[-1]['data']}|{pagina[-1]['id']}"
+    assert len(vistos) == 7 == len(set(vistos))  # nenhuma pulada nem repetida
+
+
+def test_favoritas_novas_rota_e_telegram(monkeypatch):
+    from quiron.runtime.carreira_bot import CarreiraBot
+    from quiron.servicos.cartas import consultas
+    from quiron.terminal.backend.app import app
+
+    monkeypatch.setattr(coleta, "fontes", lambda: [{"nome": n, "url": f"https://{n.lower()}.com.br", "tipo": "gestora"} for n in ("Alfa", "Beta")])
+    monkeypatch.setattr(coleta, "atualizar_em_segundo_plano", lambda *a, **k: False)
+    with pytest.raises(ValueError):
+        coleta.marcar_favorita("Fora do guia")
+    assert coleta.marcar_favorita("Beta") == ["Beta"] and coleta.favoritas() == ["Beta"]
+    hoje = date.today()
+    for nome in ("Alfa", "Beta"):
+        s = coleta.Situacao(nome, "gestora", f"https://{nome.lower()}.com.br", "ativa", conferido_em="2026-10-09T10:00:00+00:00")
+        coleta._gravar(s, [coleta.Carta(nome, f"Carta mensal de {nome}", f"https://{nome.lower()}.com.br/c.pdf", hoje.isoformat()),
+                           coleta.Carta(nome, f"Carta antiga de {nome} achada no histórico", f"https://{nome.lower()}.com.br/v.pdf", "2019-03-01")])
+    assert {c["fonte"] for c in coleta.novas()} == {"Alfa", "Beta"}  # só as recentes, não as do histórico
+    assert [c["fonte"] for c in coleta.novas(so_favoritas=True)] == ["Beta"]
+    texto = consultas.novidades()
+    assert texto.index("Beta") < texto.index("Alfa") and "⭐" in texto
+    assert CarreiraBot()._comando("cartas", "novas")[0].texto == texto
+
+    c = TestClient(app, base_url="http://127.0.0.1")
+    assert c.post("/api/cartas/favorita", json={"nome": "Alfa"}).status_code == 403  # sem o cabeçalho da tela
+    h = {"X-Quiron": "terminal"}
+    assert c.post("/api/cartas/favorita", json={"nome": "Alfa", "favorita": True}, headers=h).json()["favoritas"] == ["Alfa", "Beta"]
+    assert c.post("/api/cartas/favorita", json={"nome": "Beta", "favorita": False}, headers=h).json()["favoritas"] == ["Alfa"]
+    assert c.post("/api/cartas/favorita", json={"nome": "Zeta"}, headers=h).status_code == 400
+    d = c.get("/api/cartas", params={"categoria": "favoritas", "dias": 30}).json()
+    assert {i["fonte"] for i in d["itens"]} == {"Alfa"}
+    assert c.get("/api/cartas", params={"antes": f"{hoje.isoformat()}|abc123"}).status_code == 200
+    from quiron.runtime.roteamento import rotear
+
+    assert rotear("tem carta nova?", None) == ("cartas", "novas")

@@ -59,7 +59,11 @@ class CarreiraBot:
             if al in {"fim", "encerrar", "feedback"}:
                 return [Tela(entrevista.encerrar()[1])]
             return [Tela(entrevista.iniciar(a)[1])]
-        if nome == "cartas":  # /cartas · /cartas 30 · /cartas Verde · /cartas gestoras
+        if nome == "cartas" and a.lower() in {"novas", "novidades", "nova"}:
+            from quiron.servicos.cartas import consultas as cartas
+
+            return [Tela(cartas.novidades())]
+        if nome == "cartas":  # /cartas · /cartas 30 · /cartas Verde · /cartas gestoras · /cartas novas
             from quiron.servicos.cartas import consultas as cartas
 
             if a.lower() in {"gestoras", "situacao", "situação", "status"}:

@@ -499,6 +499,7 @@ fontes:
 - nome: Morgan Stanley
   url: https://www.morganstanley.com/ideas
   tipo: global
+  link_inclui: /insights/articles/
 - nome: Natixis CIB
   url: https://home.cib.natixis.com/library
   tipo: global
@@ -515,6 +516,7 @@ fontes:
 - nome: Standard Chartered
   url: https://www.sc.com/en/corporate-investment-banking/news-and-views/
   tipo: global
+  link_inclui: /(news|insights)/(corporate-investment-banking|wealth-retail-banking)/
 - nome: William Blair
   url: https://www.williamblair.com/Investment-Banking/Insights
   tipo: global

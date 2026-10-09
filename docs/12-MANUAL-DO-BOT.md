@@ -82,7 +82,7 @@ Montado direto dos dados, sempre no mesmo formato, para ler no celular:
 | Notícias de um tema ou ativo | `/noticia` | `/noticia copom` |
 | Clima nas redes (Bluesky, Reddit, YouTube) | — | “qual o sentimento sobre PETR4?” |
 | Alertas | `/alerta` | `/alerta PETR4 abaixo de 30` · `/alerta "fato relevante" Vale` |
-| Cartas de gestores recentes | `/cartas` | `/cartas` · `/cartas Verde` · `/cartas 30` (dias) · `/cartas gestoras` (quem segue ativo) |
+| Cartas de gestores recentes | `/cartas` | `/cartas` · `/cartas Verde` · `/cartas 30` (dias) · `/cartas gestoras` (quem segue ativo) · `/cartas novas` (últimas 48 h, favoritas primeiro) |
 | Resumo de uma carta | — | “resuma a carta da Dynamo” (ele lê o PDF e resume cenário, posições e ideias) |
 
 Dados de fontes oficiais (Banco Central, Tesouro, ANBIMA, CVM, IBGE, B3/Yahoo), sempre com fonte e horário. Fonte fora
@@ -212,7 +212,13 @@ tabelas de cada seção). Para receber todo dia: “todo dia útil às 8h15 me m
   guardado — abrir de novo não gasta IA.
 - Uma vez por dia ele confere os sites; uma vez por semana volta às páginas antigas (histórico) e, se a página de uma
   gestora mudou de endereço, procura sozinho a nova no próprio site. Sempre respeitando o robots.txt e sem login.
-- Telegram: `/cartas`, `/cartas Verde`, `/cartas gestoras`, ou “resuma a carta da Dynamo”.
+- **Favoritas**: abra uma gestora e clique em **Favoritar** (estrela). Elas ganham o filtro **Favoritas** à esquerda e
+  aparecem primeiro no `/cartas novas` do Telegram.
+- Cartas encontradas depois da sua última visita ganham o selo **nova**. Ao procurar uma palavra, a busca vale para
+  todo o histórico (ignora o período escolhido).
+- A cada conferência geral o Quíron faz uma faxina: tira repetidas (mesmo PDF com outro endereço), o que não é carta
+  (aviso ao mercado, regulamento, podcast, vídeo…) e melhora títulos vagos (“Continue lendo” vira “Carta de mm/aaaa”).
+- Telegram: `/cartas`, `/cartas Verde`, `/cartas gestoras`, `/cartas novas` (ou “tem carta nova?”), ou “resuma a carta da Dynamo”.
 
 ### 📺 TV (aba **TV** no topo, ou `TV` na busca do Terminal)
 Canais do YouTube como uma TV: botões por grupo (Notícias Brasil, Notícias globais, Gestoras e bancos, Gestoras globais e

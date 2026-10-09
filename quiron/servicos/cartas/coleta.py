@@ -44,9 +44,15 @@ _NAO = re.compile(r"politica|privacidade|cookie|termos|contato|login|cadastr|tra
 _NAO_CARTA = re.compile(r"carta[\s_-]*consulta|emiss[aã]o[\s_-]*de[\s_-]*cotas|assembleia|edital|convoca[cç][aã]o|fato[\s_-]*relevante|"
                         r"comunicado[\s_-]*ao[\s_-]*mercado|aviso[\s_-]*aos[\s_-]*cotistas|informe[\s_-]*de[\s_-]*rendimentos|"
                         r"proposta[\s_-]*da[\s_-]*administra|ata[\s_-]+d[ae]|one[\s_-]?page|l[aâ]mina|\blgpd\b|esclarecimento|"
-                        r"pol[ií]tica[\s_-]*de[\s_-]*(privacidade|voto|investimento)", re.I)
+                        r"pol[ií]tica[\s_-]*de[\s_-]*(privacidade|voto|investimento)|"
+                        # documentos de fundo e mídia que não são carta (achados na auditoria de 09/10/2026)
+                        r"aviso[\s_-]*ao[\s_-]*mercado|^aviso\b|\baviso\s+[A-Z]{2,5}\b|prospecto|regulamento|"
+                        r"demonstra[cç][oõ]es[\s_-]*financeiras|comunicado[\s_-]*aos[\s_-]*cotistas|\bpodcasts?\b|/podcasts?/|"
+                        r"\bv[ií]deo\b|\bwebinars?\b|talks[\s_-]*at[\s_-]*gs|convite[\s_-]*para[\s_-]*live", re.I)
 _GENERICO = re.compile(r"^(baixar|download|pdf|leia mais|saiba mais|clique\b.*|visualizar.*|ver|acesse|acessar|abrir|read more|"
                        r"acessar documento|ver documento|baixar documento|baixar pdf|download pdf|documento|arquivo|"
+                       r"continue lendo|continuar lendo|leia a carta|ler carta|ler a carta|ver carta|acessar carta|confira|"
+                       r"baixar carta|baixe a carta|download da carta|clique aqui|ver mais|leia|ler|mais|"
                        r"carta do gestor|carta mensal|carta|relat[oó]rio( mensal)?|coment[aá]rio( mensal)?)$", re.I)
 # mês por extenso ou abreviado, nunca dentro de outra palavra ("novidades" não é novembro, "setor" não é setembro)
 _MES = (r"(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|"
@@ -236,11 +242,12 @@ def _itens_feed(cliente: httpx.Client, feed: str, fonte: dict) -> list[Carta]:
     if r.status_code >= 400:
         return []
     f = feedparser.parse(r.content)
+    filtro = re.compile(fonte["link_inclui"], re.I) if fonte.get("link_inclui") else None
     saida = []
     for e in f.entries[:30]:
         titulo = _html.unescape(re.sub(r"<[^>]+>", "", e.get("title", ""))).strip()
         link = e.get("link", "")
-        if not titulo or not link or _NAO_CARTA.search(f"{titulo} {link}"):
+        if not titulo or not link or _NAO_CARTA.search(f"{titulo} {link}") or (filtro is not None and not filtro.search(link)):
             continue
         st = e.get("published_parsed") or e.get("updated_parsed")
         data = date(*st[:3]).isoformat() if st else extrair_data(f"{titulo} {link}")
@@ -257,6 +264,11 @@ def _encurtar(titulo: str, limite: int = 140) -> str:
     a data repetida no começo (a data já aparece ao lado)."""
     titulo = re.split(r"\s+\|\s+by\s+|\s{2,}", titulo, maxsplit=1, flags=re.I)[0].strip()
     titulo = _LIXO_FIM.sub("", titulo).strip()
+    titulo = re.sub(r"^(?:[0-9a-f]{4,12}\s+){3,}", "", titulo, flags=re.I)  # "d0f697c5 115c 4dab …" (nome de arquivo com código)
+    titulo = re.sub(r"^\d{1,2}:\d{2}\s+", "", titulo)                       # "18:42 Talks at…" (duração de vídeo)
+    titulo = re.sub(r"\s+\d{9,}$", "", titulo)                               # "carta setembro 2026 1791408250668"
+    titulo = re.sub(r"\s*(?:podcast|video|vídeo)?\s*\|?\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.? \d{1,2}, 20\d\d$",
+                    "", titulo, flags=re.I)                                    # "… Sep 23, 2026" (a data já aparece ao lado)
     titulo = re.sub(r"\s+\d{1,2}[/.]\d{1,2}[/.]\d{4}$", "", titulo)  # "Relatório de Setembro 2026 07.10.2026"
     sem_data = _DATA_INICIO.sub("", titulo).strip()
     titulo = sem_data if len(sem_data) >= 8 else titulo
@@ -435,8 +447,24 @@ def _itens_embutidos(texto: str, url: str, fonte: dict) -> list[Carta]:
     return saida
 
 
+def _titulo_fraco(titulo: str) -> bool:
+    """Título que não diz nada: "Acessar documento", só o mês ("Janeiro"), código de arquivo ou sem palavras."""
+    t = titulo.strip()
+    return bool(_GENERICO.fullmatch(t) or not re.search(r"[A-Za-zÀ-ÿ]{3}", t) or re.fullmatch(r"[\w-]{20,}", t)
+                or re.fullmatch(r"(?:" + _MES + r")\.?(?:\s*(?:/|de)?\s*(?:20)?\d\d)?", t.lower())
+                or re.search(r"\b[0-9a-f]{8}\s[0-9a-f]{4}\s", t.lower()) or re.search(r"\d{8}[a-z]{6,}", t.lower()))
+
+
+def _datas_vizinhas(texto: str, inicio: int, fim: int) -> tuple[str, str]:
+    """(data logo depois do link, data logo antes) — sem passar de outro <a>. Quem escolhe o lado é a página inteira
+    (`_itens_pagina`): sites põem a data sempre do mesmo lado, e escolher por link pegaria a data da carta vizinha."""
+    depois = texto[fim:fim + 400].split("<a ", 1)[0]
+    antes = texto[max(0, inicio - 400):inicio].rsplit("</a>", 1)[-1]
+    return tuple(extrair_data(_html.unescape(re.sub(r"<[^>]+>", " ", t))) for t in (depois, antes))
+
+
 def _itens_pagina(texto: str, url: str, fonte: dict, limite: int = 200) -> list[Carta]:
-    saida, vistos = [], set()
+    saida, vistos, lados = [], set(), []
     filtro = re.compile(fonte["link_inclui"], re.I) if fonte.get("link_inclui") else None
     for m in re.finditer(r"<a\b[^>]*href=[\"']([^\"'#][^\"']*)[\"'][^>]*>(.*?)</a>", texto, re.I | re.S):
         href = _html.unescape(m.group(1)).strip().replace("\\#", "#")
@@ -452,16 +480,32 @@ def _itens_pagina(texto: str, url: str, fonte: dict, limite: int = 200) -> list[
         elif not (pdf or _PALAVRAS.search(alvo)) or _NAO_CARTA.search(alvo):
             continue
         data = extrair_data(alvo)
-        if not (pdf or data or filtro is not None):  # link comum de menu ("Relatórios") sem data e sem PDF: não é carta
+        vizinhas = ("", "")
+        if not data and (pdf or filtro is not None):  # data escrita ao lado do link (cartões "Título · 23/09/2026")
+            vizinhas = _datas_vizinhas(texto, m.start(), m.end())
+        if not (pdf or data or filtro is not None or any(vizinhas)):  # link de menu sem data e sem PDF: não é carta
             continue
         vistos.add(link)
-        arquivo = re.sub(r"\.pdf$", "", urlsplit(link).path.rsplit("/", 1)[-1], flags=re.I)
+        arquivo = re.sub(r"\.pdf$", "", urlsplit(link).path.rstrip("/").rsplit("/", 1)[-1], flags=re.I)  # /carta-x/ → carta-x
         arquivo = re.sub(r"[\s_-]+", " ", _html.unescape(arquivo)).strip()[:120]
+        arquivo = arquivo[:1].upper() + arquivo[1:]
         titulo = rotulo if len(rotulo) >= 4 and not _GENERICO.fullmatch(rotulo) else (arquivo or rotulo)
-        if (_GENERICO.fullmatch(titulo) or not re.search(r"[A-Za-zÀ-ÿ]{3}", titulo) or re.fullmatch(r"[\w-]{20,}", titulo)) and data:
+        if _titulo_fraco(titulo) and data:
             a, m, _ = data.split("-")
             titulo = f"Carta de {m}/{a}"  # "Acessar documento" ou arquivo com nome de código: diz pelo menos o mês
-        saida.append(Carta(fonte["nome"], _encurtar(titulo), link, data, fonte.get("tipo", "")))
+        titulo = _encurtar(titulo)
+        if data and _titulo_fraco(titulo):  # sobrou só "Carta" (ou só o mês) depois da limpeza
+            titulo = f"Carta de {data[5:7]}/{data[:4]}"
+        saida.append(Carta(fonte["nome"], titulo, link, data, fonte.get("tipo", "")))
+        lados.append(vizinhas)
+    # data ao lado: vale o lado (depois/antes) em que a página mais tem datas
+    depois, antes = sum(1 for v in lados if v[0]), sum(1 for v in lados if v[1])
+    lado = 0 if depois >= antes else 1
+    for c, v in zip(saida, lados):
+        if not c.data and v[lado]:
+            c.data = v[lado]
+            if _titulo_fraco(c.titulo):
+                c.titulo = f"Carta de {c.data[5:7]}/{c.data[:4]}"
     return saida[:limite]
 
 
@@ -699,6 +743,48 @@ def conferir(fonte: dict, cliente: httpx.Client | None = None, hoje: date | None
     return sit, cartas
 
 
+def _link_canonico(link: str) -> str:
+    """Mesmo arquivo com endereço diferente (http×https, www, parâmetros de rastreio ou de versão) = mesma carta."""
+    p = urlsplit(link.strip())
+    consulta = "&".join(q for q in p.query.split("&") if q and not re.match(r"(utm_|ver=|v=|_=|fbclid|gclid)", q, re.I))
+    return f"{p.netloc.lower().removeprefix('www.')}{p.path.rstrip('/')}{'?' + consulta if consulta else ''}"
+
+
+def _chave_titulo(fonte: str, titulo: str, data: str) -> tuple[str, str, str]:
+    return fonte, re.sub(r"\W+", "", _sem_acento(titulo)), data
+
+
+def limpar_banco() -> dict[str, int]:
+    """Faxina das cartas já guardadas: tira o que os filtros novos dizem que não é carta e as repetidas (mesmo arquivo
+    em outro endereço, ou mesmo título e data na mesma gestora). Fica a primeira descoberta."""
+    tiradas = {"nao_cartas": 0, "repetidas": 0}
+    with _TRAVA, conectar() as con:
+        linhas = con.execute("SELECT id, fonte, titulo, link, data FROM cartas ORDER BY descoberta_em, id").fetchall()
+        vistos_link, vistos_titulo, apagar = set(), set(), []
+        for r in linhas:
+            if _NAO_CARTA.search(f"{r['titulo']} {r['link']}"):
+                apagar.append(r["id"])
+                tiradas["nao_cartas"] += 1
+                continue
+            canon = (r["fonte"], _link_canonico(r["link"]))
+            chave = _chave_titulo(r["fonte"], r["titulo"], r["data"]) if r["data"] and len(r["titulo"]) >= 12 else None
+            if canon in vistos_link or (chave and chave in vistos_titulo):
+                apagar.append(r["id"])
+                tiradas["repetidas"] += 1
+                continue
+            vistos_link.add(canon)
+            if chave:
+                vistos_titulo.add(chave)
+        con.executemany("DELETE FROM cartas WHERE id = ?", [(i,) for i in apagar])
+        apagados = set(apagar)
+        novos = [(t, r["id"]) for r in linhas if r["id"] not in apagados and (t := _encurtar(r["titulo"])) != r["titulo"] and t]
+        con.executemany("UPDATE cartas SET titulo = ? WHERE id = ?", novos)
+        tiradas["titulos"] = len(novos)
+        ruins = [r[0] for r in con.execute("SELECT fonte, url FROM descobertas") if _NAO_CARTA.search(r[1])]
+        con.executemany("DELETE FROM descobertas WHERE fonte = ?", [(f,) for f in ruins])
+    return tiradas
+
+
 def _gravar(sit: Situacao, cartas: list[Carta]) -> int:
     novas = 0
     agora = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -712,8 +798,16 @@ def _gravar(sit: Situacao, cartas: list[Carta]) -> int:
                      sit.historico_em))
         if sit.descoberta:
             con.execute("INSERT OR REPLACE INTO descobertas VALUES (?,?,?)", (sit.fonte, sit.descoberta, agora))
+        da_fonte = con.execute("SELECT link, titulo, data FROM cartas WHERE fonte = ?", (sit.fonte,)).fetchall()
+        links = {_link_canonico(r[0]): r[0] for r in da_fonte}
+        titulos = {_chave_titulo(sit.fonte, r[1], r[2]) for r in da_fonte if r[2] and len(r[1]) >= 12}
         for c in cartas:
             ident = hashlib.sha1(c.link.encode()).hexdigest()[:16]
+            igual = links.get(_link_canonico(c.link))
+            if igual and igual != c.link:  # o mesmo arquivo já guardado com outro endereço
+                continue
+            if (not igual and c.data and len(c.titulo) >= 12 and _chave_titulo(sit.fonte, c.titulo, c.data) in titulos):
+                continue  # mesma carta (título e data) publicada em outro link
             if con.execute("SELECT 1 FROM cartas WHERE id = ?", (ident,)).fetchone():
                 # já conhecida: só corrige título/data (melhorias da leitura valem para as antigas também)
                 # leitura sem data (ex.: feed fora do ar, caiu na página) não apaga a data que já se sabia
@@ -721,6 +815,9 @@ def _gravar(sit: Situacao, cartas: list[Carta]) -> int:
                             (c.titulo, c.data, ident))
                 continue
             con.execute("INSERT INTO cartas VALUES (?,?,?,?,?,?,?)", (ident, c.fonte, c.tipo, c.titulo, c.link, c.data, agora))
+            links[_link_canonico(c.link)] = c.link
+            if c.data and len(c.titulo) >= 12:
+                titulos.add(_chave_titulo(sit.fonte, c.titulo, c.data))
             novas += 1
     return novas
 
@@ -748,6 +845,8 @@ def atualizar(forcar: bool = False, nomes: list[str] | None = None, paralelo: in
     resumo = {"conferidas": 0, "novas": 0}
     if not lista:
         return resumo
+    if nomes is None:  # rodada geral: aproveita para a faxina (filtros novos valem para as cartas antigas também)
+        resumo["faxina"] = limpar_banco()
     with conectar() as con:
         hist = {r["fonte"]: r["historico_em"] or "" for r in con.execute("SELECT fonte, historico_em FROM situacao")}
 
@@ -946,11 +1045,12 @@ def gestoras() -> list[dict]:
                                      "SUM(CASE WHEN data = '' OR data IS NULL THEN 1 ELSE 0 END) sem_data FROM cartas GROUP BY fonte")}
     saida = []
     hoje = date.today()
+    favs = set(favoritas())
     for s in situacoes():
         n, ultima, sem_data = cont.get(s["fonte"], (0, "", 0))
         ultima = min(ultima, (hoje + timedelta(days=5)).isoformat()) if ultima else ""
         saida.append({**s, "total": n, "sem_data": sem_data, "ultima_carta": ultima or s.get("ultima_carta") or "",
-                      "categoria": categoria(s, ultima or s.get("ultima_carta") or "", hoje)})
+                      "categoria": categoria(s, ultima or s.get("ultima_carta") or "", hoje), "favorita": s["fonte"] in favs})
     return saida
 
 
@@ -963,9 +1063,14 @@ def feed(dias: int = 120, tipo: str | None = None, termo: str | None = None, ant
     if dias:
         sql += " AND c.data >= ?"
         params.append((date.today() - timedelta(days=dias)).isoformat())
-    if antes:
-        sql += " AND c.data < ?"
-        params.append(antes)
+    if antes:  # "AAAA-MM-DD|id": continua exatamente de onde parou (várias cartas podem ter a mesma data)
+        d_antes, _, id_antes = antes.partition("|")
+        if id_antes:
+            sql += " AND (c.data < ? OR (c.data = ? AND c.id < ?))"
+            params += [d_antes, d_antes, id_antes]
+        else:
+            sql += " AND c.data < ?"
+            params.append(d_antes)
     if tipo:
         sql += " AND c.tipo = ?"
         params.append(tipo)
@@ -978,7 +1083,7 @@ def feed(dias: int = 120, tipo: str | None = None, termo: str | None = None, ant
         sql += f" AND c.fonte IN ({','.join('?' * len(gestoras_nomes))})"
         params += gestoras_nomes
     with conectar() as con:
-        linhas = con.execute(sql + " ORDER BY c.data DESC, c.descoberta_em DESC LIMIT ?", (*params, limite)).fetchall()
+        linhas = con.execute(sql + " ORDER BY c.data DESC, c.id DESC LIMIT ?", (*params, limite)).fetchall()
     return [dict(l) for l in linhas]
 
 
@@ -1025,3 +1130,37 @@ def resumir(link: str) -> dict:
         con.execute("INSERT OR REPLACE INTO resumos VALUES (?,?,?,?)",
                     (link, resumo, getattr(r, "modelo", ""), datetime.now(timezone.utc).isoformat(timespec="seconds")))
     return {"resumo": resumo, "guardado": False}
+
+
+# ---------------------------------------------------------------- favoritas e novidades
+def favoritas() -> list[str]:
+    """Gestoras marcadas com estrela (dados/ajustes/cartas_favoritas.yaml — vale na tela e no Telegram)."""
+    from quiron.nucleo.config import ler_ajuste
+
+    return [str(n) for n in (ler_ajuste("cartas_favoritas").get("gestoras") or [])]
+
+
+def marcar_favorita(nome: str, favorita: bool = True) -> list[str]:
+    from quiron.nucleo.config import escrever_ajuste
+
+    if nome not in {f["nome"] for f in fontes()}:
+        raise ValueError("gestora não está no guia")
+    atuais = [n for n in favoritas() if n != nome] + ([nome] if favorita else [])
+    escrever_ajuste("cartas_favoritas", {"gestoras": sorted(atuais)} if atuais else {})
+    return sorted(atuais)
+
+
+def novas(horas: int = 48, so_favoritas: bool = False, limite: int = 40) -> list[dict]:
+    """Cartas que o Quíron encontrou nas últimas `horas` (as recém-publicadas, não as antigas achadas no histórico)."""
+    desde = (datetime.now(timezone.utc) - timedelta(hours=horas)).isoformat(timespec="seconds")
+    recente = (date.today() - timedelta(days=45)).isoformat()
+    sql = "SELECT * FROM cartas WHERE descoberta_em >= ? AND data >= ?"
+    params: list = [desde, recente]
+    if so_favoritas:
+        favs = favoritas()
+        if not favs:
+            return []
+        sql += f" AND fonte IN ({','.join('?' * len(favs))})"
+        params += favs
+    with conectar() as con:
+        return [dict(r) for r in con.execute(sql + " ORDER BY data DESC, id DESC LIMIT ?", (*params, limite))]

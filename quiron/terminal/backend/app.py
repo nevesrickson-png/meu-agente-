@@ -511,10 +511,13 @@ def api_cartas(dias: int = 120, tipo: str = "", q: str = "", antes: str = "", li
     from quiron.servicos.cartas import coleta as cartas
 
     cartas.atualizar_em_segundo_plano()  # confere as vencidas por trás (no máximo ~1 vez por dia cada uma)
-    if antes and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", antes):
+    if antes and not re.fullmatch(r"\d{4}-\d{2}-\d{2}(\|[0-9a-f]{1,32})?", antes):
         raise HTTPException(400, "data inválida")
     gs = cartas.gestoras()
-    nomes = [g["fonte"] for g in gs if g["categoria"] == categoria] if categoria else None
+    if categoria == "favoritas":
+        nomes = [g["fonte"] for g in gs if g["favorita"]]
+    else:
+        nomes = [g["fonte"] for g in gs if g["categoria"] == categoria] if categoria else None
     itens = cartas.feed(max(0, min(dias, 36500)), tipo or None, q.strip()[:80] or None, antes or None,
                         max(1, min(limite, 200)), nomes)
     from collections import Counter
@@ -539,6 +542,18 @@ def api_cartas_gestora(nome: str) -> dict:
     if not d:
         raise HTTPException(404, "gestora não está no guia")
     return d
+
+
+@app.post("/api/cartas/favorita")
+def api_cartas_favorita(request: Request, corpo: dict = Body(...)) -> dict:
+    """Marca/desmarca uma gestora como favorita (vale na aba Cartas e no /cartas novas do Telegram)."""
+    _proteger(request)
+    from quiron.servicos.cartas import coleta as cartas
+
+    try:
+        return {"favoritas": cartas.marcar_favorita(str(corpo.get("nome", "")), bool(corpo.get("favorita", True)))}
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
 
 
 @app.post("/api/cartas/resumo")
