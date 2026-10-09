@@ -168,7 +168,7 @@ def focus(indicador: str, ano: int | None = None) -> Expectativa:
         "$filter": f"Indicador eq '{nome}' and DataReferencia eq '{ano}' and baseCalculo eq 0",
         "$orderby": "Data desc",
         "$format": "json",
-        "$select": "Indicador,Data,DataReferencia,Mediana,numeroRespondentes,baseCalculo",
+        # sem "$select": desde 10/2026 o firewall do BC devolve 403 para qualquer consulta com ele
     }
     # O OData do BC exige espaço como %20 (com "+" a consulta é rejeitada), então a URL é montada aqui.
     seguros = "',"
