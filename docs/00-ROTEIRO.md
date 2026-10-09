@@ -536,6 +536,7 @@ Revisores no agente/MCP, nas contas de fundos/valuation/risco, em mercado/notíc
   selo "nova", busca em todo o histórico, `/cartas novas` no Telegram
 - [x] Gestoras novas fora do guia: investigadas ~85 candidatas (macro, ações, crédito/FII, globais); entram só as que
   publicam carta pública com data recente, conferidas com o coletor
+  → 30 novas (170 no guia): 108 ativas + 22 publicam pouco; +1.704 cartas (6.293 no total na coleta de teste)
 - [ ] Aceite do Rickson na aba Cartas (conferir se faltou alguma gestora importante do guia)
 
 ## Depois do roteiro — pendências do seu lado (05/10/2026)

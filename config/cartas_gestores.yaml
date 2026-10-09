@@ -668,4 +668,68 @@ fontes:
 - nome: Brookfield Corporation
   url: https://bn.brookfield.com/reports-filings/letters-to-shareholders
   tipo: global
+  link_inclui: '(?i)(letter|ltr)[\s_%20-]*to[\s_%20-]*shareholders|bn[\s_%20-]*letter'
   # verificado 09/10/2026: cartas trimestrais aos acionistas ("Q2 26 Brookfield Letter…"), 89 datadas, última 06/2026
+- nome: Gávea Investimentos
+  url: https://www.gaveainvest.com.br/fundos/gavea-macro-fif-cic-mm-rl/
+  tipo: gestora
+  link_inclui: Relatorio-Mensal
+  paginas:
+  - https://www.gaveainvest.com.br/fundos/gavea-macro-ii-fif-cic-mm-rl/
+  - https://www.gaveainvest.com.br/fundos/gavea-macro-dolar-fif-cic-mm-rl/
+  - https://www.gaveainvest.com.br/fundos/gavea-macro-plus-ii-fif-cic-mm-rl/
+  # verificado: 4 cartas, última 2026-08-01 — "Relatório Mensal" (comentário do gestor) de cada fundo macro; cada página mostra só o mês corrente, o histórico se acumula no banco (wp-json/media bloqueado, 403)
+- nome: Kadima Asset
+  url: https://www.kadimaasset.com.br/biblioteca/
+  tipo: gestora
+  # verificado: 37 cartas, última 2026-06-01 — carta trimestral (03/06/09/12), lista completa desde 2017 na página Biblioteca
+- nome: Sharp Capital
+  url: https://sharpcapital.com.br/relatorios/
+  tipo: gestora
+  link_inclui: /uploads/cartas/
+  descoberta_fixa: true
+  # verificado: 8 cartas, última 2026-01-01 — carta ANUAL (sai em janeiro), 2019–2026; descoberta_fixa porque a carta tem mais de 120 dias quase o ano todo
+- nome: Novus Capital
+  url: https://novuscapital.com.br/report-mensal/
+  tipo: gestora
+  paginas:
+  - https://novuscapital.com.br/cartas-ao-investidor/
+  # verificado: 80 cartas (com histórico), última 2026-07-01 — "Carta mensal" + relatórios trimestrais; a 2ª página traz os artigos/cartas de crédito
+- nome: JiveMauá (MCCI11)
+  url: https://jivemaua.com.br/fundos/mcci11/
+  tipo: gestora
+  link_inclui: relatorio-mensal
+  # verificado: ~65 relatórios, última 2026-09-01 — Mauá Capital virou JiveMauá; relatório mensal (gerencial) do FII MCCI11, desde 2020. Títulos sem nome do fundo ("Relatório Mensal - setembro"), por isso só um fundo; dá para somar https://jivemaua.com.br/fundos/mcre11/ em paginas
+- nome: XP Asset (XPML11)
+  url: https://www.xpasset.com.br/fundos/xp-malls/
+  tipo: gestora
+  mziq:
+    empresa: 8071264f-09a1-481e-9c5e-25e5b370cd63
+    categorias:
+    - relatorios_gerenciais
+  # verificado: 69 relatórios, última 2026-10-07 — relatório gerencial mensal do FII XP Malls (plataforma MZ; cada fundo da XP Asset tem seu próprio id MZ — fmId na página do fundo). Multimercados da XP Asset não têm carta pública no site
+- nome: Itaú BBA Macro (revisão de cenário)
+  url: https://blog.itau.com.br/privateinsights
+  tipo: gestora
+  sitemap: https://blog.itau.com.br/sitemap.xml
+  link_inclui: privateinsights/.*revis[a-z-]*cenario
+  # verificado: 50 cartas, última 2026-09-25 — revisão mensal de cenário da equipe macro do Itaú (Mesquita até 04/2026, Diogo Guillen desde 07/2026) no blog Private Insights; o portal itaubba-pt/portal/macro é só JavaScript. Títulos vêm do endereço (sitemap)
+
+# --- Rejeitadas (conferidas em 2026-10-09) ---
+# SPX Capital (spxcapital.com): sem cartas públicas — páginas de fundo só têm lâmina e "one pager" do mês (wp-json fechado, 401)
+# Ibiuna Investimentos (ibiunainvest.com.br): sem cartas públicas — só zips de documentos regulatórios; cartas circulam por terceiros
+# Vinland Capital (vinlandcap.com): site só por JavaScript; os 2 últimos "Relatórios de Gestão de Crédito" ficam num .js (var gestao_credito = '{...}') que o coletor não lê; sem cartas do macro
+# Absolute Investimentos (absoluteinvestimentos.com.br): sem cartas públicas — só regulamentos e "Material de Divulgação" sem data
+# Capstone Investimentos (capstone.com.br): sem cartas públicas — só o material de divulgação do mês (fundo fechado)
+# Clave Capital (clavecapital.com.br): incorporada pela BTG Pactual Asset (12/2024); certificado do site expirado
+# Truxt Investimentos (truxt.com.br): bloqueado — certificado TLS incompleto (cadeia sem intermediário), o coletor não conecta
+# Garde Asset (garde.com.br): bloqueado — falha no handshake TLS
+# Patria Investimentos (patria.com): sem cartas — só artigos "Knowledge & Insights" sem data na lista
+# Nest Asset: site oficial não encontrado (nenhum domínio responde)
+# Visia Investimentos: site não encontrado; fundos "Visia" aparecem cancelados
+# Pacifico Gestão (pagr.com.br): bloqueado — certificado não vale para o domínio; página na raiz dá 404
+# Polo Capital (polocapital.com.br): bloqueado — certificado do site expirado
+# Root Capital (rootcapital.com.br): sem cartas — site Wix com PDFs sem nome/data (lâminas)
+# Daycoval Asset (daycoval.com.br/asset): site só por JavaScript; relatórios mensais por fundo sem lista pública
+# BTG Pactual Asset Management (btgpactual.com/asset-management): site só por JavaScript (Angular) sem JSON público; research já cadastrado como "BTG Pactual Research"
+# UBS BB / CSHG (cshg.com.br): bloqueado — conexão recusada (reset); CSHG Verde já coberto por "Verde Asset"
