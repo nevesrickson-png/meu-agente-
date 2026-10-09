@@ -93,7 +93,8 @@ Arquivos com DRM não são processados.
   Testes com respostas gravadas (`testes/gravacoes_mercado.py`); `testes/test_mercado_online.py` confere as fontes reais.
   Eventos sem API (Copom, resultados) em `config/agenda_fixa.yaml`.
   SGS: `api.bcb.gov.br` recusa conexões de fora do Brasil (ex.: nuvem) → plano B automático pelo web service SOAP
-  oficial (`www3.bcb.gov.br/wssgs`). Focus (OData): espaços na URL precisam ser `%20` (com `+` dá erro 400).
+  oficial (`www3.bcb.gov.br/wssgs`). Focus (OData): espaços na URL precisam ser `%20` (com `+` dá erro 400). Desde 10/2026 o
+  firewall do BC devolve 403 para qualquer consulta OData com `$select` — não usar.
 - Notícias (código): `quiron/servicos/noticias/` — `coleta.py` (RSS/feeds oficiais de `config/fontes_noticias.yaml`, cache
   HTTP de 10 min, tabela `noticias` em `dados/quiron.db`, deduplicação por link canônico e por manchete), `classificacao.py`
   (temas, tickers, alertas e empresas por regras em `config/temas_noticias.yaml`; nome de empresa exige maiúscula e tem

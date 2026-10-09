@@ -192,3 +192,28 @@ def test_websocket_ignora_mensagem_que_nao_e_json(monkeypatch):
         ws.send_text(json.dumps({"tipo": "assinar", "paineis": [{"id": "p1", "topico": "eco", "params": {}}]}))
         msg = json.loads(ws.receive_text())
         assert msg["id"] == "p1" and msg["dados"] == {"ok": True}
+
+
+def test_titulo_com_cdata_escapado_nao_some():
+    from quiron.servicos.noticias.coleta import texto_limpo
+
+    assert texto_limpo("<![CDATA[Pharmaceutical Executive Daily: FDA Approves Tecentriq]]>") == \
+        "Pharmaceutical Executive Daily: FDA Approves Tecentriq"  # PharmExec: antes virava "" e o feed ficava vazio
+    assert texto_limpo("<p>Selic <b>mantida</b></p>") == "Selic mantida"
+
+
+def test_focus_sem_select():
+    from quiron.servicos.mercado import bcb
+
+    urls = []
+
+    class R:
+        dados = {"value": []}
+    bcb_obter = bcb.obter
+    try:
+        bcb.obter = lambda url, **k: (urls.append(url), (_ for _ in ()).throw(RuntimeError("parar")))[1]
+        with pytest.raises(RuntimeError):
+            bcb.focus("ipca", 2026)
+    finally:
+        bcb.obter = bcb_obter
+    assert "%24select" not in urls[0] and "$select" not in urls[0]  # o firewall do BC recusa (403) consulta com $select

@@ -81,7 +81,8 @@ def test_petr4_e_curv_atualizam_sozinhos(servidor):
                                  arg=antes, timeout=40_000)
         juros = pagina.locator(".painel").filter(has=pagina.locator(".painel-titulo", has_text="Juros")).first
         juros.locator(".kpi-v").first.wait_for(timeout=30_000)  # Selic/CDI aparecem logo
-        juros.locator("text=Tesouro Direto (").wait_for(timeout=90_000)  # o Tesouro chega sozinho depois
+        # o Tesouro chega sozinho depois — ou, com o Tesouro Transparente fora do ar, o painel avisa (nunca fica preso em "baixando")
+        juros.locator("text=Tesouro Direto (").or_(juros.locator(".erro", has_text="Tesouro")).first.wait_for(timeout=150_000)
         pagina.wait_for_timeout(2000)
         pagina.evaluate("scrollTo(0, 0)")
         pagina.wait_for_timeout(500)

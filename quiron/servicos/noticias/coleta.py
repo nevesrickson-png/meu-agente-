@@ -95,7 +95,9 @@ def chave_titulo(titulo: str) -> str:
 
 
 def texto_limpo(bruto: str, limite: int = 400) -> str:
-    t = re.sub(r"<[^>]+>", " ", html.unescape(bruto or ""))
+    t = html.unescape(bruto or "")
+    t = re.sub(r"<!\[CDATA\[(.*?)\]\]>", r"\1", t, flags=re.S)  # feed que escapa o CDATA (PharmExec): o título estava todo "dentro de uma tag"
+    t = re.sub(r"<[^>]+>", " ", t)
     t = re.sub(r"\s+", " ", t).strip()
     return t if len(t) <= limite else t[:limite].rsplit(" ", 1)[0] + "…"
 

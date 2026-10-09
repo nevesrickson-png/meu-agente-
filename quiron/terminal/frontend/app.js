@@ -357,7 +357,7 @@ function desenharLinhas(id, alvo, d, compacto, legenda) {
 
 function renderJuros(corpo, d, painel) {
   const kpis = d.series.map((s) => s.erro ? `<div class="kpi"><div class="kpi-r">indisponível</div><div class="dica">${esc(s.erro)}</div></div>`
-    : `<div class="kpi"><div class="kpi-r">${esc(s.nome)}</div><div class="kpi-v">${fmt(s.valor)}%</div><div class="kpi-d">ref. ${dia(s.data)}${s.desatualizado ? " ⚠️ desatualizado" : ""}</div></div>`).join("");
+    : `<div class="kpi"><div class="kpi-r">${esc(s.nome)}</div><div class="kpi-v">${fmt(s.valor)}%</div><div class="kpi-d">ref. ${dia(s.data)}${s.desatualizado ? " · desatualizado" : ""}</div></div>`).join("");
   let tes = "";
   if (d.tesouro.carregando) tes = '<div class="carregando" style="margin-top:6px">Tesouro Direto: baixando taxas (na primeira vez leva uns 20 s)…</div>';
   else if (d.tesouro.erro) tes = `<div class="erro">Tesouro: ${esc(d.tesouro.erro)}</div>`;
