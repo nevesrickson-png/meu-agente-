@@ -1,0 +1,5 @@
+# Fim de linha fixo: o Git do Windows (autocrlf) nao mexe nos scripts e eles nunca
+# aparecem como "alterados" (isso travava a atualizacao automatica do Abrir Quiron.bat).
+*.sh text eol=lf
+*.bat -text
+*.ps1 -text

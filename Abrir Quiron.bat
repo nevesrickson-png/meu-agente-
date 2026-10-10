@@ -59,8 +59,17 @@ for /f %%v in ('git rev-parse --short HEAD') do set "ANTES=%%v"
 git fetch -q origin "%RAMO%"
 if errorlevel 1 (echo  Sem internet ou sem acesso ao GitHub: abrindo a versao que ja esta no PC. & goto baixado)
 git switch -q "%RAMO%" 2>nul || git switch -q -c "%RAMO%" --track "origin/%RAMO%"
+git merge -q --ff-only "origin/%RAMO%" 2>nul
+if not errorlevel 1 goto atualizado
+rem Arquivos do programa diferentes da versao baixada (quase sempre so o fim de linha do Windows nos .sh).
+rem Guarda essas diferencas num "stash" (nada se perde: git stash list / git stash pop) e tenta de novo.
+rem .env, dados\ e biblioteca\ nao sao arquivos do programa: nunca entram aqui.
+echo  Havia arquivos do programa diferentes da versao oficial; guardei uma copia deles e vou atualizar.
+git stash push -q -m "quiron: guardado antes da atualizacao"
 git merge -q --ff-only "origin/%RAMO%"
-if errorlevel 1 (echo  Voce alterou arquivos do programa; mantive a sua versao. Me avise para eu ajudar a juntar. & goto baixado)
+if errorlevel 1 (echo  Nao consegui atualizar sozinho; abrindo a versao que ja esta no PC. Me mande um print desta tela. & goto baixado)
+echo  Copia guardada: para ver, rode  git stash list  nesta pasta.
+:atualizado
 for /f %%v in ('git rev-parse --short HEAD') do set "DEPOIS=%%v"
 if "%ANTES%"=="%DEPOIS%" (echo  Ja esta na versao mais nova: %DEPOIS%) else (echo  Atualizado: %ANTES% para %DEPOIS%)
 :baixado

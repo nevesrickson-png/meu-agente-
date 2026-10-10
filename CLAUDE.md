@@ -362,6 +362,9 @@ Arquivos com DRM não são processados.
   disco, memória, pasta de dados, regras sem conferência, Google. Supervisor: 3 quedas em < 60 s = situação "erro" com
   `motivo_da_queda` (token recusado, conflito, sem rede…) e espera de 5 min; lançador para após 3 quedas rápidas e
   avisa porta ocupada.
+  `Abrir Quiron.bat` (10/10/2026): se o `merge --ff-only` falhar por arquivo do programa alterado no PC, guarda as
+  diferenças com `git stash push -m "quiron: guardado antes da atualizacao"` e tenta de novo; `.gitattributes` fixa o
+  fim de linha (`*.sh eol=lf`, `*.bat`/`*.ps1 -text`) para o autocrlf do Windows não "alterar" scripts.
 - Bot (depuração 05/10/2026): erro inesperado vira resposta amigável; `drop_pending_updates=False` + ignora mensagens
   com mais de 6 h; menu "/" via `set_my_commands` (`menu_telegram`); `/start` curto; comando errado sugere o parecido;
   sub-bots não cortam texto (o envio divide). Modos que capturam mensagens (treino, entrevista, `/pos`): um fecha o
