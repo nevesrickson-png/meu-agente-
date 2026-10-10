@@ -127,6 +127,7 @@ simples_nacional:
   observacao: "Alíquota efetiva = (RBT12 × alíquota − parcela a deduzir) ÷ RBT12. Fator R ≥ 28% leva serviços do Anexo V ao III."
   limite_anual: 4800000.00
   fator_r_minimo: 0.28
+  sublimite_icms_iss: 3600000.00   # art. 13-A: acima disso ISS/ICMS são pagos fora do DAS
   anexo_iii:           # serviços (com fator R ≥ 28%) — inclui CPP e ISS
     - {ate: 180000.00, aliquota: 0.06, deduzir: 0.0}
     - {ate: 360000.00, aliquota: 0.112, deduzir: 9360.00}
@@ -144,7 +145,7 @@ simples_nacional:
 
 lucro_presumido:
   verificado_em:
-  fonte: "Lei 9.249/1995; Lei 9.430/1996; LC 224/2025 (presunção maior acima de R$ 5 mi a partir de 2026 — CONFIRA)"
+  fonte: "Lei 9.249/1995; Lei 9.430/1996; Lei 7.689/1988; LC 224/2025 art. 4º §§ 4º-VII e 5º; Decreto 12.808/2025 art. 12"
   presuncao_servicos: 0.32
   irpj: 0.15
   irpj_adicional: 0.10
@@ -153,40 +154,45 @@ lucro_presumido:
   pis: 0.0065
   cofins: 0.03
   iss_padrao: 0.05                        # varia por município (2% a 5%): informe o do cliente
+  acrescimo_presuncao_lc224: 0.10         # +10% na presunção de IRPJ/CSLL (32% → 35,2%) só na parcela da receita acima do limite
+  acrescimo_limite_receita_anual: 5000000.00   # proporcional por período (R$ 1,25 mi/trimestre)
+  acrescimo_vigencia: {irpj: "2026-01-01", csll: "2026-04-01"}   # contestado no STF (ADIs 7920 e 7936)
+  observacao: "PIS/Cofins cumulativos até 31/12/2026; a CBS os substitui a partir de 2027 (LC 214/2025)"
 
 fgc:
   verificado_em:
-  fonte: "fgc.org.br"
+  fonte: "Res. CMN 4.222/2013, Anexo II (red. Res. 4.620/2017, 5.184/2024 e 5.279/2026); fgc.org.br"
   limite_por_cpf_por_instituicao: 250000.00
   teto_global: 1000000.00
   teto_global_renovacao_anos: 4
-  cobre: [CDB, RDB, LCI, LCA, LC, LIG, "Poupança", "Conta corrente"]
-  nao_cobre: [CRI, CRA, "Debêntures", "Fundos", "Tesouro Direto (risco soberano, não FGC)"]
+  cobre: [CDB, RDB, LCI, LCA, LCD, LC, "Letra Hipotecária", "Poupança", "Conta corrente", "Conta-salário", "Compromissada com título de empresa ligada"]
+  nao_cobre: [CRI, CRA, "Debêntures", "Fundos", LF, LIG, COE, "Instrumentos subordinados", "Previdência", "Ações", "Tesouro Direto (risco soberano, não FGC)"]
 
 itcmd:
   verificado_em:
-  fonte: "Legislação estadual de cada UF; EC 132/2023 (progressividade obrigatória; teto de 8% pela Resolução do Senado 9/1992)"
+  fonte: "LC 227/2026 (arts. 150, 155 e 156); EC 132/2023; Resolução do Senado 9/1992 (teto de 8%); leis estaduais citadas por UF"
   aliquota_maxima_nacional: 0.08
   observacao: >
-    Após a EC 132/2023 os estados estão migrando para alíquotas progressivas. Os valores abaixo
-    são referência antiga e precisam ser confirmados UF por UF antes de qualquer cálculo de sucessão.
-  previdencia: "STF (Tema 1214, dez/2024): não incide ITCMD sobre PGBL/VGBL na morte do titular — CONFIRA a lei do estado"
+    LC 227/2026 art. 156 § 2º: progressividade por faixa (como no IR). A faixa [mín, máx] abaixo é só o intervalo e o
+    cálculo usa a MÁXIMA (conservador: superestima em estados com faixas). SP, MG, PR e ES ainda têm alíquota fixa
+    (lei estadual nova pendente). PE: isento até R$ 80 mil desde 01/01/2026 (LC 563/2025). Conferido em 10/10/2026.
+  previdencia: "Não incide ITCMD sobre previdência complementar (PGBL/VGBL), seguro e pecúlio — LC 227/2026 art. 150, III e STF Tema 1214 (RE 1.363.013)"
   estados:               # UF → alíquota (fixa) ou faixa [mínima, máxima]; faixa → o cálculo usa a MÁXIMA (conservador)
     SP: 0.04
     RJ: [0.04, 0.08]
     MG: 0.05
     PR: 0.04
-    SC: [0.01, 0.08]
-    RS: [0.03, 0.06]
+    SC: [0.01, 0.07]     # Lei 13.136/2004 art. 9º (a faixa de 8% foi revogada)
+    RS: [0.0, 0.06]      # causa mortis (Lei 8.821/1989); doação 3%–4%
     DF: [0.04, 0.06]
     BA: [0.04, 0.08]
-    GO: [0.0125, 0.08]
+    GO: [0.02, 0.08]     # CTE (Lei 11.651/1991) art. 78
     PE: [0.02, 0.08]
     CE: [0.02, 0.08]
     ES: 0.04
 
 tesouro_direto:
   verificado_em:        # ← preencha após conferir
-  fonte: "Tesouro Direto — tesourodireto.com.br (Taxas); B3"
-  taxa_custodia_b3: 0.002          # 0,20% a.a. sobre o valor dos títulos, cobrada semestralmente
-  isencao_custodia: "Tesouro Selic: isento até R$ 10 mil por investidor (confira a regra atual)"
+  fonte: "B3 — tarifas do Tesouro Direto (b3.com.br); tesourodireto.com.br"
+  taxa_custodia_b3: 0.002          # 0,20% a.a., provisionada diariamente; cobrada na venda, no vencimento ou no pagamento de juros
+  isencao_custodia: "Tesouro Selic: sem taxa até R$ 10.000 por CPF; acima, só sobre o excedente. Educa+/Renda+: 0% no vencimento e em recebimentos até 4/6 salários mínimos; 0,10% acima"

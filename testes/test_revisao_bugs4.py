@@ -235,3 +235,13 @@ def test_iof_da_calculadora_bate_com_a_tabela_oficial():
 
     tabela = regras.carregar_regras()["renda_fixa"]["iof"]["tabela_dia_1_a_30"]  # Decreto 6.306/2007, anexo
     assert [round(aliquota_iof(d) * 100) for d in range(1, 31)] == tabela
+
+
+def test_lucro_presumido_com_acrescimo_da_lc_224_acima_de_5_milhoes():
+    from quiron.servicos.planejamento import impostos
+
+    ate = impostos.lucro_presumido(4_000_000)
+    assert ate.irpj == pytest.approx(4_000_000 * 0.32 * 0.15)  # abaixo do limite: nada muda
+    acima = impostos.lucro_presumido(6_000_000)
+    base = 6_000_000 * 0.32 + 1_000_000 * 0.32 * 0.10  # só o R$ 1 mi acima do limite tem presunção de 35,2%
+    assert acima.irpj == pytest.approx(base * 0.15) and acima.csll == pytest.approx(base * 0.09)

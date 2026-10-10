@@ -119,6 +119,9 @@ class Presumido:
 def lucro_presumido(faturamento_anual: float, iss: float | None = None, r: dict | None = None) -> Presumido:
     c = (r or _r())["lucro_presumido"]
     base = faturamento_anual * c["presuncao_servicos"]
+    # LC 224/2025: presunção 10% maior só na parcela da receita acima de R$ 5 mi/ano (IRPJ desde 01/2026, CSLL desde 04/2026)
+    base += max(0.0, faturamento_anual - c.get("acrescimo_limite_receita_anual", float("inf"))) \
+        * c["presuncao_servicos"] * c.get("acrescimo_presuncao_lc224", 0.0)
     return Presumido(base * c["irpj"], max(0.0, base - c["irpj_adicional_acima_anual"]) * c["irpj_adicional"],
                      base * c["csll"], faturamento_anual * c["pis"], faturamento_anual * c["cofins"],
                      faturamento_anual * (c["iss_padrao"] if iss is None else iss))
