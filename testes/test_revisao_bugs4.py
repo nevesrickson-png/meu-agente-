@@ -227,3 +227,11 @@ def test_telas_nao_ficam_em_cache_depois_de_atualizar():
     c = TestClient(app, base_url="http://127.0.0.1")
     for caminho in ("/", "/app.js", "/tema.css", "/cartas"):
         assert c.get(caminho).headers.get("cache-control") == "no-cache", caminho
+
+
+def test_iof_da_calculadora_bate_com_a_tabela_oficial():
+    from quiron.nucleo import regras
+    from quiron.servicos.calculadoras import aliquota_iof
+
+    tabela = regras.carregar_regras()["renda_fixa"]["iof"]["tabela_dia_1_a_30"]  # Decreto 6.306/2007, anexo
+    assert [round(aliquota_iof(d) * 100) for d in range(1, 31)] == tabela

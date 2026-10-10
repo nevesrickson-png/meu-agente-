@@ -1,7 +1,8 @@
 # Regras de mercado usadas nos cálculos do Quíron.
 #
 # ⚠️  RASCUNHO MONTADO PELO CLAUDE CODE EM 03/10/2026 — NADA AQUI FOI CONFERIDO AINDA.
-#     Regras tributárias mudam (houve propostas em 2025 de unificar o IR de aplicações e de tributar LCI/LCA).
+#     Regras tributárias mudam. A MP 1.303/2025 (IR único de 17,5% e 5% em LCI/LCA) CADUCOU em 08/10/2025 sem efeito
+#     (Ato Declaratório CN 67/2025). Valores conferidos pelo Quíron em 10/10/2026 nas fontes primárias citadas em cada bloco.
 #     Confira cada bloco na fonte oficial indicada e preencha `verificado_em` (AAAA-MM-DD).
 #     Enquanto `verificado_em` estiver vazio, o Quíron avisa que o bloco NÃO foi verificado.
 #     Depois de 90 dias da verificação, ele avisa que é hora de conferir de novo.
@@ -14,10 +15,12 @@ renda_fixa:
     - {ate_dias: 360, aliquota: 0.20}
     - {ate_dias: 720, aliquota: 0.175}
     - {acima_de_dias: 720, aliquota: 0.15}
-  isentos_pf: [LCI, LCA, CRI, CRA, "Debêntures incentivadas (Lei 12.431)", LIG, "Poupança"]
+  isentos_pf: [LCI, LCA, CRI, CRA, CDCA, LCD, LIG, "Letra Hipotecária", "CPR (mercado financeiro)", "Debêntures incentivadas (Lei 12.431)", "Poupança"]
+  nao_isentos_pf: ["Debêntures de infraestrutura da Lei 14.801/2024 (seguem a tabela regressiva)"]
   iof:
     aplica_resgate_antes_de_dias: 30
-    observacao: "Tabela regressiva diária do IOF (96% no 1º dia a 0% no 30º), sobre o rendimento"
+    observacao: "Tabela regressiva diária do IOF sobre o rendimento (Decreto 6.306/2007, art. 32 e anexo) — passos desiguais"
+    tabela_dia_1_a_30: [96, 93, 90, 86, 83, 80, 76, 73, 70, 66, 63, 60, 56, 53, 50, 46, 43, 40, 36, 33, 30, 26, 23, 20, 16, 13, 10, 6, 3, 0]
 
 poupanca:
   verificado_em:        # ← preencha após conferir
@@ -38,23 +41,24 @@ fundos:
   acoes: {aliquota_resgate: 0.15, come_cotas: false}
   fii_rendimentos_pf:
     isento: true
-    condicoes: "Cotas negociadas em bolsa/balcão, fundo com ≥ 100 cotistas e cotista com < 10% das cotas (confira regras atuais)"
+    condicoes: "Cotas negociadas exclusivamente em bolsa/balcão; fundo com ≥ 100 cotistas; PF com < 10% das cotas E < 10% dos rendimentos; PFs ligadas com < 30% (Lei 11.033, art. 3º, III e §1º, red. Lei 14.754/2023). Vale também para Fiagro."
   fii_ganho_capital: 0.20
 
 renda_variavel:
   verificado_em:
-  fonte: "Receita Federal — IRPF, renda variável"
+  fonte: "Lei 11.033/2004 arts. 2º e 3º; Lei 9.959/2000 art. 8º; Lei 9.249/1995 arts. 9º e 10; Lei 15.270/2025; LC 224/2025"
   acoes_swing_trade: 0.15
   acoes_day_trade: 0.20
   isencao_vendas_mensais_acoes_ate: 20000.00   # só ações à vista, swing trade
   etf_renda_variavel: 0.15                      # sem isenção dos R$ 20 mil
-  irrf_dedo_duro: {swing_trade: 0.00005, day_trade: 0.01}
+  irrf_dedo_duro: {swing_trade: 0.00005, day_trade: 0.01, base: {swing_trade: "valor de venda", day_trade: "resultado positivo do dia"}}
   dividendos:
-    isentos_ate_2025: true
-    observacao: >
-      A partir de 2026 (Lei 15.270/2025) há retenção de 10% sobre dividendos acima de R$ 50 mil por mês
-      de uma mesma empresa para a mesma pessoa física, e tributação mínima para altas rendas. CONFIRA os detalhes.
-  jcp_irrf: 0.15        # houve propostas de aumento — CONFIRA
+    isentos: true                       # Lei 9.249, art. 10
+    retencao_mensal: {acima_de_por_empresa: 50000.00, aliquota: 0.10, base: "valor TOTAL do mês, sem deduções"}  # Lei 15.270/2025 (art. 6º-A da Lei 9.250), desde 01/2026
+    exterior_irrf: 0.10
+    transicao: "lucros apurados até 2025 com distribuição aprovada até 31/12/2025 não sofrem retenção"
+    observacao: "Dividendos entram na base do imposto mínimo da alta renda (irpf_alta_renda); os 10% retidos são compensados lá."
+  jcp_irrf: 0.175       # LC 224/2025, art. 8º (Lei 9.249, art. 9º, §2º), desde 01/01/2026
 
 previdencia:
   verificado_em:
