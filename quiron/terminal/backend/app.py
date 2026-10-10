@@ -97,7 +97,12 @@ async def exigir_senha(request: Request, call_next):
         if request.url.path.startswith("/api/"):
             return JSONResponse({"erro": "senha necessária"}, status_code=401)
         return RedirectResponse("/login")
-    return await call_next(request)
+    resposta = await call_next(request)
+    caminho = request.url.path
+    if not caminho.startswith(("/api/", "/vendor/")) and "cache-control" not in resposta.headers:
+        # telas (HTML/JS/CSS): o navegador sempre confere se mudou — depois de uma atualização nunca mostra a versão velha
+        resposta.headers["Cache-Control"] = "no-cache"
+    return resposta
 
 
 @app.get("/login", response_class=HTMLResponse)

@@ -62,10 +62,10 @@ git switch -q "%RAMO%" 2>nul || git switch -q -c "%RAMO%" --track "origin/%RAMO%
 git merge -q --ff-only "origin/%RAMO%" 2>nul
 if not errorlevel 1 goto atualizado
 rem Arquivos do programa diferentes da versao baixada (quase sempre so o fim de linha do Windows nos .sh).
-rem Guarda essas diferencas num "stash" (nada se perde: git stash list / git stash pop) e tenta de novo.
+rem Guarda essas diferencas (e arquivos soltos, ex.: um ZIP extraido por cima) num "stash" (nada se perde: git stash list / git stash pop) e tenta de novo.
 rem .env, dados\ e biblioteca\ nao sao arquivos do programa: nunca entram aqui.
 echo  Havia arquivos do programa diferentes da versao oficial; guardei uma copia deles e vou atualizar.
-git stash push -q -m "quiron: guardado antes da atualizacao"
+git stash push -q -u -m "quiron: guardado antes da atualizacao"
 git merge -q --ff-only "origin/%RAMO%"
 if errorlevel 1 (echo  Nao consegui atualizar sozinho; abrindo a versao que ja esta no PC. Me mande um print desta tela. & goto baixado)
 echo  Copia guardada: para ver, rode  git stash list  nesta pasta.

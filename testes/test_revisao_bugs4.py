@@ -217,3 +217,13 @@ def test_focus_sem_select():
     finally:
         bcb.obter = bcb_obter
     assert "%24select" not in urls[0] and "$select" not in urls[0]  # o firewall do BC recusa (403) consulta com $select
+
+
+def test_telas_nao_ficam_em_cache_depois_de_atualizar():
+    from fastapi.testclient import TestClient
+
+    from quiron.terminal.backend.app import app
+
+    c = TestClient(app, base_url="http://127.0.0.1")
+    for caminho in ("/", "/app.js", "/tema.css", "/cartas"):
+        assert c.get(caminho).headers.get("cache-control") == "no-cache", caminho
