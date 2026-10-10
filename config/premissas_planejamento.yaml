@@ -36,7 +36,7 @@ sucessao:
 
 # Empresário (PF × PJ).
 empresario:
-  pro_labore_minimo: 1518.00        # um salário mínimo (atualize)
+  pro_labore_minimo: 1621.00        # um salário mínimo de 2026 (Decreto 12.797/2025)
   contabilidade_pj_anual: 6000.00   # custo de contador/abertura que a PJ tem e a PF não
 
 # Simulador de patrimônio (perguntas do dia a dia: quanto investir, quando parar, quando chego a X, imóvel × aplicação).

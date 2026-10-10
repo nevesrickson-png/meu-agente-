@@ -71,7 +71,7 @@ previdencia:
 
 irpf_tabela_mensal:
   verificado_em:
-  fonte: "Receita Federal — tabela progressiva mensal (vigente desde mai/2025); Lei 15.270/2025 (redução a partir de 2026)"
+  fonte: "Receita Federal — Tributação de 2026 (tabela mensal de mai/2025 mantida em 2026, Lei 15.191/2025); Lei 15.270/2025 (redução e desconto simplificado) — conferido pelo Quíron em 10/10/2026"
   observacao: >
     Valores-base da tabela de mai/2025. A partir de 2026, a Lei 15.270/2025 criou uma REDUÇÃO do imposto: zera para
     rendimentos tributáveis até R$ 5.000/mês e diminui gradualmente até R$ 7.350/mês. CONFIRA na Receita.
@@ -88,7 +88,7 @@ irpf_tabela_mensal:
     dependente: 2275.08
     educacao_por_pessoa: 3561.50
     desconto_simplificado: 0.20
-    desconto_simplificado_teto: 16754.34
+    desconto_simplificado_teto: 17640.00   # a partir do ano-calendário 2026 (16.754,34 até o ano-calendário 2025) — art. 10, X, Lei 9.250
     desconto_simplificado_mensal: 607.20   # na fonte: 25% da faixa isenta, no lugar das deduções legais se for maior
     pgbl_maximo_renda_tributavel: 0.12   # só na declaração completa e para quem contribui ao INSS/regime próprio
 
@@ -101,17 +101,18 @@ irpf_alta_renda:
   renda_minima_anual: 600000.00
   renda_aliquota_cheia: 1200000.00
   aliquota_maxima: 0.10
-  dividendos_retencao: {acima_por_mes_por_empresa: 50000.00, aliquota: 0.10}
+  dividendos_retencao: {acima_por_mes_por_empresa: 50000.00, aliquota: 0.10, base: total_do_mes}   # 10% sobre o TOTAL pago no mês, sem deduções (art. 6º-A da Lei 9.250); lucros até 2025 com distribuição aprovada até 31/12/2025 ficam fora
 
 inss:
   verificado_em:
-  fonte: "Portaria interministerial MPS/MF vigente (valores de 2025 — atualize para o ano corrente)"
-  teto_mensal: 8157.41
+  fonte: "Portaria Interministerial MPS/MF nº 13, de 09/01/2026; Decreto 12.797/2025 (salário mínimo R$ 1.621,00) — conferido pelo Quíron em 10/10/2026"
+  salario_minimo: 1621.00
+  teto_mensal: 8475.55
   empregado_faixas:    # contribuição progressiva do empregado (CLT)
-    - {ate: 1518.00, aliquota: 0.075}
-    - {ate: 2793.88, aliquota: 0.09}
-    - {ate: 4190.83, aliquota: 0.12}
-    - {ate: 8157.41, aliquota: 0.14}
+    - {ate: 1621.00, aliquota: 0.075}
+    - {ate: 2902.84, aliquota: 0.09}
+    - {ate: 4354.27, aliquota: 0.12}
+    - {ate: 8475.55, aliquota: 0.14}
   contribuinte_individual: 0.20        # autônomo pessoa física (carnê), até o teto
   pro_labore_retido: 0.11              # sócio, até o teto
   patronal_lucro_presumido: 0.20       # empresa sobre o pró-labore (sem teto); no Simples III/V já está no DAS

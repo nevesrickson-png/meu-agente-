@@ -125,7 +125,7 @@ def test_reducao_do_ir_2026_sobre_o_bruto():
         return round(impostos.ir_na_fonte(bruto, impostos.inss_empregado(bruto)), 2)
 
     assert ir(5000) == 0.0
-    assert ir(7000) == 752.53  # antes: 647,39 (redução calculada sobre a base já deduzida)
+    assert ir(7000) == 754.75  # INSS 2026; antes da correção da redução dava 647,39
     assert 190 < ir(5500) < 200  # desconto simplificado (R$ 607,20) > INSS
 
 

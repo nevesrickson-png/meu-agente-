@@ -46,8 +46,8 @@ def test_irpf_inss_simples_presumido_conferidos_a_mao():
     assert impostos.irpf_mensal(4_000) == 0  # até R$ 5 mil: zerado pela redução de 2026
     assert impostos.irpf_mensal(6_000) == pytest.approx(6_000 * 0.275 - 908.73 - (978.62 - 0.133145 * 6_000))
     assert impostos.irpf_mensal(10_000) == pytest.approx(10_000 * 0.275 - 908.73)  # acima de R$ 7.350: sem redução
-    assert impostos.inss_empregado(3_000) == pytest.approx(1518 * 0.075 + (2793.88 - 1518) * 0.09 + (3000 - 2793.88) * 0.12)
-    teto = 1518 * 0.075 + (2793.88 - 1518) * 0.09 + (4190.83 - 2793.88) * 0.12 + (8157.41 - 4190.83) * 0.14
+    assert impostos.inss_empregado(3_000) == pytest.approx(1621 * 0.075 + (2902.84 - 1621) * 0.09 + (3000 - 2902.84) * 0.12)
+    teto = 1621 * 0.075 + (2902.84 - 1621) * 0.09 + (4354.27 - 2902.84) * 0.12 + (8475.55 - 4354.27) * 0.14  # 2026
     assert impostos.inss_empregado(20_000) == pytest.approx(teto)
     assert impostos.simples_aliquota(600_000, "iii") == pytest.approx((600_000 * 0.135 - 17_640) / 600_000)
     assert impostos.simples_aliquota(600_000, "v") == pytest.approx((600_000 * 0.195 - 9_900) / 600_000)
@@ -154,7 +154,7 @@ def test_tributario_completa_simplificada_e_pgbl():
     t = tributario.planejar(f)
     inss = impostos.inss_empregado(10_000) * 12
     assert t.rendimento_tributavel == 120_000
-    assert t.simplificada.imposto == pytest.approx((120_000 - 16_754.34) * 0.275 - 908.73 * 12)
+    assert t.simplificada.imposto == pytest.approx((120_000 - 17_640.00) * 0.275 - 908.73 * 12)  # teto do simplificado a partir do ano-calendário 2026
     assert t.completa.imposto == pytest.approx((120_000 - inss - 2_275.08) * 0.275 - 908.73 * 12)
     assert t.melhor == "Simplificada" and t.pgbl_limite == pytest.approx(14_400)
     com_pgbl = (120_000 - inss - 2_275.08 - 14_400) * 0.275 - 908.73 * 12
@@ -170,7 +170,7 @@ def test_empresario_regimes_conferidos_a_mao():
     assert iii.pro_labore == pytest.approx(0.28 * 600_000 - 60_000)  # fator R = 28%
     assert v.tributos_empresa == pytest.approx(600_000 * 0.195 - 9_900)
     assert lp.tributos_empresa == pytest.approx(impostos.lucro_presumido(600_000, 0.02).total)
-    assert lp.lucros == pytest.approx(600_000 - 90_000 - 60_000 - lp.tributos_empresa - 1518 * 12 - 1518 * 12 * 0.2 - 6_000)
+    assert lp.lucros == pytest.approx(600_000 - 90_000 - 60_000 - lp.tributos_empresa - 1621 * 12 - 1621 * 12 * 0.2 - 6_000)
     assert pf.pro_labore == 450_000 and pf.liquido_dono < min(iii.liquido_dono, lp.liquido_dono)
     assert e.melhor in c and e.economia_vs_atual == pytest.approx(c[e.melhor].liquido_dono - pf.liquido_dono)
     grande = empresario.comparar(Empresa(faturamento_anual=6_000_000, despesas_anuais=1_000_000))
